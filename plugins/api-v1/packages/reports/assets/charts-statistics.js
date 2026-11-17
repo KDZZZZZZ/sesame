@@ -7,6 +7,7 @@
   if (!api || typeof api.register !== 'function') throw new Error('SesameCharts statistics require the chart extension registry');
   const fail = message => { throw new Error(`SesameCharts statistics: ${message}`); };
   const field = (spec, name, fallback) => spec[name] ?? fallback;
+  const language = (en, zh) => document.documentElement.lang.startsWith('zh') ? zh : en;
   const exact = value => value === null || value === undefined || value === '' ? 'missing' : String(value);
   const color = 'var(--chart-series-1,var(--foreground,#151515))';
   const up = 'var(--success,#347c49)', down = 'var(--danger,#c83b40)';
@@ -98,7 +99,6 @@
     n.append(ctx.node('circle', { cx: x, cy: y, r: 5, class: 'sc-missing', fill: 'none', 'stroke-dasharray': '2 2' }), ctx.node('text', { x: x + 9, y: y + 4, class: 'sc-axis' }, '—'));
     ctx.mark(n, row, index, description);
   }
-  const metadata = (ctx, text) => ctx.note(text);
 
   // The reconciliation operates on decimal coefficients, never floating point
   // sums. SVG coordinates are approximate; tooltip strings remain untouched.
@@ -151,7 +151,8 @@
       ctx.mark(ctx.node('rect', { x: left, y: top, width: w, height: h, rx: 2, fill, 'data-stat-mark': 'waterfall', 'data-start': p.a, 'data-end': p.b }), p.row, p.index, `${exact(p.row[x])} · ${p.kind}: ${exact(p.row[y])}${spec.unit ? ` ${spec.unit}` : ''}`);
       if (rows.length <= Math.max(3, Math.floor((width - pad.left - pad.right) / 50))) label(ctx, left + w / 2, height - 23, String(p.row[x] ?? '').slice(0, 12));
     });
-    metadata(ctx, tolerated ? `Balances reconcile within the declared tolerance ${exact(spec.balanceTolerance)}; ${tolerated} displayed total(s) include registered rounding differences.` : 'Start + registered changes = end.');
+    if (tolerated) ctx.note(language(`Rounding difference ≤ ${exact(spec.balanceTolerance)}`, `舍入差 ≤ ${exact(spec.balanceTolerance)}`), 'context');
+    ctx.note(tolerated ? `Balances reconcile within the declared tolerance ${exact(spec.balanceTolerance)}; ${tolerated} displayed total(s) include registered rounding differences.` : 'Start + registered changes = end.', 'method');
   });
 
   api.register('dumbbell', ctx => {
@@ -198,8 +199,11 @@
       ctx.mark(g, row, index, description);
     });
     const zh = /^zh(?:-|$)/i.test(document.documentElement.lang);
-    metadata(ctx, zh ? `空心：${spec.beforeLabel || before}；实心：${spec.afterLabel || after}。${missing ? ` ${missing} 组有缺失，缺失端点不连线。` : ''}`
-      : `Hollow = ${spec.beforeLabel || before}; filled = ${spec.afterLabel || after}.${missing ? ` ${missing} incomplete comparison(s); missing endpoints are not connected.` : ''}`);
+    ctx.note(zh ? `空心：${spec.beforeLabel || before} · 实心：${spec.afterLabel || after}` : `Hollow: ${spec.beforeLabel || before} · Filled: ${spec.afterLabel || after}`, 'legend');
+    if (missing) {
+      ctx.note(zh ? `缺失：${missing} 组` : `Incomplete: ${missing}`, 'context');
+      ctx.note(zh ? `${missing} 组有缺失，缺失端点不连线。` : `${missing} incomplete comparison(s); missing endpoints are not connected.`, 'help');
+    }
   });
 
   api.register('strip', ctx => {
@@ -219,8 +223,11 @@
       });
     });
     const zh = /^zh(?:-|$)/i.test(document.documentElement.lang);
-    metadata(ctx, zh ? `每个点代表一条原始记录；上下错开仅为避免重叠。${missing ? ` ${missing} 条记录缺少数值，未画成零。` : ''}`
-      : `One point = one registered row; vertical offset only separates overlapping points.${missing ? ` ${missing} missing value(s) are omitted, not plotted at zero.` : ''}`);
+    ctx.note(zh ? '每个点代表一条原始记录；上下错开仅为避免重叠。' : 'One point = one registered row; vertical offset only separates overlapping points.', 'help');
+    if (missing) {
+      ctx.note(zh ? `缺失：${missing}` : `Missing: ${missing}`, 'context');
+      ctx.note(zh ? `${missing} 条记录缺少数值，未画成零。` : `${missing} missing value(s) are omitted, not plotted at zero.`, 'help');
+    }
   });
 
   api.register('histogram', ctx => {
@@ -261,7 +268,13 @@
       }
     });
     if (spec.unit) label(ctx, ctx.width - pad.right, height - 3, spec.unit, 'end');
-    metadata(ctx, `${description} · n=${sampleCount} · height=${density ? 'registered density; area follows the supplied normalization' : 'registered count; equal-width bins'}.${missing ? ` ${missing} missing bin(s); their counts are unknown.` : ''}`);
+    ctx.note(`${description} · n=${sampleCount}`, 'method');
+    if (missing) {
+      ctx.note(language(`Missing bins: ${missing}`, `缺失区间：${missing}`), 'context');
+      ctx.note(`${missing} missing bin(s); their counts are unknown.`, 'help');
+    }
+    if (density) ctx.note(language('Height: density', '高度：密度'), 'legend');
+    ctx.note(density ? 'Height = density; area follows the supplied normalization.' : 'Height = registered count; equal-width bins.', 'help');
   });
 
   api.register('boxplot', ctx => {
@@ -295,7 +308,13 @@
       g.append(ctx.node('line', { x1: sx(median), x2: sx(median), y1: cy - 10, y2: cy + 10, stroke: color, 'stroke-width': 2, 'data-box-median': exact(row[keys[2]]) }));ctx.mark(g, row, index, desc);
       summary.outside.forEach((v, j) => ctx.mark(ctx.node('circle', { cx: sx(v), cy: cy + (j % 3 - 1) * 3, r: 4, fill: 'var(--surface-secondary,#fff)', stroke: color, 'data-stat-mark': 'outlier' }), row, index, `${name} · registered outlier ${j + 1}: ${exact(summary.rawOutliers[j])}${spec.unit ? ` ${spec.unit}` : ''} · n=${summary.samples}`));
     });
-    metadata(ctx, `${description} · Box = q1–q3; line = median; whiskers = registered low/high.${missing ? ` ${missing} incomplete box(es) are not inferred.` : ''}`);
+    ctx.note(description, 'method');
+    ctx.note(language('Box: Q1–Q3 · Line: median · Whiskers: low/high', '箱：Q1–Q3 · 线：中位数 · 须：上下界'), 'legend');
+    ctx.note('Box = q1–q3; line = median; whiskers = registered low/high.', 'help');
+    if (missing) {
+      ctx.note(language(`Incomplete: ${missing}`, `缺失：${missing} 组`), 'context');
+      ctx.note(`${missing} incomplete box(es) are not inferred.`, 'help');
+    }
   });
 
   function densityPlot(ctx, mirrored) {
@@ -335,7 +354,13 @@
         ctx.mark(ctx.node('circle', { cx: sx(p.x), cy: cy - dy(p.y), r: group.points.length < 60 ? 3 : 2, class: 'sc-point', 'data-stat-mark': mirrored ? 'violin' : 'ridgeline' }), p.row, p.index, desc);
       });
     });
-    metadata(ctx, `${description} · ${mirrored ? 'Half-thickness' : 'Height'} = registered density on a shared scale; no KDE or smoothing is estimated here. ${grouped.map(g => `${g.name}: n=${g.samples}`).join('; ')}.${missing ? ` ${missing} missing density point(s) remain gaps.` : ''}`);
+    ctx.note(`${description} · no KDE or smoothing is estimated here. ${grouped.map(g => `${g.name}: n=${g.samples}`).join('; ')}.`, 'method');
+    ctx.note(language('Density · Shared scale', '密度 · 统一尺度'), 'legend');
+    ctx.note(`${mirrored ? 'Half-thickness' : 'Height'} = density on a shared scale.`, 'help');
+    if (missing) {
+      ctx.note(language(`Missing: ${missing}`, `缺失：${missing}`), 'context');
+      ctx.note(`${missing} missing density point(s) remain gaps.`, 'help');
+    }
   }
   api.register('ridgeline', ctx => densityPlot(ctx, false));
   api.register('violin', ctx => densityPlot(ctx, true));

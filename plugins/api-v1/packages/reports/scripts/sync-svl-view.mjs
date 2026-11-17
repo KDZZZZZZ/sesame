@@ -17,9 +17,6 @@ const lucide = JSON.parse(await readFile(lucidePackage, 'utf8'));
 const aliases = [
   ['@sesame/svl-canvas', join(host, shared, 'svl-graph-canvas.tsx')],
   ['@sesame/svl-layout', join(host, shared, 'svl-layout.js')],
-  ['@sesame/svl-logic', join(host, shared, 'svl-logic-view.tsx')],
-  ['@sesame/svl-logic-model', join(host, shared, 'svl-logic-model.js')],
-  ['@sesame/svl-tree', join(host, shared, 'svl-expression-tree.tsx')],
   ['lucide-react', join(lucidePackage, '..', lucide.module)],
   ...['react', 'react/jsx-runtime', 'react-dom', 'react-dom/client'].map(name => [name, require.resolve(name)]),
 ].map(([name, replacement]) => ({ find: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), replacement }));
@@ -37,7 +34,7 @@ const css = output.find(item => item.type === 'asset' && item.fileName.endsWith(
 if (!script || !css) throw Error('The shared SVL canvas must include JavaScript and its original CSS.');
 const files = new Map([['svl-graph.js', script.code], ['svl-graph.css', String(css.source)]]);
 const sources = {};
-for (const name of ['svl-graph-canvas.tsx', 'svl-graph-canvas.css', 'svl-layout.js', 'svl-logic-model.js', 'svl-logic-view.tsx', 'svl-logic-view.css', 'svl-expression-model.js', 'svl-expression-tree.tsx', 'svl-expression-tree.css']) {
+for (const name of ['svl-graph-canvas.tsx', 'svl-graph-canvas.css', 'svl-layout.js']) {
   sources[shared + name] = createHash('sha256').update(await readFile(join(host, shared, name))).digest('hex');
 }
 const dependencies = {}, licenses = [];

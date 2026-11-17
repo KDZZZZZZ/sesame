@@ -27,4 +27,4 @@ behavioral-finance 检查注意力或预期机制，institutional-analysis 检�
 
 ## 按需参考
 
-references/method.md 解释命题与情景；references/evidence.md 说明来源簇和可得时间；examples/case.json 与 examples/expected.md 展示重复来源反例。 参考路径位于 skills/narrative-analysis/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/narrative-analysis",part:"resource",path:"skills/narrative-analysis/references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。
+references/method.md 解释命题与情景；references/evidence.md 说明来源簇和可得时间；examples/case.json 与 examples/expected.md 展示重复来源反例。 参考路径位于 references/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/narrative-analysis",part:"resource",path:"references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。

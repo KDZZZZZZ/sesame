@@ -17,13 +17,13 @@ description: 帮助用户使用 Sesame 工作台、图表、报告引用、聊�
 
 | 用户的问题 | 读取 |
 | --- | --- |
-| 官网 docs、产品用法、报告效果、可交互演示和完整上手路线 | [官网文档与演示](references/website-docs.md) |
-| 首次配置、启动开屏、关闭与退出、更新备份、行情后端环境 | [安装与首次配置](references/installation.md) |
-| 三个窗口、按钮、拖动、调整大小、滚轮、图表组件 | [Dashboard 操作](references/dashboard.md) |
-| 输入附件、思考与时间、复制回复、停止、@、/clear、/skill、Ultra | [聊天与命令](references/chat-and-commands.md) |
-| User 设置、模型、插件安装更新与三态、配置与密钥 | [设置解释](references/settings.md) |
-| 能帮我做什么、调整流程并记住偏好、并行 Agent、研究与策略示例 | [按目标使用 Agent](references/workflows.md) |
-| 拖不动、图表不见、没有行情、引用为空、任务失败 | [常见问题](references/troubleshooting.md) |
+| 官网 docs、产品用法、报告效果、可交互演示和完整上手路线 | [官网文档与演示](../../references/website-docs.md) |
+| 首次配置、启动开屏、关闭与退出、更新备份、行情后端环境 | [安装与首次配置](../../references/installation.md) |
+| 三个窗口、按钮、拖动、调整大小、滚轮、图表组件 | [Dashboard 操作](../../references/dashboard.md) |
+| 输入附件、思考与时间、复制回复、停止、@、/clear、/skill、Ultra | [聊天与命令](../../references/chat-and-commands.md) |
+| User 设置、模型、插件安装更新与三态、配置与密钥 | [设置解释](../../references/settings.md) |
+| 能帮我做什么、调整流程并记住偏好、并行 Agent、研究与策略示例 | [按目标使用 Agent](../../references/workflows.md) |
+| 拖不动、图表不见、没有行情、引用为空、任务失败 | [常见问题](../../references/troubleshooting.md) |
 
 ## 核对操作与结果
 

@@ -45,5 +45,5 @@ holdout 记录必须最后且只能一项（失败/未知也视为已暴露）�
 `executionId`、冻结输出 `path`、实际 `inputRefs` 或 `inputIds`、`operationId`、`title`、
 `description` 与已冻结的 `recipePaths` 传给 `research_register`。普通路径或独立进程退出码不能
 替代宿主执行凭据。工具已直接返回不可变 `ref` 与 `evidence`，交给调用工作流复用并按任务生成报告，
-无需为同一结果再调 `report_data` 冻结。资源 CLI 输出自己的结构，不是假冒 `strategy.result`
+同一结果已有固定引用时直接复用，无需再次冻结。资源 CLI 输出自己的结构，不是假冒 `strategy.result`
 原生回测收据；不要编造 DataRef。

@@ -7,7 +7,7 @@ export async function syncHostRules(hostRoot, { check = false, packageRoot = fil
   if (!hostRoot) throw new Error('Usage: node scripts/sync-host-rules.mjs --host <host-source-root> [--check]');
   const shared = join(resolve(hostRoot), 'modules/shared');
   const { reportEditorialCss } = await import(pathToFileURL(join(shared, 'report-theme.js')).href);
-  const read = path => readFile(path, 'utf8');
+  const read = async path => (await readFile(path, 'utf8')).replace(/\r\n/g, '\n');
   const files = new Map();
   for (const name of ['report-export-contract.js', 'report-html.js']) files.set(join(packageRoot, 'shared', name), await read(join(shared, name)));
   files.set(join(packageRoot, 'assets/editorial.css'), reportEditorialCss(
@@ -18,7 +18,7 @@ export async function syncHostRules(hostRoot, { check = false, packageRoot = fil
   const changed = [];
   for (const [path, expected] of files) {
     let actual; try { actual = await read(path); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    if (actual === expected) continue;
+    if (actual?.replace(/\r\n/g, '\n') === expected) continue;
     changed.push(path);
     if (!check) { await mkdir(dirname(path), { recursive: true }); await writeFile(path, expected); }
   }

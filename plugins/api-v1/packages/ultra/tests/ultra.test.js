@@ -65,11 +65,42 @@ test('agent tools are classified and generic nested invocation cannot hide execu
   await assert.rejects(dispatch(f.host, { branches: [research('bypass', { capability: 'host.agent.run', input: { ...request, allowedCalls: [{ pluginId: 'host', capabilityId: 'capabilities.invoke' }] } })] }), { code: 'UNBOUNDED_DELEGATION' });
 });
 
-test('existing main-only immediate workflow launchers retain and observe their real workflow refs', async t => {
+test('independent factor search and compute track native function completion', async t => {
   const f = await started(t);
-  const result = await dispatch(f.host, { branches: [research('factor', { capability: 'sesame/auto-factor-mining#auto_factor_start' })] });
-  assert.equal(result.branches[0].status, 'running'); assert.equal(result.branches[0].run_refs.length, 1);
-  assert.equal(f.store.calls.find(call => call.capability.includes('auto_factor_start')).context.kind, 'main');
+  const result = await dispatch(f.host, { branches: ['search', 'compute'].map(kind => research(kind, { capability: `sesame/auto-factor-mining#factor_${kind}` })) });
+  for (const branch of result.branches) {
+    assert.equal(branch.status, 'running'); assert.equal(branch.run_refs.length, 1);
+    assert.equal(f.store.runs.get(branch.run_refs[0].id).value.kind, 'function');
+    f.complete(branch.run_refs[0].id);
+  }
+  const completed = await status(f.host, {});
+  assert.ok(completed.branches.every(branch => branch.status === 'completed'));
+  assert.ok(f.store.calls.filter(call => call.capability.startsWith('sesame/auto-factor-mining#')).every(call => call.context.kind === 'main'));
+});
+
+test('factor library lookup finishes without inventing a Run and search cancellation reaches its Run', async t => {
+  const f = await started(t, { onInvoke: async ({ capability }) => capability.endsWith('#factor_library')
+    ? { type: 'result', value: { items: [], cursor: null } } : undefined });
+  const result = await dispatch(f.host, { branches: [research('reuse', { capability: 'sesame/auto-factor-mining#factor_library' }), research('search', { capability: 'sesame/auto-factor-mining#factor_search' })] });
+  const reused = result.branches.find(branch => branch.key === 'reuse'), searching = result.branches.find(branch => branch.key === 'search');
+  assert.equal(reused.status, 'completed'); assert.deepEqual(reused.run_refs, []);
+  assert.equal(searching.status, 'running');
+  await stop(f.host, {});
+  assert.equal(f.store.runs.get(searching.run_refs[0].id).value.status, 'cancelled');
+});
+
+test('a factor receipt cannot register or cancel another conversation Run', async t => {
+  const f = await started(t, { onInvoke: async ({ capability, newRun, store }) => {
+    if (!capability.endsWith('#factor_search')) return;
+    const run = newRun(); store.runs.get(run.id).value.sessionId = 'foreign-owner';
+    return { type: 'run', run };
+  } });
+  const result = await dispatch(f.host, { branches: [research('foreign', { capability: 'sesame/auto-factor-mining#factor_search' })] });
+  assert.equal(result.branches[0].status, 'failed');
+  assert.equal(result.branches[0].error.code, 'FOREIGN_RUN');
+  assert.deepEqual(result.branches[0].run_refs, []);
+  await stop(f.host, {});
+  assert.equal([...f.store.runs.values()].find(job => job.value.sessionId === 'foreign-owner').value.status, 'running');
 });
 
 test('stop cancels the real supervisor, all registered branch trees and queued work', async t => {

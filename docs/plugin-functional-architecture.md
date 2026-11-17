@@ -107,7 +107,7 @@ ICT 的验收保留原 Python 样例的 5 个区间观察及其确认时点；MT
 
 密钥通过 `writeOnly` 标记，只显示配置状态，不显示已存值或在回执中回显。未编辑密钥省略，清除是显式操作。`configured` 或保存成功只说明已有配置，认证、权限、订阅范围和连接健康仍由相应能力实际核验。缺字段导致 Run 暂停时，补齐后沿用原 Run 的恢复流程。
 
-详细字段、条件、绑定、并发版本、保存权限及脱敏规则以宿主的 [configuration.md](../../mt5agent/docs/plugin-api-v2/configuration.md) 为准；该链接指向同一工作区的宿主仓库。插件作者另见 [API 2 作者说明](../plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/authoring.md)。
+详细字段、条件、绑定、并发版本、保存权限及脱敏规则以宿主的 [configuration.md](../../mt5agent/docs/plugin-api-v2/configuration.md) 为准；该链接指向同一工作区的宿主仓库。插件作者另见 [API 2 作者说明](../plugins/api-v1/packages/plugin-manager/references/authoring.md)。
 
 ## 分批推广与验收
 

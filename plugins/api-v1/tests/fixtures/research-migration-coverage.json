@@ -1,0 +1,2672 @@
+{
+  "schemaVersion": 1,
+  "note": "仅迁移覆盖记录；运行工具不读取此文件，旧 M/R 不是新调用协议。字段的视觉/布局已去除；共同对象语义合并，调查问题由新方法承接。",
+  "modules": [
+    {
+      "from": "M01",
+      "title": "行情状态与相对强弱",
+      "methods": [
+        "market-state"
+      ],
+      "fields": [
+        [
+          "summary",
+          "market-state"
+        ],
+        [
+          "price_chart",
+          "fields-market-observations#price_series"
+        ],
+        [
+          "relative_chart",
+          "fields-market-observations#relative_series"
+        ],
+        [
+          "reference_price",
+          "fields-market-observations#reference_price"
+        ],
+        [
+          "timeframe_states",
+          "fields-market-observations#timeframe_states"
+        ],
+        [
+          "price_performance",
+          "fields-market-observations#price_performance"
+        ],
+        [
+          "trend",
+          "fields-market-observations#trend"
+        ],
+        [
+          "volatility",
+          "fields-market-observations#volatility"
+        ],
+        [
+          "relative_strength",
+          "fields-market-observations#relative_strength"
+        ],
+        [
+          "changes",
+          "fields-market-observations#changes"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-market-observations"
+    },
+    {
+      "from": "M02",
+      "title": "技术事件与价格情景",
+      "methods": [
+        "technical-structure"
+      ],
+      "fields": [
+        [
+          "summary",
+          "technical-structure"
+        ],
+        [
+          "price_chart",
+          "fields-technical-events#price_series"
+        ],
+        [
+          "method_scan",
+          "fields-technical-events#method_scan"
+        ],
+        [
+          "feature_signals",
+          "fields-technical-events#feature_signals"
+        ],
+        [
+          "method_comparison_chart",
+          "fields-technical-events#method_comparison_series"
+        ],
+        [
+          "key_levels",
+          "fields-technical-events#key_levels"
+        ],
+        [
+          "scenario_chart",
+          "fields-technical-events#scenario_series"
+        ],
+        [
+          "lifecycle_chart",
+          "fields-technical-events#lifecycle_series"
+        ],
+        [
+          "events",
+          "fields-technical-events#events"
+        ],
+        [
+          "scenarios",
+          "fields-technical-events#scenarios"
+        ],
+        [
+          "invalidation",
+          "fields-technical-events#invalidation"
+        ],
+        [
+          "valid_until",
+          "fields-technical-events#valid_until"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "event_identity",
+          "fields-technical-events#event_identity"
+        ],
+        [
+          "event_times",
+          "fields-technical-events#event_times"
+        ],
+        [
+          "event_lifecycle",
+          "fields-technical-events#event_lifecycle"
+        ],
+        [
+          "geometry",
+          "fields-technical-events#geometry"
+        ],
+        [
+          "research_horizons",
+          "fields-technical-events#research_horizons"
+        ],
+        [
+          "entry_zone",
+          "fields-technical-events#entry_zone"
+        ],
+        [
+          "targets",
+          "fields-technical-events#targets"
+        ],
+        [
+          "stop_plan",
+          "fields-technical-events#stop_plan"
+        ],
+        [
+          "reward_risk",
+          "fields-technical-events#reward_risk"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-technical-events"
+    },
+    {
+      "from": "M03",
+      "title": "基本面与财务质量",
+      "methods": [
+        "business-quality",
+        "factor-evaluation"
+      ],
+      "fields": [
+        [
+          "summary",
+          "business-quality"
+        ],
+        [
+          "fundamental_judgments",
+          "business-quality"
+        ],
+        [
+          "factor_chart",
+          "fields-fundamental-quality#factor_series"
+        ],
+        [
+          "composite_assessment",
+          "fields-fundamental-quality#composite_assessment"
+        ],
+        [
+          "growth_chart",
+          "fields-fundamental-quality#growth_series"
+        ],
+        [
+          "cash_bridge_chart",
+          "fields-fundamental-quality#cash_bridge_series"
+        ],
+        [
+          "factor_results",
+          "fields-fundamental-quality#factor_results"
+        ],
+        [
+          "period",
+          "fields-fundamental-quality#period"
+        ],
+        [
+          "growth",
+          "fields-fundamental-quality#growth"
+        ],
+        [
+          "earnings_quality",
+          "fields-fundamental-quality#earnings_quality"
+        ],
+        [
+          "cash_flow",
+          "fields-fundamental-quality#cash_flow"
+        ],
+        [
+          "balance_sheet",
+          "fields-fundamental-quality#balance_sheet"
+        ],
+        [
+          "peers",
+          "fields-fundamental-quality#peers"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "income",
+          "fields-fundamental-quality#income"
+        ],
+        [
+          "cycle_context",
+          "fields-fundamental-quality#cycle_context"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-fundamental-quality"
+    },
+    {
+      "from": "M04",
+      "title": "估值与价格假设",
+      "methods": [
+        "valuation"
+      ],
+      "fields": [
+        [
+          "summary",
+          "valuation"
+        ],
+        [
+          "valuation_judgments",
+          "valuation"
+        ],
+        [
+          "price_estimates_chart",
+          "fields-valuation#price_estimates_series"
+        ],
+        [
+          "valuation",
+          "fields-valuation#valuation"
+        ],
+        [
+          "model_target",
+          "fields-valuation#model_target"
+        ],
+        [
+          "sensitivity_chart",
+          "fields-valuation#sensitivity_series"
+        ],
+        [
+          "peer_chart",
+          "fields-valuation#peer_series"
+        ],
+        [
+          "assumptions",
+          "fields-valuation#assumptions"
+        ],
+        [
+          "market_comparison",
+          "fields-valuation#market_comparison"
+        ],
+        [
+          "sensitivity",
+          "fields-valuation#sensitivity"
+        ],
+        [
+          "implied_assumptions",
+          "fields-valuation#implied_assumptions"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "update_schedule",
+          "fields-valuation#update_schedule"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-valuation"
+    },
+    {
+      "from": "M05",
+      "title": "共识与预期修正",
+      "methods": [
+        "earnings-preview",
+        "earnings-review",
+        "valuation"
+      ],
+      "fields": [
+        [
+          "summary",
+          "earnings-preview"
+        ],
+        [
+          "consensus_judgments",
+          "earnings-preview"
+        ],
+        [
+          "revision_chart",
+          "fields-expectations-revisions#revision_series"
+        ],
+        [
+          "ratings_chart",
+          "fields-expectations-revisions#ratings_series"
+        ],
+        [
+          "dispersion_chart",
+          "fields-expectations-revisions#dispersion_series"
+        ],
+        [
+          "target_prices",
+          "fields-expectations-revisions#target_prices"
+        ],
+        [
+          "coverage",
+          "fields-expectations-revisions#coverage"
+        ],
+        [
+          "consensus",
+          "fields-expectations-revisions#consensus"
+        ],
+        [
+          "revisions",
+          "fields-expectations-revisions#revisions"
+        ],
+        [
+          "dispersion",
+          "fields-expectations-revisions#dispersion"
+        ],
+        [
+          "actual_comparison",
+          "fields-expectations-revisions#actual_comparison"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "rating_distribution",
+          "fields-expectations-revisions#rating_distribution"
+        ],
+        [
+          "analyst_count",
+          "fields-expectations-revisions#analyst_count"
+        ],
+        [
+          "target_dates",
+          "fields-expectations-revisions#target_dates"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-expectations-revisions"
+    },
+    {
+      "from": "M06",
+      "title": "宏观与公司事件冲击",
+      "methods": [
+        "event-explanation",
+        "macro-outlook",
+        "macro-transmission",
+        "earnings-preview",
+        "earnings-review"
+      ],
+      "fields": [
+        [
+          "summary",
+          "event-explanation"
+        ],
+        [
+          "impact_judgments",
+          "event-explanation"
+        ],
+        [
+          "event_price_chart",
+          "fields-event-impact#event_price_series"
+        ],
+        [
+          "reaction_chart",
+          "fields-event-impact#reaction_series"
+        ],
+        [
+          "event",
+          "fields-event-impact#event"
+        ],
+        [
+          "expectations",
+          "fields-event-impact#expectations"
+        ],
+        [
+          "release",
+          "fields-event-impact#release"
+        ],
+        [
+          "surprise",
+          "fields-event-impact#surprise"
+        ],
+        [
+          "reaction",
+          "fields-event-impact#reaction"
+        ],
+        [
+          "conditional_outlook",
+          "fields-event-impact#conditional_outlook"
+        ],
+        [
+          "updates",
+          "fields-event-impact#updates"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "previous_values",
+          "fields-event-impact#previous_values"
+        ],
+        [
+          "reaction_windows",
+          "fields-event-impact#reaction_windows"
+        ],
+        [
+          "event_importance",
+          "fields-event-impact#event_importance"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-event-impact"
+    },
+    {
+      "from": "M07",
+      "title": "新闻主题与关注变化",
+      "methods": [
+        "market-state",
+        "event-explanation",
+        "opportunity-and-calendar"
+      ],
+      "fields": [
+        [
+          "summary",
+          "market-state"
+        ],
+        [
+          "news_judgments",
+          "market-state"
+        ],
+        [
+          "attention_chart",
+          "fields-news-attention#attention_series"
+        ],
+        [
+          "themes_chart",
+          "fields-news-attention#themes_series"
+        ],
+        [
+          "news",
+          "fields-news-attention#news"
+        ],
+        [
+          "themes",
+          "fields-news-attention#themes"
+        ],
+        [
+          "novelty",
+          "fields-news-attention#novelty"
+        ],
+        [
+          "attention",
+          "fields-news-attention#attention"
+        ],
+        [
+          "impact",
+          "fields-news-attention#impact"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "coverage_details",
+          "fields-news-attention#coverage_details"
+        ],
+        [
+          "source_mix",
+          "fields-news-attention#source_mix"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-news-attention"
+    },
+    {
+      "from": "M08",
+      "title": "情绪与拥挤状态",
+      "methods": [
+        "market-state",
+        "event-explanation"
+      ],
+      "fields": [
+        [
+          "summary",
+          "market-state"
+        ],
+        [
+          "sentiment_judgments",
+          "market-state"
+        ],
+        [
+          "sentiment_chart",
+          "fields-sentiment-positioning#sentiment_series"
+        ],
+        [
+          "fear_chart",
+          "fields-sentiment-positioning#fear_series"
+        ],
+        [
+          "subjectivity_chart",
+          "fields-sentiment-positioning#subjectivity_series"
+        ],
+        [
+          "crowding_chart",
+          "fields-sentiment-positioning#crowding_series"
+        ],
+        [
+          "subjectivity",
+          "fields-sentiment-positioning#subjectivity"
+        ],
+        [
+          "evidence_volume",
+          "fields-sentiment-positioning#evidence_volume"
+        ],
+        [
+          "fear_index",
+          "fields-sentiment-positioning#fear_index"
+        ],
+        [
+          "coverage",
+          "fields-sentiment-positioning#coverage"
+        ],
+        [
+          "sentiment",
+          "fields-sentiment-positioning#sentiment"
+        ],
+        [
+          "changes",
+          "fields-sentiment-positioning#changes"
+        ],
+        [
+          "crowding",
+          "fields-sentiment-positioning#crowding"
+        ],
+        [
+          "divergence",
+          "fields-sentiment-positioning#divergence"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "trend_indicator",
+          "fields-sentiment-positioning#trend_indicator"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-sentiment-positioning"
+    },
+    {
+      "from": "M09",
+      "title": "波动与期权定价",
+      "methods": [
+        "volatility-patterns",
+        "options-structures"
+      ],
+      "fields": [
+        [
+          "summary",
+          "volatility-patterns"
+        ],
+        [
+          "pricing_judgments",
+          "volatility-patterns"
+        ],
+        [
+          "iv_history_chart",
+          "fields-volatility-pricing#iv_history_series"
+        ],
+        [
+          "iv_history",
+          "fields-volatility-pricing#iv_history"
+        ],
+        [
+          "iv_rank",
+          "fields-volatility-pricing#iv_rank"
+        ],
+        [
+          "iv_percentile",
+          "fields-volatility-pricing#iv_percentile"
+        ],
+        [
+          "expected_move_chart",
+          "fields-volatility-pricing#expected_move_series"
+        ],
+        [
+          "expected_move",
+          "fields-volatility-pricing#expected_move"
+        ],
+        [
+          "term_chart",
+          "fields-volatility-pricing#term_series"
+        ],
+        [
+          "skew_chart",
+          "fields-volatility-pricing#skew_series"
+        ],
+        [
+          "implied_volatility",
+          "fields-volatility-pricing#implied_volatility"
+        ],
+        [
+          "realized_volatility",
+          "fields-volatility-pricing#realized_volatility"
+        ],
+        [
+          "term_structure",
+          "fields-volatility-pricing#term_structure"
+        ],
+        [
+          "skew",
+          "fields-volatility-pricing#skew"
+        ],
+        [
+          "event_premium",
+          "fields-volatility-pricing#event_premium"
+        ],
+        [
+          "tails",
+          "fields-volatility-pricing#tails"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "quote_context",
+          "fields-volatility-pricing#quote_context"
+        ],
+        [
+          "volatility_surface",
+          "fields-volatility-pricing#volatility_surface"
+        ],
+        [
+          "volatility_cone",
+          "fields-volatility-pricing#volatility_cone"
+        ],
+        [
+          "liquidity",
+          "fields-volatility-pricing#liquidity"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-volatility-pricing"
+    },
+    {
+      "from": "M10",
+      "title": "期权结构与损益",
+      "methods": [
+        "options-structures"
+      ],
+      "fields": [
+        [
+          "summary",
+          "options-structures"
+        ],
+        [
+          "structure_judgments",
+          "options-structures"
+        ],
+        [
+          "payoff_chart",
+          "fields-option-payoffs#payoff_series"
+        ],
+        [
+          "max_profit",
+          "fields-option-payoffs#max_profit"
+        ],
+        [
+          "max_loss",
+          "fields-option-payoffs#max_loss"
+        ],
+        [
+          "cost_chart",
+          "fields-option-payoffs#cost_series"
+        ],
+        [
+          "profit_probability",
+          "fields-option-payoffs#profit_probability"
+        ],
+        [
+          "objective",
+          "fields-option-payoffs#objective"
+        ],
+        [
+          "legs",
+          "fields-option-payoffs#legs"
+        ],
+        [
+          "costs",
+          "fields-option-payoffs#costs"
+        ],
+        [
+          "payoff",
+          "fields-option-payoffs#payoff"
+        ],
+        [
+          "risks",
+          "fields-option-payoffs#risks"
+        ],
+        [
+          "alternatives",
+          "fields-option-payoffs#alternatives"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "breakevens",
+          "fields-option-payoffs#breakevens"
+        ],
+        [
+          "expected_profit",
+          "fields-option-payoffs#expected_profit"
+        ],
+        [
+          "greeks",
+          "fields-option-payoffs#greeks"
+        ],
+        [
+          "liquidity",
+          "fields-option-payoffs#liquidity"
+        ],
+        [
+          "settlement",
+          "fields-option-payoffs#settlement"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-option-payoffs"
+    },
+    {
+      "from": "M11",
+      "title": "条件筛选与机会候选",
+      "methods": [
+        "opportunity-and-calendar",
+        "comparison"
+      ],
+      "fields": [
+        [
+          "summary",
+          "opportunity-and-calendar"
+        ],
+        [
+          "candidate_judgments",
+          "opportunity-and-calendar"
+        ],
+        [
+          "ranking_chart",
+          "fields-candidate-screening#ranking_series"
+        ],
+        [
+          "tradeoff_chart",
+          "fields-candidate-screening#tradeoff_series"
+        ],
+        [
+          "universe",
+          "fields-candidate-screening#universe"
+        ],
+        [
+          "criteria",
+          "fields-candidate-screening#criteria"
+        ],
+        [
+          "candidates",
+          "fields-candidate-screening#candidates"
+        ],
+        [
+          "coverage_gaps",
+          "fields-candidate-screening#coverage_gaps"
+        ],
+        [
+          "follow_up",
+          "fields-candidate-screening#follow_up"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "selection_logic",
+          "fields-candidate-screening#selection_logic"
+        ],
+        [
+          "rank_rules",
+          "fields-candidate-screening#rank_rules"
+        ],
+        [
+          "candidate_details",
+          "fields-candidate-screening#candidate_details"
+        ],
+        [
+          "backtest_refs",
+          "fields-candidate-screening#backtest_refs"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-candidate-screening"
+    },
+    {
+      "from": "M12",
+      "title": "风险与组合暴露",
+      "methods": [
+        "portfolio-risk",
+        "performance-attribution"
+      ],
+      "fields": [
+        [
+          "summary",
+          "portfolio-risk"
+        ],
+        [
+          "risk_judgments",
+          "portfolio-risk"
+        ],
+        [
+          "exposure_chart",
+          "fields-portfolio-exposures#exposure_series"
+        ],
+        [
+          "dependence_chart",
+          "fields-portfolio-exposures#dependence_series"
+        ],
+        [
+          "stop_chart",
+          "fields-portfolio-exposures#stop_series"
+        ],
+        [
+          "portfolio",
+          "fields-portfolio-exposures#portfolio"
+        ],
+        [
+          "exposures",
+          "fields-portfolio-exposures#exposures"
+        ],
+        [
+          "concentration",
+          "fields-portfolio-exposures#concentration"
+        ],
+        [
+          "dependence",
+          "fields-portfolio-exposures#dependence"
+        ],
+        [
+          "stress",
+          "fields-portfolio-exposures#stress"
+        ],
+        [
+          "budget",
+          "fields-portfolio-exposures#budget"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "stop_variants",
+          "fields-portfolio-exposures#stop_variants"
+        ],
+        [
+          "stop_distances",
+          "fields-portfolio-exposures#stop_distances"
+        ],
+        [
+          "position_size",
+          "fields-portfolio-exposures#position_size"
+        ],
+        [
+          "execution_costs",
+          "fields-portfolio-exposures#execution_costs"
+        ],
+        [
+          "margin",
+          "fields-portfolio-exposures#margin"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-portfolio-exposures"
+    },
+    {
+      "from": "M13",
+      "title": "历史同类特征验证",
+      "methods": [
+        "factor-evaluation",
+        "technical-structure",
+        "strategy-evaluation",
+        "forecast-review"
+      ],
+      "fields": [
+        [
+          "summary",
+          "factor-evaluation"
+        ],
+        [
+          "outcome_chart",
+          "fields-historical-evidence#outcome_series"
+        ],
+        [
+          "baseline_chart",
+          "fields-historical-evidence#baseline_series"
+        ],
+        [
+          "cases_chart",
+          "fields-historical-evidence#cases_series"
+        ],
+        [
+          "inference_evidence",
+          "fields-historical-evidence#inference_evidence"
+        ],
+        [
+          "feature",
+          "fields-historical-evidence#feature"
+        ],
+        [
+          "matching",
+          "fields-historical-evidence#matching"
+        ],
+        [
+          "sample",
+          "fields-historical-evidence#sample"
+        ],
+        [
+          "baseline",
+          "fields-historical-evidence#baseline"
+        ],
+        [
+          "outcomes",
+          "fields-historical-evidence#outcomes"
+        ],
+        [
+          "uncertainty",
+          "fields-historical-evidence#uncertainty"
+        ],
+        [
+          "validation",
+          "fields-historical-evidence#validation"
+        ],
+        [
+          "applicability",
+          "fields-historical-evidence#applicability"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-historical-evidence"
+    },
+    {
+      "from": "M14",
+      "title": "多特征综合预测",
+      "methods": [
+        "technical-structure",
+        "macro-outlook",
+        "macro-transmission"
+      ],
+      "fields": [
+        [
+          "summary",
+          "technical-structure"
+        ],
+        [
+          "evidence_chart",
+          "fields-outlook-synthesis#evidence_series"
+        ],
+        [
+          "confidence",
+          "fields-outlook-synthesis#confidence"
+        ],
+        [
+          "outlook_chart",
+          "fields-outlook-synthesis#outlook_series"
+        ],
+        [
+          "target",
+          "fields-outlook-synthesis#target"
+        ],
+        [
+          "supporting",
+          "fields-outlook-synthesis#supporting"
+        ],
+        [
+          "opposing",
+          "fields-outlook-synthesis#opposing"
+        ],
+        [
+          "overlap",
+          "fields-outlook-synthesis#overlap"
+        ],
+        [
+          "probabilities",
+          "fields-outlook-synthesis#probabilities"
+        ],
+        [
+          "scenarios",
+          "fields-outlook-synthesis#scenarios"
+        ],
+        [
+          "invalidation",
+          "fields-outlook-synthesis#invalidation"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "inference_evidence",
+          "fields-outlook-synthesis#inference_evidence"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-outlook-synthesis"
+    },
+    {
+      "from": "M15",
+      "title": "条件行动与监测计划",
+      "methods": [
+        "technical-structure",
+        "comparison",
+        "allocation-rebalance"
+      ],
+      "fields": [
+        [
+          "summary",
+          "technical-structure"
+        ],
+        [
+          "monitor_chart",
+          "fields-conditions-monitoring#monitor_series"
+        ],
+        [
+          "objective",
+          "fields-conditions-monitoring#objective"
+        ],
+        [
+          "scenarios",
+          "fields-conditions-monitoring#scenarios"
+        ],
+        [
+          "constraints",
+          "fields-conditions-monitoring#constraints"
+        ],
+        [
+          "watchlist",
+          "fields-conditions-monitoring#watchlist"
+        ],
+        [
+          "actions",
+          "fields-conditions-monitoring#actions"
+        ],
+        [
+          "review_at",
+          "fields-conditions-monitoring#review_at"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "scenario_terms",
+          "fields-conditions-monitoring#scenario_terms"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ],
+        [
+          "action_chart",
+          "fields-conditions-monitoring#action_series"
+        ]
+      ],
+      "semanticResource": "fields-conditions-monitoring"
+    },
+    {
+      "from": "M16",
+      "title": "预测复盘与校准",
+      "methods": [
+        "forecast-review"
+      ],
+      "fields": [
+        [
+          "summary",
+          "forecast-review"
+        ],
+        [
+          "use_judgments",
+          "forecast-review"
+        ],
+        [
+          "calibration_chart",
+          "fields-forecast-record#calibration_series"
+        ],
+        [
+          "evaluation_chart",
+          "fields-forecast-record#evaluation_series"
+        ],
+        [
+          "original",
+          "fields-forecast-record#original"
+        ],
+        [
+          "settlement",
+          "fields-forecast-record#settlement"
+        ],
+        [
+          "actual",
+          "fields-forecast-record#actual"
+        ],
+        [
+          "evaluation",
+          "fields-forecast-record#evaluation"
+        ],
+        [
+          "calibration",
+          "fields-forecast-record#calibration"
+        ],
+        [
+          "explanation",
+          "fields-forecast-record#explanation"
+        ],
+        [
+          "follow_up",
+          "fields-forecast-record#follow_up"
+        ],
+        [
+          "evidence",
+          "fields-context#evidence"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-forecast-record"
+    },
+    {
+      "from": "M17",
+      "title": "经济与公司事件日历",
+      "methods": [
+        "opportunity-and-calendar"
+      ],
+      "fields": [
+        [
+          "summary",
+          "opportunity-and-calendar"
+        ],
+        [
+          "event_priorities",
+          "fields-event-calendar#event_priorities"
+        ],
+        [
+          "timeline_chart",
+          "fields-event-calendar#timeline_series"
+        ],
+        [
+          "calendar_chart",
+          "fields-event-calendar#calendar_series"
+        ],
+        [
+          "scope",
+          "fields-event-calendar#scope"
+        ],
+        [
+          "events",
+          "fields-event-calendar#events"
+        ],
+        [
+          "economic_releases",
+          "fields-event-calendar#economic_releases"
+        ],
+        [
+          "earnings",
+          "fields-event-calendar#earnings"
+        ],
+        [
+          "dividends",
+          "fields-event-calendar#dividends"
+        ],
+        [
+          "splits",
+          "fields-event-calendar#splits"
+        ],
+        [
+          "meetings",
+          "fields-event-calendar#meetings"
+        ],
+        [
+          "schedule_changes",
+          "fields-event-calendar#schedule_changes"
+        ],
+        [
+          "coverage",
+          "fields-event-calendar#coverage"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-event-calendar"
+    },
+    {
+      "from": "M18",
+      "title": "策略回测与历史表现",
+      "methods": [
+        "strategy-evaluation",
+        "strategy-diagnosis",
+        "performance-attribution"
+      ],
+      "fields": [
+        [
+          "summary",
+          "strategy-evaluation"
+        ],
+        [
+          "strategy_judgments",
+          "strategy-evaluation"
+        ],
+        [
+          "equity_chart",
+          "fields-strategy-results#equity_series"
+        ],
+        [
+          "drawdown_chart",
+          "fields-strategy-results#drawdown_series"
+        ],
+        [
+          "market_matrix_chart",
+          "fields-strategy-results#market_matrix_series"
+        ],
+        [
+          "parameter_heatmap",
+          "fields-strategy-results#parameter_surface"
+        ],
+        [
+          "parameter_sensitivity_chart",
+          "fields-strategy-results#parameter_sensitivity_series"
+        ],
+        [
+          "validation_chart",
+          "fields-strategy-results#validation_series"
+        ],
+        [
+          "funnel_chart",
+          "fields-strategy-results#funnel_series"
+        ],
+        [
+          "pnl_chart",
+          "fields-strategy-results#pnl_series"
+        ],
+        [
+          "hypothesis",
+          "fields-strategy-results#hypothesis"
+        ],
+        [
+          "universe",
+          "fields-strategy-results#universe"
+        ],
+        [
+          "selection",
+          "fields-strategy-results#selection"
+        ],
+        [
+          "simulation",
+          "fields-strategy-results#simulation"
+        ],
+        [
+          "window",
+          "fields-strategy-results#window"
+        ],
+        [
+          "metrics",
+          "fields-strategy-results#metrics"
+        ],
+        [
+          "benchmark",
+          "fields-strategy-results#benchmark"
+        ],
+        [
+          "positions",
+          "fields-strategy-results#positions"
+        ],
+        [
+          "trades",
+          "fields-strategy-results#trades"
+        ],
+        [
+          "costs",
+          "fields-strategy-results#costs"
+        ],
+        [
+          "assumptions",
+          "fields-strategy-results#assumptions"
+        ],
+        [
+          "validation",
+          "fields-strategy-results#validation"
+        ],
+        [
+          "artifacts",
+          "fields-strategy-results#artifacts"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ],
+        [
+          "logic_graph",
+          "fields-strategy-results#strategy_logic"
+        ],
+        [
+          "parameter_trials",
+          "fields-strategy-results#parameter_trials"
+        ],
+        [
+          "selection_rule",
+          "fields-strategy-results#selection_rule"
+        ]
+      ],
+      "semanticResource": "fields-strategy-results"
+    },
+    {
+      "from": "M19",
+      "title": "组合构建与再平衡",
+      "methods": [
+        "allocation-rebalance"
+      ],
+      "fields": [
+        [
+          "summary",
+          "allocation-rebalance"
+        ],
+        [
+          "allocation_judgments",
+          "allocation-rebalance"
+        ],
+        [
+          "weights_chart",
+          "fields-allocation#weights_series"
+        ],
+        [
+          "changes_chart",
+          "fields-allocation#changes_series"
+        ],
+        [
+          "objective",
+          "fields-allocation#objective"
+        ],
+        [
+          "action_status",
+          "fields-allocation#action_status"
+        ],
+        [
+          "constraints",
+          "fields-allocation#constraints"
+        ],
+        [
+          "current_weights",
+          "fields-allocation#current_weights"
+        ],
+        [
+          "target_weights",
+          "fields-allocation#target_weights"
+        ],
+        [
+          "changes",
+          "fields-allocation#changes"
+        ],
+        [
+          "weighting_rules",
+          "fields-allocation#weighting_rules"
+        ],
+        [
+          "rebalance",
+          "fields-allocation#rebalance"
+        ],
+        [
+          "benchmark",
+          "fields-allocation#benchmark"
+        ],
+        [
+          "performance_refs",
+          "fields-allocation#performance_refs"
+        ],
+        [
+          "risk_refs",
+          "fields-allocation#risk_refs"
+        ],
+        [
+          "instrument_context",
+          "fields-context#instrument_context"
+        ],
+        [
+          "data_times",
+          "fields-context#data_times"
+        ],
+        [
+          "source_scales",
+          "fields-context#source_scales"
+        ]
+      ],
+      "semanticResource": "fields-allocation"
+    }
+  ],
+  "compositions": [
+    {
+      "from": "R01",
+      "title": "资产概览",
+      "methods": [
+        "market-state",
+        "business-quality"
+      ],
+      "questions": [
+        {
+          "from": "R01_state",
+          "question": "按用户关心的期限，这个资产目前是什么状态，最明显的变化是什么？"
+        },
+        {
+          "from": "R01_relative_strength",
+          "question": "相对合适的市场、同类资产或用户基准，它更强还是更弱，这种差别意味着什么？"
+        },
+        {
+          "from": "R01_drivers",
+          "question": "哪些新信息最能解释当前变化，哪些只是热度或重复消息？"
+        },
+        {
+          "from": "R01_review_conditions",
+          "question": "接下来最值得关注什么，出现什么变化会使当前状态判断改变？"
+        },
+        {
+          "from": "R01_tc_overview_states",
+          "question": "价值投资特征、新闻情绪与最近24小时关注度分别如何？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "每组判断对应哪一项资产？",
+          "destinations": [
+            "fields-context#instrument_context"
+          ]
+        },
+        {
+          "question": "按实际采用的价值投资方法，这项资产符合价值投资条件的程度如何？",
+          "destinations": [
+            "fields-fundamental-quality#factor_results",
+            "fields-context#source_scales"
+          ]
+        },
+        {
+          "question": "短期、中期和长期的技术方向分别如何？",
+          "destinations": [
+            "fields-market-observations#timeframe_states"
+          ]
+        },
+        {
+          "question": "相关新闻的总体情绪偏正还是偏负？",
+          "destinations": [
+            "fields-sentiment-positioning#sentiment",
+            "market-state",
+            "fields-sentiment-positioning#coverage"
+          ]
+        },
+        {
+          "question": "最近24小时，相关新闻受到多少关注？",
+          "destinations": [
+            "fields-news-attention#attention",
+            "fields-news-attention#attention_series",
+            "fields-news-attention#coverage_details"
+          ]
+        },
+        {
+          "question": "从摘要去哪里查看详细研究与具体依据？",
+          "destinations": [
+            "fields-context#evidence"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R02",
+      "title": "综合行情预测",
+      "methods": [
+        "technical-structure",
+        "macro-transmission"
+      ],
+      "questions": [
+        {
+          "from": "R02_outlook",
+          "question": "在这次指定的目标期限内，更支持哪一种行情走势或状态，判断有多明确？"
+        },
+        {
+          "from": "R02_evidence_weights",
+          "question": "技术状态、事件和信息变化分别支持什么，冲突时应该更相信哪些依据？"
+        },
+        {
+          "from": "R02_historical_support",
+          "question": "历史上相同或可比情景后来怎样，是否真的加强了这次综合判断？"
+        },
+        {
+          "from": "R02_final_scenarios",
+          "question": "什么条件下保持主判断，什么条件下切换到备选判断，何时到期复核？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "判断针对什么资产和哪一段时间？",
+          "destinations": [
+            "fields-outlook-synthesis#target",
+            "fields-technical-events#research_horizons"
+          ]
+        },
+        {
+          "question": "当前条件下，更倾向哪一种走法？",
+          "destinations": [
+            "technical-structure",
+            "fields-conditions-monitoring#scenario_terms"
+          ]
+        },
+        {
+          "question": "价格跨过哪个分界位后切换到备用情景？",
+          "destinations": [
+            "fields-technical-events#key_levels",
+            "fields-conditions-monitoring#scenario_terms"
+          ]
+        },
+        {
+          "question": "主情景成立时，重点关注的两个价位是什么？",
+          "destinations": [
+            "fields-technical-events#targets",
+            "fields-conditions-monitoring#scenario_terms"
+          ]
+        },
+        {
+          "question": "原条件改变后，如何调整判断和目标？",
+          "destinations": [
+            "fields-conditions-monitoring#scenario_terms",
+            "fields-conditions-monitoring#action_series"
+          ]
+        },
+        {
+          "question": "哪些可以在图上辨认的依据支持判断？",
+          "destinations": [
+            "fields-technical-events#feature_signals",
+            "fields-technical-events#price_series",
+            "fields-outlook-synthesis#supporting"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R03",
+      "title": "事件冲击研究",
+      "methods": [
+        "event-explanation"
+      ],
+      "questions": [
+        {
+          "from": "R03_event_surprise",
+          "question": "事件真正带来的新信息是什么，相比当时预期有多大变化？"
+        },
+        {
+          "from": "R03_market_reaction",
+          "question": "事件前后市场向哪边走、波动有多大，反应是延续、反转还是已经消退？"
+        },
+        {
+          "from": "R03_explanation",
+          "question": "事件是否是这次市场变化的有力解释，还有哪些因素会改变这个判断？"
+        },
+        {
+          "from": "R03_historical_transfer",
+          "question": "同类事件过去的反应是否一致，哪些条件决定这些经验能否用于这一次？"
+        },
+        {
+          "from": "R03_next_decision",
+          "question": "根据这次事件研究，应该保留哪项判断，下一步什么观测会使它改变？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "研究的是哪件事件、哪个资产的反应？",
+          "destinations": [
+            "fields-event-impact#event",
+            "fields-context#instrument_context"
+          ]
+        },
+        {
+          "question": "公布后的观察窗口从何时到何时，历史比较是否一致？",
+          "destinations": [
+            "fields-event-impact#reaction_windows",
+            "fields-context#data_times"
+          ]
+        },
+        {
+          "question": "参考了多少次历史公布？",
+          "destinations": [
+            "fields-historical-evidence#sample"
+          ]
+        },
+        {
+          "question": "这组历史记录中有多少次上涨，占全部样本多少？",
+          "destinations": [
+            "fields-historical-evidence#outcomes"
+          ]
+        },
+        {
+          "question": "同一观察窗口内，价格活动范围或交易区间有多大？",
+          "destinations": [
+            "fields-event-impact#reaction_windows"
+          ]
+        },
+        {
+          "question": "实际公布结果高于、符合还是低于当时预期？",
+          "destinations": [
+            "fields-event-impact#expectations",
+            "fields-event-impact#release",
+            "fields-event-impact#surprise"
+          ]
+        },
+        {
+          "question": "观察期终点相对事件时点，净涨跌是多少？",
+          "destinations": [
+            "fields-event-impact#reaction_windows",
+            "fields-event-impact#reaction"
+          ]
+        },
+        {
+          "question": "价格反应何时发生，途中是否反转？",
+          "destinations": [
+            "fields-event-impact#event_price_series",
+            "fields-event-impact#reaction_series"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R04",
+      "title": "公司价值与中长期展望",
+      "methods": [
+        "business-quality",
+        "valuation",
+        "earnings-review"
+      ],
+      "questions": [
+        {
+          "from": "R04_business_quality",
+          "question": "公司的增长和盈利是否值得信任，最主要的经营优势或薄弱点在哪里？"
+        },
+        {
+          "from": "R04_valuation",
+          "question": "相对于合理假设，当前价格偏贵、偏便宜还是差异有限，最依赖哪项假设？"
+        },
+        {
+          "from": "R04_expectations",
+          "question": "市场预期正在改善还是恶化，与本次研究判断的主要分歧是什么？"
+        },
+        {
+          "from": "R04_catalysts",
+          "question": "什么经营结果或事件会兑现、加强或推翻这份价值判断？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "模型估计的股票公允价值是多少？",
+          "destinations": [
+            "fields-valuation#valuation"
+          ]
+        },
+        {
+          "question": "用什么估值方法，盈利与要求回报如何进入模型？",
+          "destinations": [
+            "fields-valuation#assumptions",
+            "fields-context#evidence"
+          ]
+        },
+        {
+          "question": "估值何时更新，更新节奏是什么？",
+          "destinations": [
+            "fields-valuation#update_schedule"
+          ]
+        },
+        {
+          "question": "分析师的买入、持有、卖出等评级如何分布？",
+          "destinations": [
+            "fields-expectations-revisions#rating_distribution",
+            "fields-expectations-revisions#coverage"
+          ]
+        },
+        {
+          "question": "分析师平均目标价处于什么水平？",
+          "destinations": [
+            "fields-expectations-revisions#target_prices"
+          ]
+        },
+        {
+          "question": "最低和最高目标价相差多少？",
+          "destinations": [
+            "fields-expectations-revisions#target_prices",
+            "fields-expectations-revisions#dispersion"
+          ]
+        },
+        {
+          "question": "分析师共识何时更新，节奏是否不同于公允价值？",
+          "destinations": [
+            "fields-expectations-revisions#target_dates"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R05",
+      "title": "市场日报与机会扫描",
+      "methods": [
+        "market-state",
+        "opportunity-and-calendar"
+      ],
+      "questions": [
+        {
+          "from": "R05_market_priority",
+          "question": "本期市场最值得注意的变化是什么，为什么它比其他变化重要？"
+        },
+        {
+          "from": "R05_information_value",
+          "question": "哪些消息或事件真正带来新信息，哪些变化可能影响后续判断？"
+        },
+        {
+          "from": "R05_candidates",
+          "question": "哪些候选最值得继续研究，入选依据和主要疑点分别是什么？"
+        },
+        {
+          "from": "R05_next_updates",
+          "question": "接下来哪些已知事件或观察结果最可能改变今天的关注顺序？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "这份市场回顾对应哪一天？",
+          "destinations": [
+            "fields-context#data_times",
+            "fields-event-calendar#scope"
+          ]
+        },
+        {
+          "question": "当天指数、行业和主要市场发生了什么整体变化？",
+          "destinations": [
+            "fields-market-observations#price_performance",
+            "fields-market-observations#changes"
+          ]
+        },
+        {
+          "question": "哪些公司与政策消息构成理解市场变化的背景？",
+          "destinations": [
+            "fields-news-attention#news",
+            "fields-news-attention#novelty",
+            "fields-event-impact#event"
+          ]
+        },
+        {
+          "question": "外汇、商品和加密资产等相关市场分别处于什么状态？",
+          "destinations": [
+            "fields-market-observations#timeframe_states",
+            "fields-market-observations#relative_strength"
+          ]
+        },
+        {
+          "question": "每个资产的主观点和关键价位是什么？",
+          "destinations": [
+            "technical-structure",
+            "fields-technical-events#key_levels"
+          ]
+        },
+        {
+          "question": "关键条件改变后，如何调整原观点？",
+          "destinations": [
+            "fields-conditions-monitoring#scenario_terms",
+            "fields-conditions-monitoring#action_series"
+          ]
+        },
+        {
+          "question": "接下来有哪些经济事件，其时间、预期与重要性是什么？",
+          "destinations": [
+            "fields-event-calendar#events",
+            "fields-event-calendar#economic_releases",
+            "fields-event-calendar#event_priorities"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R06",
+      "title": "期权波动与策略结构",
+      "methods": [
+        "volatility-patterns",
+        "options-structures"
+      ],
+      "questions": [
+        {
+          "from": "R06_volatility_value",
+          "question": "相关期限和行权价的波动定价偏高、偏低还是缺乏明显优势，主要贵在哪里？"
+        },
+        {
+          "from": "R06_structure_fit",
+          "question": "哪种结构更适合用户要表达的方向、波动或保护目标，为什么？"
+        },
+        {
+          "from": "R06_payoff_risk",
+          "question": "计入成本后，什么情况下赚钱或亏钱，主要损失是否值得承担？"
+        },
+        {
+          "from": "R06_feasibility",
+          "question": "报价、流动性和资金条件是否允许合理使用这个结构，哪些限制会消除优势？"
+        },
+        {
+          "from": "R06_review_conditions",
+          "question": "采用后需要观察什么，何时调整、退出或重新研究？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "比较的是哪个标的、哪一个到期日？",
+          "destinations": [
+            "fields-option-payoffs#legs",
+            "fields-option-payoffs#settlement"
+          ]
+        },
+        {
+          "question": "期权组合包含哪些行权价和合约腿？",
+          "destinations": [
+            "fields-option-payoffs#legs"
+          ]
+        },
+        {
+          "question": "首选结构与替代结构分别是什么，怎样比较？",
+          "destinations": [
+            "fields-option-payoffs#alternatives",
+            "options-structures"
+          ]
+        },
+        {
+          "question": "预期价格变化和愿意承担的风险分别是什么？",
+          "destinations": [
+            "fields-option-payoffs#objective",
+            "fields-portfolio-exposures#budget"
+          ]
+        },
+        {
+          "question": "各结构到期时的最大收益和最大亏损是多少？",
+          "destinations": [
+            "fields-option-payoffs#max_profit",
+            "fields-option-payoffs#max_loss"
+          ]
+        },
+        {
+          "question": "各结构的盈利概率是多少，数值对应什么定义？",
+          "destinations": [
+            "fields-option-payoffs#profit_probability"
+          ]
+        },
+        {
+          "question": "不同价格结果下如何盈亏，所示波动区间是什么？",
+          "destinations": [
+            "fields-option-payoffs#payoff_series",
+            "fields-volatility-pricing#expected_move",
+            "fields-volatility-pricing#expected_move_series"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R07",
+      "title": "持仓与组合诊断",
+      "methods": [
+        "portfolio-risk",
+        "performance-attribution"
+      ],
+      "questions": [
+        {
+          "from": "R07_main_risks",
+          "question": "组合真正集中在哪些风险上，哪些持仓看似分散却可能一起受损？"
+        },
+        {
+          "from": "R07_goal_fit",
+          "question": "当前风险是否符合用户的目标、期限和承受能力，最需要担心哪种损失？"
+        },
+        {
+          "from": "R07_priorities",
+          "question": "最值得优先保留、降低或重新研究的暴露是什么，改变它会付出什么代价？"
+        },
+        {
+          "from": "R07_review_conditions",
+          "question": "哪些可观察变化会改变现有持仓判断，何时需要复核？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "研究摘要对应哪一项持仓证券？",
+          "destinations": [
+            "fields-portfolio-exposures#portfolio",
+            "fields-context#instrument_context"
+          ]
+        },
+        {
+          "question": "该证券符合价值投资条件的程度如何？",
+          "destinations": [
+            "fields-fundamental-quality#factor_results",
+            "fields-context#source_scales"
+          ]
+        },
+        {
+          "question": "该持仓近期和较长时间的技术方向分别如何？",
+          "destinations": [
+            "fields-market-observations#timeframe_states"
+          ]
+        },
+        {
+          "question": "该持仓相关新闻的总体情绪及其变化如何？",
+          "destinations": [
+            "fields-sentiment-positioning#sentiment",
+            "fields-sentiment-positioning#changes",
+            "fields-sentiment-positioning#coverage"
+          ]
+        },
+        {
+          "question": "最近24小时，哪些持仓相关新闻更受关注？",
+          "destinations": [
+            "fields-news-attention#attention",
+            "fields-news-attention#coverage_details"
+          ]
+        },
+        {
+          "question": "用户持仓组合的集中度、行业暴露及风险分布如何？",
+          "destinations": [
+            "fields-portfolio-exposures#concentration",
+            "fields-portfolio-exposures#exposures",
+            "portfolio-risk"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R08",
+      "title": "预测复盘",
+      "methods": [
+        "forecast-review"
+      ],
+      "questions": [
+        {
+          "from": "R08_original_results",
+          "question": "原来具体判断了什么，哪些已经被实际结果支持，哪些已经失败？"
+        },
+        {
+          "from": "R08_conditional_usefulness",
+          "question": "这套预测或分数在哪些资产、情景或分组中比基准更有用，在哪些情况下不值得依赖？"
+        },
+        {
+          "from": "R08_calibration_value",
+          "question": "校准或修正是否真的改善了结果，哪些映射值得保留，哪些应停止使用？"
+        },
+        {
+          "from": "R08_adjustments",
+          "question": "主要偏差更可能来自哪里，现有证据支持怎样调整，而不是事后美化结果？"
+        },
+        {
+          "from": "R08_adoption",
+          "question": "现在应采用、限制、暂停还是仅保留研究用途，什么新结果会改变这个决定？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "历史统计绑定什么事件与资产？",
+          "destinations": [
+            "fields-event-impact#event",
+            "fields-historical-evidence#feature",
+            "fields-context#instrument_context"
+          ]
+        },
+        {
+          "question": "历史结果使用多长的观察窗口，比较是否一致？",
+          "destinations": [
+            "fields-historical-evidence#feature",
+            "fields-event-impact#reaction_windows"
+          ]
+        },
+        {
+          "question": "历史样本中有多少次上涨，全部样本有多少？",
+          "destinations": [
+            "fields-historical-evidence#outcomes",
+            "fields-historical-evidence#sample"
+          ]
+        },
+        {
+          "question": "事件观察期内的平均交易区间有多大？",
+          "destinations": [
+            "fields-event-impact#reaction_windows"
+          ]
+        },
+        {
+          "question": "有数值的事件结果是高于、符合还是低于预期？",
+          "destinations": [
+            "fields-event-impact#expectations",
+            "fields-event-impact#release",
+            "fields-event-impact#surprise"
+          ]
+        },
+        {
+          "question": "分数与实际结果是否匹配，校准是否改善？",
+          "destinations": [
+            "fields-forecast-record#original",
+            "fields-forecast-record#actual",
+            "fields-forecast-record#calibration",
+            "fields-forecast-record#evaluation",
+            "forecast-review"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R09",
+      "title": "经济与公司事件周历",
+      "methods": [
+        "opportunity-and-calendar"
+      ],
+      "questions": [
+        {
+          "from": "R09_event_priority",
+          "question": "这段时间哪些事件对用户最重要，为什么应优先关注？"
+        },
+        {
+          "from": "R09_schedule_reliability",
+          "question": "哪些时间和事项已经确认，哪些仍可能变动或来源尚未覆盖？"
+        },
+        {
+          "from": "R09_information_to_watch",
+          "question": "重点事件公布时应该看哪项信息，它可能怎样改变已有判断？"
+        },
+        {
+          "from": "R09_updates",
+          "question": "什么时候需要更新日历或重排关注顺序，哪些事项值得进一步研究？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "将发生什么经济或公司事件，涉及哪个国家或公司？",
+          "destinations": [
+            "fields-event-calendar#events"
+          ]
+        },
+        {
+          "question": "事件何时公布，使用什么时区？",
+          "destinations": [
+            "fields-event-calendar#events",
+            "fields-event-calendar#scope"
+          ]
+        },
+        {
+          "question": "宏观事件的影响级别是什么，应如何安排关注？",
+          "destinations": [
+            "fields-event-calendar#events",
+            "fields-event-calendar#event_priorities"
+          ]
+        },
+        {
+          "question": "公布前预期与实际结果分别是多少？",
+          "destinations": [
+            "fields-event-calendar#economic_releases"
+          ]
+        },
+        {
+          "question": "上期结果是多少，后来是否修订？",
+          "destinations": [
+            "fields-event-calendar#economic_releases",
+            "fields-event-impact#previous_values"
+          ]
+        },
+        {
+          "question": "这个指标表示什么，相关价格图显示怎样的市场反应？",
+          "destinations": [
+            "fields-event-calendar#events",
+            "fields-event-impact#event_price_series"
+          ]
+        },
+        {
+          "question": "有哪些已披露的财报、股息及其他公司事件？",
+          "destinations": [
+            "fields-event-calendar#earnings",
+            "fields-event-calendar#dividends",
+            "fields-event-calendar#splits",
+            "fields-event-calendar#meetings"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R10",
+      "title": "筛选策略与回测评估",
+      "methods": [
+        "strategy-evaluation",
+        "opportunity-and-calendar"
+      ],
+      "questions": [
+        {
+          "from": "R10_strategy_hypothesis",
+          "question": "这套规则想利用什么行为，实际运行的规则是否真的检验了这个想法？"
+        },
+        {
+          "from": "R10_net_performance",
+          "question": "计入实际研究的成本后，策略相对持有、现金或其他合适基准是否更值得使用？"
+        },
+        {
+          "from": "R10_effective_conditions",
+          "question": "策略在哪些可识别条件下有效，在哪些情况下容易失效，证据是否足以支持有条件使用？"
+        },
+        {
+          "from": "R10_robustness",
+          "question": "优势依赖少数交易、特定参数或选样吗，换一个合理条件后还剩多少依据？"
+        },
+        {
+          "from": "R10_conditional_use",
+          "question": "对每个实际研究的策略或资产，现在应采用、限制、停用还是继续作为候选，什么结果会改变决定？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "什么筛选规则决定哪些资产进入候选？",
+          "destinations": [
+            "fields-candidate-screening#criteria",
+            "fields-candidate-screening#selection_logic",
+            "fields-strategy-results#selection"
+          ]
+        },
+        {
+          "question": "回测覆盖哪段时期，策略与基准是否一致？",
+          "destinations": [
+            "fields-strategy-results#window",
+            "fields-strategy-results#benchmark"
+          ]
+        },
+        {
+          "question": "选择资产时实际能知道哪些信息？",
+          "destinations": [
+            "fields-strategy-results#universe",
+            "fields-strategy-results#assumptions"
+          ]
+        },
+        {
+          "question": "选中多少资产，资金如何分配？",
+          "destinations": [
+            "fields-strategy-results#selection",
+            "fields-strategy-results#simulation"
+          ]
+        },
+        {
+          "question": "按什么周期重新筛选和换仓？",
+          "destinations": [
+            "fields-strategy-results#simulation"
+          ]
+        },
+        {
+          "question": "按什么时点和价格计算买卖成交？",
+          "destinations": [
+            "fields-strategy-results#simulation",
+            "fields-strategy-results#assumptions"
+          ]
+        },
+        {
+          "question": "策略与基准在同一尺度上的历史表现各是多少？",
+          "destinations": [
+            "fields-strategy-results#metrics",
+            "fields-strategy-results#benchmark",
+            "fields-strategy-results#equity_series"
+          ]
+        },
+        {
+          "question": "被评价的策略针对哪类资产？",
+          "destinations": [
+            "fields-strategy-results#universe"
+          ]
+        },
+        {
+          "question": "表现评价覆盖哪段相同的观察时期？",
+          "destinations": [
+            "fields-strategy-results#window"
+          ]
+        },
+        {
+          "question": "策略的年化历史表现是多少？",
+          "destinations": [
+            "fields-strategy-results#metrics"
+          ]
+        },
+        {
+          "question": "可比基准同期表现是多少？",
+          "destinations": [
+            "fields-strategy-results#benchmark",
+            "fields-strategy-results#metrics",
+            "fields-strategy-results#equity_series"
+          ]
+        },
+        {
+          "question": "这些收益对应什么换仓和持有规则？",
+          "destinations": [
+            "fields-strategy-results#simulation"
+          ]
+        },
+        {
+          "question": "选择资产时使用什么风险筛选条件？",
+          "destinations": [
+            "fields-candidate-screening#criteria",
+            "fields-strategy-results#selection"
+          ]
+        },
+        {
+          "question": "回撤、尾部变化和成本怎样影响策略取舍？",
+          "destinations": [
+            "fields-strategy-results#drawdown_series",
+            "fields-strategy-results#costs",
+            "strategy-evaluation",
+            "fields-portfolio-exposures#stress"
+          ]
+        }
+      ]
+    },
+    {
+      "from": "R11",
+      "title": "组合构建与再平衡方案",
+      "methods": [
+        "allocation-rebalance",
+        "portfolio-risk"
+      ],
+      "questions": [
+        {
+          "from": "R11_goal_fit",
+          "question": "目标组合要解决什么具体问题，所选权重为什么适合用户目标？"
+        },
+        {
+          "from": "R11_changes",
+          "question": "相对当前组合，应该增减什么，哪些变化最重要？"
+        },
+        {
+          "from": "R11_risk_tradeoff",
+          "question": "新方案改善了哪些风险，又增加了哪些代价或新的集中问题？"
+        },
+        {
+          "from": "R11_performance_support",
+          "question": "已有历史结果能支持新方案到什么程度，哪些优势仍只是方案假设？"
+        },
+        {
+          "from": "R11_rebalance_conditions",
+          "question": "什么条件下值得实施或复核这份方案，哪些变化会使它不再合适？"
+        }
+      ],
+      "referenceQuestions": [
+        {
+          "question": "组合允许选择哪些资产？",
+          "destinations": [
+            "fields-strategy-results#universe",
+            "fields-allocation#constraints"
+          ]
+        },
+        {
+          "question": "依据哪些规则选择这些资产？",
+          "destinations": [
+            "fields-candidate-screening#criteria",
+            "fields-strategy-results#selection"
+          ]
+        },
+        {
+          "question": "组合包含多少个标的？",
+          "destinations": [
+            "fields-strategy-results#selection",
+            "fields-allocation#target_weights"
+          ]
+        },
+        {
+          "question": "资金怎样分配，权重规则是什么？",
+          "destinations": [
+            "fields-allocation#weighting_rules",
+            "fields-allocation#target_weights"
+          ]
+        },
+        {
+          "question": "行业是否分散，资产数量是否掩盖风险集中？",
+          "destinations": [
+            "fields-portfolio-exposures#exposures",
+            "fields-portfolio-exposures#concentration"
+          ]
+        },
+        {
+          "question": "什么时候调整组合，各规则的周期是什么？",
+          "destinations": [
+            "fields-allocation#rebalance"
+          ]
+        },
+        {
+          "question": "用户指定资产如何配置，什么条件触发调整？",
+          "destinations": [
+            "fields-allocation#target_weights",
+            "fields-allocation#constraints",
+            "fields-allocation#rebalance",
+            "allocation-rebalance"
+          ]
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "id": "question-before-method",
+      "target": "adapt-and-compose",
+      "terms": [
+        "用户",
+        "问题",
+        "主回答线"
+      ]
+    },
+    {
+      "id": "point-in-time",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "首次可得",
+        "修订",
+        "历史"
+      ]
+    },
+    {
+      "id": "units-and-scales",
+      "target": "fields-context",
+      "terms": [
+        "币种",
+        "原尺度",
+        "分母"
+      ]
+    },
+    {
+      "id": "actual-provenance",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "获取方式",
+        "内容性质",
+        "固定"
+      ]
+    },
+    {
+      "id": "missing-is-not-zero",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "零匹配",
+        "零值",
+        "50%"
+      ]
+    },
+    {
+      "id": "testable-mechanism",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "机制",
+        "可观察预期",
+        "反驳"
+      ]
+    },
+    {
+      "id": "history-sampling",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "当前品种",
+        "跨品种",
+        "不可用"
+      ]
+    },
+    {
+      "id": "settlement-counts",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "已结算",
+        "待结算",
+        "分母"
+      ]
+    },
+    {
+      "id": "dependence-selection-bias",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "重叠",
+        "多次尝试",
+        "独立投票"
+      ]
+    },
+    {
+      "id": "probability-meaning",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "历史条件频率",
+        "风险中性",
+        "校准"
+      ]
+    },
+    {
+      "id": "validation-stages",
+      "target": "evidence-and-judgment",
+      "terms": [
+        "历史探索",
+        "样本外",
+        "前瞻"
+      ]
+    },
+    {
+      "id": "no-automatic-sufficiency",
+      "target": "review-and-recovery",
+      "terms": [
+        "Agent",
+        "静态 schema",
+        "不充分"
+      ]
+    },
+    {
+      "id": "targeted-recovery",
+      "target": "review-and-recovery",
+      "terms": [
+        "替代",
+        "不重放",
+        "不阻塞"
+      ]
+    },
+    {
+      "id": "actual-report-delivery",
+      "target": "review-and-recovery",
+      "terms": [
+        "发布",
+        "可见",
+        "摘要"
+      ]
+    },
+    {
+      "id": "factor-application-separation",
+      "target": "factor-evaluation",
+      "terms": [
+        "因子库",
+        "因子池",
+        "不能直接"
+      ]
+    },
+    {
+      "id": "strategy-records",
+      "target": "strategy-evaluation",
+      "terms": [
+        "完整参数试验",
+        "失败组合",
+        "成本"
+      ]
+    }
+  ]
+}

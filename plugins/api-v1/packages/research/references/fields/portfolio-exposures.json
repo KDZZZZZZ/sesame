@@ -1,0 +1,203 @@
+{
+  "title": "风险与组合暴露：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "exposure_series": {
+      "label": "组合敞口构成",
+      "meaning": "同一组合截点的非负总敞口层级；多空分开，父子金额不重复累计。",
+      "definition": "组合同一截点按层级分解的非负总敞口展示。",
+      "inputs": "节点 ID/父节点、资产/因子、金额、方向、层级和分母。",
+      "unit_time": "同账户币种与截点，多空分开，现金/衍生品名义与市值口径明确。",
+      "interpretation": "父子值不能重复相加；总敞口不同于净敞口或可损失金额。",
+      "missing": "缺持仓/定价时标覆盖，不能以零敞口填未知资产。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "持仓事实获取，估值/权重/层级加总计算；因子/行业映射另有来源，父子不重复计。"
+      }
+    },
+    "dependence_series": {
+      "label": "资产关联矩阵",
+      "meaning": "同一窗口、频率与所选依赖度方法的完整矩阵；缺失保持 null。",
+      "definition": "指定估计方法下各资产或因子的同期依赖矩阵。",
+      "inputs": "资产对、依赖值、方法、窗口、样本数和缺失处理。",
+      "unit_time": "同收益口径、频率与窗口，矩阵尺度和方向依方法说明。",
+      "interpretation": "相关系数只是依赖度的一种；历史相关不保证压力期稳定，缺失不能当独立。",
+      "missing": "未估计单元保留 null，不填零相关或自动补对称值冒充结果。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按同窗收益或特征计算依赖矩阵，方法/频率由研究选择；相关不等因果。"
+      }
+    },
+    "stop_series": {
+      "label": "止损距离与风险规模",
+      "meaning": "同一参考价、合约单位及风险预算下的已计算止损距离和规模；不在图中计算仓位。",
+      "definition": "同一风险预算下不同止损方案的距离与规模结果。",
+      "inputs": "variant、distance、quantity、risk_cash、参考价、乘数和方法输出。",
+      "unit_time": "距离为价格/pip/指定度量，规模为股/张等，风险额同账户币种和截点。",
+      "interpretation": "图只比较已计算方案；止损距离不保证最大实际损失，数量不是已提交订单。",
+      "missing": "缺少规模或距离则不补点，不能在绘图中计算仓位。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "参考价格/规格获取，阈值与预算由用户/方法，距离/风险规模计算。"
+      }
+    },
+    "portfolio": {
+      "label": "组合与口径",
+      "meaning": "真实或假设标识、持仓、币种及口径。",
+      "definition": "本次风险研究对应的用户账户、用户指定公开基金组合或明确假设持仓快照。",
+      "inputs": "账户/组合身份、真实/模拟标识、资产、数量、方向、现金、币种和来源。",
+      "unit_time": "记录持仓截点、价格时点、汇率时点、乘数与分母口径。",
+      "interpretation": "公开基金组合不是用户账户，也不是虚构持仓；真实与假设组合分别标识，研究所需字段不授予账户读取权限。",
+      "missing": "没有持仓则标未提供，不根据用户兴趣构造真实仓位。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "真实持仓/余额从账户获取；假设组合由用户输入，合并币种/权重计算，二者不得混合。"
+      }
+    },
+    "exposures": {
+      "label": "风险暴露",
+      "meaning": "所选资产或因子暴露结果。",
+      "definition": "方法给出的组合对资产、行业、币种或风险因子的暴露。",
+      "inputs": "暴露类型、原值、方向、权重/金额/敏感度定义、分母与方法。",
+      "unit_time": "同账户币种、截点和净/总口径，衍生品市值与名义/敏感度分开。",
+      "interpretation": "资产权重不一定等于风险贡献；净敞口低不表示总风险低。",
+      "missing": "缺少因子或头寸映射时说明未覆盖比例，不归为零风险。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "持仓和资产身份获取，名义/因子暴露计算；因子模型和分类判断另列。"
+      }
+    },
+    "concentration": {
+      "label": "集中度",
+      "meaning": "方法给出的集中度。",
+      "definition": "在所选划分和度量下仓位或风险的集中程度。",
+      "inputs": "集中对象、份额/指标、分母、层级、方法和基准。",
+      "unit_time": "同截点、币种/无量纲尺度，现金、多空和穿透口径明确。",
+      "interpretation": "持仓数量多不必然分散；行业集中、名称集中和风险集中不同。",
+      "missing": "无法穿透时标未覆盖，不将基金看成互不相关的独立资产。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "集中度由明确分母下的权重/金额计算；分组字典来自源或方法。"
+      }
+    },
+    "dependence": {
+      "label": "相关关系",
+      "meaning": "所选依赖度量及结果。",
+      "definition": "资产或因子之间按指定方法估计的统计依赖。",
+      "inputs": "对象对/集合、度量、结果、样本窗、频率、有效样本和方法。",
+      "unit_time": "注明收益定义、币种、尺度及同步/缺失处理。",
+      "interpretation": "依赖不等于因果；不同窗口和尾部定义不能无说明混合。",
+      "missing": "样本不足或对象缺失时标不可用，不默认独立或沿用旧值为当前。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "相关/尾部依赖等为计算，是否稳定和适用为解释；指标选择由方法决定。"
+      }
+    },
+    "stress": {
+      "label": "压力情景",
+      "meaning": "方法生成的情景及潜在损失。",
+      "definition": "既定市场或经营情景下组合的条件损失与响应。",
+      "inputs": "情景冲击、受影响暴露、估计损益、传导方法、假设和参照。",
+      "unit_time": "冲击与损益各自单位、持有期限、币种、价格截点明确。",
+      "interpretation": "压力情景不自带发生概率；历史情景重演与假设冲击不同。",
+      "missing": "未覆盖资产/非线性效应时说明范围，不把部分损失当全组合上限。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "压力路径是用户/方法设定的假设，损失由模型计算；不是已发生损失或默认概率。"
+      }
+    },
+    "budget": {
+      "label": "风险预算",
+      "meaning": "用户的决策条件，不作为价格方向证据。",
+      "definition": "用户给定或已确认的风险承担与决策限制。",
+      "inputs": "风险金额/比例、资金基数、时间跨度、单笔/组合层级及用户来源。",
+      "unit_time": "币种、净值日期、百分比基数和允许损失时间口径明确。",
+      "interpretation": "风险预算是约束，不是市场方向证据或最优仓位算法。",
+      "missing": "预算未知时保持未约定，不自行假定账户规模或容忍度。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "风险金额/比例和限制来自当前用户目标或有效既有偏好，不是方向证据。"
+      }
+    },
+    "stop_variants": {
+      "label": "止损方案",
+      "meaning": "所选方法给出的松紧/跟踪方案、价格或偏移、适用方向和期限；不固定三档算法。",
+      "definition": "所选风险方法给出的可比较止损或跟踪方案。",
+      "inputs": "方案 ID、方向、价格/偏移、更新规则、参考价、适用期限与方法。",
+      "unit_time": "注明价格、pip、ATR 等各自单位和数据截点，不混合距离尺度。",
+      "interpretation": "松紧标签来自方法定义，不固定三档；止损方案与观点失效条件分开。",
+      "missing": "没有方案结果时标缺失，不自动设固定百分比。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "松紧/跟踪方案由用户或方法给出，数值可计算；不固定档数或算法。"
+      }
+    },
+    "stop_distances": {
+      "label": "止损距离与单位损失",
+      "meaning": "各方案的价格/pip/ATR 距离、合约单位损失及计算时点。",
+      "definition": "各止损方案相对指定参考点的已计算距离和单位损失。",
+      "inputs": "方案 ID、参考价、止损价、距离、每单位损失、乘数与方法。",
+      "unit_time": "明确价格/pip/ATR 及金额转换，账户币种、汇率和计算时间。",
+      "interpretation": "名义价格距离与现金风险不同；跳空/滑点可使实际损失超出距离估计。",
+      "missing": "缺汇率或合约单位时标无法转换，不以价格差充当金额。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "从参考价/止损/合约规则计算距离和单位损失；若给定风险单位需其明确定义。"
+      }
+    },
+    "position_size": {
+      "label": "风险预算下的规模",
+      "meaning": "风险金额、单单位损失、估计规模、合约乘数、步长、汇率与方法引用。",
+      "definition": "在明确风险输入与交易单位下由方法给出的估计仓位。",
+      "inputs": "风险预算、单单位损失、估计数量、乘数、步长、汇率、成本与方法。",
+      "unit_time": "注明账户币种、资金截点、股/张/手及取整方式，毛净风险分开。",
+      "interpretation": "仓位是计算结果或建议，不是已成交；风险约束不唯一决定最优配置。",
+      "missing": "缺预算、止损或合约规格时保持未计算，不填默认账户规模。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "预算是用户条件，单位损失/规模是计算，乘数/步长/汇率是源事实；不代表已下单。"
+      }
+    },
+    "execution_costs": {
+      "label": "成本与成交假设",
+      "meaning": "价差、佣金、滑点、融资/借券等结果与单位；研究成本不表示执行授权。",
+      "definition": "持仓或行动研究所采用的执行、融资和借券成本估计。",
+      "inputs": "价差、佣金、滑点、冲击、融资/借券、数量依赖及方法和来源。",
+      "unit_time": "币种、单边/往返、每股/每单/年率与持有期清楚。",
+      "interpretation": "成本估计不是实际成交回执；已计入价格的成本不可重复扣除。",
+      "missing": "未知项目标未覆盖或估计范围，不把未报价视为零成本。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "真实bid/ask/费率获取，滑点/融资借券可能估计或用户假设，最终成本汇总为计算。"
+      }
+    },
+    "margin": {
+      "label": "保证金与可用资金",
+      "meaning": "估算保证金、账户币种与资金条件；真实/假设账户明确标识。",
+      "definition": "给定持仓与规则下的保证金或资金占用估计。",
+      "inputs": "金额、账户类型、杠杆/抵扣规则、可用资金、真实/假设身份和依据。",
+      "unit_time": "账户币种、规则版本、估计截点、初始/维持保证金分别记录。",
+      "interpretation": "保证金不是最大损失，也不是可承受风险；资金充足不等于交易获授权。",
+      "missing": "规则或账户信息未知时标估计受限，不按统一杠杆虚构可用资金。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "当前账户资金/已用保证金获取；拟议订单保证金为原生规则计算；假设账户须明确。"
+      }
+    }
+  }
+}

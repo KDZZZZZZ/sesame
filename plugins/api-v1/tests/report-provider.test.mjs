@@ -1,10 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { graph as sourceGraph } from '@sesame/plugin-sdk/svl';
+import { Errors } from '@sesame/plugin-sdk/schema/value';
 import { reportRenderInputSchema, REPORT_RENDER_OUTPUT_SCHEMA } from '@sesame/plugin-sdk/report-contract';
 import { renderReport, publishReport } from '../packages/reports/report-provider.js';
-import { buildBacktestReport } from '../packages/reports/backtest-template.js';
 import { resolveReportStyle } from '../packages/reports/report-styles.js';
 
 // All refs and values below are synthetic contract fixtures, not research results.
@@ -14,6 +13,54 @@ const metadata = {title:'Fixture',summary:'Synthetic software check',locale:'en'
 const envelope = input => ({metadata,data:[],related:[],references:[],input});
 const publishArgs = extra => ({operation_id:'fixture-op',title:metadata.title,summary:metadata.summary,provenance_kind:'demo',data:[],content,...extra});
 const freeze = value => { if(value&&typeof value==='object'){Object.values(value).forEach(freeze);Object.freeze(value);}return value; };
+
+test('a published document shows one demo label rather than duplicating renderer metadata', async () => {
+  const result = await renderReport({}, envelope({ content }));
+  const html = result.files.find(file => file.path === 'index.html').content;
+  const labels = html.match(/<(?:p|aside)\b(?=[^>]*data-sesame-provenance="demo"|[^>]*>演示样本<)[^>]*>/g) ?? [];
+  assert.equal(labels.length, 1);
+  assert.match(html, /data-sesame-provenance="demo"/);
+});
+
+test('answer surface is pinned in provider output while default report output stays unchanged', async () => {
+  const ordinary = await renderReport({}, envelope({ content }));
+  const explicitReport = await renderReport({}, envelope({ content, target: 'report' }));
+  assert.deepEqual(explicitReport, ordinary);
+  assert.deepEqual(ordinary.presentation.metadata, { layout: 'unified' });
+  assert.doesNotMatch(ordinary.files[0].content, /data-report-surface="answer"|data-report-answer-style/);
+  const answer = await renderReport({}, envelope({ content, target: 'answer' }));
+  assert.deepEqual(answer.presentation.metadata, { layout: 'unified', surface: 'answer', protocol: 'sesame-components/1' });
+  assert.match(answer.files[0].content, /<html\b[^>]*data-report-surface="answer"/);
+  assert.match(answer.files[0].content, /<style data-report-answer-style>/);
+  assert.match(answer.files[0].content, /Synthetic values only/);
+  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const providerSchema = manifest.capabilities.find(item => item.id === 'report_render').inputSchema;
+  assert.equal(Object.hasOwn(providerSchema.properties, 'target'), false, 'target belongs only to plugin-owned input');
+  assert.deepEqual(Errors(providerSchema, envelope({ content, target: 'answer' })), []);
+  const nonDocument = { kind: 'signal-study', run: {} };
+  assert.ok(Errors(providerSchema, envelope({ content: nonDocument, target: 'report' })).length);
+  assert.ok(Errors(providerSchema, envelope({ content: nonDocument, target: 'answer' })).length);
+  await assert.rejects(renderReport({}, envelope({ content: nonDocument, target: 'answer' })), /document/);
+  for (const target of ['chat-html', '<script>bad</script>', { css: 'body{display:none}' }]) {
+    await assert.rejects(renderReport({}, envelope({ content, target })), /target/);
+  }
+  for (const extra of [{ css: 'body{display:none}' }, { body_html: '<p>raw</p>' }]) {
+    await assert.rejects(renderReport({}, envelope({ content, target: 'answer', ...extra })), /HTML|CSS|input/);
+  }
+});
+
+test('answer target travels through the existing facade as complete provider input', async () => {
+  const calls = [], host = { capabilities: { invoke: async (id, request) => {
+    calls.push({ id, request });
+    const rendered = await renderReport({}, envelope(request.input));
+    return { type: 'result', value: { ref: ref('answer-publication', 'report'), presentation: rendered.presentation } };
+  } } };
+  const result = await publishReport(host, publishArgs({ target: 'answer' }));
+  assert.equal(calls[0].id, 'host.reports.publish');
+  assert.deepEqual(calls[0].request.input, { content, target: 'answer' });
+  assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
+  assert.equal(result.presentation.metadata.surface, 'answer');
+});
 
 test('Report declares a host-only immediate provider with plugin-owned recursive content schema', async () => {
   const c=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
@@ -32,11 +79,11 @@ test('publication facade delegates unchanged content and fixed evidence to the h
   const calls=[],receipt={ref:ref('published','report'),renderStatus:'not_checked'},signal=new AbortController().signal;
   const host={capabilities:{invoke:async(...args)=>{calls.push(args);return {type:'result',value:receipt};}},resources:{publish:()=>assert.fail('Provider cannot publish report resources')}};
   const source=ref('actual-svl','strategy.source'),evidence=ref('actual-native-run');
-  const original=freeze(publishArgs({strategy_source:source,strategy_evidence:{engine:'synthetic-engine',summary:'Recorded fixture',references:[evidence]},references:[source],artifact_id:'existing',expected_revision:'current',locale:'zh-CN',features:['interactive','strategy_details']}));
+  const original=freeze(publishArgs({references:[source,evidence,source],artifact_id:'existing',expected_revision:'current',locale:'zh-CN',features:['interactive']}));
   const before=structuredClone(original),result=await publishReport(host,original,signal);
   assert.equal(result,receipt);assert.deepEqual(original,before);assert.equal(calls.length,1);
   const [id,input,options]=calls[0];assert.equal(id,'host.reports.publish');assert.equal(options.signal,signal);
-  assert.deepEqual(input.input,{content, strategy_source:source,strategy_evidence:original.strategy_evidence});
+  assert.deepEqual(input.input,{content});
   assert.deepEqual(input.references,[source,evidence]);assert.equal(input.artifactId,'existing');assert.equal(input.expectedRevision,'current');
   assert.equal(Object.hasOwn(input,'provider'),false);assert.equal(input.input.content,content);
 });
@@ -47,7 +94,7 @@ test('complete inputRef is forwarded without retyping, reading or accepting an a
   const args=publishArgs({input_ref});delete args.content;
   await publishReport(host,args);
   assert.deepEqual(calls[0].args.inputRef,input_ref);assert.equal(Object.hasOwn(calls[0].args,'input'),false);
-  for(const extra of [{content},{style:{}},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
+  for(const extra of [{content},{style:{}},{target:'answer'},{target:'report'},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
   assert.equal(calls.length,1);
   await assert.rejects(publishReport({capabilities:{invoke:async()=>({type:'job',job:{}})}},args),/immediate/);
 });
@@ -66,27 +113,15 @@ test('fixed inert attachments preserve bytes and reject changed refs or media be
   for(const path of ['../bad.json','INDEX.HTML','sesame-report-input.json','x.js']) await assert.rejects(renderReport(host,{...request,input:{...input,assets:[{...input.assets[0],path}]}}),/safe|unique|extension/);
 });
 
-const nativeArgs=extra=>({title:'Native fixture',summary:'Recorded synthetic trial matrix',data_id:'trials',parameters:['period'],selection_rule:'Recorded development selection; never recomputed',source_note:'Synthetic engine fixture',currency:'USD',strategy_evidence:{engine:'native-fixture',summary:'Actual fixture source and run evidence',references:[ref('native-evidence')]},references:[ref('native-evidence')],...extra});
-test('native backtest input renders the same explorer without inventing SVL source or graph', async () => {
-  const reads=[],host={resources:{read:async(actual,request)=>{reads.push({actual,request});assert.equal(request.part,'manifest');return {content:{}};}}};
-  const args=freeze(nativeArgs()),before=structuredClone(args),result=await buildBacktestReport(host,args);
-  assert.deepEqual(args,before);assert.equal(result.graph,undefined);
-  const config=JSON.parse(result.html.match(/const config = (.+);\nasync function initialize/)[1]);
-  assert.deepEqual(config.strategyEvidence,args.strategy_evidence);assert.equal(Object.hasOwn(config,'graph'),false);assert.equal(Object.hasOwn(config,'source'),false);
-  assert.equal(config.dataId,'trials');assert.deepEqual(config.parameters,['period']);
-  assert.equal(reads.length,1);
-  await assert.rejects(buildBacktestReport(host,{...args,references:[]}),/declared/);
-  await assert.rejects(buildBacktestReport(host,{...args,strategy_evidence:undefined}),/SVL|native strategy_evidence/);
-  await assert.rejects(buildBacktestReport(host,{...args,parameters:[]}),/recorded parameter/);
-});
-
-test('actual SVL source retains same-source graph digest validation', async () => {
-  const source=JSON.parse(await readFile(new URL('../packages/strategy-authoring/examples/close-threshold.svl.json',import.meta.url),'utf8'));
-  const graph=sourceGraph(source),sourceRef=ref('svl','strategy.source'),bytes=Buffer.from(JSON.stringify(source));let sourceDigest=graph.sourceDigest;
-  const host={resources:{read:async(actual,request)=>{assert.deepEqual(actual,sourceRef);return request.part==='manifest'?{content:{sourcePath:'source.json',sourceDigest},blobs:[{path:'source.json'}]}:{content:bytes.toString('base64'),total:bytes.length};}}};
-  const args=nativeArgs({strategy_source:sourceRef,strategy_evidence:undefined,references:[sourceRef]});
-  assert.equal((await buildBacktestReport(host,args)).graph.sourceDigest,graph.sourceDigest);
-  sourceDigest='sha256:'+'b'.repeat(64);await assert.rejects(buildBacktestReport(host,args),/must match/);
+test('a visual report consumes results without parsing source programs or imposing research fields', async () => {
+  const source = ref('producer-source', 'strategy.source');
+  const host = { resources: { read: () => assert.fail('Producer-owned source is opaque to the visual renderer') } };
+  const request = freeze({ ...envelope({ content }), references: [source] });
+  const rendered = await renderReport(host, request);
+  assert.match(rendered.files[0].content, /Synthetic values only/);
+  for (const input of [{ content, strategy_source: source }, { content: { kind: 'backtest' } }, { content: { kind: 'modules' } }]) {
+    await assert.rejects(renderReport(host, envelope(input)), /input|layout/i);
+  }
 });
 
 test('old saved user token versions retain their original dimensions without offering public presets', async () => {
@@ -98,8 +133,8 @@ test('old saved user token versions retain their original dimensions without off
 });
 
 test('the documented host publication example uses the current input contract and preserves values', async () => {
-  const guide=await readFile(new URL('../packages/reports/skills/report-design/style-guide.md',import.meta.url),'utf8');
-  const args=JSON.parse(guide.match(/```json\n([\s\S]*?)\n```/)[1]);
+  const guide=await readFile(new URL('../packages/reports/references/delivery.md',import.meta.url),'utf8');
+  const args=JSON.parse(guide.match(/```json\r?\n([\s\S]*?)\r?\n```/)[1]);
   assert.equal(args.provenanceKind,'demo');assert.equal(Object.hasOwn(args.input,'style'),false);
   const original=structuredClone(args.input);
   const result=await renderReport({}, {metadata:{title:args.title,summary:args.summary,locale:args.locale,space:args.space,provenanceKind:args.provenanceKind,features:['interactive']},data:args.data,related:[],references:[],input:freeze(args.input)});

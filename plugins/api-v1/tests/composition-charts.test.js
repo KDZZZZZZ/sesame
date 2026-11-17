@@ -5,33 +5,27 @@ import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { renderStructuredReport } from '../packages/reports/report-content.js';
-import { createCapabilities } from '../packages/reports/index.js';
+import { validateComponents } from '../packages/reports/component-tools.js';
 
 const pkg = new URL('../packages/reports/', import.meta.url);
 const fixture = JSON.parse(await readFile(new URL('examples/composition-fixtures.json', pkg), 'utf8'));
 const block = chart => {
   const { rows, kind, ...options } = chart.spec;
-  return { type: 'chart', kind, title: chart.title, takeaway: chart.caption, source_note: 'Explicit fictional demo', columns: [...new Set(rows.flatMap(Object.keys))], rows, options };
+  return { type: 'chart', kind, title: chart.title, columns: [...new Set(rows.flatMap(Object.keys))], rows, options };
 };
 const report = { title: 'Composition collection', locale: 'zh-CN', provenance_kind: 'demo', content: { kind: 'document', sections: fixture.charts.map(chart => ({ title: chart.spec.kind, blocks: [block(chart)] })) } };
 
-test('all selected kinds reach the production document and preview interfaces', async () => {
+test('all selected kinds reach the production document and component interfaces', async () => {
   const manifest = JSON.parse(await readFile(new URL('capabilities.json', pkg), 'utf8'));
-  const publicKinds = manifest.capabilities.find(c => c.id === 'report_template').inputSchema.properties.kind.anyOf.map(v => v.const);
+  const publicKinds = manifest.capabilities.find(c => c.id === 'report_render').inputSchema.properties.input.$defs.block.oneOf.find(b => b.properties.type.const === 'chart').properties.kind.enum;
   for (const chart of fixture.charts) assert.ok(publicKinds.includes(chart.spec.kind), `${chart.spec.kind} must pass the public schema`);
   const html = await renderStructuredReport({}, report);
   assert.match(html, /function rankRace/);
-  assert.match(html, /data-report-evidence/);
+  assert.doesNotMatch(html, /<details[^>]+data-report-evidence|data-report-evidence-appendix/);
   const config = JSON.parse(html.match(/<script id="sesame-module-charts" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   assert.deepEqual(config.map(c => c.kind), fixture.charts.map(c => c.spec.kind));
   assert.deepEqual(config.map(c => c.rows), fixture.charts.map(c => c.spec.rows));
-  const writes = [];
-  const tool = createCapabilities({ capabilities: { invoke: async (id, input) => { assert.equal(id, 'sesame/workspace#write'); writes.push(input); return { type: 'result', value: { path: input.path } }; } } }).find(t => t.name === 'report_template');
-  for (const chart of fixture.charts) {
-    const { rows, kind, ...chart_options } = chart.spec;
-    await tool.execute({ kind, title: chart.title, takeaway: chart.caption, source_note: 'Demo', columns: Object.keys(rows[0]), data_id: 'fixed', output_path: 'preview.html', chart_options, demo: true });
-  }
-  assert.equal(writes.length, fixture.charts.length);
+  for(const chart of fixture.charts) assert.equal((await validateComponents({}, {component:block(chart),provenance_kind:'demo'})).valid,true,chart.spec.kind);
 });
 
 const host = process.env.SESAME_HOST_ROOT;

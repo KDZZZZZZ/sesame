@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { copies, syncBoundaryHelpers } from '../scripts/sync-boundary-helpers.mjs';
 
 test('all self-contained copies match their maintained sources', () => {
-  assert.equal(syncBoundaryHelpers('--check'), 19);
+  assert.equal(syncBoundaryHelpers('--check'), 15);
 });
 
 test('the copy registry is explicit and excludes independent domain records', () => {
@@ -15,15 +15,16 @@ test('the copy registry is explicit and excludes independent domain records', ()
     ['scripts/shared/dataset-snapshot.js', 2],
     ['scripts/shared/artifact-files.js', 2],
     ['scripts/shared/parser.js', 3],
-    ['scripts/shared/workflow-mechanics.js', 3],
-    ['scripts/shared/research-artifacts.js', 3],
+    ['scripts/shared/workflow-mechanics.js', 2],
+    ['scripts/shared/research-artifacts.js', 2],
     ['scripts/shared/investment-research-contract.js', 2],
-    ['scripts/shared/report-publication.js', 2],
-    ['scripts/shared/workflow-report-fixture.mjs', 2],
+    ['scripts/shared/report-publication.js', 1],
+    ['scripts/shared/workflow-report-fixture.mjs', 1],
   ]);
   const targets = copies.flatMap(item => item.targets);
-  assert.equal(new Set(targets).size, 19);
+  assert.equal(new Set(targets).size, 15);
   assert.ok(targets.every(path => !path.includes('records')));
+  assert.ok(targets.every(path => !path.includes('auto-factor-mining')), 'Factor v2 owns its narrow modules without legacy workflow copies');
 });
 
 test('copy verification rejects drift and write repairs only the declared copies', t => {
@@ -37,14 +38,14 @@ test('copy verification rejects drift and write repairs only the declared copies
   const domainRecords = join(directory, 'packages/trading-decision/records.js');
   writeFileSync(parserServer, 'format-specific implementation');
   writeFileSync(domainRecords, 'intentional independent domain storage');
-  assert.equal(syncBoundaryHelpers('--check', base), 19);
+  assert.equal(syncBoundaryHelpers('--check', base), 15);
   writeFileSync(join(directory, copies[0].targets[1]), 'drift');
   assert.throws(() => syncBoundaryHelpers('--check', base), /Boundary helper copy differs/);
-  assert.equal(syncBoundaryHelpers('--write', base), 19);
-  assert.equal(syncBoundaryHelpers('--check', base), 19);
+  assert.equal(syncBoundaryHelpers('--write', base), 15);
+  assert.equal(syncBoundaryHelpers('--check', base), 15);
   writeFileSync(join(directory, 'packages/rss-collect/parser.js'), 'parser drift');
   assert.throws(() => syncBoundaryHelpers('--check', base), /packages\/rss-collect\/parser\.js/);
-  assert.equal(syncBoundaryHelpers('--write', base), 19);
+  assert.equal(syncBoundaryHelpers('--write', base), 15);
   assert.equal(readFileSync(parserServer, 'utf8'), 'format-specific implementation');
   assert.equal(readFileSync(domainRecords, 'utf8'), 'intentional independent domain storage');
 });

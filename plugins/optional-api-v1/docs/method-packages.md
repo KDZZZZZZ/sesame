@@ -1,6 +1,6 @@
 # Independent optional research methods
 
-These eight API 1 packages target Sesame `>=0.2.0-0`. Each is installed as
+These eight API 2 packages target Sesame `>=0.2.3`. Each is installed as
 `discoverable` and loaded separately. None depends on another theory package,
 adds tools/providers, downloads dependencies, connects an account or extends SVL.
 An ICT-only session receives the ICT skill and prompt; other methods can remain
@@ -27,10 +27,12 @@ The unshipped umbrella candidates `technical-analysis` and
 
 ## Existing capability ownership
 
-Data discovery and frozen prices use `data-access` with an explicitly selected
-provider; scripts use workspace `write`/`bash`, and `research_register` freezes
-successful execution outputs. Reports and chart rendering remain owned by
-`reports` and `canvas-control`. Persistent forecasting uses the optional judgment
+Research chooses the investigation and answer structure; these specialized
+methods contribute task-specific analysis. Data discovery and fixed snapshots use
+`data-access` (`data_snapshot`) with an explicitly selected provider; scripts use workspace `write`/`bash`, and `research_register` freezes
+successful execution outputs. Report visuals use generic `document` blocks through
+`reports#components_show`; live chart rendering belongs to `canvas-control`.
+Reports does not select theories, evidence requirements or report business templates. Persistent forecasting uses the optional judgment
 plugin only when requested. Executable rules use core strategy-authoring and a
 separately selected target profile. These methods do not create a parallel
 retrieval, report, order or strategy interface.
@@ -61,7 +63,7 @@ Run from this repository root:
 ```sh
 node --test plugins/optional-api-v1/tests/method-packages.test.mjs
 python3 -B plugins/optional-api-v1/tests/method_observations_test.py -v
-SESAME_HOST_ROOT=/path/to/matching-host node --test plugins/optional-api-v1/tests/method-host.test.mjs
+SESAME_HOST_ROOT=/path/to/matching-host node --import /path/to/matching-host/modules/plugins/sdk-loader.js --test plugins/optional-api-v1/tests/method-host.test.mjs
 ```
 
 The first checks the eight packages as an isolated package set, declared resource
@@ -72,19 +74,33 @@ both actual standalone commands. The opt-in test uses the matching real Store,
 Runtime, Pi SDK session and plugin manager, with temporary state and a never-called
 model. It installs all eight through `plugin_test`/`plugin_install`, loads each in
 an independent conversation through `plugin_load`, reads every declared resource,
-rejects reads from unmounted methods and confirms ICT-only state after reopening.
+verifies that declared resource reads do not load another method, rejects
+undeclared resource paths, and confirms ICT-only method state after reopening.
+The temporary core bundle comes from the current lock generator; its count is
+not hard-coded.
 
-It also performs the real `data_read` → `bash` → `research_register` → `report_data`
-→ `report_publish` chain for both scripts, checking five ICT observations and six
+It also performs the real `data_snapshot` → `data_read` → `host_files_run` →
+`research_register` → `components_show(target:"report")` chain for both scripts,
+checking five ICT observations and six
 Price Action observations against the deliberately fictional sample. Actual
 execution IDs, fixed DataRefs and report references are emitted in TAP diagnostics;
 the temporary state is then deleted. Demo origin stays demo. This proves local
 package/workflow behavior, not model judgment quality, real market accuracy,
 rendered report UI, financial efficacy, native backtesting or trading.
 
-On 2026-10-10 UTC these checks passed: **2 Node package/case tests, 16 Python
+Historical result: on 2026-10-10 UTC the then-current API 1 checkout passed: **2 Node package/case tests, 16 Python
 tests, and 1 real-host integration test** (eight installation/loadout cases and
 two execution/publication chains inside it). The host test made zero network or
 model calls and zero native/account calls. Without `SESAME_HOST_ROOT`, the host
 test is explicitly skipped, not counted as passed. Core and optional inventory,
 locks, catalog and release plans are intentionally left to the integration owner.
+
+The dated counts above do not certify the current API 2 migration. Current
+verification is established by a fresh run of the listed tests; report publication
+alone does not establish a browser rendering receipt.
+
+On 2026-11-16 the migrated `method-host.test.mjs` passed against the current
+API 2 host: eight isolated installs/loadouts and reopen, five ICT observations,
+six Price Action observations, and both snapshot/execution/registration/component
+publication chains. It made zero network, model or native/account calls. This run
+did not perform browser rendering or repeat the historical standalone test counts.

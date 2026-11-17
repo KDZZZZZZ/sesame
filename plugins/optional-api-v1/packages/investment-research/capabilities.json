@@ -86,7 +86,7 @@
         "additionalProperties": false
       },
       "id": "investment_research_start",
-      "description": "Research报告工作流：理解需求与建议结果形式、获取固定证据、组合分析方法与历史参照、生成并核验报告。用户可调整字段、视觉与成员。",
+      "description": "投资研究报告工作流：按用户问题发现 Research 方法，明确问题、取得证据、分析并交付统一视觉报告；支持自定义实际成员与顺序。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -293,314 +293,51 @@
           "report_brief": {
             "type": "object",
             "properties": {
-              "case": {
-                "type": "string",
-                "enum": [
-                  "auto",
-                  "overview",
-                  "outlook",
-                  "event",
-                  "company",
-                  "briefing",
-                  "options",
-                  "portfolio",
-                  "forecast_review",
-                  "calendar",
-                  "custom"
-                ],
-                "default": "auto"
-              },
-              "template_id": {
+              "objective": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 128,
-                "description": "Mxx/Rxx建议结果模板，显式值优先，不选择方法。"
-              },
-              "sections": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "description": "Stable identifier",
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
-                    },
-                    "module_id": {
-                      "type": "string",
-                      "description": "Optional M01–M19 module to copy suggested fields from",
-                      "minLength": 1,
-                      "maxLength": 128
-                    },
-                    "title": {
-                      "type": "string",
-                      "description": "Custom section title",
-                      "minLength": 1,
-                      "maxLength": 20000
-                    },
-                    "fields": {
-                      "type": "array",
-                      "items": {
-                        "anyOf": [
-                          {
-                            "type": "string",
-                            "description": "Suggested field key",
-                            "minLength": 1,
-                            "maxLength": 128
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "key": {
-                                "type": "string",
-                                "description": "Stable identifier",
-                                "minLength": 1,
-                                "maxLength": 128,
-                                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
-                              },
-                              "label": {
-                                "type": "string",
-                                "description": "Reader-facing field label",
-                                "minLength": 1,
-                                "maxLength": 20000
-                              },
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "text",
-                                  "number",
-                                  "integer",
-                                  "boolean",
-                                  "array",
-                                  "object",
-                                  "probability",
-                                  "distribution",
-                                  "interval",
-                                  "confidence",
-                                  "inferences",
-                                  "chart"
-                                ]
-                              },
-                              "meaning": {
-                                "type": "string",
-                                "description": "Meaning of the result; no analysis algorithm is selected here",
-                                "minLength": 1,
-                                "maxLength": 20000
-                              },
-                              "unit": {
-                                "type": "string",
-                                "maxLength": 100
-                              },
-                              "required": {
-                                "type": "boolean",
-                                "description": "Required only for this task; defaults to false"
-                              },
-                              "display": {
-                                "type": "string",
-                                "enum": [
-                                  "visible",
-                                  "folded",
-                                  "hidden"
-                                ]
-                              },
-                              "chart": {
-                                "type": "object",
-                                "properties": {
-                                  "kind": {
-                                    "type": "string",
-                                    "description": "Existing reportKit or SesameCharts kind; prefer the module candidate."
-                                  },
-                                  "options": {
-                                    "type": "object",
-                                    "description": "Field mappings and display options only; no rows, data, nodes or callbacks."
-                                  },
-                                  "columns": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "minItems": 1,
-                                    "maxItems": 32
-                                  },
-                                  "data_requirements": {
-                                    "type": "string",
-                                    "minLength": 1
-                                  },
-                                  "evidence_role": {
-                                    "type": "string",
-                                    "enum": [
-                                      "descriptive",
-                                      "historical",
-                                      "prediction"
-                                    ]
-                                  }
-                                },
-                                "required": [
-                                  "kind",
-                                  "columns",
-                                  "data_requirements"
-                                ],
-                                "additionalProperties": false
-                              },
-                              "history_display": {
-                                "type": "string",
-                                "enum": [
-                                  "full",
-                                  "summary",
-                                  "hidden"
-                                ],
-                                "description": "Historical evidence presentation; summary links to matching history detail when present. Fixed evidence remains bound."
-                              },
-                              "presentation": {
-                                "description": "Optional value projection; only maps supplied properties. null disables the suggested view. No scores/probabilities/estimates are calculated.",
-                                "anyOf": [
-                                  {
-                                    "type": "null"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "kind": {
-                                        "type": "string",
-                                        "enum": [
-                                          "metric",
-                                          "range",
-                                          "scores"
-                                        ]
-                                      },
-                                      "value": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "label": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "lower": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "upper": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "reference": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "caption": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "unit": {
-                                        "type": "string",
-                                        "maxLength": 100
-                                      },
-                                      "min": {
-                                        "type": "number"
-                                      },
-                                      "max": {
-                                        "type": "number"
-                                      },
-                                      "digits": {
-                                        "type": "integer",
-                                        "minimum": 0,
-                                        "maximum": 6
-                                      },
-                                      "meta": {
-                                        "type": "array",
-                                        "maxItems": 6,
-                                        "items": {
-                                          "type": "string",
-                                          "maxLength": 200
-                                        }
-                                      },
-                                      "unit_field": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "scale": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      },
-                                      "scale_label": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                      }
-                                    },
-                                    "required": [
-                                      "kind"
-                                    ],
-                                    "additionalProperties": false
-                                  }
-                                ]
-                              }
-                            },
-                            "required": [
-                              "key"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
-                      },
-                      "maxItems": 64
-                    },
-                    "method_refs": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "description": "Exact selected method or knowledge reference; no invocation is performed",
-                        "minLength": 1,
-                        "maxLength": 20000
-                      },
-                      "maxItems": 32
-                    },
-                    "context": {
-                      "type": "object",
-                      "properties": {
-                        "subject": {
-                          "type": "string",
-                          "description": "Expected research subject",
-                          "minLength": 1,
-                          "maxLength": 20000
-                        },
-                        "as_of": {
-                          "type": "string",
-                          "description": "Expected research as_of",
-                          "minLength": 1,
-                          "maxLength": 20000
-                        },
-                        "target": {
-                          "type": "string",
-                          "description": "Expected research target",
-                          "minLength": 1,
-                          "maxLength": 20000
-                        },
-                        "horizon": {
-                          "type": "string",
-                          "description": "Expected research horizon",
-                          "minLength": 1,
-                          "maxLength": 20000
-                        }
-                      },
-                      "required": [],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [],
-                  "additionalProperties": false
-                },
-                "maxItems": 64
-              },
-              "adjustments": {
-                "type": "string",
                 "maxLength": 12000,
-                "description": "用户对字段、结构和展示的调整优先于建议模板。"
+                "description": "本次研究要帮助用户解决什么问题；省略时沿用 question。"
+              },
+              "questions": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 6000
+                },
+                "description": "实际待回答的问题，不是必填报告栏目。"
+              },
+              "method_ids": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "description": "可选 research_methods 返回的方法 ID；由 research_read 按需读取，不限定报告视觉。"
+              },
+              "evidence_requirements": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 6000
+                },
+                "description": "用户的证据要求或需要填补的关键缺口。"
+              },
+              "delivery": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 12000,
+                "description": "读者需要的交付内容与明确删改要求；不强制固定章节。"
               }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "description": "可选任务 brief；目标、问题、方法、证据和交付按需填写，无报告模板依赖。"
           }
         },
         "required": [
@@ -620,18 +357,18 @@
         "publish:report-if-requested"
       ],
       "usage": {
-        "purpose": "组织Research报告的研究过程；Report只建议字段与视觉，具体分析方法自由选择。",
-        "inputs": "{title,question,subjects,research:{plugins,tools?},model,as_of?,horizon?,evidence_refs?,report_brief?:{case,template_id?,sections?,adjustments?},workflow?,agent_models?}。绑定task.output:{type:\"report\",space:\"research\",path:\"...html\"}。case为auto/overview/outlook/event/company/briefing/options/portfolio/forecast_review/calendar/custom。显式sections替换建议组合。更新资料用新start并传旧result_ref至evidence_refs；仅改报告用investment_research_report。 可选选择sesame/historical-evidence的匹配/校准计算，固定单行输入DataRef放evidence_refs；具体选择和依赖字段见公开HISTORY.md，未选择时不强制调用。",
+        "purpose": "执行投资研究与报告交付；Research 提供调查和回答方法，Reports 只负责通用组件与统一视觉。",
+        "inputs": "{title,question,subjects,research:{plugins,tools?},model,as_of?,horizon?,evidence_refs?,report_brief?:{objective?,questions?,method_ids?,evidence_requirements?,delivery?},workflow?,agent_models?}。绑定 task.output:{type:\"report\",space:\"research\",path:\"...html\"}。Research 方法由 research_methods 发现、research_read 按需读取；来源与计算能力由 research 显式选择。更新资料用新 start 引用既有成果；只改报告用 investment_research_report。",
         "outputs": "原生Run。result_ref保留冻结report_brief、实际成员计划及证据；report_ref为实际发布且已渲染的报告。默认四阶段有不同权限，自定义workflow优先。",
         "prerequisites": [
-          "选定模型、来源与分析插件可用；reports 3.6.1+提供report_structure/report_compose。",
-          "来源配置走统一管理，无需配置的渠道不要求其他来源的Key。"
+          "已配置模型和明确选定的来源/计算插件可用；sesame/research 提供只读方法目录与正文。",
+          "报告交付使用 sesame/reports 的 components_show 与 report_check；不需要旧模板或组合工具。"
         ],
         "limitations": [
-          "scope只读字段和知识；evidence取证；analysis使用固定证据与选定方法，可定向请原取证成员补缺；synthesis只呈现固定结果。",
-          "模板不指定ATR/FVG等方法。日历、描述、比较或复盘不强制预测；预测需要历史情景与后果支持，不制造置信度。",
-          "不下单、不配置凭据；搜索失败不是无事件。用户明确来源、方法、字段及路径优先。",
-          "analyze保留高级计划与内部数据交接兼容；新报告任务优先使用start。"
+          "scope 读取方法与已有材料；取证和分析使用调用方选定的研究安全能力；synthesis 只综合固定证据和定向问答。",
+          "方法预设按用户问题适配，不是必填栏目；事实、比较或复盘不强制预测，预测需要真实支持，不能虚构概率。",
+          "不下单、不配置凭据；搜索失败不是无事件。用户明确来源、方法及交付要求优先。",
+          "analyze 用于显式成员计划与内部数据交接；新报告任务优先 start。"
         ]
       },
       "binding": {

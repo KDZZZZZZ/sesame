@@ -1,0 +1,261 @@
+{
+  "title": "波动与期权定价：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "iv_history_series": {
+      "label": "隐含与实现波动历史",
+      "meaning": "相同年化与期限口径的已提供 IV/HV；附历史窗口，不用现货 ATR 代替 IV。",
+      "definition": "在统一期限与年化口径下已取得的隐含/历史波动序列。",
+      "inputs": "日期、IV、HV、各自方法、隐含期限/行权价选择和实现窗口。",
+      "unit_time": "标明年化比例或百分数、采样频率、历史窗口、报价和首次可得时间。",
+      "interpretation": "IV 是定价反推量，HV 是历史变化估计；现货 ATR 不能代替 IV，二者窗口需明确。",
+      "missing": "缺失历史报价保留断点，不用当前 IV 回填或跨来源无说明拼接。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "历史IV是获取的外部模型统计或由期权报价反算；HV由标的历史计算，两类序列不能互相替代。"
+      }
+    },
+    "iv_history": {
+      "label": "隐含波动历史范围",
+      "meaning": "历史窗口、频率、期限/行权价口径及缺失处理，由方法提供可比历史。",
+      "definition": "构成隐含波动历史比较基准的数据和筛选口径。",
+      "inputs": "历史起止、频率、期限/行权价或价内外程度、报价来源、缺失和展期处理。",
+      "unit_time": "同年化、同尺度；记录每时点的合约或恒定期限构造以及数据版本。",
+      "interpretation": "历史极值、分位数等只对这一已定义样本有效，不能任意扩大窗口增强结论。",
+      "missing": "历史不足时标覆盖与可计算范围，不补造报价。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "默认取得同期限/行权价口径的历史IV统计；自算时需每个历史截点的期权报价和模型输入。"
+      }
+    },
+    "iv_rank": {
+      "label": "IV Rank",
+      "meaning": "原始结果、尺度、历史窗口、极值口径和所选方法，不能当作百分位。",
+      "definition": "当前 IV 在所选历史窗口极值范围内的位置指标。",
+      "inputs": "当前 IV、历史窗口、极值口径、所选方法的原始结果与尺度、异常处理。",
+      "unit_time": "注明期限/行权价口径、年化与 0–1/0–100 等原尺度和报价截点。",
+      "interpretation": "IV Rank 基于极值位置；IV Percentile 基于样本排序比例，二者即使同值也不能互换。",
+      "missing": "极值缺失或范围退化时按方法标不可用，不填 50 或转用百分位。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "IV Rank由同口径当前IV和指定历史极值计算；供应商值可获取但仍是统计，不是百分位。"
+      }
+    },
+    "iv_percentile": {
+      "label": "IV 百分位",
+      "meaning": "历史分位结果、尺度、窗口、样本数和所选方法，不能与 IV Rank 合并。",
+      "definition": "当前 IV 相对所选历史观测分布的分位位置。",
+      "inputs": "历史样本数、窗口、比较方向、相等值处理、结果与方法定义。",
+      "unit_time": "保留原 0–1/0–100 尺度、频率、期限/行权价口径及当前截点。",
+      "interpretation": "分位位置依赖样本计数和排序，不是极值距离或未来 IV 上升概率。",
+      "missing": "样本不可得或分位规则未知时说明缺失，不以 IV Rank 代替。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "以同口径历史IV样本排序得到分位；不是IV Rank、方向概率或真实结局频率。"
+      }
+    },
+    "expected_move_series": {
+      "label": "各期限的预期价格范围",
+      "meaning": "独立方法给定的各期限价格范围与概率含义；不是方向目标，不在图中推算。",
+      "definition": "指定方法给出的不同期限波动范围或价格界限。",
+      "inputs": "horizon、lower/upper、参考价、范围含义、定价或历史模型与来源。",
+      "unit_time": "价格/收益单位、到期时间、年化/自然日口径与报价截点明确。",
+      "interpretation": "预期波动范围不是方向目标；风险中性范围不能直接称真实价格置信区间。",
+      "missing": "没有既有范围结果时不从 IV 自算；缺失期限保持空缺。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "价格范围来自独立概率/波动方法，若以定价分布计算仍是模型预测，不代表方向目标。"
+      }
+    },
+    "expected_move": {
+      "label": "预期波动范围",
+      "meaning": "价格/收益范围、期限、单位、概率含义和方法；预期波动不是方向目标价。",
+      "definition": "所选方法对给定期限价格变化幅度或区间的估计。",
+      "inputs": "参考价、变动幅度/上下界、期限、模型/定价依据、覆盖水平含义和历史对照。",
+      "unit_time": "明确价格金额或收益率、币种、交易日/自然日、报价时点与起点。",
+      "interpretation": "波动幅度不指定方向；模型定价概率与真实发生概率不同，后者需要同类历史结果。",
+      "missing": "未知概率含义时只给已提供范围并标其性质，不擅自标注 68%/95%。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "prediction",
+        "meaning_note": "范围可由模型计算或外部预测获取，期限/概率解释来自所选方法；不是现成观察事实。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "term_series": {
+      "label": "隐含与实际波动期限",
+      "meaning": "同一截点和年化口径的到期天数及波动；保留实际波动窗口与隐含期限的区别。",
+      "definition": "同一截点不同期限定价或波动估计的曲线。",
+      "inputs": "期限天数、implied/realized、到期日、实现窗口、合约选择和方法。",
+      "unit_time": "同年化与尺度；天数采用自然日或交易日需说明，报价时间尽量同步。",
+      "interpretation": "隐含期限与实现历史窗不是同一种时间属性；曲线斜率不直接预测价格方向。",
+      "missing": "缺少某期限时保留缺口，插值只能来自明确方法并标为估计。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "隐含期限各点取IV或反算，实际波动各窗计算；相同单位不表示同一性质。"
+      }
+    },
+    "skew_series": {
+      "label": "波动偏斜曲线",
+      "meaning": "相同到期、截点与报价口径的行权价和隐含波动；不插入没有报价的点。",
+      "definition": "同一到期和截点下 IV 随行权价或方法定义的价内外程度变化。",
+      "inputs": "行权价、IV、看涨/看跌范围、到期、报价类型及合约 ID。",
+      "unit_time": "价格和 IV 原单位、同步报价时点、到期与年化口径一致。",
+      "interpretation": "偏斜描述期权相对定价，不直接等于实际下跌概率或投资者唯一信念。",
+      "missing": "无报价点保持缺失，不插入看似实测的平滑曲线点。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "报价/IV点获取或反算，偏斜形状与插值为计算；未报价点不当实测。"
+      }
+    },
+    "implied_volatility": {
+      "label": "隐含波动",
+      "meaning": "报价时点、期限、模型口径与结果。",
+      "definition": "指定期权报价和定价模型反推出的波动参数。",
+      "inputs": "合约、报价类型、IV 结果、模型、利率/分红等输入引用和求解状态。",
+      "unit_time": "注明报价与标的时间、期限、年化尺度和行权价选择。",
+      "interpretation": "IV 是模型定价参数而非未来实现波动的保证；不同模型/报价不必可比。",
+      "missing": "求解失败或报价无效时保持不可用，不用历史波动补位。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "供应商IV虽是获取值，但本质是模型反推统计；自行从期权价反算则为derived，不能叫实测波动。"
+      }
+    },
+    "realized_volatility": {
+      "label": "实际波动",
+      "meaning": "所选波动估计方法的结果。",
+      "definition": "依据已发生价格变化、按指定估计方法计算的波动结果。",
+      "inputs": "收益或价格输入范围、估计方式、采样频率、窗口、结果和版本。",
+      "unit_time": "明确年化、收益定义、比例/百分数和缺失/非交易时段处理。",
+      "interpretation": "实现波动是历史统计，不等同高低区间、ATR 或未来隐含定价。",
+      "missing": "历史不足或估计方法不可用时注明缺口，不更换度量而保留原名。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "由真实历史价格按所选估计/年化/窗口计算；结果不是未来波动预测。"
+      }
+    },
+    "term_structure": {
+      "label": "期限结构",
+      "meaning": "各期限的同口径结果。",
+      "definition": "不同期限上可比的波动或定价结果及结构解释。",
+      "inputs": "各期限/到期、原值、合约选择、方法与曲线差异说明。",
+      "unit_time": "同截点、年化、单位和报价口径，期权期限与回看窗口分开。",
+      "interpretation": "期限差异可含事件、流动性与模型因素；不能把升水曲线直接当上涨预测。",
+      "missing": "缺失期限不外推成真实报价，方法插值要单独标识。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "同截点不同期限IV是定价统计；期限比较和归一由方法完成，外部值保留原模型。"
+      }
+    },
+    "skew": {
+      "label": "偏斜",
+      "meaning": "方法定义的偏斜数据。",
+      "definition": "所选方法定义的偏斜、微笑或左右尾相对定价结果。",
+      "inputs": "偏斜定义、各合约/Delta/行权价、IV 或价差、到期、方法。",
+      "unit_time": "保留原量纲、Delta 定义、报价时间、年化和到期口径。",
+      "interpretation": "风险逆转、斜率与两侧 IV 差并非同指标；偏斜不能直接替代现实尾部概率。",
+      "missing": "没有对应合约或定义时标不可用，不从单个 IV 猜偏斜。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按明确到期/价内外程度/Delta口径计算偏斜；外部偏斜值仍是供应商统计。"
+      }
+    },
+    "event_premium": {
+      "label": "事件溢价",
+      "meaning": "方法提供的事件相关定价结果。",
+      "definition": "方法识别的、与特定事件相关的额外期权定价或波动成分。",
+      "inputs": "事件、合约期限、事件前后/含不含事件对照、估计值、分解方法与假设。",
+      "unit_time": "明确价格、波动点或方差单位，以及报价截点、事件时间和到期。",
+      "interpretation": "事件溢价依赖比较与模型，不是事件发生概率或方向；相邻到期差异未必全由事件造成。",
+      "missing": "无法分离事件成分时保留原期限差并说明，不能全部归为事件溢价。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "interpretation",
+        "meaning_note": "事件前后定价差是模型统计，归因于特定事件是解释；事件日程本身才是事实输入。"
+      }
+    },
+    "tails": {
+      "label": "尾部风险",
+      "meaning": "尾部描述；区分定价概率和实际发生概率。",
+      "definition": "期权或历史方法对极端结果区域的描述和估计。",
+      "inputs": "尾部定义/阈值、方向、期限、分布或价格依据、模型和实际历史结果。",
+      "unit_time": "明确损益/收益/价格单位及定价测度；概率若有使用 0–1 并标来源。",
+      "interpretation": "风险中性定价尾部不同于实际发生概率；尾部区间不等于最大可能损失。",
+      "missing": "缺少尾部样本或模型支持时只给已知边界，不凭稀少观测声称风险为零。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "历史尾部分位是统计，未来尾部风险或风险中性概率是模型推断；两种概率不可混用。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "quote_context": {
+      "label": "同步报价与合约口径",
+      "meaning": "标的与期权报价时点、合约范围、币种、价格口径及模型引用。",
+      "definition": "波动研究引用的现货和期权报价及合约环境。",
+      "inputs": "标的、合约范围、现货/期权时间、bid/ask/last/mid 类型、币种、模型引用。",
+      "unit_time": "注明交易所、乘数、到期、时间与时区，异步报价延迟明确。",
+      "interpretation": "中间价不是可执行价格；上笔成交可能陈旧，不能默认同一时间全链同步。",
+      "missing": "关键报价缺失或不一致时标注可用范围，不自动拼成同步快照。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "标的/期权报价时刻、合约ID、币种与报价类型来自真实源，模型引用来自计算回执。"
+      }
+    },
+    "volatility_surface": {
+      "label": "波动曲面结果",
+      "meaning": "期限、行权价/价内外程度、IV 与报价截点；缺失不插值冒充实测。",
+      "definition": "指定截点下按期限与行权价/价内外程度排列的 IV 数据。",
+      "inputs": "到期/期限、坐标定义、IV、合约、报价质量、模型和原始/插值标识。",
+      "unit_time": "同报价截点、年化尺度和坐标口径，价格与 Delta 坐标不可混淆。",
+      "interpretation": "曲面是定价结构；插值或外推点不能当成交实测，不能自动推出现实概率面。",
+      "missing": "缺失单元保持缺失；只有方法明确产出时才使用估计值并标记。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "观察节点IV来自外部统计或报价反算，拟合/插值为模型结果；各节点分别保留来源和缺失。"
+      }
+    },
+    "volatility_cone": {
+      "label": "波动锥结果",
+      "meaning": "期限、历史分位/范围、窗口、样本与估计方法。",
+      "definition": "同一历史波动方法在不同观察期限的历史范围或分位分布。",
+      "inputs": "各窗口长度、历史分位/极值、样本量、回看范围、估计与重叠处理方法。",
+      "unit_time": "一致年化、频率和收益定义，分位尺度与样本时间边界明确。",
+      "interpretation": "波动锥描述历史分布，不是未来价格置信带；重叠窗口不等于独立样本数。",
+      "missing": "某期限历史不足则标未覆盖，不从其他期限缩放补全。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "各持有窗口历史实现波动的分位/范围为统计，方法/样本窗口由研究选择。"
+      }
+    },
+    "liquidity": {
+      "label": "期权流动性",
+      "meaning": "合约 bid/ask、价差、成交量、未平仓量、报价时点与单位。",
+      "definition": "参与本次 IV/期限/偏斜研究的合约报价与交易活跃度。",
+      "inputs": "合约 ID、bid/ask、价差、成交量、未平仓量和对应时间。",
+      "unit_time": "价格单位、乘数、量的张数/份数、成交统计窗与 OI 所属日明确。",
+      "interpretation": "成交量与 OI 不同；窄历史价差不保证本次能按中价成交。",
+      "missing": "无报价、零成交与未知 OI 分开，不能把空白当零流动性。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "bid/ask/成交量/OI获取，价差计算，流动性好坏解释；各字段可能不同更新时点。"
+      }
+    }
+  }
+}

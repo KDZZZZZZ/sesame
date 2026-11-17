@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "prompt",
+      "path": "prompt.md",
+      "kind": "prompt",
+      "description": "触发条件、独立分析与综合原则"
+    },
+    {
+      "id": "skill",
+      "path": "skills/deep-reasoning/SKILL.md",
+      "kind": "skill",
+      "description": "角色选择、七阶段与交付路线"
+    },
+    {
+      "id": "protocol",
+      "path": "references/protocol.md",
+      "kind": "reference",
+      "description": "共同证据 E0、窄交接字段、综合和最终检查"
+    },
+    {
+      "id": "historical",
+      "path": "references/historical.md",
+      "kind": "reference",
+      "description": "H：因果参照类、案例偏差、基准频率与类比条件"
+    },
+    {
+      "id": "contradictions",
+      "path": "references/contradictions.md",
+      "kind": "reference",
+      "description": "D：具体制约、主次张力、反馈与条件演变"
+    },
+    {
+      "id": "game-theory",
+      "path": "references/game-theory.md",
+      "kind": "reference",
+      "description": "G：真实行动者、激励信息、候选均衡与协调证据"
+    },
+    {
+      "id": "reconciliation",
+      "path": "references/reconciliation.md",
+      "kind": "reference",
+      "description": "成对比较、最小责任链、七类修订与进展停止条件"
+    },
+    {
+      "id": "coordination",
+      "path": "references/coordination.md",
+      "kind": "reference",
+      "description": "现有宿主 Agent 与 Run 的实际独立并行及唯一报告交付"
+    },
+    {
+      "id": "readme",
+      "path": "README.md",
+      "kind": "reference",
+      "description": "独立插件使用、职责与安装说明"
+    },
+    {
+      "id": "provenance",
+      "path": "PROVENANCE.md",
+      "kind": "reference",
+      "description": "用户提供资料的来源、改编内容与授权范围"
+    },
+    {
+      "id": "evidence-example",
+      "path": "examples/evidence.json",
+      "kind": "reference",
+      "description": "带来源类型的完整合成 E0，非真实研究输入"
+    },
+    {
+      "id": "parallel-example",
+      "path": "examples/parallel-tasks.json",
+      "kind": "reference",
+      "description": "三个只共享 E0 的独立宿主 Agent 请求，合成示例"
+    },
+    {
+      "id": "review-cases",
+      "path": "examples/review-cases.md",
+      "kind": "reference",
+      "description": "支持、反例、缺证据与停止条件的合成校阅案例"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

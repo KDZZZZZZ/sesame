@@ -25,9 +25,3 @@ export async function readWorkspace(host, path, signal, operationId) {
   const ref = await host.resources.create({ kind: 'file', lifetime: 'durable', source: { path: target } }, { signal, ...(operationId ? { operationId: `report-import:${operationId}:${hash(target)}` } : {}) });
   return readBytes(host, ref, undefined, signal);
 }
-
-export async function writeWorkspace(host, path, content, signal) {
-  const result = await host.capabilities.invoke('sesame/workspace#write', { path, content }, { signal });
-  check(result.type === 'result', 'Workspace write must return an immediate result');
-  return result.value;
-}

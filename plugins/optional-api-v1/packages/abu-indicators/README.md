@@ -8,7 +8,7 @@
 
 通过 Sesame native 工具调用时，宿主会登记固定输入与输出数据集，并在结果中返回 `input_artifact` 与 `result_artifact`，便于用户和 Agent 查看同一证据；CLI 只读取/输出 JSON，不自动持久化数据集。
 
-上游参考固定为 `bbfamily/abu` commit `d602d847677e4c2b77b0a122df30816ea68b5710`。本包以 GPL-3.0-only 发布；来源、差异和信任边界见 `PROVENANCE.md` 与 `skills/abu-indicators/references/method.md`。
+上游参考固定为 `bbfamily/abu` commit `d602d847677e4c2b77b0a122df30816ea68b5710`。本包以 GPL-3.0-only 发布；来源、差异和信任边界见 `PROVENANCE.md` 与 `references/method.md`。
 
 ## API 2 调用契约
 

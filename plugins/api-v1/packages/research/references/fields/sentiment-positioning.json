@@ -1,0 +1,190 @@
+{
+  "title": "情绪与拥挤状态：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "sentiment_series": {
+      "label": "情绪与参照变化",
+      "meaning": "已计算的同口径情绪分数和参照，说明来源、量纲与覆盖变化。",
+      "definition": "同一情绪测量方法在连续观察窗的原值与参照序列。",
+      "inputs": "情绪值、基准、语料/群体、量表定义、方法版本和覆盖。",
+      "unit_time": "保持同频率、窗口、尺度方向和数据截点，方法更换标为断点。",
+      "interpretation": "情绪变化不同于价格变化；不同来源分数不可无说明拼接或平均。",
+      "missing": "缺测时间保留断点，不以中性值补齐。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "情绪分数由指定文本方法计算，外部得分可获取但仍是统计/评价；同源同尺度才能连线。"
+      }
+    },
+    "fear_series": {
+      "label": "恐惧指标变化",
+      "meaning": "同一恐惧指标的原尺度与历史值，来源口径单独说明。",
+      "definition": "某一已定义恐惧指标的历史序列。",
+      "inputs": "原恐惧值、来源/构成、量表范围、标签和历史覆盖。",
+      "unit_time": "同时间频率和版本，标明观察与可得时间及尺度方向。",
+      "interpretation": "恐惧指标可能基于文本、价格或其他输入，不默认等同 VIX 或市场风险概率。",
+      "missing": "来源未给值时保持缺失，不用波动率或情绪分数代替。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "默认展示指定外部恐惧指标原历史；若自建则是计算，必须明确公式/尺度，不能默认VIX。"
+      }
+    },
+    "subjectivity_series": {
+      "label": "文本主观性变化",
+      "meaning": "同一主观性量表、语料范围和时间频率的原始结果，不与情绪强度混合。",
+      "definition": "同一文本主观性量表随时间的原始结果。",
+      "inputs": "主观性值、语料范围、聚合窗内文档数、聚合方式、方法与参照。",
+      "unit_time": "同尺度同频率，标明高值意义、语言范围与版本变化。",
+      "interpretation": "主观性衡量意见表达等文本特性，不等于负面情绪、真实性或预测风险。",
+      "missing": "无主观性模型输出时标不可用，不从正负情绪强度反推。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "主观性是对文本的模型结果，区别于情绪正负；时间序列须固定模型和语料口径。"
+      }
+    },
+    "crowding_series": {
+      "label": "拥挤度与后续表现",
+      "meaning": "历史时点可知的拥挤指标与固定后续窗口实际收益；相关性不等于因果。",
+      "definition": "历史时点可知的拥挤度与随后实际结果之间的样本关系。",
+      "inputs": "历史 case_id、当时拥挤值、固定后续收益、原始样本、匹配与方法。",
+      "unit_time": "拥挤值保留原尺度，收益注明单位、起点与期限，信息须当时可得。",
+      "interpretation": "相关散点不证明拥挤造成反转；重叠和相近资产样本可能不独立。",
+      "missing": "缺历史定位或未结算收益时明确缺失/待结算，不用当前值回填历史。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "拥挤代理在历史时点可知，后续实际收益从价格算；相关图不是因果证据。"
+      }
+    },
+    "subjectivity": {
+      "label": "文本主观性",
+      "meaning": "文本主观性结果及原尺度/标签、语料和方法，与情绪方向不同。",
+      "definition": "文本表现为主观判断而非客观描述的程度或所选方法定义的指标。",
+      "inputs": "原值、尺度与标签、语料数量/范围、语言、方法和版本。",
+      "unit_time": "注明计算窗和语料可得时间，比例/评分及方向保持原定义。",
+      "interpretation": "主观性与情绪正负、证据量、新闻真实性不同，不能转成预测置信度。",
+      "missing": "未提供该指标时保持不可用，不以情绪绝对值代替。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "主观性分数/标签由声明方法产生；源文本获取、解释标签单列，不能把票数当主观性。"
+      }
+    },
+    "evidence_volume": {
+      "label": "情绪证据量",
+      "meaning": "语料数量/证据充分性等级及原定义；供应商 Confidence 不作为预测概率或历史置信度。",
+      "definition": "情绪或新闻评分背后的语料量、覆盖或供应商定义的证据充分性。",
+      "inputs": "独立消息/文档/来源数量、去重范围、供应商 Confidence 原值、量表与定义。",
+      "unit_time": "注明统计窗口、语言/渠道和计数单位；供应商等级按原尺度保留。",
+      "interpretation": "证据量 Confidence 不是行情预测 confidence 或 probability；报道多也可能高度重复。",
+      "missing": "定义未知时保留原标签与未知含义，不换算成 0–1 预测信心。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "实际样本数为统计；充分性等级为评价；供应商Confidence是其定义，不是预测概率。"
+      }
+    },
+    "fear_index": {
+      "label": "恐惧指标",
+      "meaning": "独立恐惧量表、来源、时间与比较范围；不默认等同 VIX。",
+      "definition": "所选来源对恐惧状态的独立指标或标签。",
+      "inputs": "指标名称、原值/标签、输入范围、尺度、历史比较与方法来源。",
+      "unit_time": "标明截点、历史窗口、频率和版本；不同恐惧量表分别保存。",
+      "interpretation": "恐惧指数不默认是 VIX，也不等于未来下跌概率；高恐惧的交易含义需另做历史验证。",
+      "missing": "未定义或缺值时说明不可用，不用情绪、IV 或主观印象补值。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "外部恐惧量表是获取的指数；自建则为派生，原尺度/方法/范围须单列。"
+      }
+    },
+    "coverage": {
+      "label": "来源与覆盖",
+      "meaning": "文本或持仓样本的来源及范围。",
+      "definition": "情绪或拥挤测量实际覆盖的文本、人群或持仓样本。",
+      "inputs": "来源、参与者/语料范围、样本量、去重/抽样规则、延迟与缺口。",
+      "unit_time": "说明观测窗、发布日期、首次可得时间和持仓报告的所属日期。",
+      "interpretation": "被覆盖群体不等于全市场；发帖者与真实持仓者也不相同。",
+      "missing": "样本未知时不声称代表性，来源中断不能解释为情绪归零。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "来源/市场/窗口/文本或持仓样本属性从源与实际查询回执获取；覆盖完整性需另证。"
+      }
+    },
+    "sentiment": {
+      "label": "情绪状态",
+      "meaning": "情绪值、量表定义及方法解释。",
+      "definition": "所选方法测得的情绪方向、强度或类别。",
+      "inputs": "原值、正负中性标签、尺度方向、语料/群体、方法与解释。",
+      "unit_time": "明确观察窗口、原量表、语言、数据截点及版本。",
+      "interpretation": "正面情绪不是上涨概率；同分不同供应商尺度不可比，不能默认线性归一化。",
+      "missing": "方法未产出或量表未知时保留状态与原值，不补中性或综合分数。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "数值情绪为计算或外部评分，强弱解释为推断；事实仅是所观察文本/行为。"
+      }
+    },
+    "changes": {
+      "label": "情绪变化",
+      "meaning": "同口径变化。",
+      "definition": "在可比覆盖和方法下情绪或拥挤指标的前后变化。",
+      "inputs": "前后值、两个窗口、变化幅度、来源覆盖变化与方法版本。",
+      "unit_time": "区分原分数差、百分比变动和百分点，窗口长度保持可比。",
+      "interpretation": "水平高和趋势上升不同；方法或语料变化不应伪称情绪转向。",
+      "missing": "没有可比基准则只报当前状态，未知变化不能记为零。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "同尺度情绪变化是两次真实结果的差值；原因属于解释。"
+      }
+    },
+    "crowding": {
+      "label": "拥挤状态",
+      "meaning": "真实定位或代理指标及其定义。",
+      "definition": "参与者定位集中、共同行为或其代理度量的当前状态。",
+      "inputs": "真实持仓或代理身份、原值、分母、样本群体、比较基准和方法。",
+      "unit_time": "注明持仓所属日、报告公开日、单位与历史窗口；实际定位和文本代理分开。",
+      "interpretation": "拥挤不自动意味着反转时点；代理指标不能冒充真实资金流或全市场仓位。",
+      "missing": "定位数据不可得时注明代理及范围，不能从价格上涨推定拥挤量。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "源持仓数量是事实，净仓/分位代理为统计，拥挤评价为解释；个人持仓不等于市场拥挤。"
+      }
+    },
+    "divergence": {
+      "label": "分歧与背离",
+      "meaning": "参与者分歧和与价格或持仓的关系。",
+      "definition": "不同参与群体、情绪与价格或持仓之间的可比差异。",
+      "inputs": "比较双方、指标定义、窗口、差异结果、可能解释与反证。",
+      "unit_time": "对齐时间、频率与各自尺度；不同单位保留独立展示。",
+      "interpretation": "背离是观察关系，不自动构成反转信号；预测需同类背离历史结果。",
+      "missing": "一方缺数据或不同步时说明不能确认背离，不补对照序列。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "分歧/背离数值由对齐数据计算，行为机制解释另列；参与者标签来自源或方法。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "trend_indicator": {
+      "label": "情绪趋势指标",
+      "meaning": "情绪趋势/直方图的值、尺度、基准与解释，不与情绪绝对强度混用。",
+      "definition": "情绪随时间变化的趋势度量或供应商直方图信号。",
+      "inputs": "趋势值、平滑/差分等原定义、基准、原尺度、计算窗和方法。",
+      "unit_time": "注明更新频率、截点、信号滞后及方向，保留与绝对情绪不同单位。",
+      "interpretation": "情绪仍负但改善可有正趋势；趋势信号不等于情绪水平或行情概率。",
+      "missing": "没有独立趋势结果时不从视觉线段自行生成趋势分数。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "情绪趋势/直方图由已算分数按明确规则派生；与绝对情绪强度不同。"
+      }
+    }
+  }
+}

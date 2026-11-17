@@ -32,19 +32,19 @@
     },
     {
       "id": "knowledge-4",
-      "path": "skills/price-action/references/execution.md",
+      "path": "references/execution.md",
       "description": "Price Action 价格行为可选 Python 计算的真实输入、执行与结果登记接口；已有匹配观察时可复用。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
-      "path": "skills/price-action/references/method.md",
+      "path": "references/method.md",
       "description": "Price Action 价格行为的操作定义、因果边界与反证；用于核对本次具体判据。",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
-      "path": "skills/price-action/references/validation.md",
+      "path": "references/validation.md",
       "description": "Price Action 价格行为从解释候选到可重复规则的验证前提、时间与样本外边界。",
       "kind": "reference"
     },

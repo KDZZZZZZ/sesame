@@ -13,7 +13,6 @@ const historicalBases = {
   visual: { content_width: 1160, body_size: 16, section_gap: 64, chart_height: 380, heading: 'sans', columns: 2 },
 };
 export const styleCatalog = Object.freeze({
-  overview: 'document.overview: one short conclusion, compact facts, optional short table and one native chart. Use report_structure.first_screen_fields for the selected reference. No repeated introduction; keep full analysis and evidence below.',
   default: { id: 'unified', title: '统一排版', description: '蓝色与随主题变化的黑白灰交替、无框留白；涨赚为绿，跌亏为红。', tokens: defaultTokens },
   blocks: ['judgment', 'judgments', 'metrics', 'range', 'scores', 'chart', 'logic', 'reasoning', 'group', 'paragraph', 'markdown', 'attachments', 'formula', 'table', 'details'],
   guidance: '所有报告使用同一套默认排版。按信息关系选择组件、并排或上下组合，不选择预设、不绑定分析方法。用户明确要求时可用受控 custom token 或保存的精确版本；配色按指标种类确定，盈亏涨跌固定红绿，回撤净值固定蓝灰，不因数值分布换色；样式不计算结论、分数或概率。',

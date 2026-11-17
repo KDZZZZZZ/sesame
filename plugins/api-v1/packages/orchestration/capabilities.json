@@ -26,13 +26,13 @@
     },
     {
       "id": "resource.3",
-      "path": "skills/coordinate-research/references/agent-runs.md",
-      "description": "知识资料 skills/coordinate-research/references/agent-runs.md",
+      "path": "references/agent-runs.md",
+      "description": "知识资料 references/agent-runs.md",
       "kind": "reference"
     },
     {
       "id": "resource.4",
-      "path": "skills/coordinate-research/references/workflow-plans.md",
+      "path": "references/workflow-plans.md",
       "description": "工作流计划与可调整阶段",
       "kind": "reference"
     }

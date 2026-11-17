@@ -23,8 +23,8 @@
     "README.md",
     "examples/case.json",
     "examples/expected.md",
-    "skills/elliott-wave/references/method.md",
-    "skills/elliott-wave/references/validation.md"
+    "references/method.md",
+    "references/validation.md"
   ],
   "provides": {},
   "engines": {

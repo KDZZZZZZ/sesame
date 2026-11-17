@@ -770,19 +770,19 @@
     },
     {
       "id": "resource.6",
-      "path": "skills/develop-plugins/references/authoring.md",
+      "path": "references/authoring.md",
       "description": "插件职责、显式声明、权限、配置依赖、知识分层和验证要求。",
       "kind": "reference"
     },
     {
       "id": "resource.7",
-      "path": "skills/develop-plugins/references/host-api.md",
+      "path": "references/host-api.md",
       "description": "八个宿主端口、能力与 Run、资源和入站消息的真实调用约定。",
       "kind": "reference"
     },
     {
       "id": "resource.8",
-      "path": "skills/develop-plugins/references/recovery.md",
+      "path": "references/recovery.md",
       "description": "安装失败、摘要冲突、未知结果及草稿恢复。",
       "kind": "reference"
     },
@@ -794,7 +794,7 @@
     },
     {
       "id": "management-operations",
-      "path": "skills/manage-plugins/references/operations.md",
+      "path": "references/operations.md",
       "kind": "reference",
       "description": "11 个插件管理工具的参数、版本字段、三态、配置入口和安装检查范围。"
     }

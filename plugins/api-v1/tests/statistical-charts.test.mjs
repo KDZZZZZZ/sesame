@@ -83,9 +83,9 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
         drawScratch({ ...bad, balanceTolerance: '0.00000000000000001' });
         const note = document.querySelector('#scratch .sc-missing-note').textContent;
         const start = document.querySelector('#waterfall [data-row-index="1"]'), fee = document.querySelector('#waterfall [data-row-index="2"]');
-        return { rejected, note, positive: Number(start.dataset.end) > Number(start.dataset.start), feeReduces: Number(fee.dataset.end) < Number(fee.dataset.start) };
+        return { rejected, note, description: document.querySelector('#scratch svg desc').textContent, positive: Number(start.dataset.end) > Number(start.dataset.start), feeReduces: Number(fee.dataset.end) < Number(fee.dataset.start) };
       });
-      assert.match(result.rejected, /does not reconcile/);assert.match(result.note, /rounding differences/);assert.ok(result.positive && result.feeReduces);
+      assert.match(result.rejected, /does not reconcile/);assert.equal(result.note, 'Rounding difference ≤ 0.00000000000000001');assert.match(result.description, /rounding differences/);assert.ok(result.positive && result.feeReduces);
     });
 
     await t.test('histogram preserves bin width, missingness, and original row identity', async () => {
@@ -189,7 +189,7 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         return { empty, missing, finite, centers, resized, children: target.childElementCount };
       });
-      assert.match(result.empty, /No observations/);assert.equal(result.missing.marks, 0);assert.match(result.missing.note, /2 missing/);
+      assert.match(result.empty, /No observations/);assert.equal(result.missing.marks, 0);assert.equal(result.missing.note, 'Missing: 2');
       assert.ok(result.finite);assert.ok(result.centers[0] < result.centers[1]);assert.equal(result.resized, 300);assert.equal(result.children, 0);
 
       // Reuse this page to exercise real ResizeObserver redraws with full CJK
@@ -218,7 +218,8 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
             before: n.querySelectorAll('[data-endpoint="before"]').length, after: n.querySelectorAll('[data-endpoint="after"]').length,
             lines: n.querySelectorAll('line').length, missing: n.dataset.missing === 'true' }));
           return { labels, marks, plotStart: Math.min(...[...svg.querySelectorAll('line.sc-grid')].map(n => Number(n.getAttribute('x1')))),
-            note: target.querySelector('.sc-missing-note').textContent, notes: target.querySelectorAll('.sc-missing-note').length,
+            legend: target.querySelector('[data-report-text="legend"]').textContent,
+            context: target.querySelector('[data-report-text="context"]').textContent, readingAreas: target.querySelectorAll('.sc-chart-reading').length,
             unchanged: JSON.stringify(longLabels.rows) === originalLongLabels, width: innerWidth, scroll: document.documentElement.scrollWidth };
         });
         assert.deepEqual(state.labels.map(n => n.text), rows.map(row => row.label));
@@ -228,12 +229,15 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
         assert.match(state.marks[0].label, /0\.52000000000000001/);
         assert.deepEqual(state.marks.map(n => [n.before, n.after, n.lines, n.missing]), [[1, 1, 1, false], [1, 0, 0, false], [0, 0, 0, true], [1, 1, 1, false]]);
         assert.match(state.marks[3].label, /同组基线: 0;/);
-        assert.equal(state.note, '空心：同组基线；实心：匹配样本。 2 组有缺失，缺失端点不连线。');
-        assert.equal(state.notes, 1);assert.equal(state.unchanged, true);assert.equal(state.scroll, state.width);
+        assert.equal(state.legend, '空心：同组基线 · 实心：匹配样本');
+        assert.equal(state.context, '缺失：2 组');
+        assert.equal(state.readingAreas, 1);assert.equal(state.unchanged, true);assert.equal(state.scroll, state.width);
         if (screenshots) await page.locator('#scratch').screenshot({ path: join(screenshots, `statistics-dumbbell-${width}-zh.png`) });
       }
       await page.evaluate(() => { document.documentElement.lang = 'en';drawScratch(longLabels); });
-      assert.match(await page.locator('#scratch .sc-missing-note').textContent(), /Hollow = .*filled = .*2 incomplete comparison\(s\)/);
+      assert.match(await page.locator('#scratch [data-report-text="legend"]').textContent(), /Hollow: .*Filled: /);
+      assert.equal(await page.locator('#scratch [data-report-text="context"]').textContent(), 'Incomplete: 2');
+      assert.match(await page.locator('#scratch svg desc').textContent(), /2 incomplete comparison\(s\)/);
       await page.evaluate(() => scratchHandle.destroy());
     });
     await t.test('strip readout explains original points and missingness in the report locale', async () => {
@@ -243,13 +247,16 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
         const state=await page.evaluate(({locale,rows})=>{
           document.documentElement.lang=locale;
           drawScratch({kind:'strip',x:'group',y:'value',rows,jitter:.15});
-          return {note:document.querySelector('#scratch .sc-missing-note').textContent,marks:[...document.querySelectorAll('#scratch [data-stat-mark="strip"]')].map(e=>({index:e.dataset.rowIndex,x:e.getAttribute('cx'),y:e.getAttribute('cy'),label:e.getAttribute('aria-label')}))};
+          return {note:document.querySelector('#scratch [data-report-text="context"]').textContent,help:document.querySelector('#scratch svg desc').textContent,visible:document.querySelector('#scratch').innerText,marks:[...document.querySelectorAll('#scratch [data-stat-mark="strip"]')].map(e=>({index:e.dataset.rowIndex,x:e.getAttribute('cx'),y:e.getAttribute('cy'),label:e.getAttribute('aria-label')}))};
         },{locale,rows});
         states.push(state);assert.deepEqual(state.marks.map(m=>m.index),['0','2']);
         assert.match(state.marks[0].label,/1\.2408098449819225/);
       }
-      assert.equal(states[0].note,'每个点代表一条原始记录；上下错开仅为避免重叠。 1 条记录缺少数值，未画成零。');
-      assert.equal(states[1].note,'One point = one registered row; vertical offset only separates overlapping points. 1 missing value(s) are omitted, not plotted at zero.');
+      assert.equal(states[0].note,'缺失：1');
+      assert.equal(states[1].note,'Missing: 1');
+      assert.equal(states[0].help,'每个点代表一条原始记录；上下错开仅为避免重叠。\n1 条记录缺少数值，未画成零。');
+      assert.equal(states[1].help,'One point = one registered row; vertical offset only separates overlapping points.\n1 missing value(s) are omitted, not plotted at zero.');
+      for (const state of states) assert.ok(!state.visible.includes(state.help), 'Point-placement help remains accessible without a visible tutorial');
       assert.deepEqual(states[0].marks,states[1].marks,'Language changes only the explanatory note');
     });
     assert.deepEqual(errors, []);

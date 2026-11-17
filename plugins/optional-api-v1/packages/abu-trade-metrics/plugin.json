@@ -24,11 +24,11 @@
     "examples/input.json",
     "scripts/baseline.mjs",
     "scripts/runtime.mjs",
-    "skills/abu-trade-metrics/references/method.md",
+    "references/method.md",
     "AUDIT-PROVENANCE.md",
     "examples/audit-input.json",
     "scripts/audit.mjs",
-    "skills/abu-trade-metrics/references/audit.md"
+    "references/audit.md"
   ],
   "provides": {},
   "engines": {

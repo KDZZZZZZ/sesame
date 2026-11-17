@@ -1,0 +1,162 @@
+{
+  "title": "条件筛选与机会候选：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "ranking_series": {
+      "label": "候选条件比较",
+      "meaning": "用户所选筛选方法的真实指标或评分及定义；没有评分方法时不自行合成总分。",
+      "definition": "既有筛选方法对候选给出的排序指标或原始分数。",
+      "inputs": "候选 ID、score、评分定义、排名、排序方向、输入版本。",
+      "unit_time": "保持同尺度、同观察窗与截点，明确分数单位和高低含义。",
+      "interpretation": "图不重算综合评分、不因显示排序改变方法排名；分数不是成功概率。",
+      "missing": "无分数但有候选可用文字列表，不能为绘图补主观分数。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "指标/得分与排序来自实际筛选计算；外部得分可获取但仍是其统计/评价，不能按图形重算。"
+      }
+    },
+    "tradeoff_series": {
+      "label": "风险与收益特征",
+      "meaning": "同观察窗的风险、收益及资产标识；历史表现不作为预测概率。",
+      "definition": "候选在可比历史窗口的风险与收益位置。",
+      "inputs": "候选、risk、return_pct、两项度量定义、历史窗口、费用和方法。",
+      "unit_time": "风险及收益单位分别明确，年化和累计不可混，所有点说明样本区间。",
+      "interpretation": "历史风险收益点不等于未来有效前沿或预测概率；点少不做平滑暗示。",
+      "missing": "缺一维时保留候选缺口，不用零风险/收益占位。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "同窗收益和风险指标由历史数据计算，资产ID取源；历史位置不是未来概率。"
+      }
+    },
+    "universe": {
+      "label": "市场范围",
+      "meaning": "资产范围、截点和数据覆盖。",
+      "definition": "本次实际筛选的资产范围和可获得数据边界。",
+      "inputs": "资产集合/规则、市场、纳入排除条件、数据覆盖和时点版本。",
+      "unit_time": "记录筛选截点、历史可交易性、币种及退市/新上市处理。",
+      "interpretation": "当前投资池不一定代表历史可投资池；宇宙范围决定筛选结论适用范围。",
+      "missing": "资产不可得或覆盖不全时说明分母，不声称全市场已筛选。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "可交易身份由目录获取，纳入排除由任务/方法决定，历史范围必须用当时可得名单。"
+      }
+    },
+    "criteria": {
+      "label": "筛选条件",
+      "meaning": "方法实际采用的筛选条件。",
+      "definition": "实际执行的筛选条件及其判定口径。",
+      "inputs": "条件名、指标定义、阈值/范围、单位、时间窗和原规则引用。",
+      "unit_time": "记录阈值尺度与输入可得时间，条件使用同一约定截点。",
+      "interpretation": "筛选条件来自用户或所选方法，不自动增加无关指标；满足条件不等于可交易或盈利。",
+      "missing": "必要输入缺失时标未判定，不按 false 或零值静默排除。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "筛选条件由用户或所选方法实际指定，阈值不属于客观市场事实。"
+      }
+    },
+    "candidates": {
+      "label": "候选与排序",
+      "meaning": "候选、排序、分数定义和入选依据。",
+      "definition": "既定筛选和排序后得到的资产候选及入选理由。",
+      "inputs": "资产身份、排名、原分数/指标、命中条件、状态和证据。",
+      "unit_time": "同筛选运行、数据截点和指标尺度，价格/币种等单位明确。",
+      "interpretation": "候选是进一步研究对象，不是买入指令；入选理由不同于预测置信度。",
+      "missing": "确认无候选可空列表并注明规则，筛选未完成则说明 pending。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "候选身份来自源，指标/分数/排序由计算，入选理由为解释。"
+      }
+    },
+    "coverage_gaps": {
+      "label": "覆盖缺口",
+      "meaning": "与本次任务相关的数据缺口。",
+      "definition": "会影响本次筛选覆盖或候选可信范围的实际资料缺口。",
+      "inputs": "缺失资产/字段/期间、原因、受影响条件、已覆盖分母及可能影响。",
+      "unit_time": "时间范围与筛选截点明确，缺口数量按资产或观测单位说明。",
+      "interpretation": "数据不可得与不满足条件不同；缺口不自动代表负面信号。",
+      "missing": "缺口范围未知就说明未知，不猜测排除数量或缺失值。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "实际失败/缺行/截断来自回执，是否足以代表目标市场由研究核查；不能把未查到当不存在。"
+      }
+    },
+    "follow_up": {
+      "label": "后续研究",
+      "meaning": "待研究问题和入口。",
+      "definition": "筛选之后仍需完成的具体研究问题与成果入口。",
+      "inputs": "候选、待确认问题、所需数据/方法、已有成果引用和建议触发点。",
+      "unit_time": "注明问题适用期和需要更新的数据时点。",
+      "interpretation": "建议研究不是已安排任务或交易；不强制所有候选执行同一方法。",
+      "missing": "没有必要后续事项可省略，不为每个候选复制空泛步骤。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "plan",
+        "meaning_note": "后续研究项目由当前缺口和用户目标推导，不是外部事实。"
+      }
+    },
+    "selection_logic": {
+      "label": "筛选逻辑",
+      "meaning": "条件之间的 AND/OR 等关系、阈值及输入版本；逻辑由用户/方法指定。",
+      "definition": "实际筛选条件之间的布尔或规则组合关系。",
+      "inputs": "条件引用、AND/OR/嵌套关系、阈值、缺失判定和固定规则版本。",
+      "unit_time": "各条件的窗口、单位与截点可追溯，先后执行关系明确。",
+      "interpretation": "选择逻辑和阈值由用户或研究方法确定；研究结果应与实际执行规则对应。",
+      "missing": "源码/规则未提供时只标已知条件，不编造 AND/OR 关系。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "AND/OR、阈值、输入版本由用户/方法提供，实际执行回执验证其落实。"
+      }
+    },
+    "rank_rules": {
+      "label": "排序与并列规则",
+      "meaning": "排序依据、方向、并列处理与保留数量，以及采用这些规则得到的实际结果。",
+      "definition": "筛选后排序和截取候选的既定规则。",
+      "inputs": "排序键、升降序、主次级顺序、并列处理、Top N 与缺失值处理。",
+      "unit_time": "评分尺度、截点、规则版本明确，Top N 是数量不是阈值概率。",
+      "interpretation": "排序指标与筛选条件可以不同；更换排序规则应明确记录，不能暗改已完成筛选。",
+      "missing": "规则缺失时沿原结果顺序并说明未获排序定义，不自行选最优。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "排序方向、并列和Top N是已选规则；运行前约定与实际结果分开。"
+      }
+    },
+    "candidate_details": {
+      "label": "机会详情与状态",
+      "meaning": "候选身份、技术事件引用、检测时间、bar 周期、持有期限、预期行为、状态及详情引用。",
+      "definition": "每个候选对应技术事件和研究状态的可追溯细节。",
+      "inputs": "资产/事件 ID、检测时间、方法、bar 周期、持有/预测期限、预期行为、状态与详情引用。",
+      "unit_time": "分开事件发现、确认、数据首次可得时间，原值保留单位。",
+      "interpretation": "候选事件不等于持仓或已成交；预期行为涉及预测时需要自己的同类历史结果。",
+      "missing": "未确认事件或历史不足时保留状态，不补确定方向/成功率。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "身份/源价获取，事件/检测状态来自方法记录，期限/预期行为属于计划或预测。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "backtest_refs": {
+      "label": "筛选历史表现引用",
+      "meaning": "对应筛选规则版本与 策略回测与历史表现/原生回测固定结果引用；不以条件频率替代回测。",
+      "definition": "对本次筛选规则与后续持有策略进行历史模拟的固定成果入口。",
+      "inputs": "策略/筛选版本、run/result 引用、样本期间、成本/持仓规则和 策略回测与历史表现 或原生报告。",
+      "unit_time": "注明运行和数据截点、训练/留出范围、币种及模拟身份。",
+      "interpretation": "条件出现频率或 历史同类特征验证 情景统计不等于可执行策略回测；不同规则版本不能借用业绩。",
+      "missing": "没有对应回测就标未回测，不引用相似策略冒充验证。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "读取已真实完成、与筛选规则版本一致的固定回测ref；模拟结果身份不变成市场事实。"
+      }
+    }
+  }
+}

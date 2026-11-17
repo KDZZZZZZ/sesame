@@ -39,7 +39,7 @@ test('internal and external authoring install, load, execute and reopen on the m
       assert.equal(result.type, 'result'); return result.value;
     };
     await t.test('the installed skill, API reference and portable CLI are readable by the Agent', async () => {
-      for (const path of ['skills/manage-plugins/SKILL.md', 'skills/manage-plugins/references/operations.md', 'skills/develop-plugins/SKILL.md', 'skills/develop-plugins/references/host-api.md', 'skills/develop-plugins/references/authoring.md', 'scripts/create-plugin.mjs']) {
+      for (const path of ['skills/manage-plugins/SKILL.md', 'references/operations.md', 'skills/develop-plugins/SKILL.md', 'references/host-api.md', 'references/authoring.md', 'scripts/create-plugin.mjs']) {
         const resource = await call('plugin_read', { pluginId: 'sesame/plugin-manager', part: 'resource', path });
         assert.ok(resource.content.length > 100, path);
       }

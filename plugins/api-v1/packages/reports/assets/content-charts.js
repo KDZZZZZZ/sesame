@@ -6,17 +6,26 @@
     for (const chart of charts) {
       const rows = chart.rows ?? await reportKit.rows(chart.dataId, { maxRows: 2500 });
       const extra = Object.fromEntries(await Promise.all((chart.chartData??[]).map(async item=>[item.property,await reportKit.rows(item.data_id,{maxRows:2500})])));
-      const evidence = document.getElementById(`${chart.id}-evidence`);
-      if (evidence && (!chart.rows || chart.chartData?.length)) evidence.textContent = JSON.stringify({ data_id: chart.dataId, rows, ...(chart.nodes ? {nodes:chart.nodes} : {}), ...extra }, null, 2);
-      const spec = { ...chart.options, kind: chart.kind, title: chart.title, caption: chart.caption };
       const target = document.getElementById(chart.id);
-      if (kit.has(chart.kind)) {
-        const figure = reportKit.chart(target, { ...spec, data: rows });
-        // The document owns the visible caption. Keep title/caption in the
-        // built-in model so its SVG remains named, including after resize.
-        figure.querySelector(':scope > figcaption')?.remove();
-      }
-      else SesameCharts.chart(target, { ...spec, rows, ...(chart.nodes ? { nodes: chart.nodes } : {}), ...extra });
+      const interactions = window.SesameReportInteractions;
+      const draw = () => {
+        reportKit.destroy(target); SesameCharts.destroy(target); target.replaceChildren();
+        const selected = interactions ? interactions.filter(rows, chart.filter, chart.scope) : rows;
+        const options = interactions ? interactions.options(chart.options, chart.optionControls, chart.scope) : chart.options;
+        const spec = { ...options, kind: chart.kind, title: chart.title };
+        if (!selected.length) { const empty = document.createElement('p'); empty.textContent = /^zh/i.test(document.documentElement.lang) ? '没有匹配的数据' : 'No matching data'; target.append(empty); return; }
+        if (kit.has(chart.kind)) {
+          const figure = reportKit.chart(target, { ...spec, data: selected });
+          // The document owns visible prose; retain accessible chart naming.
+          figure.querySelector(':scope > figcaption')?.remove();
+        }
+        else SesameCharts.chart(target, { ...spec, rows: selected, ...(chart.nodes ? { nodes: chart.nodes } : {}), ...extra });
+      };
+      draw();
+      if (chart.scope) interactions.subscribe(chart.scope, () => {
+        const work = Promise.resolve().then(draw).then(() => new Promise(resolve => requestAnimationFrame(resolve)));
+        if (window.report?.track) window.report.track(work).catch(() => {}); else work.catch(error => console.error(error));
+      });
     }
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   });

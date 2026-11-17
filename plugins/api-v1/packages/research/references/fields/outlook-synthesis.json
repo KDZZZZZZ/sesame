@@ -1,0 +1,169 @@
+{
+  "title": "多特征综合预测：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "evidence_series": {
+      "label": "各项推断的历史支持",
+      "meaning": "每项特征推断在同类历史情景中的实际结果与基准；配套 inference_evidence 逐项记录口径，不把差值当独立贡献。",
+      "definition": "逐特征推断在各自可比历史情景中的实际结果与基准对照。",
+      "inputs": "claim、conditional/baseline、n/baseline_n、目标、方法和 inference_evidence 对应引用。",
+      "unit_time": "只将同目标、期限、单位和口径放入同一比较轴，样本窗口明确。",
+      "interpretation": "条件差值不是独立预测贡献；相关特征的支持不能相加或多数投票变概率。",
+      "missing": "某推断历史或基准缺失时标未支持，不以其他特征结果替代。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "历史实际结局及基准是统计，图中各推断是解释/预测；差值不自动等于独立贡献。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "confidence": {
+      "label": "置信度及依据",
+      "meaning": "置信度定义、统计不确定性、验证状态和依据；不预设评分法。",
+      "definition": "所选综合方法对本次判断可靠性或统计不确定性的明确评价。",
+      "inputs": "definition、estimate 或 assessment、可选区间、综合方法、历史联合情景结果与 validation。",
+      "unit_time": "数值 estimate/区间/level 为 0–1，区间另有 method_ref；评价关联具体目标、期限与截点。",
+      "interpretation": "预测置信度不是供应商新闻证据量、主观自评分或历史胜率；定性评价也须有其历史依据。",
+      "missing": "没有可比历史或明确定义时用 unavailable/pending，不填 50%、高/中/低或自评百分数。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "统计区间可计算、模型置信可推断、验证状态取记录，定义分别列；不默认评分法或供应商Confidence。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "outlook_series": {
+      "label": "目标结果概率",
+      "meaning": "独立综合方法提供的同一目标概率及其历史依据；原值为 0–1，不用指标投票代替概率。",
+      "definition": "独立综合研究方法已经产出的目标结果概率分布。",
+      "inputs": "outcome、probability、完整目标、综合方法、历史依据、验证状态和类别覆盖。",
+      "unit_time": "概率原值 0–1，所有类别同一目标/期限/截点；完备类别才要求总和为 1。",
+      "interpretation": "特征票数、置信度和历史频率不能直接改名为综合概率；归一化也不能产生本不存在的预测结果。",
+      "missing": "缺综合历史检验或分布时不给概率柱，保留有证据的定性结论。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "同一目标的概率分布由独立综合方法提供，是预测；图形只展示，不归一化指标投票。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "target": {
+      "label": "预测目标与期限",
+      "meaning": "明确结果、期限、截点和口径。",
+      "definition": "综合预测试图回答的可观测结果及结算规则。",
+      "inputs": "标的、结果变量、阈值/类别、参考价/起点、预测截点、期限和结算方法。",
+      "unit_time": "价格/收益/事件单位、币种、交易日/自然日与时区明确。",
+      "interpretation": "预测上涨、达到目标价和净盈利是不同目标；后续评价必须沿用原定义。",
+      "missing": "目标或期限未确定时不能输出可检验概率，保留待明确事项。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "结果事件、期限、截点和结算口径来自任务/方法约定，不是外部数据事实。"
+      }
+    },
+    "supporting": {
+      "label": "支持证据",
+      "meaning": "方法提供的支持项及历史依据。",
+      "definition": "所选综合方法认定支持当前判断的具体证据。",
+      "inputs": "推断 ID、当前观察、知识解释、同类历史实际结果、基准、方法与固定引用。",
+      "unit_time": "逐项目标/期限/信息可得时间可追溯，不同尺度保留原值。",
+      "interpretation": "支持方向不等于独立贡献；理论理由不能代替历史结果，不能只留有利样本。",
+      "missing": "缺历史支持的项标假说/待验证，不补权重或置信度。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "各支持项分别为原始事实、计算统计或方法解释，是否支持属于推断；每项历史依据单列。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "opposing": {
+      "label": "相反证据",
+      "meaning": "方法提供的相反证据。",
+      "definition": "与当前综合判断冲突、削弱或限定其适用范围的证据。",
+      "inputs": "相反观察/推断、历史失败案例、与支持项的冲突、方法和固定引用。",
+      "unit_time": "记录观察截点、目标期限及样本口径，避免事后信息。",
+      "interpretation": "相反证据不是必须强凑的对称观点；其影响由综合方法说明，不机械正负相抵。",
+      "missing": "未发现反证需说明检索范围；未检索不等于无反证。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "相反事实/统计获取或计算，构成反证的含义由方法解释，不能因不支持主结论而省略。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "overlap": {
+      "label": "重复信息与冲突",
+      "meaning": "综合方法对冗余或冲突的处理说明。",
+      "definition": "综合方法如何处理特征之间共享输入、冗余与冲突。",
+      "inputs": "相关推断 ID、共同来源/机制、依赖处理、冲突规则、方法版本和实际运行结果。",
+      "unit_time": "说明处理所用数据窗口、目标期限及当时可得性。",
+      "interpretation": "多个技术指标可能重复反映同一价格信息；不能把去重后数量当概率算法。",
+      "missing": "方法未处理或未披露依赖时明确局限，不自创新权重掩盖。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "相关/冗余量可计算，哪些信息重复或冲突及处理方式由综合方法判断。"
+      }
+    },
+    "probabilities": {
+      "label": "结果概率",
+      "meaning": "所选方法提供的结果分布；类别和目标由任务确定。",
+      "definition": "所选综合方法对同一可结算目标给出的结果概率分布。",
+      "inputs": "target、exhaustive、items 中 label/probability、方法、联合历史依据、基准和验证状态。",
+      "unit_time": "概率为 0–1，类别共享起点/期限/单位；只有 exhaustive:true 时总和为 1。",
+      "interpretation": "类别不固定为涨/平/跌；模型输出需说明验证程度，单特征频率不能直接拼接综合分布。",
+      "missing": "没有综合历史结果时置不可用；部分覆盖不擅自归一化或补剩余类别。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "结果概率是指定目标/期限下的模型预测；外部概率若获取也仍是预测。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "scenarios": {
+      "label": "条件情景",
+      "meaning": "方法提供的条件判断，不暗示分支权重。",
+      "definition": "综合研究中的有条件未来路径及可能结果。",
+      "inputs": "情景 ID、条件、支持/反对依据、结果、期限、失效与相应历史案例。",
+      "unit_time": "统一目标、价格/收益单位、参考截点和触发观察方式。",
+      "interpretation": "情景叙述不自动含分支概率，知识推演与历史证据应分别可查；相互重叠须说明。",
+      "missing": "未研究情景不补结果；缺概率时保留条件表述不平均分配。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "条件分支与结果由方法推断，条件事实和预测分开；无概率不暗示等权。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "invalidation": {
+      "label": "更新或失效条件",
+      "meaning": "改变判断的观测条件。",
+      "definition": "触发综合判断重新评估或失效的未来可观察条件。",
+      "inputs": "对应判断/情景、指标或事件条件、判定门槛、期限和方法依据。",
+      "unit_time": "注明单位、数据频率、首次可得时间要求和收盘/盘中判定方式。",
+      "interpretation": "失效不同于止损、到期或单项反证出现；条件必须与当前判断有关。",
+      "missing": "未定义条件时明确缺口，不自动用价格跌幅或任意阈值。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "plan",
+        "meaning_note": "哪些新观察会更新或推翻判断是事前约定的研究判据。"
+      }
+    },
+    "inference_evidence": {
+      "label": "各项推断的历史依据",
+      "meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+      "definition": "组成综合判断的各个可检验推断及逐项历史支持。",
+      "inputs": "推断 ID/claim、所选知识/方法、同类历史结果、基准、置信度定义、验证与证据引用。",
+      "unit_time": "每项有自己的目标、期限、截点和样本窗，使用当时可得数据。",
+      "interpretation": "知识假说须对照实际历史，特征支持度不能相加；综合概率另需联合方法及历史检验。",
+      "missing": "无对应历史时该项设 unavailable/pending，不以一份通用报告支撑全部推断。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "逐项命题为推断，历史匹配/实际结果为计算与事实，验证状态/定义来自回执；综合方法需另有联合依据。"
+      },
+      "historical": "evidence-and-judgment"
+    }
+  }
+}

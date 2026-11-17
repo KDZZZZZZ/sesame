@@ -17,7 +17,7 @@ description: 按任务发现和读取插件、加载现有能力、安装或更�
 
 mounted 为默认装配，discoverable 为按需发现和会话加载，disabled 不能靠 plugin_load 绕过。plugin_set_state 的 scope:"workspace" 以 enabled:true/false 设置 mounted/disabled；scope:"session" 只调整当前会话 loadout，不改变工作区三态。当前工具不提供直接设置 discoverable 的参数，不伪造枚举；完整三态由客户端设置提供。
 
-加载不等于连接成功。按错误查看依赖和统一配置目录，对实际需要的字段完成配置后验证业务能力；不能把未配置、运行失败、未加载混为一种状态。配置入口与精确版本字段见 [管理接口](references/operations.md)。
+加载不等于连接成功。按错误查看依赖和统一配置目录，对实际需要的字段完成配置后验证业务能力；不能把未配置、运行失败、未加载混为一种状态。配置入口与精确版本字段见 [管理接口](../../references/operations.md)。
 
 ## 3. 安装或更新
 

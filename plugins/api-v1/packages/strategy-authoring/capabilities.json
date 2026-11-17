@@ -37,7 +37,7 @@
       ],
       "usage": {
         "purpose": "Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.",
-        "inputs": "source_path 是工作区 SVL JSON。语言与合法示例从本插件 skills/strategy-authoring/references/language.md、examples/close-threshold.svl.json 读取。",
+        "inputs": "source_path 是工作区 SVL JSON。语言与合法示例从本插件 references/language.md、examples/close-threshold.svl.json 读取。",
         "outputs": "{sourceDigest,operators,diagnostics,graph,validationScope:\"svl-source-only\"}，对应实际解析与静态语义。",
         "prerequisites": [
           "sesame/workspace 可读；源≤1MiB。"
@@ -688,13 +688,13 @@
     },
     {
       "id": "reference-0",
-      "path": "skills/strategy-authoring/references/language.md",
+      "path": "references/language.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
     {
       "id": "reference-1",
-      "path": "skills/strategy-authoring/references/architecture.md",
+      "path": "references/architecture.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
@@ -724,13 +724,13 @@
     },
     {
       "id": "reference-6",
-      "path": "skills/strategy-authoring/references/pipeline.md",
+      "path": "references/pipeline.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
     {
       "id": "reference-7",
-      "path": "skills/strategy-authoring/references/agent-inputs.md",
+      "path": "references/agent-inputs.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
@@ -754,19 +754,19 @@
     },
     {
       "id": "reference-11",
-      "path": "skills/strategy-authoring/references/methods.md",
+      "path": "references/methods.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
     {
       "id": "reference-12",
-      "path": "skills/strategy-authoring/references/execution.md",
+      "path": "references/execution.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },
     {
       "id": "reference-13",
-      "path": "skills/strategy-authoring/references/quant-functions.md",
+      "path": "references/quant-functions.md",
       "description": "策略语言、方法或可重放示例。",
       "kind": "reference"
     },

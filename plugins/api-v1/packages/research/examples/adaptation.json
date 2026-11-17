@@ -1,0 +1,88 @@
+[
+  {
+    "question": "这家公司财报前应该看什么？",
+    "methods": [
+      "earnings-preview"
+    ],
+    "spine": "事前预期—待揭晓经营变量—公布后怎样解读",
+    "omit": [
+      "已实现业绩点评",
+      "完整公司估值"
+    ]
+  },
+  {
+    "question": "这家公司财报哪里超预期？",
+    "methods": [
+      "earnings-review"
+    ],
+    "spine": "实际预期差—经营与一次性贡献—预测修订",
+    "omit": [
+      "重新介绍全部公司背景"
+    ]
+  },
+  {
+    "question": "这家公司现在贵不贵？",
+    "methods": [
+      "valuation"
+    ],
+    "spine": "价格隐含要求—可支持经营假设—价值敏感性",
+    "omit": [
+      "强行加入财报日历"
+    ]
+  },
+  {
+    "question": "利润增长为什么股价跌了？",
+    "methods": [
+      "event-explanation",
+      "earnings-review"
+    ],
+    "spine": "时间顺序—事前预期与指引—竞争解释",
+    "omit": [
+      "拼接两套完整报告"
+    ]
+  },
+  {
+    "question": "AI投资怎样影响电力公司的长期价值？",
+    "methods": [
+      "valuation",
+      "macro-transmission",
+      "business-quality"
+    ],
+    "spine": "需求—资本投入与融资—监管回报—现金流和价值",
+    "omit": [
+      "完整全球宏观综述"
+    ]
+  },
+  {
+    "question": "只把已有报告排版改好",
+    "methods": [],
+    "spine": "复用现有正文和固定数据交Reports",
+    "omit": [
+      "重新取证",
+      "重新回测"
+    ]
+  },
+  {
+    "question": "陌生新品种的结算安排怎样影响持有收益？",
+    "methods": [
+      "concept-explanation",
+      "comparison"
+    ],
+    "spine": "先查真实合约和结算机制，再按持有期构建问题专属调查",
+    "omit": [
+      "目录未命中就停止",
+      "强套公司财报"
+    ]
+  },
+  {
+    "question": "只要本周的事件日历",
+    "methods": [
+      "opportunity-and-calendar"
+    ],
+    "spine": "时点—事件—已知预期与相关资产",
+    "omit": [
+      "配置建议",
+      "长篇市场预测"
+    ]
+  }
+]

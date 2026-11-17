@@ -8,7 +8,7 @@
     {
       "pluginId": "sesame/factor-research",
       "sourcePath": "plugins/optional-api-v1/packages/factor-research",
-      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。",
+      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。 2026-11-16: retained CLI guidance now reuses existing fixed data references with Reports components; research semantics and executable fixtures remain unchanged.",
       "replacementPluginId": "sesame/auto-factor-mining",
       "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "retainedResources": [
@@ -34,14 +34,14 @@
         },
         {
           "path": "references/factor-cli.md",
-          "sha256": "sha256:823e7c99ef7cb7a4c204a83bd0ebe9de2d26355bb673a915bf13f25810f9bd80"
+          "sha256": "sha256:9722216db89fe16f40c14880f796fedb80a3ee8ccea0ef56c888e4ff2dac357b"
         }
       ]
     },
     {
       "pluginId": "sesame/strategy-research",
       "sourcePath": "plugins/optional-api-v1/packages/strategy-research",
-      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。",
+      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。 2026-11-16: retained CLI guidance now reuses existing fixed data references with Reports components; research semantics and executable fixtures remain unchanged.",
       "replacementPluginId": "sesame/auto-factor-mining",
       "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "retainedResources": [
@@ -71,7 +71,7 @@
         },
         {
           "path": "references/strategy-cli.md",
-          "sha256": "sha256:7d45ee5bc21f403e9ed0d4b57957b55d5f22f21cb07f506fdf6b7d4673f0d8e7"
+          "sha256": "sha256:f4a638f7f5e247457d7dce1a9774182d12455f0954e4d1623eeeb2be513b3b6c"
         }
       ]
     }

@@ -53,7 +53,7 @@
 | --- | --- | --- |
 | [historical-evidence](../plugins/optional-api-v1/packages/historical-evidence/README.md) | `analysis / function`；历史匹配、校准及固定引用读取 | 固定特征与到期结果的分层匹配；前瞻原记录与今日 historical_replay 分开，回放仅探索诊断、不输出当前校准概率 |
 | [factor-evaluator](../plugins/optional-api-v1/packages/factor-evaluator/README.md) | `analysis / function`；`factor_evaluate` | `index.js` 注册，`engine.js` 负责有界 AST、数据时点和实际指标，`evaluator.js` 负责可信调用者、冻结选择、回执与原 `sessions` 状态。局部评估协议已有完整边界；保留唯一串行队列、CAS、持久资源和原所有权校验 |
-| [strategy-authoring](../plugins/api-v1/packages/strategy-authoring/skills/strategy-authoring/references/architecture.md) | `analysis / service`；原 10 个策略/模型判断/生命周期能力 | 复用 SDK 的 SVL 验证/图/回放；`lib/` 已按组合、风险、执行回放、量化函数、模型判断与持久记录划分。`artifact-io.js` 保留固定文件与成果 I/O；不再分散现有账本、生命周期和状态。图的前端布局由宿主呈现 |
+| [strategy-authoring](../plugins/api-v1/packages/strategy-authoring/references/architecture.md) | `analysis / service`；原 10 个策略/模型判断/生命周期能力 | 复用 SDK 的 SVL 验证/图/回放；`lib/` 已按组合、风险、执行回放、量化函数、模型判断与持久记录划分。`artifact-io.js` 保留固定文件与成果 I/O；不再分散现有账本、生命周期和状态。图的前端布局由宿主呈现 |
 | [web-extract](../plugins/optional-api-v1/packages/web-extract/skills/web-extract/SKILL.md) | `search / function`；`extract_webpage` | `index.js` 注册；共用 `parser.js` 处理宿主 transport；`server.py` 负责 HTML 正文、标题和链接规则。只解析已有内容 |
 | [rss-collect](../plugins/optional-api-v1/packages/rss-collect/skills/rss-collect/SKILL.md) | `search / function`；`parse_feed` | 同一 transport、独立 RSS/Atom 解析；原条目截断、源信息与固定结果规则保持 |
 | [market-data-parser](../plugins/optional-api-v1/packages/market-data-parser/skills/market-data-parser/SKILL.md) | `analysis / function`；`parse_fx_json`、`parse_fx_xml` | 同一 transport、独立 JSON/XML 汇率解析；原币种筛选和字段保持，不变成实时行情源 |

@@ -1,0 +1,134 @@
+{
+  "title": "新闻主题与关注变化：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "attention_series": {
+      "label": "去重消息关注变化",
+      "meaning": "按同一来源集合、主题口径和时间段去重后的消息数量；数量不等于影响方向。",
+      "definition": "固定新闻语料范围内按时间统计的去重消息量。",
+      "inputs": "日期、计数、主题/实体、来源集合、去重规则和覆盖变化。",
+      "unit_time": "数量单位是文章/事件/提及等既定定义，窗口长度与时区一致。",
+      "interpretation": "量增加说明关注变化，不证明事实更多或方向更强；采集扩容可造成假上升。",
+      "missing": "未采集的时间段是缺失，只有覆盖完整且查无消息才为零。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "同一源集合下去重后的数量由统计产生，主题分类和窗口由方法定义；数量不代表方向。"
+      }
+    },
+    "themes_series": {
+      "label": "主题覆盖分布",
+      "meaning": "研究方法产出的主题及去重数量，说明多标签是否可能重复计数。",
+      "definition": "同一语料中各主题的实际分类计数。",
+      "inputs": "主题名、计数、分类规则、去重方式、多标签处理及原语料引用。",
+      "unit_time": "同一观察窗和来源范围，计数单位明确。",
+      "interpretation": "多标签主题之和可大于消息数；主题数量不是独立证据量或预测权重。",
+      "missing": "分类失败与未出现主题分别记录，不将未覆盖主题写为零。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "主题由分类方法判断，主题计数为统计，多标签重叠须保留。"
+      }
+    },
+    "news": {
+      "label": "关键新闻",
+      "meaning": "可核验事实、实体、首发时间与来源。",
+      "definition": "可核验的新闻事实条目及其传播来源。",
+      "inputs": "实体、事件/事实、原始首发链接或引用、首发与更新时间、转述关系和核验状态。",
+      "unit_time": "原事件发生、首发、更新与抓取时间分开；数字保留原单位。",
+      "interpretation": "媒体观点、传闻和已核实事实分别标识；转载条数不能冒充独立证据。",
+      "missing": "无法核验时保留明确状态或待核查，不把标题推测写成事实。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "标题/链接/作者/时间可获取；正文包含事实陈述、引述预测与评论，核验后逐条保留性质，不能全称事实。"
+      }
+    },
+    "themes": {
+      "label": "主题",
+      "meaning": "所选分类方法提供的主题。",
+      "definition": "所选分类方法从新闻语料识别出的主题集合。",
+      "inputs": "主题定义、关联实体、代表消息、纳入规则、数量和分类方法。",
+      "unit_time": "记录观察窗口、语料版本与语言范围；各主题计数口径一致。",
+      "interpretation": "主题是组织信息的类别，不是影响方向；一则消息可涉及多主题。",
+      "missing": "无法分类的内容保留未分类，不强塞已有主题。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "主题是所选分类/聚类方法对实际语料的解释；外部主题标签也只是其分类结果。"
+      }
+    },
+    "novelty": {
+      "label": "新信息",
+      "meaning": "相对于已有信息的新变化。",
+      "definition": "相对于明确先前信息集，本次新闻新增或修正的内容。",
+      "inputs": "旧事实/观点、新事实/观点、对照语料、首次出现证据及变化说明。",
+      "unit_time": "明确对照基准截至时点和新信息首发时间，区分旧闻转载与新事实。",
+      "interpretation": "新标题或报道增多不等于信息新颖；新消息也不自动改变资产价值。",
+      "missing": "无先前信息集时只描述当前内容，不声称首次或重大新增。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "新颖性依赖相对旧信息的比较：文本差异可算，信息是否新增/重要为解释。"
+      }
+    },
+    "attention": {
+      "label": "关注变化",
+      "meaning": "关注指标、基准和语料覆盖。",
+      "definition": "新闻关注度度量及相对历史或跨主题基准的位置。",
+      "inputs": "指标定义、原值、基准、窗口、语料覆盖、去重与归一化方法。",
+      "unit_time": "数量、比例、指数或排名保留原尺度；比较窗口同长度或说明归一化。",
+      "interpretation": "关注量不同于情绪方向、事实可靠性和预测置信度。",
+      "missing": "覆盖改变或基准不可得时限制变化判断，不补中性关注分。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "消息数等为统计，热度变化解释与覆盖基准分开；外部关注指数是获取统计而非市场概率。"
+      }
+    },
+    "impact": {
+      "label": "影响解释",
+      "meaning": "方法提供的影响机制或解释。",
+      "definition": "新闻事实通过何种机制可能影响研究对象的解释。",
+      "inputs": "事实证据、机制或知识引用、受影响变量、方向条件、历史对照与反例。",
+      "unit_time": "注明事实可得时间与可能影响期限；金额或暴露按原单位。",
+      "interpretation": "解释机制是可检验假说，不把相关报道当已证因果；涉及行情预测须关联同类历史结果。",
+      "missing": "缺少机制或历史结果时说明解释层级，不给无依据价格幅度或概率。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "传导机制、方向和影响程度是方法解释/预测；引用事实与未来主张分开。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "coverage_details": {
+      "label": "语料与去重口径",
+      "meaning": "观察窗口、语言、渠道范围、实体匹配与去重口径，明确基准窗口和已知覆盖变化。",
+      "definition": "支撑新闻分析的语料边界、匹配与去重口径。",
+      "inputs": "观察/基准窗口、语言、渠道、实体别名、重复识别规则、覆盖变化及缺口。",
+      "unit_time": "发布时间与抓取时间分开，窗口和时区明确，回溯数据可得性注明。",
+      "interpretation": "来源缺席不等于事件不存在；不同评分可能使用不同语料范围。",
+      "missing": "无法确认完整性时说明已覆盖范围，不声称全网零新闻。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "实际抓取范围/条数从回执取；语言/实体匹配/去重规则来自方法配置，覆盖变化需版本比较。"
+      }
+    },
+    "source_mix": {
+      "label": "消息来源构成",
+      "meaning": "新闻/网页/社交等来源类别及可比消息数；不同评分所用语料单独标识。",
+      "definition": "本次语料各来源类别的可比数量与构成。",
+      "inputs": "新闻/网页/社交等分类、独立来源数/消息数、去重定义、对应评分语料。",
+      "unit_time": "同一观察窗和计数单位，各来源更新延迟明确。",
+      "interpretation": "消息份额不是可信度权重；转载链不能当多个独立事实来源。",
+      "missing": "来源类别未采集标记缺失，不将份额归一化伪装完整覆盖。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按已记录来源类别对可比消息去重计数；来源类别是元数据，构成比为统计。"
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ description: "按用户指定的方法选择独立 Sesame 插件，只合并同�
 
 ## 先按需求去重
 
-综合投资研究使用 `catalog_recommend({"need":"investment-research"})`，推荐 Research（`sesame/investment-research`）。因子或策略研究使用 `need:"strategy"`，推荐 Strategy（`sesame/auto-factor-mining`）；研究知识和可选参考脚本已在工作流内提供。再按实际需求选择数据和回测后端。用户只要 ICT，就用 `catalog_recommend({"need":"technical-analysis","method":"ict"})`，只加载 `sesame/ict`。不传 method 时返回选择项和 `selection_required:true`，不能理解成要安装或同时启用全部方法。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。必须以当时 `plugin_catalog` 和实际环境检查为准，不安装不存在的包，不把所有 `backend_choices` 都装上。
+综合投资研究使用 `catalog_recommend({"need":"investment-research"})`，推荐 Research（`sesame/investment-research`）。因子需求使用 `need:"strategy"` 发现因子研究（`sesame/auto-factor-mining`）：先查 factor_library，再由 Agent/工作流直接调用 factor_prepare/search/compute/evaluate，决定是否继续和如何并行；插件没有自动研究总控。策略创作、池成员决策、原生回测和最终报告分别使用对应能力；Historical 参考脚本不属于现行计算接口。按实际需求选择数据和回测后端。用户只要 ICT，就用 `catalog_recommend({"need":"technical-analysis","method":"ict"})`，只加载 `sesame/ict`。不传 method 时返回选择项和 `selection_required:true`，不能理解成要安装或同时启用全部方法。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。必须以当时 `plugin_catalog` 和实际环境检查为准，不安装不存在的包，不把所有 `backend_choices` 都装上。
 
 | 用户需要 | need | 合并方式 |
 | --- | --- | --- |

@@ -544,7 +544,7 @@
     },
     {
       "id": "knowledge-4",
-      "path": "skills/abu-trade-metrics/references/method.md",
+      "path": "references/method.md",
       "description": "abu_trade_metrics_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },
@@ -562,7 +562,7 @@
     },
     {
       "id": "audit-method",
-      "path": "skills/abu-trade-metrics/references/audit.md",
+      "path": "references/audit.md",
       "kind": "reference",
       "description": "abu_trade_results_audit规则、原有数值口径及原生引擎边界。"
     },

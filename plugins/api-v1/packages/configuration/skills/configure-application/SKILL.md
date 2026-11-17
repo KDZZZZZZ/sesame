@@ -11,7 +11,7 @@ configuration_integration_apply({plugin_id,command_id,values,expected_version?})
 
 现有 configuration_update 使用稳定 command_id。target="environment" 的 changes 按环境变量名保存单行字符串，null 删除，省略字段保留，不传 expected_version；宿主私有保存、立即生效并在重启时恢复。configuration_read({section:"environment"}) 只返回名称、configured、source。financial_research_configure({credentials:{fmp_api_key:<用户提供的值>,fred_api_key:<用户提供的值>}}) 是领域入口，使用同一宿主保存机制；只配置当前需要的来源。
 
-target="model" 的 changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,max_tokens?,reasoning?} 可保存新的认证与模型，无需预先完成设置。自定义接口使用新的 provider ID 和匹配的 base_url/api；已知供应商省略 api_key 时复用已有认证。model 不传 expected_version，queued 表示等待当前回复结束，当前轮不循环等待；后续读取 recent_changes 判断 applied 或具体失败。configuration_open 仅供用户要求查看设置或供应商要求交互式 OAuth 登录。
+target="model" 的 changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,reasoning?} 可保存新的认证与模型，无需预先完成设置。context_window 为 1024–10000000 token；省略时保留已存窗口，尚未配置时默认 256000，仅在用户要求调整时提交。自定义接口使用新的 provider ID 和匹配的 base_url/api；已知供应商省略 api_key 时复用已有认证。model 不传 expected_version，queued 表示等待当前回复结束，当前轮不循环等待；后续读取 recent_changes 判断 applied 或具体失败。configuration_open 仅供用户要求查看设置或供应商要求交互式 OAuth 登录。
 
 平台连接由对应后端插件的直接配置能力保存，例如 mt5_update_configuration 可接收明确的连接、账户和凭据；导入现有原生配置是可选方式。读取、发现或连接检查是为了复用现状、补足具体缺项并验证结果，不是每次配置必须重复的固定步骤。配置保存与远端认证成功不同；按实际错误说明 Key、套餐、网络或接口覆盖问题，不把它们笼统说成没有宿主权限。配置请求也不自动授权持续交易。
 

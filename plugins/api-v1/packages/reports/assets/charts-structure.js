@@ -149,7 +149,10 @@
       mark(g, row, index, `${key}: ${route.map((value, i) => `${headings[i]} ${value === null ? 'not recorded' : value}`).join(' → ')}`);
       marks.push({ element: g, row });
     });
-    if (missing) ctx.note(language(`${missing} stages are explicitly unrecorded; no links cross a gap.`, `${missing} 个阶段明确无记录，缺口之间不补连线。`));
+    if (missing) {
+      ctx.note(language(`Missing stages: ${missing}`, `缺失阶段：${missing}`), 'context');
+      ctx.note(language(`${missing} stages are explicitly unrecorded; no links cross a gap.`, `${missing} 个阶段明确无记录，缺口之间不补连线。`), 'help');
+    }
     focusRecords(ctx, marks, (item, row) => item.row === row);
   }
 
@@ -221,7 +224,9 @@
       const sink = item.level === levels - 1, available = vertical ? Math.max(60, item.size) : axis / Math.max(1, levels - 1) - 20;
       if (!vertical || item.size >= 45) caption(ctx, vertical ? x : x + (sink ? -5 : 17), vertical ? y - 6 : y + Math.min(item.size / 2 + 4, 15), short(item.name, Math.max(6, Math.floor(available / 6.8))), { 'text-anchor': !vertical && sink ? 'end' : 'start', 'data-node-label': item.key });
     }
-    ctx.note(language(`Batch ${[...batches][0]} · internal amounts conserve exactly; dashed links carry zero.`, `批次 ${[...batches][0]} · 内部流量精确守恒，虚线表示零流量。`));
+    ctx.note(language('Dashed: 0', '虚线：0'), 'legend');
+    ctx.note(language(`Batch ${[...batches][0]} · dashed links carry zero.`, `批次 ${[...batches][0]} · 虚线表示零流量。`), 'help');
+    ctx.note(language('Internal amounts conserve exactly.', '内部流量精确守恒。'), 'method');
     focusRecords(ctx, marks, (item, row) => item.row === row);
   }
 
@@ -290,7 +295,8 @@
       }
     }
     update();
-    ctx.note(language('Distance is layout only. Edges show supplied weight and sign; dashed edges are negative or zero.', '距离仅用于布局。边表示已提供的权重和符号；虚线表示负向或零权重。'));
+    ctx.note(language('Width: |weight| · Dashed: ≤ 0', '线宽：|权重| · 虚线：≤ 0'), 'legend');
+    ctx.note(language('Distance is layout only. Edges show supplied weight and sign; dashed edges are negative or zero.', '距离仅用于布局。边表示已提供的权重和符号；虚线表示负向或零权重。'), 'help');
     focusRecords(ctx, marks, (item, row) => {
       const selectedNode = ordered.find(node => node.row === row), selectedLink = data.links.find(link => link.row === row);
       return item.row === row || selectedNode && (item.link?.source === selectedNode || item.link?.target === selectedNode || item.node && data.links.some(link => link.source === selectedNode && link.target === item.node || link.target === selectedNode && link.source === item.node)) || selectedLink && (item.node === selectedLink.source || item.node === selectedLink.target);

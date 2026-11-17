@@ -86,7 +86,7 @@
     const overlayDefinitions = spec.overlays ?? [];
     if (!Array.isArray(overlayDefinitions) || overlayDefinitions.length > 12) fail('overlays must contain at most 12 price-column mappings');
     const overlays = [], groups = new Map();
-    const legend = document.createElement('div'); legend.className = 'sc-market-overlays';
+    const legend = document.createElement('div'); legend.className = 'sc-market-overlays'; legend.setAttribute('data-report-text', 'legend');
     legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0;font-size:12px';
     for (const definition of overlayDefinitions) {
       if (!definition || typeof definition.field !== 'string' || !definition.field.trim() || typeof definition.label !== 'string' || !definition.label.trim()) fail('overlay needs field and label');
@@ -121,6 +121,7 @@
     const labels = document.documentElement.lang.toLowerCase().startsWith('zh') ? ['开', '高', '低', '收'] : ['O', 'H', 'L', 'C'];
     const describe = record => {
       if (!record) return;
+      heading.setAttribute('data-report-text', 'context');
       heading.textContent = `${stamp(record.time)}   ${['open','high','low','close'].map((key, index) => `${labels[index]} ${price(record.row[keys[key]])}`).join('   ')}${spec.unit ? ` · ${spec.unit}` : ''}`;
       for (const { definition, parent } of overlays) if (parent.visible && record.row[definition.field] != null) heading.textContent += ` · ${definition.label} ${price(record.row[definition.field])}`;
     };

@@ -1,0 +1,31 @@
+{
+  "id": "sesame/deep-reasoning",
+  "apiVersion": "2",
+  "version": "1.0.1",
+  "title": "深度推理",
+  "description": "解释复杂市场现象的成因与演变：从共同证据出发，独立开展历史类比、矛盾分析和博弈分析，再定向复核分歧并综合为可检验的判断。由 Agent 使用宿主已有编排能力执行。",
+  "author": { "name": "Sesame contributors" },
+  "license": "UNLICENSED",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "capability_manifest": "capabilities.json",
+  "prompts": ["prompt.md"],
+  "skills": ["skills"],
+  "resources": [
+    "README.md",
+    "LICENSE",
+    "PROVENANCE.md",
+    "references/protocol.md",
+    "references/historical.md",
+    "references/contradictions.md",
+    "references/game-theory.md",
+    "references/reconciliation.md",
+    "references/coordination.md",
+    "examples/evidence.json",
+    "examples/parallel-tasks.json",
+    "examples/review-cases.md"
+  ],
+  "permissions": { "scopes": [], "calls": [] },
+  "engines": { "sesame": ">=0.3.0-dev.1" }
+}

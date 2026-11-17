@@ -11,7 +11,7 @@ import { createCapabilities } from '../packages/strategy-authoring/index.js';
 const root = new URL('../packages/strategy-authoring/', import.meta.url);
 const bytes = path => readFileSync(new URL(path, root));
 const json = path => JSON.parse(bytes(path));
-const languagePath = 'skills/strategy-authoring/references/language.md';
+const languagePath = 'references/language.md';
 async function validateTool(path, source = bytes(path)) {
   const directory = mkdtempSync(join(tmpdir(), 'strategy-reference-'));
   try {

@@ -23,8 +23,8 @@
     "README.md",
     "examples/case.json",
     "examples/expected.md",
-    "skills/narrative-analysis/references/evidence.md",
-    "skills/narrative-analysis/references/method.md"
+    "references/evidence.md",
+    "references/method.md"
   ],
   "provides": {},
   "engines": {

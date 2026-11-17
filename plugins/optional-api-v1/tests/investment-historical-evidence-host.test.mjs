@@ -19,7 +19,11 @@ function task(body) {
 }
 function replies(body) {
   const calls = new Map(body.messages.flatMap(row => row.tool_calls ?? []).map(call => [call.id, call.function.name]));
-  return body.messages.filter(row => row.role === 'tool').map(row => ({ name: calls.get(row.tool_call_id), value: JSON.parse(text(row.content)) }));
+  return body.messages.filter(row => row.role === 'tool').map(row => {
+    const name = calls.get(row.tool_call_id), content = text(row.content);
+    try { return {name,value:JSON.parse(content)}; }
+    catch { throw new Error(`${name} returned non-JSON: ${content.slice(0,2000)}`); }
+  });
 }
 function reply(response, model, content, call) {
   const event = (delta, reason) => JSON.stringify({ id: 'historical-research-fixture', object: 'chat.completion.chunk', created: 1, model, choices: [{ index: 0, delta, finish_reason: reason }] });
@@ -32,9 +36,8 @@ test('Research four-stage workflow carries fixed history inputs, runs independen
   process.env.NO_PROXY = process.env.no_proxy = '127.0.0.1,localhost,::1';
   const load = path => import(pathToFileURL(join(hostRoot, path)).href);
   const [{ fixture, eventually }, { createHostContextV2 }] = await Promise.all([load('tests/fixture-provider.js'), load('modules/plugins/host-v2/context.js')]);
-  const sections = [{ module_id: 'M01', title: '合成校准结果与适用边界', fields: ['summary'] }];
-  const brief = { case: 'custom', sections, adjustments: 'Only the computed synthetic calibration and its conditions; no market prediction or mandatory all-tests-pass conclusion.' };
-  let inputRef, sourceRef, resultsRef, delivery, measured, rendered, composed, publish, fixtureCalls = 0;
+  const brief = {objective:'Review the computed synthetic calibration',delivery:'Preserve its conditions and counterevidence; no market prediction or mandatory all-tests-pass conclusion.'};
+  let inputRef, sourceRef, resultsRef, delivery, measured, rendered, publish, fixtureCalls = 0;
   const failures = [], calls = [], observations = new Map();
   const app = await fixture({ reportRenderer: 'electron', responseHandler: (body, response) => {
     try {
@@ -49,14 +52,14 @@ test('Research four-stage workflow carries fixed history inputs, runs independen
       const call = (name, args) => { assert.ok(names.includes(name), `${role} cannot call ${name}`); calls.push({ role, name }); reply(response, body.model, null, { name, arguments: args }); };
       if (role === 'scope') {
         assert.equal(names.includes('historical_evidence_from_ref'), false);
-        if (!last) call('report_structure', { sections });
-        else reply(response, body.model, '用户选择一个结果字段。方法由已冻结计划决定；只处理合成固定输入，不搜索市场。');
+        if (!last) call('research_methods', {query:'forecast-review',limit:1});
+        else reply(response, body.model, 'Research 按问题提供研究方法。实际计算采用已冻结计划；只处理合成固定输入，不搜索市场。');
       } else if (role === 'evidence') {
         if (!last) call('host_resources_read', { ref: inputRef, part: 'manifest' });
         else { assert.equal(last.value.content.rowCount, 1); assert.deepEqual(last.value.dependencies, [sourceRef]); reply(response, body.model, '单行固定输入包与计划/原预测引用依赖齐全。来源明确为软件合成样本，不是市场证据。'); }
       } else if (role === 'analysis') {
         assert.ok(names.includes('historical_evidence_from_ref'));
-        assert.equal(names.includes('report_publish'), false);
+        assert.equal(names.includes('components_show'), false);
         if (!last) call('historical_evidence_from_ref', { operation: 'calibrate', input_ref: inputRef });
         else if (last.name === 'historical_evidence_from_ref') {
           delivery = last.value;
@@ -69,7 +72,7 @@ test('Research four-stage workflow carries fixed history inputs, runs independen
           assert.equal(measured.current_predictions[0].calibrated_probability, .5);
           assert.ok(measured.groups[0].warnings.includes('calibration_did_not_improve_raw_brier'));
           const value = '真实计算的合成评价：原分数 Brier 0.1325，校准后 0.14453125，基线 0.25；校准变差。仅限计划定义的 calm 条件，保留反例、失效条件与后续监测；不是市场预测或所有检验通过的证明。';
-          resultsRef = publish('measured-report-result', [{ section_id: 'M01', field: 'summary', status: 'provided', value,
+          resultsRef = publish('measured-report-result', [{ value,
             method_ref: 'sesame/historical-evidence#historical_evidence_calibrate@1.0.0', evidence_refs: [inputRef],
             origin: { kind: 'derived', nature: 'statistic', source: 'Actual native calculation over explicitly synthetic fixed inputs', refs: [inputRef] } }], [inputRef]);
           reply(response, body.model, value);
@@ -77,9 +80,10 @@ test('Research four-stage workflow carries fixed history inputs, runs independen
       } else {
         assert.equal(names.includes('historical_evidence_from_ref'), false, 'Synthesis must consume measured results, not silently refit');
         assert.ok(input.research.source_refs.some(ref => ref.digest === inputRef.digest));
-        if (!last) call('report_compose', { output_path: 'history-research.html', title: 'DEMO · 独立时间校准与条件边界', summary: '合成软件验收；校准变差也保留其条件和反例。', structure: { sections }, results_ref: resultsRef });
-        else if (last.name === 'report_compose') { composed = last.value; call('report_publish', { ...composed.publish, operation_id: 'history-research-publication', space: 'research' }); }
-        else if (last.name === 'report_publish') call('report_check', { ref: last.value.ref });
+        if (!last) call('components_show', {target:'report',operation_id:'history-research-publication',title:'DEMO · 独立时间校准与条件边界',summary:'合成软件验收；校准变差也保留其条件和反例。',provenance_kind:'demo',
+          references:[inputRef,delivery.result_ref,resultsRef],data:[{id:'measured-results',ref:delivery.result_ref,usage:'Actual calibration computation for the supplied synthetic history'}],
+          content:{kind:'document',sections:[{title:'校准后的评价结果',blocks:[{type:'markdown',text:input.research.members.find(member=>member.role==='analysis').markdown}]}]}});
+        else if (last.name === 'components_show') call('report_check', {ref:last.value.ref});
         else { rendered = last.value; assert.equal(rendered.status, 'rendered', JSON.stringify(rendered)); reply(response, body.model, '固定计算结果已发布并渲染；合成数据和条件边界保留，不宣称真实模型研究质量。'); }
       }
       return true;
@@ -87,12 +91,14 @@ test('Research four-stage workflow carries fixed history inputs, runs independen
   } });
   try {
     const installed = [];
-    for (const name of ['historical-evidence', 'investment-research']) {
+    for (const [name,base] of [['reports','../../api-v1/packages/'],['research','../../api-v1/packages/'],['historical-evidence','../packages/'],['investment-research','../packages/']]) {
       const draft = join(app.runtime.workspaces.root('conv_main'), name + '-history-fixture');
-      await cp(fileURLToPath(new URL(`../packages/${name}/`, import.meta.url)), draft, { recursive: true });
+      await cp(fileURLToPath(new URL(`${base}${name}/`, import.meta.url)), draft, { recursive: true });
       const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft }); assert.equal(checked.passed, true, JSON.stringify(checked));
-      const result = await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
-      assert.equal(result.runtime_status, 'ready', JSON.stringify(result.diagnostics)); installed.push({ id: result.id, digest: checked.digest });
+      const existing=app.runtime.plugins.entries.get('sesame/'+name);
+      if(existing) assert.equal(existing.digest,checked.digest,'Bundled package must match the current source');
+      else { const result=await app.runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest}); assert.equal(result.runtime_status,'ready',JSON.stringify(result.diagnostics)); }
+      installed.push({id:'sesame/'+name,digest:checked.digest});
     }
     publish = (operationId, rows, dependencies = []) => app.runtime.contractArtifacts.publish({ id: 'fixture/historical-research', version: '1.0.0', digest: 'sha256:' + 'c'.repeat(64) }, {
       operationId, manifest: { kind: 'data', schemaVersion: '1.0.0', dependencies,

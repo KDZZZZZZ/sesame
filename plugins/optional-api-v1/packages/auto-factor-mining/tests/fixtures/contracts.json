@@ -1,0 +1,1249 @@
+{
+  "schema": "factor-contract-fixture/1",
+  "note": "Synthetic planning fixture; refs and paths are not live host artifacts. Canonical JSON hashes use sorted keys, compact UTF-8, finite numbers. Published manifests model only the declared contract payload. source.original-data is a pinned source fixture identity; its six decoded rows appear in sourceRows.",
+  "sourceRows": [
+    {
+      "time": "2026-01-01T00:00:00Z",
+      "symbol": "A",
+      "availableAt": "2026-01-01T00:00:00Z",
+      "fields": {
+        "close": 1,
+        "regime": 0
+      }
+    },
+    {
+      "time": "2026-01-01T01:00:00Z",
+      "symbol": "A",
+      "availableAt": "2026-01-01T01:00:00Z",
+      "fields": {
+        "close": 2,
+        "regime": 1
+      }
+    },
+    {
+      "time": "2026-01-01T02:00:00Z",
+      "symbol": "A",
+      "availableAt": "2026-01-01T02:00:00Z",
+      "fields": {
+        "close": 4,
+        "regime": 0
+      }
+    },
+    {
+      "time": "2026-01-01T00:00:00Z",
+      "symbol": "B",
+      "availableAt": "2026-01-01T00:00:00Z",
+      "fields": {
+        "close": 2,
+        "regime": 0
+      }
+    },
+    {
+      "time": "2026-01-01T01:00:00Z",
+      "symbol": "B",
+      "availableAt": "2026-01-01T01:00:00Z",
+      "fields": {
+        "close": 4,
+        "regime": 1
+      }
+    },
+    {
+      "time": "2026-01-01T02:00:00Z",
+      "symbol": "B",
+      "availableAt": "2026-01-01T02:00:00Z",
+      "fields": {
+        "close": 6,
+        "regime": 0
+      }
+    }
+  ],
+  "formula": {
+    "dsl": "qlib-expr/1",
+    "tree": {
+      "call": "Mean",
+      "args": [
+        {
+          "field": "close"
+        },
+        {
+          "constant": 2
+        }
+      ]
+    }
+  },
+  "sensitivityOption": {
+    "argumentPath": [
+      1
+    ],
+    "neighbors": [
+      1,
+      3
+    ]
+  },
+  "limits": {
+    "maxInputBytes": 1048576,
+    "maxOutputBytes": 1048576,
+    "timeoutMs": 30000,
+    "maxDiagnosticWork": 8
+  },
+  "artifacts": {
+    "calendar": {
+      "ref": {
+        "id": "fixture-calendar",
+        "revision": "1",
+        "digest": "sha256:3830e29e52c2446c656ee2f0c5c9009385f16933cec244a87d9a894fa04b36e6",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:bec0cbaa893d62c7b423dc38090c76b9d1c32fdbd6128dbd68de14d8e5de5ec8",
+          "schema": "factor-calendar/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": [
+        {
+          "barIndex": 0,
+          "time": "2026-01-01T00:00:00Z",
+          "qlibTime": "2026-01-01 00:00:00"
+        },
+        {
+          "barIndex": 1,
+          "time": "2026-01-01T01:00:00Z",
+          "qlibTime": "2026-01-01 01:00:00"
+        },
+        {
+          "barIndex": 2,
+          "time": "2026-01-01T02:00:00Z",
+          "qlibTime": "2026-01-01 02:00:00"
+        }
+      ],
+      "byteLength": 235
+    },
+    "symbols": {
+      "ref": {
+        "id": "fixture-symbols",
+        "revision": "1",
+        "digest": "sha256:d3dda11343514dc1591da327c73090350f2a9bd7fcd85fe0241405c923ee8955",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:4015f09f871d4023b4db236bd3e3a0927a940caf36b6ce39085199885158d924",
+          "schema": "factor-symbol-map/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": [
+        {
+          "original": "A",
+          "synthetic": "s000000"
+        },
+        {
+          "original": "B",
+          "synthetic": "s000001"
+        }
+      ],
+      "byteLength": 79
+    },
+    "feature-A": {
+      "ref": {
+        "id": "fixture-feature-A",
+        "revision": "1",
+        "digest": "sha256:baac28df5d4995f86d277b4281f1f72f9109262166b683a633d37ee89ffb8d6c",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-binary/1",
+          "path": "payload.bin",
+          "bytesDigest": "sha256:553820e732b56553db2370612026ad97121f72a1e7534fc19e3362625300f6d7",
+          "schema": "factor-provider-file/1"
+        }
+      },
+      "payloadEncoding": "base64",
+      "payload": "AAAAAAAAgD8AAABAAACAQA==",
+      "byteLength": 16
+    },
+    "feature-B": {
+      "ref": {
+        "id": "fixture-feature-B",
+        "revision": "1",
+        "digest": "sha256:a54c43afc15ad1bf61b2c5e743ab1ad28dcd8a8dc42fbd4f5352f65fd28995c4",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-binary/1",
+          "path": "payload.bin",
+          "bytesDigest": "sha256:c73733cfbd1aee670dce75f394258ceab30ee6c07a6b147f58924a8a390608b0",
+          "schema": "factor-provider-file/1"
+        }
+      },
+      "payloadEncoding": "base64",
+      "payload": "AAAAAAAAAEAAAIBAAADAQA==",
+      "byteLength": 16
+    },
+    "provider": {
+      "ref": {
+        "id": "fixture-provider",
+        "revision": "1",
+        "digest": "sha256:e0b510d73d9dae69134cce32f7325768130acbfbd958e6794bf61f8d310e4194",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:cc0293df1300e917052a945a100ad8895ee77019e45c0f8218e2eb6feba6c5db",
+          "schema": "factor-provider/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "schema": "factor-provider/1",
+        "frequency": "60min",
+        "calendar": {
+          "id": "fixture-calendar",
+          "revision": "1",
+          "digest": "sha256:3830e29e52c2446c656ee2f0c5c9009385f16933cec244a87d9a894fa04b36e6",
+          "kind": "resource",
+          "schemaVersion": "1.0.0"
+        },
+        "symbolMap": {
+          "id": "fixture-symbols",
+          "revision": "1",
+          "digest": "sha256:d3dda11343514dc1591da327c73090350f2a9bd7fcd85fe0241405c923ee8955",
+          "kind": "resource",
+          "schemaVersion": "1.0.0"
+        },
+        "features": [
+          {
+            "symbol": "s000000",
+            "field": "close",
+            "file": {
+              "id": "fixture-feature-A",
+              "revision": "1",
+              "digest": "sha256:baac28df5d4995f86d277b4281f1f72f9109262166b683a633d37ee89ffb8d6c",
+              "kind": "resource",
+              "schemaVersion": "1.0.0"
+            }
+          },
+          {
+            "symbol": "s000001",
+            "field": "close",
+            "file": {
+              "id": "fixture-feature-B",
+              "revision": "1",
+              "digest": "sha256:a54c43afc15ad1bf61b2c5e743ab1ad28dcd8a8dc42fbd4f5352f65fd28995c4",
+              "kind": "resource",
+              "schemaVersion": "1.0.0"
+            }
+          }
+        ]
+      },
+      "byteLength": 839
+    },
+    "matrix-shard": {
+      "ref": {
+        "id": "fixture-matrix-shard",
+        "revision": "1",
+        "digest": "sha256:838870ad163d21affffbe610258d286c5c4b3fc7ac6482cc96fe2f98fd529ed1",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:29c0c711ba11655e6c46601fc801e0f3755e0107cc44763afc057cc65b680ff6",
+          "schema": "factor-matrix/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "keys": [
+          {
+            "symbol": "A",
+            "barIndex": 0,
+            "time": "2026-01-01T00:00:00Z"
+          },
+          {
+            "symbol": "A",
+            "barIndex": 1,
+            "time": "2026-01-01T01:00:00Z"
+          },
+          {
+            "symbol": "B",
+            "barIndex": 0,
+            "time": "2026-01-01T00:00:00Z"
+          },
+          {
+            "symbol": "B",
+            "barIndex": 1,
+            "time": "2026-01-01T01:00:00Z"
+          }
+        ],
+        "columns": {
+          "c-mean2": [
+            null,
+            1.5,
+            null,
+            3
+          ]
+        }
+      },
+      "byteLength": 282
+    },
+    "label-shard": {
+      "ref": {
+        "id": "fixture-label-shard",
+        "revision": "1",
+        "digest": "sha256:f38ea3d3a4e71a82fd58862142b40209ac87cc59dc12d3773ef5fa89c512a5a4",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:7312c6f3682887277e7e3f6eee7bbaacfba13f67bfc24e8f8aba4196736eeaf7",
+          "schema": "factor-matrix/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "keys": [
+          {
+            "symbol": "A",
+            "barIndex": 0,
+            "time": "2026-01-01T00:00:00Z"
+          },
+          {
+            "symbol": "A",
+            "barIndex": 1,
+            "time": "2026-01-01T01:00:00Z"
+          },
+          {
+            "symbol": "B",
+            "barIndex": 0,
+            "time": "2026-01-01T00:00:00Z"
+          },
+          {
+            "symbol": "B",
+            "barIndex": 1,
+            "time": "2026-01-01T01:00:00Z"
+          }
+        ],
+        "columns": {
+          "target": [
+            1,
+            null,
+            1,
+            null
+          ]
+        }
+      },
+      "byteLength": 279
+    },
+    "matrix": {
+      "ref": {
+        "id": "fixture-matrix",
+        "revision": "1",
+        "digest": "sha256:1be8a81458181d66251bf038d2fdd3abcb42f9707fd599767ad9a646e7750ee9",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:dda0bab629048f37abc5224ed9b80153181375f7413b261175de67be9943682d",
+          "schema": "factor-matrix/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "schema": "factor-matrix/1",
+        "snapshotId": "snapshot-fixture",
+        "partition": "development",
+        "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "columns": [
+          "c-mean2"
+        ],
+        "shards": [
+          {
+            "id": "fixture-matrix-shard",
+            "revision": "1",
+            "digest": "sha256:838870ad163d21affffbe610258d286c5c4b3fc7ac6482cc96fe2f98fd529ed1",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          }
+        ]
+      },
+      "byteLength": 389
+    },
+    "labels": {
+      "ref": {
+        "id": "fixture-labels",
+        "revision": "1",
+        "digest": "sha256:32b81b63ea508c0e68aff16fb1b07d26a089822ebafa105861b5bd2994f36162",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:b3db139edfab7e8aaa8c577f781989a931f4ad7de069586dbedfe37bedab4a2b",
+          "schema": "factor-matrix/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "schema": "factor-matrix/1",
+        "snapshotId": "snapshot-fixture",
+        "partition": "development",
+        "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "columns": [
+          "target"
+        ],
+        "shards": [
+          {
+            "id": "fixture-label-shard",
+            "revision": "1",
+            "digest": "sha256:f38ea3d3a4e71a82fd58862142b40209ac87cc59dc12d3773ef5fa89c512a5a4",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          }
+        ]
+      },
+      "byteLength": 387
+    },
+    "values": {
+      "ref": {
+        "id": "fixture-values",
+        "revision": "1",
+        "digest": "sha256:2865d4a72a22a3fe45a7c08f1c58e5277f7924ae798dd970bee019ff820f5c6a",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:01ee142e48942e4bd74e209c6b562e8fd6bac18611cb0d02da15086ceca209ad",
+          "schema": "factor-values/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "id": "values-fixture",
+        "snapshotId": "snapshot-fixture",
+        "partition": "development",
+        "matrix": {
+          "manifest": {
+            "id": "fixture-matrix",
+            "revision": "1",
+            "digest": "sha256:1be8a81458181d66251bf038d2fdd3abcb42f9707fd599767ad9a646e7750ee9",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          },
+          "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+          "rows": 4,
+          "bytes": 561
+        },
+        "labels": {
+          "manifest": {
+            "id": "fixture-labels",
+            "revision": "1",
+            "digest": "sha256:32b81b63ea508c0e68aff16fb1b07d26a089822ebafa105861b5bd2994f36162",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          },
+          "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+          "rows": 4,
+          "bytes": 561
+        },
+        "candidates": [
+          {
+            "id": "c-mean2",
+            "status": "ok",
+            "value": {
+              "candidate": {
+                "id": "c-mean2",
+                "formula": {
+                  "dsl": "qlib-expr/1",
+                  "tree": {
+                    "call": "Mean",
+                    "args": [
+                      {
+                        "field": "close"
+                      },
+                      {
+                        "constant": 2
+                      }
+                    ]
+                  }
+                },
+                "hypothesis": "fixture only",
+                "origin": {
+                  "method": "seed",
+                  "parents": [],
+                  "parameters": {}
+                }
+              },
+              "column": "c-mean2",
+              "computeKey": "sha256:e190e96a7c67c5b389201a01b537f8a3fbf069fecde40eced7ea0c6a0ae3c6ad"
+            }
+          }
+        ],
+        "diagnosticValues": {
+          "covariates": null,
+          "sensitivityMatrix": null,
+          "sensitivity": []
+        },
+        "engine": {
+          "name": "qlib",
+          "version": "0.9.7",
+          "environmentDigest": "sha256:0c46eb879e765db9f64b8e7ade372fbf127314fa929e54b3abc230cfe0ec1494",
+          "operatorDigest": "sha256:f7bdc4301bf95c8d315ce4c412e45e905a6296c3239776b4917e23f91d03f4db"
+        },
+        "snapshotRef": {
+          "id": "fixture-snapshot",
+          "revision": "1",
+          "digest": "sha256:1348dd6279f991e4868cfe3204ee793462a661902230ac4278c742cb576ea9b3",
+          "kind": "resource",
+          "schemaVersion": "1.0.0"
+        }
+      },
+      "byteLength": 1522
+    },
+    "development-rows": {
+      "ref": {
+        "id": "fixture-development-rows",
+        "revision": "1",
+        "digest": "sha256:35849eec9a2ca3b7773156614de73a3111d7cf65e7d17150d95567a9bb23fbe1",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:056da4dea59415d42e10c198f57449d2aa73db298b9f87b9cefc1084ae6b1230",
+          "schema": "factor-source-rows/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": [
+        {
+          "time": "2026-01-01T00:00:00Z",
+          "symbol": "A",
+          "availableAt": "2026-01-01T00:00:00Z",
+          "fields": {
+            "close": 1,
+            "regime": 0
+          }
+        },
+        {
+          "time": "2026-01-01T01:00:00Z",
+          "symbol": "A",
+          "availableAt": "2026-01-01T01:00:00Z",
+          "fields": {
+            "close": 2,
+            "regime": 1
+          }
+        },
+        {
+          "time": "2026-01-01T00:00:00Z",
+          "symbol": "B",
+          "availableAt": "2026-01-01T00:00:00Z",
+          "fields": {
+            "close": 2,
+            "regime": 0
+          }
+        },
+        {
+          "time": "2026-01-01T01:00:00Z",
+          "symbol": "B",
+          "availableAt": "2026-01-01T01:00:00Z",
+          "fields": {
+            "close": 4,
+            "regime": 1
+          }
+        }
+      ],
+      "byteLength": 457
+    },
+    "development-index": {
+      "ref": {
+        "id": "fixture-development-index",
+        "revision": "1",
+        "digest": "sha256:2e593d84d6839b0b1363f81f65253988bbba796af360937f9e6433a3a69a556c",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:913852e8593468e4a2da99767490635bc8cc5e46bb04688d1c04f7edd9c2f6b7",
+          "schema": "factor-source-rows/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "schema": "factor-source-rows/1",
+        "snapshotId": "snapshot-fixture",
+        "partition": "development",
+        "rows": 4,
+        "shards": [
+          {
+            "id": "fixture-development-rows",
+            "revision": "1",
+            "digest": "sha256:35849eec9a2ca3b7773156614de73a3111d7cf65e7d17150d95567a9bb23fbe1",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          }
+        ]
+      },
+      "byteLength": 285
+    },
+    "holdout-rows": {
+      "ref": {
+        "id": "fixture-holdout-rows",
+        "revision": "1",
+        "digest": "sha256:1f0d750bf94cbc782a5469715a2fb83d5a7581beb77ac5b727533fee7f43c967",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:0c30fee46d81201550a4df081e1d02da74170d7f2ea01a5be14363d9b5f9695d",
+          "schema": "factor-source-rows/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": [
+        {
+          "time": "2026-01-01T02:00:00Z",
+          "symbol": "A",
+          "availableAt": "2026-01-01T02:00:00Z",
+          "fields": {
+            "close": 4,
+            "regime": 0
+          }
+        },
+        {
+          "time": "2026-01-01T02:00:00Z",
+          "symbol": "B",
+          "availableAt": "2026-01-01T02:00:00Z",
+          "fields": {
+            "close": 6,
+            "regime": 0
+          }
+        }
+      ],
+      "byteLength": 229
+    },
+    "holdout-index": {
+      "ref": {
+        "id": "fixture-holdout-index",
+        "revision": "1",
+        "digest": "sha256:d806040f5a3dc0fa0699d829467659fe3864a853e22d0a4e7abee15d46ea1d2d",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:f4e9b9542536af21efdd6cedf3a505cd871541dcceec7d13e05f3a68b78c5e23",
+          "schema": "factor-source-rows/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "schema": "factor-source-rows/1",
+        "snapshotId": "snapshot-fixture",
+        "partition": "holdout",
+        "rows": 2,
+        "shards": [
+          {
+            "id": "fixture-holdout-rows",
+            "revision": "1",
+            "digest": "sha256:1f0d750bf94cbc782a5469715a2fb83d5a7581beb77ac5b727533fee7f43c967",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          }
+        ]
+      },
+      "byteLength": 277
+    },
+    "usage": {
+      "ref": {
+        "id": "fixture-usage",
+        "revision": "1",
+        "digest": "sha256:a1625fb4db5064953e5d36359becf1a668457e982b1fbf985ff469dded34bcfa",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:d39cfe42988e6d7c97c6e9335470eb473fc99248299ce053c1f92796c03ba17f",
+          "schema": "factor-usage/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "snapshotId": "snapshot-fixture",
+        "holdoutAccessCount": 0
+      },
+      "byteLength": 56
+    },
+    "snapshot": {
+      "ref": {
+        "id": "fixture-snapshot",
+        "revision": "1",
+        "digest": "sha256:1348dd6279f991e4868cfe3204ee793462a661902230ac4278c742cb576ea9b3",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "publishedManifest": {
+        "kind": "resource",
+        "schemaVersion": "1.0.0",
+        "content": {
+          "format": "factor-json/1",
+          "path": "payload.json",
+          "bytesDigest": "sha256:8c3a1db213f5b0cd9bc0504e9687b2aaa1adf41342c0f994cef0c77f394ea514",
+          "schema": "factor-snapshot/1"
+        }
+      },
+      "payloadEncoding": "json",
+      "payload": {
+        "id": "snapshot-fixture",
+        "source": {
+          "id": "fixture-original-data",
+          "revision": "1",
+          "digest": "sha256:877704f1e4b70209dfd8d135fdf323ce6c1eb54c9d8626a2e907a454cf8bde59",
+          "kind": "data",
+          "schemaVersion": "1.0.0"
+        },
+        "layout": {
+          "universe": [
+            "A",
+            "B"
+          ],
+          "frequency": "60min",
+          "timezone": "UTC",
+          "availableAt": "bar_close",
+          "development": [
+            "2026-01-01T00:00:00Z",
+            "2026-01-01T01:00:00Z"
+          ],
+          "holdout": [
+            "2026-01-01T02:00:00Z",
+            "2026-01-01T02:00:00Z"
+          ],
+          "target": {
+            "kind": "forward_return",
+            "field": "close",
+            "horizonBars": 1
+          }
+        },
+        "fields": [
+          "close",
+          "regime"
+        ],
+        "calendarDigest": "sha256:bec0cbaa893d62c7b423dc38090c76b9d1c32fdbd6128dbd68de14d8e5de5ec8",
+        "development": {
+          "manifest": {
+            "id": "fixture-development-index",
+            "revision": "1",
+            "digest": "sha256:2e593d84d6839b0b1363f81f65253988bbba796af360937f9e6433a3a69a556c",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          },
+          "digest": "sha256:056da4dea59415d42e10c198f57449d2aa73db298b9f87b9cefc1084ae6b1230",
+          "rows": 4,
+          "bytes": 457
+        },
+        "holdout": {
+          "manifest": {
+            "id": "fixture-holdout-index",
+            "revision": "1",
+            "digest": "sha256:d806040f5a3dc0fa0699d829467659fe3864a853e22d0a4e7abee15d46ea1d2d",
+            "kind": "resource",
+            "schemaVersion": "1.0.0"
+          },
+          "digest": "sha256:0c30fee46d81201550a4df081e1d02da74170d7f2ea01a5be14363d9b5f9695d",
+          "rows": 2,
+          "bytes": 229
+        },
+        "provider": {
+          "id": "fixture-provider",
+          "revision": "1",
+          "digest": "sha256:e0b510d73d9dae69134cce32f7325768130acbfbd958e6794bf61f8d310e4194",
+          "kind": "resource",
+          "schemaVersion": "1.0.0"
+        },
+        "usageLedgerRef": {
+          "id": "fixture-usage",
+          "revision": "1",
+          "digest": "sha256:a1625fb4db5064953e5d36359becf1a668457e982b1fbf985ff469dded34bcfa",
+          "kind": "resource",
+          "schemaVersion": "1.0.0"
+        }
+      },
+      "byteLength": 1563
+    }
+  },
+  "materializedA": {
+    "provider": {
+      "schema": "factor-provider/1",
+      "frequency": "60min",
+      "calendar": {
+        "path": "E:/factor-fixture/attempt-A/fixture-calendar/payload.json",
+        "digest": "sha256:bec0cbaa893d62c7b423dc38090c76b9d1c32fdbd6128dbd68de14d8e5de5ec8",
+        "bytes": 235
+      },
+      "symbolMap": {
+        "path": "E:/factor-fixture/attempt-A/fixture-symbols/payload.json",
+        "digest": "sha256:4015f09f871d4023b4db236bd3e3a0927a940caf36b6ce39085199885158d924",
+        "bytes": 79
+      },
+      "features": [
+        {
+          "symbol": "s000000",
+          "field": "close",
+          "file": {
+            "path": "E:/factor-fixture/attempt-A/fixture-feature-A/payload.bin",
+            "digest": "sha256:553820e732b56553db2370612026ad97121f72a1e7534fc19e3362625300f6d7",
+            "bytes": 16
+          }
+        },
+        {
+          "symbol": "s000001",
+          "field": "close",
+          "file": {
+            "path": "E:/factor-fixture/attempt-A/fixture-feature-B/payload.bin",
+            "digest": "sha256:c73733cfbd1aee670dce75f394258ceab30ee6c07a6b147f58924a8a390608b0",
+            "bytes": 16
+          }
+        }
+      ]
+    },
+    "matrix": {
+      "schema": "factor-matrix/1",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "columns": [
+        "c-mean2"
+      ],
+      "shards": [
+        {
+          "path": "E:/factor-fixture/attempt-A/fixture-matrix-shard/payload.json",
+          "digest": "sha256:29c0c711ba11655e6c46601fc801e0f3755e0107cc44763afc057cc65b680ff6",
+          "bytes": 282
+        }
+      ]
+    },
+    "labels": {
+      "schema": "factor-matrix/1",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "columns": [
+        "target"
+      ],
+      "shards": [
+        {
+          "path": "E:/factor-fixture/attempt-A/fixture-label-shard/payload.json",
+          "digest": "sha256:7312c6f3682887277e7e3f6eee7bbaacfba13f67bfc24e8f8aba4196736eeaf7",
+          "bytes": 279
+        }
+      ]
+    },
+    "values": {
+      "id": "values-fixture",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "matrix": {
+        "manifest": {
+          "path": "E:/factor-fixture/attempt-A/fixture-matrix/payload.json",
+          "digest": "sha256:54ff106751d98c7b33810363743753c136ed8a066052f349b3ce279405f74fb5",
+          "bytes": 387
+        },
+        "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "bytes": 561
+      },
+      "labels": {
+        "manifest": {
+          "path": "E:/factor-fixture/attempt-A/fixture-labels/payload.json",
+          "digest": "sha256:775531ae08c7c974b5a5007f624238b2a1392da70cbeae005e5ee44a46c4e16d",
+          "bytes": 385
+        },
+        "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "bytes": 561
+      },
+      "candidates": [
+        {
+          "id": "c-mean2",
+          "status": "ok",
+          "value": {
+            "candidate": {
+              "id": "c-mean2",
+              "formula": {
+                "dsl": "qlib-expr/1",
+                "tree": {
+                  "call": "Mean",
+                  "args": [
+                    {
+                      "field": "close"
+                    },
+                    {
+                      "constant": 2
+                    }
+                  ]
+                }
+              },
+              "hypothesis": "fixture only",
+              "origin": {
+                "method": "seed",
+                "parents": [],
+                "parameters": {}
+              }
+            },
+            "column": "c-mean2",
+            "computeKey": "sha256:e190e96a7c67c5b389201a01b537f8a3fbf069fecde40eced7ea0c6a0ae3c6ad"
+          }
+        }
+      ],
+      "diagnosticValues": {
+        "covariates": null,
+        "sensitivityMatrix": null,
+        "sensitivity": []
+      },
+      "engine": {
+        "name": "qlib",
+        "version": "0.9.7",
+        "environmentDigest": "sha256:0c46eb879e765db9f64b8e7ade372fbf127314fa929e54b3abc230cfe0ec1494",
+        "operatorDigest": "sha256:f7bdc4301bf95c8d315ce4c412e45e905a6296c3239776b4917e23f91d03f4db"
+      },
+      "snapshotRef": {
+        "path": "E:/factor-fixture/attempt-A/fixture-snapshot/payload.json",
+        "digest": "sha256:8c3a1db213f5b0cd9bc0504e9687b2aaa1adf41342c0f994cef0c77f394ea514",
+        "bytes": 1563
+      }
+    }
+  },
+  "materializedB": {
+    "provider": {
+      "schema": "factor-provider/1",
+      "frequency": "60min",
+      "calendar": {
+        "path": "E:/factor-fixture/attempt-B/fixture-calendar/payload.json",
+        "digest": "sha256:bec0cbaa893d62c7b423dc38090c76b9d1c32fdbd6128dbd68de14d8e5de5ec8",
+        "bytes": 235
+      },
+      "symbolMap": {
+        "path": "E:/factor-fixture/attempt-B/fixture-symbols/payload.json",
+        "digest": "sha256:4015f09f871d4023b4db236bd3e3a0927a940caf36b6ce39085199885158d924",
+        "bytes": 79
+      },
+      "features": [
+        {
+          "symbol": "s000000",
+          "field": "close",
+          "file": {
+            "path": "E:/factor-fixture/attempt-B/fixture-feature-A/payload.bin",
+            "digest": "sha256:553820e732b56553db2370612026ad97121f72a1e7534fc19e3362625300f6d7",
+            "bytes": 16
+          }
+        },
+        {
+          "symbol": "s000001",
+          "field": "close",
+          "file": {
+            "path": "E:/factor-fixture/attempt-B/fixture-feature-B/payload.bin",
+            "digest": "sha256:c73733cfbd1aee670dce75f394258ceab30ee6c07a6b147f58924a8a390608b0",
+            "bytes": 16
+          }
+        }
+      ]
+    },
+    "matrix": {
+      "schema": "factor-matrix/1",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "columns": [
+        "c-mean2"
+      ],
+      "shards": [
+        {
+          "path": "E:/factor-fixture/attempt-B/fixture-matrix-shard/payload.json",
+          "digest": "sha256:29c0c711ba11655e6c46601fc801e0f3755e0107cc44763afc057cc65b680ff6",
+          "bytes": 282
+        }
+      ]
+    },
+    "labels": {
+      "schema": "factor-matrix/1",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "columns": [
+        "target"
+      ],
+      "shards": [
+        {
+          "path": "E:/factor-fixture/attempt-B/fixture-label-shard/payload.json",
+          "digest": "sha256:7312c6f3682887277e7e3f6eee7bbaacfba13f67bfc24e8f8aba4196736eeaf7",
+          "bytes": 279
+        }
+      ]
+    },
+    "values": {
+      "id": "values-fixture",
+      "snapshotId": "snapshot-fixture",
+      "partition": "development",
+      "matrix": {
+        "manifest": {
+          "path": "E:/factor-fixture/attempt-B/fixture-matrix/payload.json",
+          "digest": "sha256:073a550fe0eedb470c2a699afacccfca1c8a510d955940e056aa68430af9dc0d",
+          "bytes": 387
+        },
+        "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "bytes": 561
+      },
+      "labels": {
+        "manifest": {
+          "path": "E:/factor-fixture/attempt-B/fixture-labels/payload.json",
+          "digest": "sha256:9789c7f183a972cbd8ae276ef7ab61616b56a6e6c529d698a68f4664340ad2cc",
+          "bytes": 385
+        },
+        "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+        "rows": 4,
+        "bytes": 561
+      },
+      "candidates": [
+        {
+          "id": "c-mean2",
+          "status": "ok",
+          "value": {
+            "candidate": {
+              "id": "c-mean2",
+              "formula": {
+                "dsl": "qlib-expr/1",
+                "tree": {
+                  "call": "Mean",
+                  "args": [
+                    {
+                      "field": "close"
+                    },
+                    {
+                      "constant": 2
+                    }
+                  ]
+                }
+              },
+              "hypothesis": "fixture only",
+              "origin": {
+                "method": "seed",
+                "parents": [],
+                "parameters": {}
+              }
+            },
+            "column": "c-mean2",
+            "computeKey": "sha256:e190e96a7c67c5b389201a01b537f8a3fbf069fecde40eced7ea0c6a0ae3c6ad"
+          }
+        }
+      ],
+      "diagnosticValues": {
+        "covariates": null,
+        "sensitivityMatrix": null,
+        "sensitivity": []
+      },
+      "engine": {
+        "name": "qlib",
+        "version": "0.9.7",
+        "environmentDigest": "sha256:0c46eb879e765db9f64b8e7ade372fbf127314fa929e54b3abc230cfe0ec1494",
+        "operatorDigest": "sha256:f7bdc4301bf95c8d315ce4c412e45e905a6296c3239776b4917e23f91d03f4db"
+      },
+      "snapshotRef": {
+        "path": "E:/factor-fixture/attempt-B/fixture-snapshot/payload.json",
+        "digest": "sha256:8c3a1db213f5b0cd9bc0504e9687b2aaa1adf41342c0f994cef0c77f394ea514",
+        "bytes": 1563
+      }
+    }
+  },
+  "computeValuesHandle": {
+    "id": "values-fixture",
+    "snapshotId": "snapshot-fixture",
+    "partition": "development",
+    "matrix": {
+      "manifest": {
+        "id": "fixture-matrix",
+        "revision": "1",
+        "digest": "sha256:1be8a81458181d66251bf038d2fdd3abcb42f9707fd599767ad9a646e7750ee9",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "bytes": 561
+    },
+    "labels": {
+      "manifest": {
+        "id": "fixture-labels",
+        "revision": "1",
+        "digest": "sha256:32b81b63ea508c0e68aff16fb1b07d26a089822ebafa105861b5bd2994f36162",
+        "kind": "resource",
+        "schemaVersion": "1.0.0"
+      },
+      "digest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+      "rows": 4,
+      "bytes": 561
+    },
+    "candidates": [
+      {
+        "id": "c-mean2",
+        "status": "ok",
+        "value": {
+          "candidate": {
+            "id": "c-mean2",
+            "formula": {
+              "dsl": "qlib-expr/1",
+              "tree": {
+                "call": "Mean",
+                "args": [
+                  {
+                    "field": "close"
+                  },
+                  {
+                    "constant": 2
+                  }
+                ]
+              }
+            },
+            "hypothesis": "fixture only",
+            "origin": {
+              "method": "seed",
+              "parents": [],
+              "parameters": {}
+            }
+          },
+          "column": "c-mean2",
+          "computeKey": "sha256:e190e96a7c67c5b389201a01b537f8a3fbf069fecde40eced7ea0c6a0ae3c6ad"
+        }
+      }
+    ],
+    "diagnosticValues": {
+      "covariates": null,
+      "sensitivityMatrix": null,
+      "sensitivity": []
+    },
+    "engine": {
+      "name": "qlib",
+      "version": "0.9.7",
+      "environmentDigest": "sha256:0c46eb879e765db9f64b8e7ade372fbf127314fa929e54b3abc230cfe0ec1494",
+      "operatorDigest": "sha256:f7bdc4301bf95c8d315ce4c412e45e905a6296c3239776b4917e23f91d03f4db"
+    },
+    "snapshotRef": {
+      "id": "fixture-snapshot",
+      "revision": "1",
+      "digest": "sha256:1348dd6279f991e4868cfe3204ee793462a661902230ac4278c742cb576ea9b3",
+      "kind": "resource",
+      "schemaVersion": "1.0.0"
+    },
+    "manifest": {
+      "id": "fixture-values",
+      "revision": "1",
+      "digest": "sha256:2865d4a72a22a3fe45a7c08f1c58e5277f7924ae798dd970bee019ff820f5c6a",
+      "kind": "resource",
+      "schemaVersion": "1.0.0"
+    }
+  },
+  "expected": {
+    "providerFloat32": {
+      "s000000": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "s000001": [
+        0,
+        2,
+        4,
+        6
+      ]
+    },
+    "rowOrderDigest": "sha256:51649e35d4ff79eac52fe176c02fb7e187446360eb5aa5be77bddd226cc6c1d7",
+    "developmentBoundaryLabels": [
+      1,
+      null,
+      1,
+      null
+    ],
+    "missingRequiredAuxiliary": "incomplete_not_passed",
+    "changedEvidenceContextField": "no_exact_reuse",
+    "perCandidateError": "preserve_successful_sibling",
+    "independentMeasureValidation": "snapshot_fields_plus_frozen_dsl_policy"
+  }
+}

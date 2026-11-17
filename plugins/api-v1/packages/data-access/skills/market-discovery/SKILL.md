@@ -26,7 +26,7 @@ available 不是连接健康或会话加载状态。为 false 时通过 plugin_i
 | 取得研究用历史 K 线 | market_read；固定精确品种、spec 和区间。 |
 | 显示行情或指标 | 画布插件的 canvas_binding → canvas_apply；已有匹配绑定直接复用。 |
 
-一般来源、查询、缓存、分页和失败恢复见 [来源查询](references/source-queries.md)。行情的完整参数、时间与成交量语义见 [历史与显示](references/market-history.md)。不要把来源 operations 的宿主内部能力当成 Agent 工具直接调用。
+一般来源、查询、缓存、分页和失败恢复见 [来源查询](../../references/source-queries.md)。行情的完整参数、时间与成交量语义见 [历史与显示](../../references/market-history.md)。不要把来源 operations 的宿主内部能力当成 Agent 工具直接调用。
 
 ## 4. 核对实际结果并交接
 

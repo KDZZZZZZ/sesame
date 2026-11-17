@@ -6,14 +6,15 @@ import assert from 'node:assert/strict';
 import { mkdtemp, cp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { buildLock } from '../scripts/plugin-lock.mjs';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
-test('nine defaults provide backend-free authoring/reports; MT5 and judgments install privately and reopen without legacy grants', { skip: !hostRoot, timeout: 90000 }, async t => {
+test('default plugins provide methods and backend-free authoring/reports; MT5 and judgments install privately and reopen', { skip: !hostRoot, timeout: 90000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const { Store } = await load('modules/agent/store.js'), { Runtime } = await load('modules/agent/runtime.js');
-  const { createHostContext } = await load('modules/plugins/context.js');
+  const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
   const { ModelRuntime } = await load('node_modules/@earendil-works/pi-coding-agent/dist/index.js');
   const root = await realpath(await mkdtemp(join(tmpdir(), 'sesame-core-host-'))), bundle = join(root, 'bundle');
   const source = fileURLToPath(new URL('../', import.meta.url)), optional = fileURLToPath(new URL('../../optional-api-v1/packages/', import.meta.url));
@@ -35,12 +36,19 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     assert.deepEqual([...runtime.plugins.entries.values()].map(entry => entry.id).sort(), lock.packages.map(pkg => pkg.id).sort());
     for (const entry of runtime.plugins.entries.values()) assert.notEqual(entry.runtime_status, 'failed', `${entry.id}: ${JSON.stringify(entry.diagnostics)}`);
     assert.deepEqual(runtime.providers.list('sesame.market'), []); assert.deepEqual(runtime.providers.list('sesame.account'), []);
+    let callNumber = 0;
     const session = await runtime.session('conv_main'), call = async (name, args) => {
       const tool = runtime.plugins.definitions({ conversationId: 'conv_main' }).find(item => item.name === name); assert.ok(tool, name);
-      return (await tool.execute('offline-core', args)).details;
+      return (await tool.execute(`offline-core-${++callNumber}`, args)).details;
     };
-    for (const name of ['host_files_read', 'research_register', 'report_publish', 'strategy_validate']) assert.ok(session.getActiveToolNames().includes(name), name);
+    for (const name of ['host_files_read', 'research_register', 'components_show', 'research_methods', 'research_read', 'strategy_validate']) assert.ok(session.getActiveToolNames().includes(name), name);
+    for (const name of ['report_publish', 'report_data', 'report_template', 'report_backtest_template', 'report_structure', 'report_compose']) assert.equal(session.getActiveToolNames().includes(name), false, `${name} is retired`);
     assert.equal(session.getActiveToolNames().some(name => /^(mt5_|qmt_|akshare_|vnpy_)/.test(name)), false);
+    const methods = await call('research_methods', { query: '财报前瞻', limit: 3 });
+    assert.ok(methods.items.some(item => item.id === 'earnings-preview'));
+    const method = await call('research_read', { ids: ['earnings-preview', 'earnings-review'] });
+    assert.equal(method.items.length, 2);
+    assert.notEqual(method.items[0].content, method.items[1].content);
     const work = runtime.workspaces.root('conv_main');
     let strategySource;
     for (const name of ['close-threshold', 'crossover']) {
@@ -53,9 +61,16 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
       assert.equal(replay.status, 'completed'); assert.equal(replay.nativeEngineExecuted, false);
     }
     store.put('dataset', { id: 'core-demo', rows: [{ label: 'A', value: '1.25' }, { label: 'B', value: '2.50' }], provenance: { kind: 'demo' } });
-    const data = await call('report_data', { operation_id: 'core-demo-data', dataset_id: 'core-demo' });
-    const preview = await call('report_template', { output_path: 'demo.html', title: 'Offline demo report', summary: 'Fictional reference values', data_id: 'demo', chart_title: 'Demo comparison', takeaway: 'B is twice A in this fixture', source_note: 'Fictional demo values; no market observations', kind: 'bar', x: 'label', y: 'value', unit: 'demo units', columns: ['label', 'value'], demo: true });
-    const report = await call('report_publish', { operation_id: 'core-demo-report', title: 'Offline demo report', summary: 'Fictional reference values', ...preview.publish, provenance_kind: 'demo', data: [{ id: 'demo', ref: data.ref, usage: 'Fictional chart input' }] });
+    const snapshot = (operationId, datasetId) => call('data_snapshot', { operationId, source: { providerId: 'host#datasets', revision: 'host:2' }, input: { datasetId }, title: datasetId });
+    const data = await snapshot('core-demo-data', 'core-demo');
+    const report = await call('components_show', {
+      operation_id: 'core-demo-report', target: 'report', title: 'Offline demo report', provenance_kind: 'demo',
+      data: [{ id: 'demo', ref: data.ref, usage: 'Fictional chart input' }],
+      components: [
+        { type: 'paragraph', text: 'B is twice A in this synthetic fixture.' },
+        { type: 'chart', kind: 'bar', title: 'Demo comparison', data_id: 'demo', columns: ['label', 'value'], options: { x: 'label', y: 'value', unit: 'demo units' } },
+      ],
+    });
     assert.equal(runtime.contractArtifacts.read(report.ref).manifest.content.provenance.kind, 'demo');
     if (process.env.SESAME_REPORT_INSPECT === '1') {
       const receipt = await call('report_check', { ref: report.ref }); assert.equal(receipt.status, 'rendered', JSON.stringify(receipt));
@@ -63,15 +78,21 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     }
     const trials = [{ trial_id: 'fixture-trial', symbol: 'TEST', timeframe: 'H1', sample: 'fixture-only', status: 'completed', selected: true, parameters: { lookback: '20' }, sharpe: null, max_drawdown_pct: '3.25', net_profit: '-4.50' }];
     store.put('dataset', { id: 'core-demo-trials', rows: trials, provenance: { kind: 'demo' } });
-    const trialData = await call('report_data', { operation_id: 'core-trial-data', dataset_id: 'core-demo-trials' });
-    const strategyPreview = await call('report_backtest_template', { output_path: 'backtest.html', title: 'Demo Strategy', summary: 'Rendering fixture only', strategy_source: strategySource, data_id: 'trials', parameters: ['lookback'], selection_rule: 'Only synthetic fixture trial; no fitted strategy', source_note: 'Synthetic USD result with no terminal execution', currency: 'USD' });
-    const strategyReport = await call('report_publish', { operation_id: 'core-demo-strategy', title: 'Demo Strategy', summary: 'Rendering fixture only', ...strategyPreview.publish, space: 'strategy', provenance_kind: 'demo', data: [{ id: 'trials', ref: trialData.ref, usage: 'All fixture trials' }] });
+    const trialData = await snapshot('core-trial-data', 'core-demo-trials');
+    const strategyReport = await call('components_show', {
+      operation_id: 'core-demo-strategy', target: 'report', title: 'Demo Strategy', space: 'strategy', provenance_kind: 'demo',
+      references: [strategySource], data: [{ id: 'trials', ref: trialData.ref, usage: 'All fixture trials' }],
+      components: [
+        { type: 'paragraph', text: 'Only the supplied synthetic trial is shown; no native strategy was executed.' },
+        { type: 'table', columns: ['trial_id', 'symbol', 'timeframe', 'net_profit', 'max_drawdown_pct'],
+          rows: trials.map(row => [row.trial_id, row.symbol, row.timeframe, row.net_profit, row.max_drawdown_pct]) },
+      ],
+    });
     const strategyContent = runtime.contractArtifacts.read(strategyReport.ref).manifest;
-    assert.match(runtime.contractArtifacts.resource(strategyReport.ref, 'index.html').bytes.toString(), /<aside data-sesame-provenance="demo"/);
+    assert.ok(runtime.contractArtifacts.resource(strategyReport.ref, 'index.html').bytes.toString().includes('data-sesame-provenance="demo"'));
     assert.ok(strategyContent.content.provenance.references.some(ref=>ref.digest===strategySource.digest));
     assert.ok(strategyContent.dependencies.some(ref => ref.digest === strategySource.digest));
-    assert.ok(strategyContent.content.features.includes('strategy_details'));
-    assert.equal(store.get('report', strategyReport.ref.id).kind, 'strategy', 'UI routes to Strategy without an Agent-written classification flag');
+    assert.equal(store.get('report', strategyReport.ref.id).kind, 'strategy', 'The producer explicitly selects the Strategy delivery location');
     assert.deepEqual(runtime.contractArtifacts.reportData(strategyReport.ref, 'trials').rows, trials);
     if (process.env.SESAME_REPORT_INSPECT === '1') {
       const receipt = await call('report_check', { ref: strategyReport.ref }); assert.equal(receipt.status, 'rendered', JSON.stringify(receipt));
@@ -79,21 +100,32 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     }
     store.put('mt5_project', { id: 'legacy-fixture', title: 'Must remain outside plugin private storage' });
     await writeFile(join(store.directory, 'judgments.sqlite'), 'old synthetic bytes; not a database');
+    const privateEvidence = new Map();
     for (const name of ['mt5', 'judgment-evolution']) {
       const draft = join(work, `draft-${name}`); await cp(join(optional, name), draft, { recursive: true });
       const checked = await runtime.plugins.manager.test('conv_main', { path: draft }); assert.equal(checked.passed, true, JSON.stringify(checked));
       const installed = await runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
       assert.equal(installed.runtime_status, 'ready'); assert.equal(installed.state, 'discoverable');
       const entry = runtime.plugins.entry(installed.id); assert.equal(entry.migration, undefined);
-      const host = createHostContext(runtime, entry, 'conv_main');
-      assert.throws(() => host.storage.legacy.list('mt5_project'), { code: 'FORBIDDEN' });
-      assert.deepEqual(host.storage.list('mt5_project'), []); host.storage.put('reopen_fixture', { id: 'own', preserved: true });
+      const host = createHostContextV2(runtime, entry, 'conv_main');
+      assert.equal(host.storage, undefined, 'API2 does not expose legacy application storage');
+      assert.throws(() => host.state.read({ collection: 'mt5_project', key: 'legacy-fixture' }), /undeclared|forbidden/i);
+      const bytes = JSON.stringify({ plugin: installed.id, preserved: true });
+      const resource = await host.resources.create({ kind: 'file', name: 'reopen.json', lifetime: 'durable', source: { content: bytes, encoding: 'utf8' } });
+      const path = name === 'judgment-evolution' ? 'CRITERIA.md' : 'reopen.json';
+      const metadata = name === 'judgment-evolution'
+        ? { type: 'judgment-criteria', title: 'Offline persistence fixture', path, contentDigest: 'sha256:' + createHash('sha256').update(bytes).digest('hex') }
+        : { format: 'json-object', title: 'Offline persistence fixture' };
+      const evidence = await host.resources.publish(resource, { kind: 'resource', schemaVersion: '1.0.0', content: metadata, dependencies: [], blobs: [{ entry: 'reopen.json', path, mediaType: 'application/json' }] }, { operationId: `reopen-${name}` });
+      privateEvidence.set(installed.id, { ref: evidence.ref, path });
       assert.equal(store.get('plugin_installation', installed.id).bundled_origin, undefined);
     }
     assert.deepEqual(requests, []); await close(); await open();
     for (const id of ['sesame/mt5', 'sesame/judgment-evolution']) {
       const entry = runtime.plugins.entry(id); assert.equal(entry.runtime_status, 'ready');
-      assert.equal(createHostContext(runtime, entry, 'conv_main').storage.get('reopen_fixture', 'own').preserved, true);
+      const evidence = privateEvidence.get(id);
+      const stored = await createHostContextV2(runtime, entry, 'conv_main').resources.read(evidence.ref, { part: 'content', entry: evidence.path });
+      assert.equal(JSON.parse(stored.encoding === 'base64' ? Buffer.from(stored.content, 'base64').toString() : stored.content).preserved, true);
     }
     assert.equal(store.get('mt5_project', 'legacy-fixture').title, 'Must remain outside plugin private storage');
     assert.equal(await readFile(join(store.directory, 'judgments.sqlite'), 'utf8'), 'old synthetic bytes; not a database');

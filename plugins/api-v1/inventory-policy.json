@@ -59,6 +59,20 @@
     },
     "implementationReason": "Functions adapt host data discovery and immutable dataset storage; persisted binding state is not a standalone calculation."
   },
+  "deep-reasoning": {
+    "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": ["knowledge"],
+    "title": {"en":"Deep reasoning","zh":"深度推理"},
+    "summary": {
+      "en":"Explain causes and evolution through independent historical, contradiction and game-theoretic analysis, targeted reconciliation and evidence-based synthesis.",
+      "zh":"独立开展历史类比、矛盾分析与博弈分析，定向复核分歧，形成有证据和可检验条件的整体解释。"
+    },
+    "dependencies": {
+      "en":"No keys or external runtime. Agents use existing host orchestration and selected evidence/report capabilities; loading the method starts no background work.",
+      "zh":"无需密钥或额外运行环境；Agent 使用现有宿主编排及按任务选择的证据、报告能力。加载方法不会自行启动后台工作。"
+    }
+  },
   "memory": {
     "category": "workspace",
     "functionalCategory": "platform",
@@ -146,12 +160,26 @@
       "zh": "交互报告"
     },
     "summary": {
-      "en": "Render plugin-defined research and strategy content with one shared visual style, native market charts and interactive backtest views.",
-      "zh": "用统一样式呈现研究与策略报告，支持内置行情图、回测热力图和参数比较。"
+      "en": "Present text and fixed data through shared visual components, charts, layouts and interactions in reports and answers.",
+      "zh": "用统一组件、图表、排版与交互在报告和回答中展示已有文字与固定数据。"
     },
     "dependencies": {
       "en": "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required.",
       "zh": "需要 Sesame 0.3.0-dev.2 或更新宿主；图表随插件提供，无需 CDN。"
+    }
+  },
+  "research": {
+    "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": ["function"],
+    "title": { "en": "Research methods", "zh": "研究方法" },
+    "summary": {
+      "en": "Find financial investigation methods and question-specific answer structures; adapt them to new questions and review evidence.",
+      "zh": "发现金融调查方法与问题专属回答结构，适配新问题并复核研究证据。"
+    },
+    "dependencies": {
+      "en": "Method lookup needs no credentials or external runtime. Research uses the existing agents and relevant source and calculation plugins.",
+      "zh": "查询方法无需密钥或额外运行环境；研究由现有 Agent 配合所需来源与计算插件执行。"
     }
   },
   "strategy-authoring": {
@@ -376,8 +404,8 @@
       "zh": "量化技能索引"
     },
     "summary": {
-      "en": "Discover fixed QuantSkills references and route research to Research or Strategy; select methods and backends independently.",
-      "zh": "查询固定 QuantSkills 参考，综合投资研究推荐 Research，因子与策略研究推荐 Strategy。"
+      "en": "Discover fixed QuantSkills references; route investment research, factor research and external strategy execution to their declared capabilities.",
+      "zh": "查询固定 QuantSkills 参考，分别发现投资研究、因子研究及外部策略执行能力。"
     },
     "dependencies": {
       "en": "Existing Python 3; this catalog is guidance, not an execution engine.",
@@ -960,40 +988,21 @@
   },
   "auto-factor-mining": {
     "category": "research",
-    "functionalCategory": "business",
-    "implementationKinds": [
-      "workflow"
-    ],
-    "title": {
-      "en": "Strategy — factor and strategy research",
-      "zh": "Strategy · 因子与策略研究"
-    },
-    "summary": {
-      "en": "Run single- or multi-Agent factor and strategy experiments, retain conditional usefulness and counterevidence, optionally invoke native backtests and optimizers, and deliver Strategy.",
-      "zh": "以单 Agent 或多 Agent 研究因子与策略，保留条件用途与反例，可选接入原生回测和优化器并生成 Strategy。"
-    },
-    "dependencies": {
-      "en": "A configured model, a selected evaluator and fixed evidence. No implicit trading backend.",
-      "zh": "需要已配置模型、选定评估器与固定证据，不隐式绑定交易后端。"
-    }
-  },
-  "factor-evaluator": {
-    "category": "research",
     "functionalCategory": "analysis",
     "implementationKinds": [
       "function"
     ],
     "title": {
-      "en": "Deterministic factor evaluator",
-      "zh": "确定性因子评估"
+      "en": "Factor research",
+      "zh": "因子研究"
     },
     "summary": {
-      "en": "Compute factor association, task-selected diagnostics and complete-trial DSR/PBO evidence; support conditional use instead of requiring all tests to pass.",
-      "zh": "计算因子关联、按任务选择的检验及完整试验 DSR/PBO 证据；支持有条件使用，不要求所有检验通过。"
+      "en": "Agent-directed data preparation, search, Qlib computation and pure factor evaluation, with an evidence library and explicit strategy-owned pools.",
+      "zh": "由 Agent 直接组织数据冻结、搜索、Qlib 计算及纯因子评价，保存证据库；策略明确决定自己的因子池。"
     },
     "dependencies": {
-      "en": "Fixed data and a trusted workflow. Agent thresholds are advisory; explicit user hard requirements gate selection. DSR/PBO require complete observed trial returns and stated assumptions.",
-      "zh": "需要固定数据和可信工作流；Agent 阈值用于判断，用户明确硬性要求才限制选择。DSR/PBO 需要完整试验收益及明确假设。"
+      "en": "Verified private Windows x64 CPython 3.12 with pinned dependencies, immutable numerical data and an explicit target/profile. Strategy backtests are external.",
+      "zh": "需要已核验的 Windows x64 CPython 3.12 私有固定依赖、不可变数值数据及明确目标与评价配置；策略回测由外部能力执行。"
     }
   },
   "historical-evidence": {

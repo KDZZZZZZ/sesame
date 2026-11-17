@@ -1,0 +1,290 @@
+{
+  "title": "技术事件与价格情景：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "price_series": {
+      "label": "技术情景的实际价格证据",
+      "meaning": "所选技术方法对应的固定 OHLC；关键位置和失效条件来自可查的方法结果。",
+      "definition": "技术事件所依附的实际价格路径，用于定位事件与关键位。",
+      "inputs": "固定 OHLC、事件 ID、方法已生成的标记或价格区域引用。",
+      "unit_time": "同标的、价格口径、bar 周期、时区；区分事件检测与价格柱发生时间。",
+      "interpretation": "所识别结构对应实际价格证据；形态相似不等于预测有效，不能从叙述反造信号。",
+      "missing": "缺少对应柱或标注时保留范围缺口，不凭叙述补画确认点。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "fact",
+        "meaning_note": "原OHLC直接获取，关键位和技术标记采用独立方法结果。"
+      }
+    },
+    "method_scan": {
+      "label": "方法覆盖与执行状态",
+      "meaning": "对同一固定行情输入尝试的方法家族、定义/参数/版本、数据引用与截点、首次可得时间、运行有信号/无信号/不可运行及原因；记录全部尝试，不计算主观分。",
+      "definition": "本次实际考虑或使用的技术分析方法及其适用状态。",
+      "inputs": "方法 ID/版本、知识依据、适用对象/周期、输入可得性、是否运行、产出引用与未用原因。",
+      "unit_time": "记录扫描截点和各方法的数据窗口；同名不同版本分别标记。",
+      "interpretation": "方法清单不是已完成分析证明；可自由组合知识和算法，方法数量不等于支持票数。",
+      "missing": "未运行、不可用与运行后未检出分开，不给未执行方法虚构结论。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "方法/参数由研究选择；实际运行/无信号/失败状态从真实执行记录获取，首次可得性须输入证据。"
+      }
+    },
+    "feature_signals": {
+      "label": "多方法特征与条件",
+      "meaning": "各方法已计算的原值、单位、事件位置、首次可得时间、成立与失效条件、固定来源及历史检验状态；区分几何、波动尺度与方向命题，不替方法检测或匹配。",
+      "definition": "各已运行方法识别的具体特征、观察值和可检验推断。",
+      "inputs": "特征 ID、方法/知识引用、当前值与尺度、事件引用、方向解释、历史同类结果及反例。",
+      "unit_time": "逐特征保留识别时间、首次可得时间、bar 周期、预测期限及结算目标。",
+      "interpretation": "理论含义与历史统计对照；相关特征不能算独立票数；仅事实特征不强制变成方向预测。",
+      "missing": "无特征、数据不足、历史缺失分别记录；预测证据不足时不补置信度。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "每项原值/几何是计算，成立/方向命题是解释，时间/输入ref来自记录，历史验证另取真实结果。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "method_comparison_series": {
+      "label": "多方法信号与状态对照",
+      "meaning": "同一行情截点下，各方法记录的特征发生/确认时间、无信号或不可运行状态与证据；不把方法数量当独立投票或置信度。",
+      "definition": "在同一输入快照上，各方法检测与确认事实的生命周期对照。",
+      "inputs": "节点 id、time、方法/特征 item、state、evidence，以及输入快照和方法版本引用。",
+      "unit_time": "时间轴标明时区、检测/确认及首次可得时间，bar 周期与预测期限另列。",
+      "interpretation": "比较不产生综合分数或多数表决概率；不同理论相同结论可能依赖同一价格信息；无信号与不能运行是不同事实。",
+      "missing": "缺失方法保持未运行/不可用及原因，不能给未执行方法补事件，也不能用零分当作反对判断。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "图中事件状态/评估时间是实际方法回执；方向标签为方法判断，不按方法数投票。"
+      }
+    },
+    "key_levels": {
+      "label": "关键位置",
+      "meaning": "方法给出的价格区域和依据，不预设指标。",
+      "definition": "所选方法认定与当前技术判断相关的价格点或区域。",
+      "inputs": "位置/上下界、支撑或阻力等角色、事件 ID、形成依据、触发与失效条件。",
+      "unit_time": "每点带价格单位、复权口径、形成/确认时间及适用期限。",
+      "interpretation": "关键位是条件参照，不是保证成交价；支撑阻力、入场位、目标位与止损位不能互换。",
+      "missing": "方法未给位置或边界时说明未确定，不四舍五入造出新的交易阈值。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "interpretation",
+        "meaning_note": "价位可能来自极值等计算或方法判断；选用哪个价位及重要性为解释，不能由图形自生。"
+      }
+    },
+    "scenario_series": {
+      "label": "触发与失效路径",
+      "meaning": "条件节点、分支与叶子结果；无概率的树不能用节点大小暗示置信度。",
+      "definition": "技术判断的条件路径图，节点连接观察条件与可能结果。",
+      "inputs": "唯一节点 ID、父节点、条件、事件/情景 ID、叶子结果与依据。",
+      "unit_time": "每条路径指明观察窗口和期限，价格条件保留单位及确认方式。",
+      "interpretation": "树的分支不是互斥完备概率分布；没有历史概率时节点面积或颜色不得暗示概率。",
+      "missing": "未研究的分支标为待判断；未知条件不得画成已触发结果。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "树节点是条件预测/计划分支，触发阈值可由用户或方法给定；无权重不表示等概率。"
+      }
+    },
+    "lifecycle_series": {
+      "label": "技术事件进程",
+      "meaning": "已记录的检测、确认、失效等事件与时间；保留原始事件 ID、时区和证据链接。",
+      "definition": "同一技术事件从检测到确认、失效或到期的真实记录时间线。",
+      "inputs": "事件 ID、状态、状态时间、首次可得时间及各状态证据。",
+      "unit_time": "注明时区与 bar 闭合状态；允许发现时间晚于形态发生时间。",
+      "interpretation": "形成、已确认、已失败不是可互换标签；图线连接不证明事件连续有效。",
+      "missing": "缺少状态更新则保留最后已知状态和截止点，不推断确认或结束。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "检测/确认/失效记录来自实际规则执行，事件解释来自方法；发生时刻与检测时刻分列。"
+      }
+    },
+    "events": {
+      "label": "技术事件",
+      "meaning": "方法识别的事件及形成或确认状态。",
+      "definition": "研究方法已经识别的技术事件及当时的确认程度。",
+      "inputs": "事件 ID、类型/名称、方向、关联价格、识别规则、形成或确认状态与证据。",
+      "unit_time": "分开记录形态发生、检测、确认和报告截点；注明观察粒度。",
+      "interpretation": "方法识别到事件不等于其交易有效性已经验证；同一事件多次更新避免重复计数。",
+      "missing": "未检测到、未运行检测、数据不足分别表达；不能凭空补齐事件清单。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "interpretation",
+        "meaning_note": "技术事件由算法/理论识别，其命名和状态不是交易所公布事实；源柱是获取事实。"
+      }
+    },
+    "scenarios": {
+      "label": "条件情景",
+      "meaning": "情景、触发条件和可能结果；不隐含分支概率。",
+      "definition": "在明确技术条件成立时，方法给出的可能价格行为。",
+      "inputs": "情景 ID、适用事件、触发条件、方向/结果、期限、相反条件、方法与历史对照。",
+      "unit_time": "价格区域同单位，触发可用收盘/盘中等指定方式；注明起点和到期条件。",
+      "interpretation": "情景不是已发生事实；理论预期应与历史同类情景实际结果对照，不暗含等概率。",
+      "missing": "缺少历史结果时保留有标识的假说或待验证条件，不填预测概率。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "每个情景是带条件的可能结果；触发事实、方法判断和概率分别列，不凭措辞当预测事实。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "invalidation": {
+      "label": "失效条件",
+      "meaning": "使判断失效的可观察条件。",
+      "definition": "能使当前技术解释或特定情景不再成立的可观察条件。",
+      "inputs": "对应判断/情景 ID、价格或事件条件、判定方式、时间约束及方法依据。",
+      "unit_time": "阈值注明单位，条件注明盘中/收盘及适用期限。",
+      "interpretation": "观点失效不等于账户止损；价格越界、超时、证据冲突可能由不同规则触发。",
+      "missing": "方法未定义失效条件时标明未定义，不自动用固定比例止损代替。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "plan",
+        "meaning_note": "失效条件是预先设定的可观察判据，是否触达以后由事实核验。"
+      }
+    },
+    "valid_until": {
+      "label": "有效期限",
+      "meaning": "由用户和方法确定的有效时间或条件。",
+      "definition": "本次技术判断在时间或条件上的有效边界。",
+      "inputs": "确切截止时间或可观测到期事件、关联情景和提前复核条件。",
+      "unit_time": "区分交易日、自然日、bar 数及所在时区，期限从指定起点计算。",
+      "interpretation": "有效期是判断需复核的边界，不保证期内方向或触发；未触发与失效分别记录。",
+      "missing": "未约定期限则注明待确定，不根据 bar 周期自动生成持有期。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "期限来自用户约定或方法有效期判断；不是由价格源保证的有效时间。"
+      }
+    },
+    "event_identity": {
+      "label": "技术事件身份",
+      "meaning": "事件 ID、名称/类型、方向及来源，连接生命周期、几何和情景结果。",
+      "definition": "连接同一技术事件各条记录的稳定身份信息。",
+      "inputs": "事件 ID、名称/类型、方向、标的、检测方法与原始来源 ID。",
+      "unit_time": "身份中保留资产市场和事件版本；日期属性引用 event_times。",
+      "interpretation": "名称相似不表示同一事件；事件 ID 不是交易 ID，也不自动代表独立样本。",
+      "missing": "缺少原始 ID 时用有记录的映射标识并说明来源，不能合并无法核对的事件。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "内部事件ID由执行器登记，名称/方向由方法定义；若取外部事件保留其原ID与来源。"
+      }
+    },
+    "event_times": {
+      "label": "检测与确认时间",
+      "meaning": "同一事件的 detected_at、confirmed_at、最早可行动时间、bar 周期和闭合状态。",
+      "definition": "同一事件的发生、发现、确认与最早可行动时间记录。",
+      "inputs": "detected_at、confirmed_at、对应柱时间、首次可得时间、最早行动时间与来源。",
+      "unit_time": "明确时区、bar 周期、开收盘标记和闭合状态；不得早于当时所需信息可得时间。",
+      "interpretation": "事后回看确认的形态不能假装当时已确认；发现时间不能代替形态起点。",
+      "missing": "未确认的 confirmed_at 保持 null，不能用 detected_at 填空。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "柱时间来自行情；检测/确认来自真实执行，最早可行动时刻按明确规则派生。"
+      }
+    },
+    "event_lifecycle": {
+      "label": "事件状态与有效期",
+      "meaning": "事件 ID、形成/完成/失败/到期、状态时间和失效原因；不把检测时间当发生时间。",
+      "definition": "技术事件各阶段的状态及状态变更理由。",
+      "inputs": "事件 ID、形成/确认/失败/到期等原状态、状态时间、版本与转移原因。",
+      "unit_time": "每次状态记录使用当时可得证据，说明截止点和到期规则。",
+      "interpretation": "方法自己的状态体系需保留，不强制所有事件经过相同步骤；失效不等于亏损成交。",
+      "missing": "没有后续证据时保留截至时点的最后状态，不补完整生命周期。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "形成/完成/失败状态按方法执行记录产生，失效原因是解释，保留状态版本。"
+      }
+    },
+    "geometry": {
+      "label": "形态与关键位几何",
+      "meaning": "由方法提供的点位/时间、边界端点、触碰、关键位重要性及标注引用，不识别形态。",
+      "definition": "方法提供的形态点位、边界和相互关系，用于核对技术解释。",
+      "inputs": "带时间的转折点、线段端点、边界区域、触碰记录、重要性定义及标注引用。",
+      "unit_time": "价格坐标同复权与币种，时间坐标同 bar 粒度及时区，记录确认滞后。",
+      "interpretation": "几何描述不构成成功率；触碰次数与重要性得分采用方法原定义，并保留识别规则与版本。",
+      "missing": "缺失端点或标注时明确不可复原的部分，不由画线补齐未识别结构。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "interpretation",
+        "meaning_note": "点位和斜率/触碰可计算；边界选择、形态归属和重要性由方法判断，逐子项保留性质。"
+      }
+    },
+    "research_horizons": {
+      "label": "技术研究期限",
+      "meaning": "按事件或情景明确预测期限及观察 bar 周期。",
+      "definition": "每个事件或情景所讨论的向前研究期限及观测粒度。",
+      "inputs": "事件/情景 ID、预测起点、目标结算窗口、bar 周期及复核点。",
+      "unit_time": "交易日/自然日/bar 数明确；一分钟柱可研究多日期限，二者不能互代。",
+      "interpretation": "不同预测期限不得共享未核对的历史结果或成功率。",
+      "missing": "期限未知时暂停期限相关预测数值，保留已知事件事实。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "预测期限由用户目标或所选方法明确；观察bar周期是独立输入。"
+      }
+    },
+    "entry_zone": {
+      "label": "入场参考区",
+      "meaning": "方向、参考价/区间、触发条件、价格单位与时点；是研究条件，不表示已成交。",
+      "definition": "在指定情景触发后可供研究比较的入场价格或区域。",
+      "inputs": "情景 ID、方向、上下界/参考价、触发条件、订单假设及成本基准。",
+      "unit_time": "标明价格币种、单位、参考截点和适用期限；多头与空头方向明确。",
+      "interpretation": "入场参考不是已下单或已成交；现价处于区间也不必然满足其他触发条件。",
+      "missing": "未给入场条件则保留未定义，不用当前价自动补齐。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "方向/入场区/触发是研究或用户计划；引用的现价是事实，计划并非成交。"
+      }
+    },
+    "targets": {
+      "label": "目标价与目标区",
+      "meaning": "各目标的价格或区间、期限、适用情景和方法引用。",
+      "definition": "所选技术方法的条件目标价或目标区域。",
+      "inputs": "情景 ID、目标序号/区域、期限、目标定义、方法和历史检验引用。",
+      "unit_time": "与入场同一币种和价格口径，分别注明每个目标期限。",
+      "interpretation": "技术目标不同于公允价值和分析师共识；触及目标的概率需对应历史结算目标。",
+      "missing": "目标未确定时不给虚构价位；历史证据缺失时不得补触达概率。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "目标价/区间是指定方法的条件预测，期限和依据必须明确；外部目标则是获取的外部预测。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "stop_plan": {
+      "label": "止损条件",
+      "meaning": "止损价格/区间、触发/跟踪规则及方法；与观点失效条件分开。",
+      "definition": "用户或方法给出的损失控制价格、条件或跟踪规则。",
+      "inputs": "适用方向、初始或动态止损、触发与执行假设、情景 ID、方法依据。",
+      "unit_time": "价格/偏移量、时间粒度和更新时间明确；说明跳空和滑点条件。",
+      "interpretation": "止损服务风险约束，与观点失效分开；止损价格不保证最大实际损失。",
+      "missing": "未约定止损时标为未定义，不自动设百分比或用失效位代替。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "止损阈值/跟踪可由计算或用户规则给出，选择属于计划；与观点失效不同。"
+      }
+    },
+    "reward_risk": {
+      "label": "盈亏比口径",
+      "meaning": "方法按指定入场、止损、目标、成本计算的潜在盈亏比及参考条件，不是胜率。",
+      "definition": "指定入场、目标、止损与成本条件下潜在获利和损失的比较。",
+      "inputs": "输入情景与价格、数量/乘数、净获利/风险金额、已计算比值、成本和方法。",
+      "unit_time": "收益与风险同币种同规模同期限；比值无量纲，说明多目标分批权重。",
+      "interpretation": "盈亏比不是胜率或期望值；无损失边界时不得把比值写为无限优势。",
+      "missing": "输入不齐或分母不适用时注明无法比较，不自行补价或忽略费用。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按已给入场/止损/目标/成本计算潜在盈亏比；不是历史命中率。"
+      }
+    }
+  }
+}

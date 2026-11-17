@@ -376,10 +376,7 @@ test('report_template inlines the decision tree and reads its fixed rows through
   await page.evaluate(() => document.querySelector('.module-chart-plot').addEventListener('chartselect', event => { window.selectedTreeRow = event.detail; }));
   await page.locator('[data-node-id=usable]').focus(); await page.keyboard.press('Enter');
   assert.deepEqual(await page.evaluate(() => selectedTreeRow), { row: fixture.rows[4], index: 4 });
-  const evidence = page.locator('details[data-report-evidence]');
-  assert.equal(await evidence.count(), 1);
-  await evidence.locator('summary').click();
-  assert.equal(await evidence.getAttribute('open'), '');
-  assert.deepEqual(JSON.parse(await evidence.locator('pre').textContent()).rows, fixture.rows);
+  assert.equal(await page.locator('details[data-report-evidence], [data-report-evidence-appendix]').count(), 0);
+  assert.deepEqual(await page.evaluate(() => fixedRows), fixture.rows, 'Selection keeps the complete fixed input without a generated disclosure');
   assert.deepEqual(errors, []);
 });

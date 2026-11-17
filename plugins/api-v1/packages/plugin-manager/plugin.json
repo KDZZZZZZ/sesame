@@ -25,10 +25,10 @@
     "README.md",
     "scaffold.js",
     "scripts/create-plugin.mjs",
-    "skills/develop-plugins/references/authoring.md",
-    "skills/develop-plugins/references/host-api.md",
-    "skills/develop-plugins/references/recovery.md",
-    "skills/manage-plugins/references/operations.md"
+    "references/authoring.md",
+    "references/host-api.md",
+    "references/recovery.md",
+    "references/operations.md"
   ],
   "license": "MIT",
   "engines": {

@@ -23,8 +23,8 @@
     "README.md",
     "examples/case.json",
     "examples/expected.md",
-    "skills/dow-theory/references/method.md",
-    "skills/dow-theory/references/validation.md"
+    "references/method.md",
+    "references/validation.md"
   ],
   "provides": {},
   "engines": {

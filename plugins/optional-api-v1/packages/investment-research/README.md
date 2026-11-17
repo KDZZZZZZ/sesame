@@ -1,6 +1,6 @@
 # Research 工作流
 
-首选investment_research_start。详见[步骤与报告场景](WORKFLOW.md)。默认实际执行需求范围、取证、分析、综合报告四阶段；旧analyze的八成员默认保留给兼容调用。report_brief记录用户所需结果形式和调整，具体方法选择独立。
+首选 `investment_research_start`，详见[研究与交付流程](WORKFLOW.md)。默认执行明确问题、取证、分析、报告四阶段；`analyze` 支持显式成员计划与内部数据交接。`report_brief` 只记录目标、问题、方法参考、证据与交付要求，不接受报告模板编号或固定字段结构。
 
 # 投资研究工作流
 
@@ -43,7 +43,7 @@
 
 事件选择与基准由调用者决定，应先固定定义再进行独立历史检索；本能力不筛样本，也不替代同品种近期优先的检索过程。`no_events` 只表示传入事件为空，不代表搜索成功后的零匹配，更不能把检索失败当零样本。多重搜索、筛选与重叠带来的偏差须在研究解释中保留。
 
-版本 3.2.0，宿主 API 2。输入投资问题，组合明确的信息来源与分析方法，输出可继续使用的固定研究成果。无需交易账户，不创建目标仓位、订单或计划。交易决策和实际执行分别使用相应独立插件。
+版本 4.0.0，宿主 API 2。输入投资问题，组合明确的信息来源与分析方法，输出可继续使用的固定研究成果。无需交易账户，不创建目标仓位、订单或计划。交易决策和实际执行分别使用相应独立插件。
 
 ## 能力与输入
 
@@ -57,17 +57,18 @@
 
 计划随原生 Run 断点和最终固定成果保存；恢复不改变成员、顺序或已接受请求。自定义 `start_from.role` 是实际成员 ID，省略新 workflow 时继承原结果的计划；保留前缀的职责或依赖发生变化则必须新开研究。自定义流程需要支持 `execution.setCollaboration` 的宿主，缺接口时明确中断，默认流程兼容旧接口。来源范围、真实证据、幂等恢复、报告实际渲染要求仍生效。
 
-注册两个公开工作流和一个团队内问答能力，不复制宿主 Run 控制接口：
+公开入口各自负责研究、交付与计算，不复制宿主 Run 控制接口：
 
 | 能力 | 输入 | 成果 |
 | --- | --- | --- |
+| `investment_research_start` | 与 analyze 相同基础输入，可选 `report_brief:{objective?,questions?,method_ids?,evidence_requirements?,delivery?}`；必须绑定报告 | 按问题发现 Research 方法，执行四阶段或显式计划，交付 `result_ref` 与 `report_ref` |
 | `investment_research_analyze` | 必填 `title`、`question`、`subjects:string[]`、`research:{plugins:string[],tools?:string[]}`、`model:{provider,id}`；可选 `workflow`、`as_of`、`horizon`、`evidence_refs:DataRef[]`、`agent_models` | 按实际计划研究和综合；固定 `result_ref`、Markdown `summary`、可选 `report_ref` |
 | `investment_research_report` | `result_ref:DataRef`、`model:{provider,id}` | 仅一个经理消费既有完整成果，重新制作图表报告；返回原 `result_ref` 和新 `report_ref` |
 | `investment_research_ask` | 后续成员调用 `{analyst,question}`；默认可问四研究员，自定义时仅可问实际已完成的前序成员 ID | 后台 Run，输出 `{from,to,question,markdown,run_ref,source_refs}`；原成员定向核查并返回完整 Markdown |
 
 模型与逐角色模型取自宿主已配置模型目录，插件不接收模型密钥。`agent_models` 以实际成员 ID 为键，默认是 market、fundamentals、news、sentiment、bull、bear、risk、manager，省略时继承 model。自定义成员 ID 不能使用 constructor、toString 等继承字典属性名。`as_of` 建议用明确 UTC ISO 时间，省略为本轮启动时点，约束证据发布或观测时点，不要求已存在启动前采集的缓存。当前研究可启动后自行采集并记录真实获取时间；用户要求历史回测或当时可知版本时，另行核验数据版本，不能使用后续修订假装当时已知。`horizon` 是研究期限，不是调度频率。
 
-`research.plugins` 明确选择来源、计算或知识方法；`tools` 推荐精确 `pluginId#capabilityId`，唯一短名也可用。省略 tools 时仅选可委派的研究函数，剔除声明交易、配置、进程、编辑工作区和工作流控制副作用的能力；显式列入这些能力会在启动成员前暂停并指出具体能力。`tools:[]` 只授予知识。工作流不安装、切换或配置其他插件。
+`research.plugins` 明确选择来源、计算或知识方法；`tools` 推荐精确 `pluginId#capabilityId`，唯一短名也可用。省略 tools 时仅选可委派的研究函数，剔除声明交易、配置、进程、编辑工作区和工作流控制副作用的能力；显式列入这些能力会在启动成员前暂停并指出具体能力。`tools:[]` 不授予来源或计算工具；start 仍提供独立的 Research 方法读取能力。工作流不安装、切换或配置其他插件。
 
 研究员可在这次已授予的能力中自行选择适合问题的来源，仍须遵守用户指定的更窄限制。某一个可选提供方未配置，不自动变成本角色或整队的必需依赖；只有必要证据无法由已授权能力获得时才暂停，不能扩大来源权限或混淆不同样本代表的群体。
 
@@ -92,6 +93,7 @@
 | --- | --- | --- |
 | 已配置模型及身份凭据 | 两个入口均需要；从宿主模型目录选 provider/id | 不启动成员，原 Run 暂停 |
 | 明确选择的来源与方法插件 | analyze 的 research 选择非空时 | 说明缺失插件/能力，暂停原 Run |
+| `sesame/research` 的 `research_methods/research_read` | start 自动使用；按问题发现与读取方法，按需分批读取（每次最多 5 项） | 缺失时保留 Run，恢复后继续，不猜方法内容 |
 | `sesame/plugin-manager#plugin_read` | 使用任何知识/研究插件时，以及报告制作时 | 暂停，不能猜方法接口 |
 | 来源凭据、套餐和覆盖 | 由本次选定来源能力声明；例如 financial-research 的 status/configure | 先使用其他已授权可用来源；必要证据仍无法获得时，受影响成员保留成果并暂停；已有价格不能代替缺失新闻 |
 | `sesame/reports`、`sesame/data-access`、`sesame/workspace`、`sesame/plugin-manager` | 请求报告或 report 入口 | 在经理启动前核验；analyze 没有报告时不依赖前三者 |
@@ -113,7 +115,7 @@ analyze 的声明提供默认八成员图。显式 workflow 由执行器在首�
 
 普通 analyze 默认无报告。报告经理使用 `{type:"report",target:"parent"}` 发布到同一绑定；其他成员 output:none。经理得到 reports 设计知识、实际授予的报告内容/样式/发布/核验能力、data_read、read/write/edit 与 plugin_read，可通过原研究员补充关键证据；仅重做报告的入口消费已有成果。报告采用父工作流当前绑定的 artifact，且该精确修订最新 report_check 检查为 rendered；普通浏览器打开不代替验收。主 Agent 修复同一报告后，原 Run 可采用新修订继续，无需重派已完成经理。工作流不包一层纯文本 HTML、不复制所有成员正文。
 
-报告阶段先调用 `host_reports_describe`，按宿主所选插件返回的 `inputSchema` 组织结果，再用 `host_reports_publish` 发布；宿主通用 envelope 使用 `operationId`、`title`、`summary`、`data`、`provenanceKind`、`references`，插件输入放 `input`，大型完整输入可先登记为固定 JSON 后使用 `inputRef:{ref,entry}`。`input` 与 `inputRef` 二选一，不把默认 Reports 的 content/style 当宿主通用格式，不自行改选 provider。仅当当前 provider 是 `sesame/reports` 且 schema 适用时，使用它的 `content` 与 `style`、字段/图表助手和通用样式；助手只预览。正文保留判断、读图注解、简短推理和关键条件，原始明细在末尾附录，公式交由所选插件的组件呈现。不能上传 HTML/CSS/脚本或以不匹配接口绕过当前选择。发布后核验精确 ref；检查失败保留该 ref 重试检查，不重新研究或重选结果。
+报告先用 `host_reports_describe` 确认当前 provider 与 `inputSchema`。选中 `sesame/reports` 时直接 `components_show({target:"report",content:{kind:"document",sections:[...]},data,...})`；`component/components/content` 三选一，入口负责统一渲染与发布。不清楚组件时才用 `components_list/components_describe`，不要求先预览、校验或生成 HTML。其他 provider 按其真实 `inputSchema` 经 `host_reports_publish` 交付，不把默认 Reports 的 content/style 当宿主通用格式，不自行改选 provider。需要大输入时用该接口声明的固定引用参数。正文和图表由实际问题决定，完整原始资料保留在证据引用或附件，不自动增加附录或图注。发布后用 `report_check` 核验精确 ref 的实际渲染；失败保留该 ref 重试检查，不重新研究。
 
 暂停使用宿主 checkpoint 保存冻结请求、已接受子 Run 与完整成果。恢复重查当前需要的模型/插件/证据，只重新等待原已接受的子 Run；完成成员不重派。已发布报告不重做。未知原操作使用相同 operationId 和输入找回，不能换 ID 重付费或把未完成当完成。
 

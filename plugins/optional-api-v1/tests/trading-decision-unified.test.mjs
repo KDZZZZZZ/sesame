@@ -270,7 +270,7 @@ test('report inspector retry retains exact publication and never repeats a compl
   const done = await f.runtime.execute(f.host, 'business-run', new AbortController().signal, f.execution);
   assert.deepEqual(done.report.ref, ref); assert.equal(done.report.renderStatus, 'rendered'); assert.deepEqual(roles, ['manager', 'executor']);
   assert.equal(f.observations.length, 1, 'Report-only recovery must not re-enter the native adapter.');
-  assert.equal(f.reportService.calls.filter(call => call.id.endsWith('#report_publish')).length, 1);
+  assert.equal(f.reportService.calls.filter(call => call.id.endsWith('#components_show')).length, 1);
 });
 
 test('workflow validates the actual adapter account snapshot before starting a decision', async t => {

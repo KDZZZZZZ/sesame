@@ -1,8 +1,8 @@
 {
   "id": "sesame/reports",
-  "title": "交互报告",
-  "description": "宿主选择报告提供者，本插件定义通用内容并生成统一蓝灰无框排版。保留内置图表、公式、末尾证据附录与用户样式；分析方法独立。",
-  "version": "5.0.24",
+  "title": "视觉组件与报告",
+  "description": "将已有文字和固定数据组合为统一视觉的报告或回答组件；38 种图表、15 种内容块、局部筛选联动和现有宿主交付。研究方法独立。",
+  "version": "6.0.3",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"
@@ -12,14 +12,10 @@
   ],
   "entry": "index.js",
   "resources": [
-    "repair.md",
     "PROVENANCE.md",
     "assets/report-kit.js",
     "assets/editorial-charts.js",
     "assets/editorial.css",
-    "templates/research-brief.html",
-    "examples/demo-data.json",
-    "examples/editorial-demo.html",
     "assets/charts-statistics.js",
     "assets/charts-temporal.js",
     "assets/charts-structure.js",
@@ -27,59 +23,31 @@
     "assets/charts-market.js",
     "assets/vendor/lightweight-charts-LICENSE",
     "assets/vendor/lightweight-charts.json",
-    "examples/chart-gallery.md",
     "examples/statistical-fixtures.json",
     "examples/temporal-fixtures.json",
     "examples/structural-fixtures.json",
-    "skills/report-design/statistical-charts.md",
-    "skills/report-design/temporal-charts.md",
-    "skills/report-design/structural-charts.md",
-    "skills/report-design/decision-tree.md",
-    "skills/report-design/visual-design.md",
-    "skills/report-design/chart-catalog.md",
-    "skills/report-design/market-charts.md",
-    "backtest-template.js",
-    "assets/backtest-explorer.js",
-    "assets/backtest.css",
-    "templates/backtest.html",
-    "skills/report-writing/backtest.md",
-    "skills/report-writing/report-paths.md",
-    "skills/report-design/components.md",
-    "skills/report-writing/module-templates.md",
-    "templates/module-catalog.json",
-    "examples/module-report-input.json",
-    "skills/report-design/module-visuals.md",
-    "skills/report-writing/field-guide.md",
-    "skills/report-writing/technical-research.md",
-    "skills/report-design/module-layouts.md",
-    "templates/module-visual-plans.json",
-    "templates/field-guide-M01-M04.json",
-    "templates/field-guide-M05-M08.json",
-    "templates/field-guide-M09-M12.json",
-    "templates/field-guide-M13-M16.json",
-    "templates/field-guide-M17-M19.json",
-    "assets/report-appendix.js",
-    "assets/report-appendix.css",
-    "skills/report-design/style-guide.md",
     "assets/content-charts.js",
     "assets/report-math.js",
     "assets/vendor/katex/LICENSE",
-    "templates/analysis-questions.json",
-    "examples/judgment-presentation.json",
-    "report-overview.js",
-    "assets/report-overview.css",
-    "templates/first-screen-plans.json",
-    "skills/report-design/first-screen.md",
-    "skills/report-design/logic-diagram.md",
     "assets/svl-graph.css",
     "assets/svl-graph.LICENSE.txt",
     "assets/svl-graph.sources.json",
     "assets/charts-composition.js",
     "examples/composition-fixtures.json",
-    "skills/report-design/composition-charts.md"
+    "assets/answer-surface.css",
+    "references/composing.md",
+    "references/text.md",
+    "references/data-binding.md",
+    "references/interactions.md",
+    "references/delivery.md",
+    "references/styles.md",
+    "references/repair.md",
+    "assets/content.css",
+    "assets/interactions.js",
+    "renderer/document-shell.html"
   ],
   "templates": {
-    "report_repair": "repair.md"
+    "report_repair": "references/repair.md"
   },
   "apiVersion": "2",
   "author": {
@@ -90,16 +58,7 @@
   "engines": {
     "sesame": ">=0.3.0-dev.2 <0.4.0"
   },
-  "dependencies": [
-    {
-      "name": "sesame/data-access",
-      "version": ">=3.0.0"
-    },
-    {
-      "name": "sesame/workspace",
-      "version": ">=3.0.0"
-    }
-  ],
+  "dependencies": [],
   "execution": "native",
   "capability_manifest": "capabilities.json",
   "permissions": {
@@ -107,9 +66,14 @@
     "calls": [
       "host.artifacts.query",
       "host.records.query",
-      "sesame/data-access#data_snapshot",
-      "sesame/workspace#write",
-      "host.reports.publish"
+      "host.reports.publish",
+      "host.reports.describe"
     ]
-  }
+  },
+  "mcp_export": [
+    "components_list",
+    "components_describe",
+    "components_validate",
+    "components_show"
+  ]
 }

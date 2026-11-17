@@ -45,9 +45,9 @@
       "pluginId": "sesame/abu-exit-rules",
       "component": "declaration",
       "beforeDigest": "sha256:f3b85abd4a1f59f16a72bf7c98942d16006f2e5411d5b8c3eb2754aeb488a789",
-      "afterDigest": "sha256:e9db6aca1b33b9dcdf7502242d949b98ddcca407110926c1483b714f943804f6",
+      "afterDigest": "sha256:a91ebce733934a4f57ffad85dc77211b17408845895e8f061fb70e039abbc740",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: first TR uses high-low and ATR needs atr_window bars. Removing only that sentence reconstructs the full original declaration; no executable schema/effect/binding change is accepted. Not human/release/broker acceptance.",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: first TR uses high-low and ATR needs atr_window bars. Removing only that sentence reconstructs the full original declaration; no executable schema/effect/binding change is accepted. Not human/release/broker acceptance. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
         "addedLimitation": "首根 TR 使用 high-low，累计 atr_window 根输入可得 ATR；不足时 atr=null。与 abu-indicators/abu-volatility 首根 TR=null、需 N+1 根的初始化口径不同，不能直接互换初始窗口结果。"
@@ -57,9 +57,9 @@
       "pluginId": "sesame/abu-ml-features",
       "component": "declaration",
       "beforeDigest": "sha256:c4835a2c6764f095379d68cb3c5835fa924be4b287b0f4abc96e1ee554f3fa87",
-      "afterDigest": "sha256:a13b9e7adfdb235f4604854e56bf89e3cb385a47b48343c35cfe16121e945885",
+      "afterDigest": "sha256:201eaa8ba543c103564c5777a23872eddd9f0e8c8825ad480a99725db0ab3b1c",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: every decision needs max(window,atr_window,rank_window)+1 visible bars; insufficient history is rejected rather than partially/zero filled. Removing the sentence reconstructs the full original declaration. Not human/release/broker acceptance.",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: every decision needs max(window,atr_window,rank_window)+1 visible bars; insufficient history is rejected rather than partially/zero filled. Removing the sentence reconstructs the full original declaration. Not human/release/broker acceptance. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
         "addedLimitation": "每个决策时点都须满足 max(window,atr_window,rank_window)+1 根可见 K 线；任一时点不足会拒绝整个调用，不返回部分特征或填零的预热结果。"
@@ -69,9 +69,9 @@
       "pluginId": "sesame/abu-position-sizing",
       "component": "declaration",
       "beforeDigest": "sha256:43d7bfac0cd4bb200685b435ddb9214c3b1fb5baf06ebd4048d9130d1fbb2290",
-      "afterDigest": "sha256:37a8f00ad80839df84842d5ea1630fe11905c8dd25c3bc2d9ed3a8d226aaac6f",
+      "afterDigest": "sha256:9498242abd899dfc66e5dceb6a5e0314e35dceea10430bef1e20d61e4658a921",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: One source-verified limitation documents high-low first TR, price-rank warmup and status=warmup until both windows exist. Removing exactly that sentence reconstructs the entire frozen declaration. Not human/release/broker acceptance.",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified limitation documents high-low first TR, price-rank warmup and status=warmup until both windows exist. Removing exactly that sentence reconstructs the entire frozen declaration. Not human/release/broker acceptance. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
         "addedLimitation": "首根 TR 使用 high-low，累计 atr_window 根输入可得 ATR；完整仓位结果还须满足 price_rank_window，否则 status=warmup。与 abu-indicators/abu-volatility 首根 TR=null、需 N+1 根的初始化口径不同。"
@@ -184,9 +184,9 @@
       "pluginId": "sesame/strategy-authoring",
       "component": "manifest",
       "beforeDigest": "sha256:51ce736f8a19110d0c71ef307e61042719d6189bcbf0808d246e063d2a25efeb",
-      "afterDigest": "sha256:e5b951218d98451fe4fdd94313fa2e740c9e27759abec52738902ae97b216e3a",
+      "afterDigest": "sha256:15ba005b5ee08019056b69d5574cc097a094626b01f8d4bff910bc042243d1b1",
       "decision": "approved",
-      "reason": "Engineering acceptance of the user-requested SVL annotation guidance and commented example resource used by automatic logic-tree rendering. Identity, API entry, permissions and bindings are unchanged; the original baseline digest is preserved.",
+      "reason": "Engineering acceptance of the user-requested SVL annotation guidance and commented example resource used by automatic logic-tree rendering. Identity, API entry, permissions and bindings are unchanged; the original baseline digest is preserved. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
         "beforeEngine": ">=0.2.3",
@@ -226,9 +226,9 @@
       "pluginId": "sesame/abu-parameter-search",
       "component": "declaration",
       "beforeDigest": "sha256:ba6f914796b286820634bc4e4a85bd8f3efa98b5003e159cd548c52184abc968",
-      "afterDigest": "sha256:40adde5f5c317730635d13943db6e242fd0cf395d203868adbe435b2e64e3604",
+      "afterDigest": "sha256:c7f11e1bc761d336380b32a043eb118d5e3cf01f38f28768e3d63eaea353536d",
       "decision": "approved",
-      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify bounded input-only parameter-space and supplied-metric ranking; it never executes trials or a native optimizer. Preserve selected-only holdout checks and all existing mathematics/schema/effects.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify bounded input-only parameter-space and supplied-metric ranking; it never executes trials or a native optimizer. Preserve selected-only holdout checks and all existing mathematics/schema/effects. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "baselineReconstruction": "Remove exactly capabilities[0].researchDataAccess; the complete archived original declaration digest matches.",
         "addedContract": {
@@ -261,9 +261,9 @@
       "pluginId": "sesame/abu-similarity",
       "component": "manifest",
       "beforeDigest": "sha256:f28458fb338cf42d2d28ac3c88247eefa1b95ade03b3a04543a4f48e3b4d188f",
-      "afterDigest": "sha256:65dad066500e38c3650091bd92fb08fcbac4187bf680bfd321b34e0ed7a81623",
+      "afterDigest": "sha256:7df03b5ec07da2f7c14f87238f375491456a2b73fa60562dca4a22868e9b0b12",
       "decision": "approved",
-      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify public title as concurrent return similarity, preserving actual source permissions/resources and implementation.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify public title as concurrent return similarity, preserving actual source permissions/resources and implementation. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "receipt": "output/abu-consolidation-20261029/verification-summary.json",
         "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
@@ -273,9 +273,9 @@
       "pluginId": "sesame/abu-similarity",
       "component": "declaration",
       "beforeDigest": "sha256:5e26e0c14e8fad50229dc7bbed9276401b2ec48a036c4b0bfd416b11ef4c357a",
-      "afterDigest": "sha256:86e3afc54067f5cb94751ff547f6196ba6f0703d2ec1609a3b2a5bc883c92eb7",
+      "afterDigest": "sha256:6c81bd27372cb12b61dd45aaf9ffa2c45766b5b7d84a48e8cda0480af8e71702",
       "decision": "approved",
-      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify exact return-start/end alignment and Pearson/Spearman/sign agreement; no historical scenario retrieval or predictive probability. Mathematics, data access and output unchanged.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify exact return-start/end alignment and Pearson/Spearman/sign agreement; no historical scenario retrieval or predictive probability. Mathematics, data access and output unchanged. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "receipt": "output/abu-consolidation-20261029/verification-summary.json",
         "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
@@ -285,9 +285,9 @@
       "pluginId": "sesame/abu-trade-metrics",
       "component": "manifest",
       "beforeDigest": "sha256:85b1a1429693c759f4388d3e68570129e51a30c01203b5fd068b012c9fb1cb79",
-      "afterDigest": "sha256:066db0219fd54eee9adb6a3f7d070aa6659b1f67b0cf5f1e1fe40a8029a0a53a",
+      "afterDigest": "sha256:28e95e1e9723abd191eebd8d5ee1a0b1fc8792222d767d5513d799466fe0933e",
       "decision": "approved",
-      "reason": "Exact engineering review of user-authorized ABU consolidation: Rename the public package to trade-results diagnostics; expose the migrated audit method, example and provenance as declared package resources while preserving GPL and existing metrics.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Rename the public package to trade-results diagnostics; expose the migrated audit method, example and provenance as declared package resources while preserving GPL and existing metrics. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "receipt": "output/abu-consolidation-20261029/verification-summary.json",
         "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
@@ -297,13 +297,357 @@
       "pluginId": "sesame/abu-trade-metrics",
       "component": "declaration",
       "beforeDigest": "sha256:924ecaae9c013a373ee89de422a3d8b097655b739bb0b80b36727ccecbb5a030",
-      "afterDigest": "sha256:ac3779e3e52b846152f79662201ef5dee57b373c1b64304b53102ce1a7973058",
+      "afterDigest": "sha256:309b903885f1448c5e971e8d08bef65d18779b227085aa2d5337bfe52a3b61bc",
       "decision": "approved",
-      "reason": "Exact engineering review of user-authorized ABU consolidation: Preserve equity-performance computation and add the independent actual abu_trade_results_audit binding/schema. Both input-only computations publish their own derived artifacts; no source dereference, native execution or retired alias. Seven audit numerical goldens and real API2 factory/host tests pass.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Preserve equity-performance computation and add the independent actual abu_trade_results_audit binding/schema. Both input-only computations publish their own derived artifacts; no source dereference, native execution or retired alias. Seven audit numerical goldens and real API2 factory/host tests pass. 2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。",
       "evidence": {
         "receipt": "output/abu-consolidation-20261029/verification-summary.json",
         "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
       }
+    },
+    {
+      "pluginId": "sesame/abu-breakout",
+      "component": "manifest",
+      "beforeDigest": "sha256:7dc344689659ff8e5b99023b2af09b6167c30ee87947b84f9f46f581e27d0418",
+      "afterDigest": "sha256:7d4aa46e2082a8057e7082c50054f089d004eef07c4e2eac11ad8e9a87301f28",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-breakout",
+      "component": "declaration",
+      "beforeDigest": "sha256:95a4bcc87665eeeb7e84e8542ee455e0601a0a2db680fbc65b84a7e74ba50a75",
+      "afterDigest": "sha256:88929483b40d3c2517e5822d075cfe2a20d376022fd745254f9638616251802c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-exit-rules",
+      "component": "manifest",
+      "beforeDigest": "sha256:56e37f741b71ae9ab515403458cfc0ac4ab355265f004f20c1e45ccf5b1a245b",
+      "afterDigest": "sha256:7d7004596b2b5bceacccc896c377d58457f2a37b87d1522e827c1a7ea2eafa82",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-indicators",
+      "component": "manifest",
+      "beforeDigest": "sha256:527870fab8fa4be72fc854834676c5179507ca228883d7d893eb58009bfdf30a",
+      "afterDigest": "sha256:1e4c81d776a0ea5d7ac45607a1c522925d0819b37513896e375c609f70764dc9",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-indicators",
+      "component": "declaration",
+      "beforeDigest": "sha256:35b241ca235cbcec2300b419cb25e18939a71c113cbad320dee5e1b540a9e073",
+      "afterDigest": "sha256:c7cca4fe600c6484252559319885d0b927bfd254d848f9137cbecad215a108ea",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-ml-features",
+      "component": "manifest",
+      "beforeDigest": "sha256:4784b891f0443af5705803322964643592158be1a5db1acc2637c27720fe2e30",
+      "afterDigest": "sha256:adfc5033df069cde9412ba2fb68fb3a289b8045ab7008a1c929797c8b6be2429",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-model-lab",
+      "component": "manifest",
+      "beforeDigest": "sha256:234c0c62e4a18131ca93d7b67c4d873227d0f9385ffe86ca684e5fb548141fba",
+      "afterDigest": "sha256:fcead197c05f577d41567b1be0ac520e38b24eb670e3e696b1d52f11b511da41",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-model-lab",
+      "component": "declaration",
+      "beforeDigest": "sha256:adede0d0546f7f059d9c066ff6ed792e9cdbd4dc8e73f8e0cf9e3cb82b2ab6fb",
+      "afterDigest": "sha256:c1d27345a28137d66d68dc8aa1aa7661d920f493fda5ed0a8ad7001b05cdd82c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-moving-average",
+      "component": "manifest",
+      "beforeDigest": "sha256:1ec348d9a509714ea487d38fce55ad514ca99c39bbf9f7114d5766974f6c73ac",
+      "afterDigest": "sha256:06fee6b4e361b6938c1150cdf6341a9aa32df62744be7feaa51503208ae08bc6",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-moving-average",
+      "component": "declaration",
+      "beforeDigest": "sha256:e9bced3c01861230d338a707e8fa7a40c0efef3802dadecba76fb5ed6700762a",
+      "afterDigest": "sha256:b3438147bf40f4ec2d7201293bc1ad6a990d41f1d17f3123b0599d447149b97a",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-parameter-search",
+      "component": "manifest",
+      "beforeDigest": "sha256:9fd75fd748f91f93a6ed9894cfe0155e4f1414333d8c6f530266a1d75c499b35",
+      "afterDigest": "sha256:fdd675d7dc58017e706ec5e4de3c23d540977d60e22eff91750dc7a16fb1afe1",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-position-sizing",
+      "component": "manifest",
+      "beforeDigest": "sha256:7aa4a9b2a8c8e8c15a71b18ff0f503c998be38307946a0cc36f04667a2abd87d",
+      "afterDigest": "sha256:31e43920dad776a4fa13ad5ea3f64d487c79b03e795cf9bc7b2816397be11546",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-price-structure",
+      "component": "manifest",
+      "beforeDigest": "sha256:818a5e3dda4ddca208bc2cbfae7c9e1a3f4a50297432f109be3c69744cbb0aae",
+      "afterDigest": "sha256:0309235b3e3545ffef4ae4a38c005697231dfddd9a141cb400b4ea72a099f232",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-price-structure",
+      "component": "declaration",
+      "beforeDigest": "sha256:3a7b4f90e0ac1ac4012f25eb5e6022a503f2d4e145aa728f4a1c1c387ae1dd37",
+      "afterDigest": "sha256:923ded1508dddce10716d1ce7c1ba5e023e5bfcdddbf7d14d1b665f13b53f711",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-seasonality",
+      "component": "manifest",
+      "beforeDigest": "sha256:266ff4b6dffa83523e2892aae8d7a51f3d634191b192bfa4f463f66457706ffa",
+      "afterDigest": "sha256:c223033fa961614ef06f340d88868c1cebcd53a5183a4fbba66dd56c7021a621",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-seasonality",
+      "component": "declaration",
+      "beforeDigest": "sha256:25c1d271eff0a9954ba10ad81c2a70160363884badc9856bdbecf98f0091014b",
+      "afterDigest": "sha256:63e0f07a024cb5f950938f76aa7487e3d7757678f7fb231526475dbd73acbe01",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-stock-screening",
+      "component": "manifest",
+      "beforeDigest": "sha256:839647dc472ee34658dca53c1ce0747c09238452d07d645cc03d91d757d9fb72",
+      "afterDigest": "sha256:29485f1737dc69de1eddada9b6c011c7cab0c17774203887c77c84f6ac321740",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-stock-screening",
+      "component": "declaration",
+      "beforeDigest": "sha256:fdec81b5f771fe70efe65b640bc6b6e718a3a6718a85586161633b6d0e96535d",
+      "afterDigest": "sha256:4fda3a6d541d1c094f6e4adfc2553ab7714ae90ea0245798396c8cabcf8ff0ed",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trade-judges",
+      "component": "manifest",
+      "beforeDigest": "sha256:5acbd74882d44cb166b4b7f2dff78d9d836bd9548cd51015878b4ba7622adb86",
+      "afterDigest": "sha256:467516facebb567408ddce01b90ec8b5433f4a6053c5993a3753d5507c36db34",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trade-judges",
+      "component": "declaration",
+      "beforeDigest": "sha256:5936e7d0a8f4e62edba872c5552d35e5d038f51297d8b44d2c15994dae57d32c",
+      "afterDigest": "sha256:1d0c433a1e16d15dbc8dec282362d2b6f03a349227d4c9b76e9e6ea6d451d73e",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trend",
+      "component": "manifest",
+      "beforeDigest": "sha256:2039e44af40e9bf3c663c0e1399543e4ca7ba79aeac6c0622a72a00661ee93b7",
+      "afterDigest": "sha256:8732420dd788fbc55c5f00b4f5f1c57b6cbd0192ca13ab11f3fb1a0b1ba63c90",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trend",
+      "component": "declaration",
+      "beforeDigest": "sha256:66c01134aab8a49303e623eaae92308be5c598378f393ecbf7d96af666abedd2",
+      "afterDigest": "sha256:c327ab84eff9ba2fb8859933e6b168b7c03a9a1a76a457b5bc224adb76c7f383",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trend-pullback",
+      "component": "manifest",
+      "beforeDigest": "sha256:7daab43eac048d7621f17279f7c20c23ce5469ffdb320f9b8343bfabc0a8c4cd",
+      "afterDigest": "sha256:6de00135a3ab31d09a4b0dfac5b0f5a96dc02010003054bd2f4f64a64bf2ef98",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-trend-pullback",
+      "component": "declaration",
+      "beforeDigest": "sha256:6bce5573426546189e5bd80a9bd52a5feb7ac44764244ee10d558bf46991f58c",
+      "afterDigest": "sha256:14e9079902f9d50bea62448bf79dc476ce158b2a59ce6beae667dd86b5abf1ae",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-volatility",
+      "component": "manifest",
+      "beforeDigest": "sha256:f83bb1b25622a66aaedb28af99b5dfab8fd9acbfad81e9edb81c7e8cb92d900c",
+      "afterDigest": "sha256:567a6a7c1278e126e95c086503b231308b23adcfc9909078c2f3d89567c7ab9c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/abu-volatility",
+      "component": "declaration",
+      "beforeDigest": "sha256:50e7c05a040bc3f55efeac7c92b4338193e4fb92cd3c109ec89fd2970eaaaac0",
+      "afterDigest": "sha256:ac9dcf93e55f7abdc6ce13d0dd9e8147ce66cadd08bcaffbf3b848093a6078df",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/behavioral-finance",
+      "component": "manifest",
+      "beforeDigest": "sha256:744c75b9265da2b4ea48fc8b45a7db5d1b2e96e5b41c44eb0e65b79a0c8108fd",
+      "afterDigest": "sha256:eb274920fff3170dbc848b96911edf7822ec1cc79252414cfd5f231498be617f",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/behavioral-finance",
+      "component": "declaration",
+      "beforeDigest": "sha256:655ebd85611885116b9301f8bd747182c7ec7098d03870f5a480bf3e1e263703",
+      "afterDigest": "sha256:a3ddb3567e636321363bfc1f36be92453571b6a10812df9cfe18943f44c1d98c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/dow-theory",
+      "component": "manifest",
+      "beforeDigest": "sha256:e584fb5cad9d7e24b4e76b9056f2adecc5382ccece67d6c9eba09f7bb9a46619",
+      "afterDigest": "sha256:e10b535d88180ccf8f54ce765e390f1b42bfc87ee012a48c5763c9aa19e827a1",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/dow-theory",
+      "component": "declaration",
+      "beforeDigest": "sha256:98e638a5b1f6fbf094c2861459b7b02281c6683fef2386394f3c289a3f70386d",
+      "afterDigest": "sha256:8abf7939758e58dbdceee0c5cc21da6c1be8861a640a2c9f823b591e141a3aca",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/elliott-wave",
+      "component": "manifest",
+      "beforeDigest": "sha256:4f00017da20e7e57665eed83559c8c03f76ca23c1b17948cf97411455f860a1e",
+      "afterDigest": "sha256:da4317949c3f6fa1ea108ef4a1e0fb13b5574c8a6eb6c3700a776e4cdd0f815c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/elliott-wave",
+      "component": "declaration",
+      "beforeDigest": "sha256:b27a2038cea2b1e74dbc79aa2b06505eb18f01eeec79d4df04a7c4721a62503a",
+      "afterDigest": "sha256:31a672fde35d46692883f8819ffbcfd3170d6b66a6720a254ee32c27ba9a0a8b",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/ict",
+      "component": "manifest",
+      "beforeDigest": "sha256:ea6f1a0b9b0f32679be154d686f544105bcac7cdcf61633ea61caa8c1276aea5",
+      "afterDigest": "sha256:2779abd5ae724004d47cc3109c3de2a2f304f0fc5732d1563d850a7a4d313e06",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/ict",
+      "component": "declaration",
+      "beforeDigest": "sha256:87d307020867bcc90b451088149d04cc67f413459f52b716fdb64e199bbae7ba",
+      "afterDigest": "sha256:73734d17bf74e49f91dd271aebb0bd23220dc810439a13c34afcb7d9bf93c66b",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/institutional-analysis",
+      "component": "manifest",
+      "beforeDigest": "sha256:c3b20909e4711f7799942cc900687880caa3168e6f7b79bc8457f9a5a6831382",
+      "afterDigest": "sha256:c2c6af703984648621ef64dcde4c31104fe2527af2594247271fcb77e905b6f1",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/institutional-analysis",
+      "component": "declaration",
+      "beforeDigest": "sha256:8e0c419b9839a8611436bb136cf2fbd356559b57632a7bde4070ce2e0521d2f2",
+      "afterDigest": "sha256:dfd76cef9c62f3a0d175f3ef726d30fbf4f924a7db353be63865eacf0d55585c",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/narrative-analysis",
+      "component": "manifest",
+      "beforeDigest": "sha256:41d1fe7443dfc33bd7e28a534292f31a424d125df30b494b08796ace75cb27dc",
+      "afterDigest": "sha256:ad324454bacbcf883375d8b4d129cbcb367543f9c6842e441c15ac8fe5702057",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/narrative-analysis",
+      "component": "declaration",
+      "beforeDigest": "sha256:378e354255b11b7ab67096925533d57791861cd3ffc7dab74cdd44c2d95e0878",
+      "afterDigest": "sha256:bd0894a9591810f5386dbc3b90d753ff1f020fb655c5bf794302407ae788195f",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/price-action",
+      "component": "manifest",
+      "beforeDigest": "sha256:0c58d97d68080ecc1316eebec1d5e97105b195bb76c25389bbf400f850b08792",
+      "afterDigest": "sha256:37daceb0a345e0f82c5a2c7f4770bf9356bb5cb2a2ab56aba8e7084901b0ee39",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/price-action",
+      "component": "declaration",
+      "beforeDigest": "sha256:7d84ce847a3362995362e680fa33578b7614d42a6316027fe7a0308a3c593aad",
+      "afterDigest": "sha256:3efbda138d722a67ef91cf541f0864a1d29850683371534a250540b1431d7171",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/strategy-authoring",
+      "component": "declaration",
+      "beforeDigest": "sha256:330ef67d537cc529ff3c05fb00822ab2672b4833c6beea13356c79e6c9c892cc",
+      "afterDigest": "sha256:d484c44b2947e7bdd1617254812d3854c3330950061bf5eb4e09bbbb70e701bb",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/wyckoff",
+      "component": "manifest",
+      "beforeDigest": "sha256:55b5d43b5eb0bc6eb90f14bb1a536fd3a3f44fd70be4ba51fa92ea2c20de48e8",
+      "afterDigest": "sha256:7b31991acb75a88d77e28af146c423e28ddcb81fa6f0841ecb199b9c4ee90afb",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/wyckoff",
+      "component": "declaration",
+      "beforeDigest": "sha256:ef4ef3f0dd4cdbbda95587f3fc79812ae723d179d584b9c7bd5e6da851850ba3",
+      "afterDigest": "sha256:cfdcfaa651b180da81340805e03165e72dc70d1b1a97fee1a2628dae027c1063",
+      "decision": "approved",
+      "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
     }
   ]
 }

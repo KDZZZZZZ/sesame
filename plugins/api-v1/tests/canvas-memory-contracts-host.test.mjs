@@ -268,7 +268,7 @@ integration('the knowledge-only guide loads without aliases and host Run tools s
   for (const name of ['agent_list', 'agent_delegate', 'agent_inspect', 'agent_stop']) assert.equal(f.tool(name), undefined);
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));
-  assert.match(registry.read('conv_main', entry.id, 'skills/coordinate-research/references/agent-runs.md').content, /host\.agent\.run/);
+  assert.match(registry.read('conv_main', entry.id, 'references/agent-runs.md').content, /host\.agent\.run/);
   const hostTools = ['host_agent_run', ...['list', 'read', 'wait', 'interrupt', 'resume', 'message', 'cancel'].map(action => `host_runs_${action}`)];
   for (const name of hostTools) assert.ok(registry.hostTools('conv_main').includes(name), name);
   await registry.configure(entry.id, 'disabled', registry.policy().version);

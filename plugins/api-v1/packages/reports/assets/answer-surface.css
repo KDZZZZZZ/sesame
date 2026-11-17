@@ -1,0 +1,21 @@
+/* Only answer packages include this stylesheet. Host-rebuilt roots keep no
+   package attributes, so selectors use the retained body content directly. */
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+body > main.report {
+  max-width: none;
+  margin: 0;
+}
+
+.report > .report-header,
+.report > article > [data-report-style] > .report-subtitle {
+  display: none;
+}
+
+.report > article > [data-report-style] > .kit-section:first-of-type {
+  margin-top: 0;
+}

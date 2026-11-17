@@ -1,0 +1,32 @@
+/* Generic content around the shared chart and typography primitives. */
+.kit-section{counter-increment:none}
+.kit-section h2::before,.report-reasoning-steps li::before{content:none}
+.report-reasoning-steps{counter-reset:none}
+.report-reasoning-steps li{counter-increment:none;display:block}
+.report-prose :is(h4,h5,h6,blockquote){font-size:inherit;line-height:inherit;color:var(--report-ink)}
+.report-prose :is(h4,h5,h6){margin:1.5em 0 .5em;font-weight:600}
+.report-chart-plot,.module-chart-plot{min-width:0}
+.report-judgments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6rem 2.5rem;margin:1rem 0}
+.report-judgment-item{min-width:0;overflow-wrap:anywhere;break-inside:avoid}
+.report-judgment-item>p{margin:0 0 .45rem;color:var(--report-muted)}
+.report-judgment-item>strong{display:block;color:var(--report-accent);font-size:1.12rem;line-height:1.55}
+.report-judgment-item dl{margin:.75rem 0 0}
+.report-judgment-item dl>div{display:grid;grid-template-columns:minmax(4.5em,auto) minmax(0,1fr);gap:.35rem .75rem}
+.report-judgment-item dt{color:var(--report-muted)}
+.report-judgment-item dd{margin:0;min-width:0}
+.report-controls{display:flex;flex-wrap:wrap;gap:1rem 1.5rem;align-items:end;margin:1.25rem 0}
+.report-control{display:flex;flex-direction:column;gap:.4rem;min-width:0;max-width:100%;font:inherit}
+.report-control>span:first-child{color:var(--report-muted)}
+.report-control select{max-width:100%;min-width:8rem;border:0;border-bottom:1px solid var(--report-line);border-radius:0;padding:.3rem 1.2rem .3rem 0;background:transparent;color:var(--report-ink);font:inherit}
+.report-range-control{display:grid;grid-template-columns:1fr 1fr;gap:.25rem 1rem;min-width:min(24rem,100%)}
+.report-range-control input{min-width:0;width:100%;accent-color:var(--report-accent)}
+.report-range-control output{grid-column:1/-1;font-variant-numeric:tabular-nums}
+.report-pagination{display:flex;align-items:center;justify-content:flex-end;gap:1rem;margin-top:.75rem;font-variant-numeric:tabular-nums}
+.report-pagination button{border:0;background:none;color:var(--report-accent);font:inherit;font-size:1.3rem;cursor:pointer}
+.report-pagination button:disabled{color:var(--report-muted);opacity:.45;cursor:default}
+.report-table tr[data-report-selectable]{cursor:pointer}
+.report-table tr[aria-selected=true]{background:color-mix(in srgb,var(--report-accent) 10%,transparent)}
+.report-table tr[hidden],.report-pagination[hidden]{display:none!important}
+.report-table tr:focus-visible,.report-control select:focus-visible{outline:2px solid var(--report-accent);outline-offset:2px}
+@media print{.report-controls{break-inside:avoid}.report-pagination{display:none!important}.report-range-control input{display:none}.report-control select{appearance:none}}
+@media(max-width:560px){.report-judgments{grid-template-columns:minmax(0,1fr)}.report-judgment-item dl>div{grid-template-columns:1fr;gap:.1rem}}

@@ -27,4 +27,4 @@ price-action 可补趋势/区间语境，abu-volatility 可补波动尺度；它
 
 ## 按需参考
 
-references/method.md 定义三柱观察；references/execution.md 仅在需要本包 Python 计算时使用；references/validation.md 说明效力边界。 参考路径位于 skills/ict/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/ict",part:"resource",path:"skills/ict/references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。
+references/method.md 定义三柱观察；references/execution.md 仅在需要本包 Python 计算时使用；references/validation.md 说明效力边界。 参考路径位于 references/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/ict",part:"resource",path:"references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。

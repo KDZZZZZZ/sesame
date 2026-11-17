@@ -5,14 +5,13 @@ import { digest } from '@sesame/plugin-sdk/protocol';
 import { renderMarkdown } from '@sesame/plugin-sdk/markdown';
 
 export const reportDescription = () => ({ contract: 'sesame.report/1', provider: { pluginId: 'sesame/reports', serviceId: 'report-renderer', version: 'fixture', revision: digest('fixture-report-provider') },
-  inputSchema: { $id: 'urn:sesame:report:provider-input:1', type: 'object', properties: { content: { oneOf: ['document', 'signal-study'].map(kind => ({ properties: { kind: { const: kind } } })) }, style: { type: 'object' }, assets: { type: 'array' } } } });
+  inputSchema: { $id: 'urn:sesame:report:provider-input:1', type: 'object', properties: { content: { type: 'object', properties: { kind: { const: 'document' } } }, style: { type: 'object' }, assets: { type: 'array' } } } });
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 function fixtureHTML(input) {
-  assert.ok(input.content && !Object.hasOwn(input, 'body_html') && !Object.hasOwn(input, 'html_path'), 'The fixture accepts only structured content');
+  assert.equal(input.target, 'report');
+  assert.ok(input.content?.kind === 'document' && !Object.hasOwn(input, 'body_html') && !Object.hasOwn(input, 'html_path'), 'The fixture accepts only generic document content');
   const block = value => value.type === 'markdown' ? renderMarkdown(value.text) : `<p>${escape(value.text)}</p>`;
-  const body = input.content.kind === 'signal-study'
-    ? `<script type="application/json" id="run-snapshot">${JSON.stringify(input.content.run).replaceAll('<', '\\u003c')}</script>`
-    : input.content.sections.map(section => `<section><h2>${escape(section.title)}</h2>${section.blocks.map(block).join('')}</section>`).join('');
+  const body = input.content.sections.map(section => `<section><h2>${escape(section.title)}</h2>${section.blocks.map(block).join('')}</section>`).join('');
   return `<!doctype html><html><head><title>${escape(input.title)}</title></head><body><main>${body}</main></body></html>`;
 }
 
@@ -28,13 +27,13 @@ export function workflowReports(host, sharedState) {
   }
   const invoke = host.capabilities?.invoke?.bind(host.capabilities);
   host.capabilities = { ...host.capabilities, invoke: async (id, input, options = {}) => {
-    if (!['host.reports.describe', 'sesame/workspace#write', 'sesame/reports#report_publish', 'sesame/reports#report_check'].includes(id)) {
+    if (!['host.reports.describe', 'sesame/workspace#write', 'sesame/reports#components_show', 'sesame/reports#report_check'].includes(id)) {
       assert.ok(invoke, `Undeclared fixture capability: ${id}`); return invoke(id, input, options);
     }
     options.signal?.throwIfAborted(); state.calls.push({ id, input: structuredClone(input) });
     if (id === 'sesame/workspace#write') { state.files.set(input.path, input.content); return { type: 'result', value: { path: input.path } }; }
     if (id === 'host.reports.describe') return { type: 'result', value: structuredClone(state.description ?? reportDescription()) };
-    if (id.endsWith('#report_publish')) {
+    if (id.endsWith('#components_show')) {
       const operationId = input.operation_id;
       const root = await resources.create({ kind: 'directory', lifetime: 'durable', name: digest(operationId).slice(7) }, { operationId: operationId + ':root' });
       const entries = [{ path: 'index.html', content: fixtureHTML(input), mediaType: 'text/html' }, ...input.assets.map(asset => ({ path: asset.path, content: state.files.get(asset.source_path), mediaType: asset.media_type }))];

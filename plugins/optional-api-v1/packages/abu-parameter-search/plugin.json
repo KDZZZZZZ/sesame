@@ -25,7 +25,7 @@
     "examples/development.json",
     "scripts/baseline.mjs",
     "scripts/runtime.mjs",
-    "skills/abu-parameter-search/references/method.md"
+    "references/method.md"
   ],
   "provides": {},
   "engines": {

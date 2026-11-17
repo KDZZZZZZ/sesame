@@ -44,6 +44,7 @@
   }
   function legend(ctx, values) {
     const el = ctx.html('div', 'sc-composition-legend');
+    el.setAttribute('data-report-text', 'legend');
     values.forEach((value, i) => {
       const item = ctx.html('span'), swatch = ctx.html('i'); swatch.style.background = color(i);
       item.append(swatch, document.createTextNode(value)); el.append(item);
@@ -169,9 +170,8 @@
       label(ctx, 16 + band * (i + .5), chartHeight - 20, x, 'middle', band - 4);
     });
     if (paired) {
-      const el = ctx.html('p', 'sc-missing-note', `${series[0]} / ${series[1]} · ${words('每格', 'Each tick')} ${amount} ${spec.unit || ''}`);
-      ctx.frame.append(el);
-    } else { legend(ctx, series); ctx.note(`${words('每格', 'Each tick')} ${amount} ${spec.unit || ''}`); }
+      ctx.note(`${series[0]} / ${series[1]} · ${words('1 格 =', '1 tick =')} ${amount} ${spec.unit || ''}`, 'legend');
+    } else { legend(ctx, series); ctx.note(`${words('1 格 =', '1 tick =')} ${amount} ${spec.unit || ''}`, 'legend'); }
   }
   function dotHeatmap(ctx) {
     const { spec, width, svg, node } = ctx, xKey = key(spec, 'x'), yKey = key(spec, 'y'), valueKey = key(spec, 'value');
@@ -196,7 +196,8 @@
     const stride = Math.max(1, Math.ceil(55 / band));
     xs.forEach((x, i) => { if (i % stride === 0) label(ctx, left + (i + .5) * band, 38 + ys.length * rowHeight, x, 'middle', band * stride); });
     ys.forEach((y, i) => label(ctx, left - 10, 22 + (i + .5) * rowHeight, y, 'end', left - 10));
-    ctx.note(`${words('圆面积表示数值大小；空心为 0，× 为缺失。最大值', 'Circle area represents magnitude; hollow = 0, × = missing. Maximum magnitude')} ${display(maximum)} ${spec.unit || ''}`);
+    ctx.note(`${words('面积：大小 · ○：0 · ×：缺失 · 最大：', 'Area: magnitude · ○: 0 · ×: missing · Max:')} ${display(maximum)} ${spec.unit || ''}`, 'legend');
+    ctx.note('Circle area represents magnitude; hollow = 0, × = missing.', 'help');
   }
   function funnel(ctx) {
     const { spec, width, rows, svg, node } = ctx, xKey = key(spec, 'x'), valueKey = key(spec, 'value');
@@ -222,7 +223,8 @@
       label(ctx, width - right + 12, y(i) + 15, display(values[i]), 'start', right - 16, { fill: color(0), 'font-weight': 650 });
       if (i) label(ctx, 1, y(i) - 18, values[i - 1] ? `${display(values[i] / values[i - 1] * 100)}%` : '—', 'start', 48);
     });
-    ctx.note(words('宽度表示剩余数量；左侧为较上一步留下的比例。', 'Width shows the remaining count; percentages compare each stage with the preceding stage.'));
+    ctx.note(words('%：相对上一步', '%: of previous stage'), 'legend');
+    ctx.note(words('宽度表示剩余数量；左侧为较上一步留下的比例。', 'Width shows the remaining count; percentages compare each stage with the preceding stage.'), 'help');
   }
   function categoryLinks(ctx) {
     const { spec, rows, width, svg, node } = ctx, itemKey = key(spec, 'item'), groupKey = key(spec, 'group');
@@ -265,7 +267,8 @@
       mark.append(node('rect', { x: 10, y: y + 9, width: width - 20, height: 34, fill: 'transparent' }));
       ctx.mark(mark, rows[i], i, `${sample.label} · ${sample.hit} / ${sample.n}`);
     });
-    ctx.note(`${words('每格', 'Each tick')} ${amount} ${words('个样本', 'samples')} · ${spec.overlap ? words('各行可重复计数，不相加。', 'Outcomes may overlap; do not add rows.') : words('各行互不重复。', 'Outcomes are mutually exclusive.')}`);
+    ctx.note(`${words('1 格 =', '1 tick =')} ${amount} ${words('个样本', 'samples')} · ${spec.overlap ? words('可重叠，不相加', 'Overlapping, not additive') : words('互不重叠', 'Exclusive')}`, 'legend');
+    ctx.note(spec.overlap ? words('各行可重复计数，不相加。', 'Outcomes may overlap; do not add rows.') : words('各行互不重复。', 'Outcomes are mutually exclusive.'), 'help');
   }
   const raceViews = new WeakMap();
   function rankRace(ctx) {
@@ -287,6 +290,7 @@
     if (domain[0] === domain[1]) domain[1] = 1;
     const sx = ctx.scale(domain, [left, width - right]), zero = sx(0);
     const controls = ctx.html('div', 'sc-race-controls'), play = ctx.html('button', null, words('播放', 'Play')), slider = ctx.html('input'), caption = ctx.html('span');
+    caption.setAttribute('data-report-text', 'context');
     play.type = 'button'; slider.type = 'range'; slider.min = '0'; slider.max = String(table.xs.length - 1); slider.step = '1'; slider.setAttribute('aria-label', words('选择时间', 'Select frame'));
     controls.append(play, slider, caption); ctx.frame.append(controls);
     const draw = (selected, animate = false) => {
@@ -360,7 +364,11 @@
         ctx.mark(node('circle', { cx:sx(value), cy:y, r:focused?7:3, fill:focused?color(0):color(1), stroke:focused?'var(--report-paper)':'none', 'stroke-width':1.5, 'data-dimension':field, 'data-value':value }), row, index, `${items[index]} · ${dimension.label || `${leftLabel} / ${rightLabel}`} · ${value}${dimension.unit || ''}`);
       });
     });
-    ctx.note(`${words('大点', 'Large dot')}: ${spec.focus} · ${words('小点：对照方案', 'Small dots: comparison items')}${missing ? ` · ${missing} ${words('项缺失，未标点', 'missing observations omitted')}` : ''}`);
+    ctx.note(`${words('大点', 'Large dot')}: ${spec.focus} · ${words('小点：对照方案', 'Small dots: comparison items')}`, 'legend');
+    if (missing) {
+      ctx.note(`${words('缺失：', 'Missing:')} ${missing}`, 'context');
+      ctx.note(`${missing} ${words('项缺失，未标点', 'missing observations omitted')}`, 'help');
+    }
   }
   function tickDonut(ctx) {
     const { spec, rows, width, svg, node } = ctx, xKey = key(spec, 'x'), valueKey = key(spec, 'value'), amount = unit(ctx);
@@ -393,7 +401,7 @@
     }
     const center = label(ctx,cx,cy-1,display(total(values)),'middle',inner*.8,{fill:color(0),'font-weight':650}); center.style.fontSize = '26px';
     label(ctx,cx,cy+23,`${words('每格', 'Each tick')} ${amount}${spec.unit || ''}`,'middle',inner*1.9);
-    ctx.note(words('从正上方开始，顺时针读取；所有部分合为总数。','Read clockwise from the top; every part contributes to the total.'));
+    ctx.note(words('从正上方开始，顺时针读取；所有部分合为总数。','Read clockwise from the top; every part contributes to the total.'), 'help');
   }
   function horizontalPositions(ctx, xKey, type) {
     if (!['time','number','category'].includes(type)) fail('xType must be time, number or category');
@@ -440,7 +448,9 @@
     });
     const stride = Math.max(1,Math.ceil(entries.length/Math.max(2,Math.floor(width/120))));
     entries.forEach((entry,i)=>{if(i===0||i===entries.length-1||i%stride===0&&sx(entries.at(-1).position)-sx(entry.position)>110)label(ctx,sx(entry.position),height-14,entry.x,i===0?'start':i===entries.length-1?'end':'middle',120);});
-    ctx.note(`${words('每点是一条观测；竖线从零起，× 为缺失。','Each dot is an observation; stems start at zero, × means missing.')} ${spec.unit || ''}`);
+    ctx.note(`${words('×：缺失','×: missing')}${spec.unit ? ` · ${spec.unit}` : ''}`, 'legend');
+    ctx.note(words('竖线从零起，× 为缺失。','Stems start at zero; × means missing.'), 'help');
+    ctx.note(words('每点是一条观测。', 'Each dot is an observation.'), 'help');
   }
   function bubbleLedger(ctx) {
     const { spec, rows, width, svg, node } = ctx, xKey = key(spec,'x'), yearKey = key(spec,'y','year'), valueKey = key(spec,'value'), statusKey = key(spec,'status');
@@ -469,7 +479,8 @@
       mark.append(node('circle',{cx:x,cy:y,r:Math.max(r,6),fill:'transparent'}));
       ctx.mark(mark,cell.row,cell.index,`${cell.year} · ${cell.group} · ${cell.value===null?words('缺失','Missing'):cell.value+' '+(spec.unit||'')}${cell.status==='partial'?words(' · 资料不完整',' · Partial coverage'):''}`);
     });
-    ctx.note(words('圆面积表示数值大小；虚线为资料不完整，空心小点为 0。','Circle area represents magnitude; dashed outlines indicate incomplete coverage; small hollow dots indicate zero.'));
+    ctx.note(words('面积：大小 · 虚线：不完整 · ○：0','Area: magnitude · Dashed: incomplete · ○: 0'), 'legend');
+    ctx.note(words('圆面积表示数值大小；虚线为资料不完整，空心小点为 0。','Circle area represents magnitude; dashed outlines indicate incomplete coverage; small hollow dots indicate zero.'), 'help');
     if(events.size){const notes=ctx.html('div','sc-ledger-events');for(const[year,event]of [...events].sort((a,b)=>a[0]-b[0])){const entry=ctx.html('span'),time=ctx.html('strong',null,year);entry.append(time,document.createTextNode(' '+event));notes.append(entry);}ctx.frame.append(notes);}
   }
   for (const [kind, renderer] of Object.entries({ stream, 'stacked-rungs': ctx => rungs(ctx, false), 'dot-heatmap': dotHeatmap, funnel, 'category-links': categoryLinks, 'outcome-tally': outcomeTally, 'paired-rungs': ctx => rungs(ctx, true), 'rank-race': rankRace, spectrum, 'tick-donut': tickDonut, barcode, 'bubble-ledger': bubbleLedger })) global.SesameCharts.register(kind, renderer);

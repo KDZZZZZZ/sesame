@@ -12,12 +12,7 @@ const outputDirectory = process.env.SESAME_INVESTMENT_REPORT_RECEIPT_DIR;
 const pluginId = 'sesame/investment-research';
 const roles = ['scope', 'evidence', 'analysis', 'synthesis'];
 const reportPath = 'research-fixture/four-stage-research.html';
-const selectedFields = ['summary', 'user_observations', 'user_note'];
-const adjustedSections = [{ module_id: 'M01', title: '用户选择的事实与解释', fields: ['summary',
-  { key: 'user_observations', label: '合成观察 · USD', type: 'chart', meaning: 'Only supplied fictional observations; no trend estimator.', chart: { kind: 'line', columns: ['time', 'value'], options: { x: 'time', y: 'value', unit: 'USD' }, data_requirements: 'Fixed fixture times and USD values.', evidence_role: 'descriptive' } },
-  { key: 'user_note', label: '用户要求保留的边界', type: 'text', meaning: 'The explicit user limit on the scope of this report.' },
-] }];
-const brief = { case: 'overview', sections: adjustedSections, adjustments: 'Keep only the summary; replace default charts with user_observations and add user_note. Remove trend and all forecast/confidence fields. No new source fetching.' };
+const brief = { objective: 'Describe only the supplied fictional observations', questions: ['How do the supplied values compare?'], method_ids: ['comparison'], delivery: 'Keep the observation chart and requested scope note. Omit forecasts, confidence and new source fetching.' };
 const text = content => typeof content === 'string' ? content : (content ?? []).map(part => part.text ?? '').join('');
 let sequence = 0;
 function task(body) {
@@ -48,7 +43,7 @@ test('installed Research entry separates four actual Agent stages and publishes 
   process.env.NO_PROXY = process.env.no_proxy = '127.0.0.1,localhost,::1';
   const { fixture, eventually } = await load('tests/fixture-provider.js');
   const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
-  const observations = new Map(), failures = [], calls = []; let rawRef, resultsRef, fixtureCalls = 0, composed, rendered, bindingRead;
+  const observations = new Map(), failures = [], calls = []; let rawRef, resultsRef, fixtureCalls = 0, published, rendered, bindingRead;
   const rawRows = [100, 101, 99, 103, 104, 105].map((value, index) => ({ time: `2026-01-0${index + 1}`, value, unit: 'USD', source: 'explicit synthetic fixture' }));
   const app = await fixture({ reportRenderer: 'electron', responseHandler: (body, response) => {
     try {
@@ -61,45 +56,52 @@ test('installed Research entry separates four actual Agent stages and publishes 
       assert.deepEqual(input.research.members.map(item => item.role), roles.slice(0, roles.indexOf(role)));
       assert.ok(names.includes('host_resources_read'));
       assert.equal(names.some(name => /^(?:manual_|trading_|portfolio_|mt5_|host_agent_run)/.test(name)), false);
-      if (role === 'scope') { assert.deepEqual(names.filter(name => !name.startsWith('host_')), ['plugin_read', 'report_structure']); assert.ok(names.includes('host_reports_describe')); assert.equal(names.includes('host_reports_publish'), false); }
-      if (role === 'evidence') { assert.ok(names.includes('sources_fetch') && names.includes('data_read')); assert.equal(names.includes('report_compose'), false); }
-      if (role === 'analysis') { assert.ok(names.includes('data_read') && names.includes('investment_research_ask')); assert.equal(names.includes('sources_fetch'), false); assert.equal(names.includes('report_publish'), false); }
-      if (role === 'synthesis') { assert.ok(names.includes('host_reports_describe') && names.includes('host_reports_publish') && names.includes('report_structure') && names.includes('report_compose') && names.includes('report_check')); assert.equal(names.includes('sources_fetch'), false); }
+      if (role === 'scope') { assert.deepEqual(names.filter(name => !name.startsWith('host_')), ['plugin_read', 'research_methods', 'research_read']); assert.equal(names.includes('host_reports_describe'), false); assert.equal(names.includes('host_reports_publish'), false); }
+      if (role === 'evidence') { assert.ok(names.includes('sources_fetch') && names.includes('data_read')); assert.equal(names.includes('components_show'), false); }
+      if (role === 'analysis') { assert.ok(names.includes('data_read') && names.includes('investment_research_ask')); assert.ok(names.includes('sources_fetch')); assert.equal(names.includes('components_show'), false); }
+      if (role === 'synthesis') { assert.ok(names.includes('host_reports_describe') && names.includes('host_reports_publish') && names.includes('components_describe') && names.includes('components_show') && names.includes('report_check')); assert.equal(names.includes('sources_fetch'), false); }
       const returned = replies(body);
       for (const result of returned) assert.ok(!result.value?.isError, JSON.stringify({ role, name: result.name, result: result.value }));
       const call = (name, args) => { assert.ok(names.includes(name), `${role} must actually own ${name}`); calls.push({ role, name, args }); respond(response, body.model, null, { name, arguments: args }); };
       if (role === 'scope') {
-        if (returned.length === 0) call('host_reports_describe', {});
-        else if (returned.length === 1) { assert.equal(returned[0].value.provider.pluginId, 'sesame/reports'); assert.equal(returned[0].value.inputSchema.$id, 'urn:sesame:report:provider-input:1'); call('report_structure', { template_id: 'R01' }); }
-        else if (returned.length === 2) { assert.equal(returned[1].value.kind, 'structure'); assert.ok(returned[1].value.sections.some(section => section.fields.some(field => field.key === 'price_chart'))); call('report_structure', { sections: adjustedSections }); }
-        else { assert.deepEqual(returned[2].value.sections[0].fields.map(field => field.key), selectedFields); respond(response, body.model, '已读取当前 report_structure。用户明确字段优先：summary、user_observations、user_note。移除趋势与预测字段；只复用固定合成证据。'); }
+        if (returned.length === 0) call('research_methods', {query:'comparison',limit:1});
+        else if (returned.length === 1) { assert.equal(returned[0].value.items[0].id, 'comparison'); call('research_read', {ids:['comparison']}); }
+        else { assert.ok(returned[1].value.items[0].content.length > 100); respond(response, body.model, '已按实际比较问题读取 Research 方法。仅说明固定观察与用户需要的边界，保留观察图，不追加预测或业务模板栏目。'); }
       } else if (role === 'evidence') {
         if (returned.length === 0) call('data_read', { ref: rawRef });
         else if (returned.length === 1) { assert.deepEqual(returned[0].value.ref, rawRef); assert.equal(returned[0].value.rowCount, rawRows.length); call('data_read', { ref: resultsRef }); }
-        else { assert.deepEqual(returned[1].value.ref, resultsRef); assert.equal(returned[1].value.rowCount, 4); respond(response, body.model, '固定证据已读取：6 条 USD 合成观察及预制研究结果。原始观察期是 2026-01-01 至 2026-01-06，软件 fixture 获取记录为 2026-10-28；不能冒充当时已可得。没有执行网络请求，也未检索历史同类样本。'); }
+        else { assert.deepEqual(returned[1].value.ref, resultsRef); assert.equal(returned[1].value.rowCount, 3); respond(response, body.model, '固定证据已读取：6 条 USD 合成观察及预制研究结果。原始观察期是 2026-01-01 至 2026-01-06，软件 fixture 获取记录为 2026-10-28；不能冒充当时已可得。没有执行网络请求，也未检索历史同类样本。'); }
       } else if (role === 'analysis') {
         const evidence = input.research.members.find(item => item.role === 'evidence');
         assert.ok(evidence.source_refs.some(ref => ref.digest === rawRef.digest) && evidence.source_refs.some(ref => ref.digest === resultsRef.digest));
         if (returned.length === 0) call('data_read', { ref: resultsRef });
-        else if (returned.length === 1) { assert.deepEqual(returned[0].value.sample.find(row => row.field === 'summary').reasoning.history, { status: 'pending', note: '同类历史检索未运行；这不是零匹配，也不提供预测概率。' }); call('host_resources_read', { ref: rawRef, part: 'content', entry: 'rows.json' }); }
+        else if (returned.length === 1) { assert.deepEqual(returned[0].value.sample.find(row => row.field === 'summary').history, { status: 'pending', note: '同类历史检索未运行；这不是零匹配，也不提供预测概率。' }); call('host_resources_read', { ref: rawRef, part: 'content', entry: 'rows.json' }); }
         else { assert.deepEqual(JSON.parse(returned[1].value.content), rawRows); respond(response, body.model, '合成序列末值高于首值，仅支持此观察区间的描述；不能外推未来方向。解释保留实际观察、一步推理和历史 pending。按用户要求保留自定义观察图与边界说明，删除预制 trend 字段。该结论使用预制 fixture 结果，不宣称执行新分析算法。'); }
       } else {
         assert.deepEqual(input.research.source_refs.map(ref => ref.digest).sort(), [rawRef.digest, resultsRef.digest].sort());
         const last = returned.at(-1);
         if (!last) call('host_reports_describe', {});
-        else if (last.name === 'host_reports_describe') { assert.equal(last.value.provider.pluginId, 'sesame/reports'); assert.ok(last.value.inputSchema.properties.content); call('report_structure', { sections: adjustedSections }); }
-        else if (last.name === 'report_structure') { assert.deepEqual(last.value.sections[0].fields.map(field => field.key), selectedFields); call('report_compose', { output_path: 'four-stage-report.html', title: 'DEMO · 用户调整后的 Research', summary: '固定合成观察的有限解释；没有运行历史匹配或预测。', structure: { sections: adjustedSections }, results_ref: resultsRef }); }
-        else if (last.name === 'report_compose') { composed = last.value; assert.equal(composed.researchValidation, 'not_evaluated'); assert.equal(composed.completeness.status, 'complete'); assert.deepEqual(composed.structure.sections[0].fields.map(field => field.key), selectedFields); call('host_reports_publish', { operationId: 'four-stage-research-publication', space: 'research', title: composed.publish.title, summary: composed.publish.summary, locale: composed.publish.locale, provenanceKind: composed.publish.provenance_kind, data: composed.publish.data, references: composed.publish.references, features: composed.publish.features, input: { content: composed.publish.content, style: composed.publish.style } }); }
-        else if (last.name === 'host_reports_publish') call('report_check', { ref: last.value.ref });
+        else if (last.name === 'host_reports_describe') {
+          assert.equal(last.value.provider.pluginId, 'sesame/reports');
+          assert.equal(last.value.inputSchema.type, 'object');
+          call('components_show', { target:'report', operation_id:'four-stage-research-publication', title:'DEMO · 用户调整后的 Research', summary:'固定合成观察的有限解释。', provenance_kind:'demo',
+            data:[{id:'observations',ref:rawRef,usage:'Fixed fictional observations for the line chart'},{id:'research-results',ref:resultsRef,usage:'Retained precomputed fixture evidence'}], references:[rawRef,resultsRef],
+            content:{kind:'document',sections:[{title:'固定观察区间末值较高',blocks:[
+              {type:'markdown',text:'合成观察从 100 USD 变为 105 USD，仅描述给定区间。'},
+              {type:'chart',kind:'line',title:'合成观察 · USD',data_id:'observations',options:{x:'time',y:'value',unit:'USD'}},
+              {type:'paragraph',text:'用户指定：只展示固定观察。同类历史检索未运行；不提供预测概率。'}
+            ]}]} });
+        }
+        else if (last.name === 'components_show') { published = last.value; call('report_check', {ref:published.ref}); }
         else if (last.name === 'report_check') { rendered = last.value; assert.equal(rendered.status, 'rendered', JSON.stringify(rendered)); call('host_runs_read', { runId: input.qa_context.workflow_ref.id }); }
-        else { assert.equal(last.name, 'host_runs_read'); bindingRead = last.value.run; assert.deepEqual(bindingRead.report.ref, rendered.artifact); assert.equal(bindingRead.task.output.space, 'research'); assert.equal(bindingRead.task.output.path, reportPath); respond(response, body.model, 'Research 报告已发布并实际渲染，绑定 research-fixture/four-stage-research.html。自定义三字段已保留，原 trend 未显示。数据为合成 fixture，历史比较仍 pending。'); }
+        else { assert.equal(last.name, 'host_runs_read'); bindingRead = last.value.run; assert.deepEqual(bindingRead.report.ref, rendered.artifact); assert.equal(bindingRead.task.output.space, 'research'); assert.equal(bindingRead.task.output.path, reportPath); respond(response, body.model, 'Research 报告已发布并实际渲染，绑定 research-fixture/four-stage-research.html。用户要求的观察图与正文已保留，未增加预测。数据为合成 fixture，历史比较仍 pending。'); }
       }
       return true;
     } catch (error) { failures.push(error.message); respond(response, body.model, 'Fixture assertion failed; stop.'); return true; }
   } });
   try {
     const installed = [];
-    for (const [name, base] of [['reports', '../../api-v1/packages/'], ['web-sources', '../packages/'], ['investment-research', '../packages/'], ['auto-factor-mining', '../packages/'], ['trading-decision', '../packages/']]) {
+    for (const [name, base] of [['reports', '../../api-v1/packages/'], ['research', '../../api-v1/packages/'], ['web-sources', '../packages/'], ['investment-research', '../packages/'], ['trading-decision', '../packages/']]) {
       const draft = join(app.runtime.workspaces.root('conv_main'), name + '-four-stage-draft');
       await cp(fileURLToPath(new URL(base + name + '/', import.meta.url)), draft, { recursive: true });
       const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft }); assert.equal(checked.passed, true, JSON.stringify(checked));
@@ -118,15 +120,14 @@ test('installed Research entry separates four actual Agent stages and publishes 
     rawRef = publishFixture('research-raw-fixture', rawRows);
     const conclusion = '合成观察区间的末值较首值高；不构成未来方向预测。';
     const resultRows = [
-      { section_id: 'M01', field: 'summary', status: 'provided', value: conclusion, method_ref: 'fixture/precomputed-observation-review/v1', evidence_refs: [rawRef], origin: { kind: 'inferred', nature: 'interpretation', source: 'Explicit precomputed software fixture', refs: [rawRef] }, reasoning: { observations: ['合成观察从 100 USD 变为 105 USD。'], steps: ['只描述已观测区间；单条轨迹不足以辨别未来结果。'], conclusion, history: { status: 'pending', note: '同类历史检索未运行；这不是零匹配，也不提供预测概率。' } } },
-      { section_id: 'M01', field: 'user_observations', status: 'provided', value: { rows: rawRows.map(({ time, value }) => ({ time, value })), source_note: '明确合成的 USD 软件验收数据，真实观察与首次可得性均未声称。', takeaway: '末值高于首值，期间存在回落；图表只呈现固定数据。' }, evidence_refs: [rawRef], origin: { kind: 'user_supplied', nature: 'fact', source: 'Explicit synthetic rows', refs: [rawRef] } },
-      { section_id: 'M01', field: 'user_note', status: 'provided', value: '用户指定：只展示固定观察，不报告预测概率；保留历史未检索的状态。', origin: { kind: 'user_supplied', nature: 'metadata', source: 'Explicit fixture user brief' } },
-      { section_id: 'M01', field: 'trend', status: 'provided', value: 'REMOVED_TREND_MUST_NOT_APPEAR', origin: { kind: 'user_supplied', nature: 'metadata', source: 'Removed field fixture sentinel' } },
+      { field:'summary', value:conclusion, evidence_refs:[rawRef], history:{status:'pending',note:'同类历史检索未运行；这不是零匹配，也不提供预测概率。'} },
+      { field:'user_note', value:'用户指定：只展示固定观察，不报告预测概率。' },
+      { field:'discarded', value:'REMOVED_TREND_MUST_NOT_APPEAR' },
     ];
     resultsRef = publishFixture('research-results-fixture', resultRows, [rawRef]);
     await host.plugins.setEnabled(pluginId, true, { scope: 'session' });
     const directTool = app.runtime.plugins.definitions({ conversationId: 'conv_main' }).find(item => item.name === 'investment_research_start');
-    const accepted = (await directTool.execute('four-stage-research-fixture', { ...{ title: 'Four-stage Research integration fixture', question: 'Review only the fixed synthetic observations and existing result rows; honor the user sections and do not fetch any source.', subjects: ['SYNTHETIC'], as_of: '2026-10-28T12:00:00Z', model: { provider: 'fixture', id: 'fixture' }, research: { plugins: ['sesame/web-sources', 'sesame/data-access', 'sesame/plugin-manager'], tools: ['sesame/web-sources#sources_fetch', 'sesame/data-access#data_read', 'sesame/plugin-manager#plugin_read'] }, evidence_refs: [rawRef, resultsRef], report_brief: brief }, _task: { output: { type: 'report', space: 'research', path: reportPath } } })).details;
+    const accepted = (await directTool.execute('four-stage-research-fixture', { ...{ title: 'Four-stage Research integration fixture', question: 'Review only the fixed synthetic observations and existing result rows; honor the user questions and delivery and do not fetch any source.', subjects: ['SYNTHETIC'], as_of: '2026-10-28T12:00:00Z', model: { provider: 'fixture', id: 'fixture' }, research: { plugins: ['sesame/web-sources', 'sesame/data-access', 'sesame/plugin-manager'], tools: ['sesame/web-sources#sources_fetch', 'sesame/data-access#data_read', 'sesame/plugin-manager#plugin_read'] }, evidence_refs: [rawRef, resultsRef], report_brief: brief }, _task: { output: { type: 'report', space: 'research', path: reportPath } } })).details;
     assert.equal(accepted.type, 'run');
     const done = await eventually(() => { assert.deepEqual(failures, []); const run = app.runtime.runs.read(accepted.run.id); assert.notEqual(run.status, 'interrupted', JSON.stringify({ error: run.error, interrupts: run.interrupts })); return run.status === 'completed' ? run : false; }, 90000);
     const children = app.runtime.runs.descendants(done.id).filter(run => run.kind === 'agent');
@@ -152,12 +153,13 @@ test('installed Research entry separates four actual Agent stages and publishes 
     assert.ok(artifact.manifest.dependencies.some(ref => ref.digest === rawRef.digest));
     assert.deepEqual(app.runtime.contractArtifacts.reportData(done.output.report_ref, 'research-results').rows, resultRows);
     assert.deepEqual(rendered.checks.map(check => check.width), [1000, 390]);
-    assert.ok(selectedFields.every(key => html.includes(`data-field="${key}"`)));
+    assert.match(html, /固定观察区间末值较高/); assert.match(html, /合成观察/);
+    assert.equal(published.ref.digest, done.output.report_ref.digest);
     assert.doesNotMatch(html, /REMOVED_TREND_MUST_NOT_APPEAR|data-field="trend"|data-origin=/);
     assert.match(html, /同类历史检索未运行/); assert.match(html, /USD/);
     assert.equal(calls.some(call => ['sources_fetch', 'sources_search', 'http_query'].includes(call.name)), false);
     const fixedAdapterChecks = [];
-    for (const name of ['auto-factor-mining', 'trading-decision']) {
+    for (const name of ['trading-decision']) {
       const adapterHost = createHostContextV2(app.runtime, app.runtime.plugins.entry('sesame/' + name), 'conv_main');
       const { publishWorkflowReport } = await import('../packages/' + name + '/report-publication.js');
       const evidenceBytes = JSON.stringify({ fixture: true, source: rawRef, noNewAnalysis: true });
@@ -180,9 +182,9 @@ test('installed Research entry separates four actual Agent stages and publishes 
       await mkdir(outputDirectory, { recursive: true });
       const save = (name, value) => writeFile(join(outputDirectory, name), JSON.stringify(value, null, 2) + '\n');
       await writeFile(join(outputDirectory, 'four-stage-research-report.html'), html);
-      await save('host-receipt.json', { status: 'passed', checkedAt: new Date().toISOString(), installed, fixtureCalls, fixedAdapterChecks, realModelCalls: 0, sourceNetworkCalls: 0, nativeAgentRuns: children.length, roles, permissions: Object.fromEntries([...observations].map(([role, observation]) => [role, observation.tools])), toolCalls: calls.map(({ role, name }) => ({ role, name })), reportBrief: brief, resultRef: done.output.result_ref, reportRef: done.output.report_ref, reportBinding: { space: 'research', path: reportPath, reportId: done.report.id, fileId: libraryFile.id, exactSourceBytes: true }, evidenceRefs: [rawRef, resultsRef], completeness: composed.completeness, lineageAudit: composed.lineageAudit, render: rendered, limits: ['Inputs and method-result rows were explicitly precomputed synthetic fixtures, not live sources or new algorithm execution.', 'Local deterministic provider verifies mechanics, not actual model reasoning quality.', 'History remains pending; no matching search or predictive probability is invented.', 'Only the isolated Store and workspace were used. PDF/PNG export was not tested.'] });
+      await save('host-receipt.json', { status: 'passed', checkedAt: new Date().toISOString(), installed, fixtureCalls, fixedAdapterChecks, realModelCalls: 0, sourceNetworkCalls: 0, nativeAgentRuns: children.length, roles, permissions: Object.fromEntries([...observations].map(([role, observation]) => [role, observation.tools])), toolCalls: calls.map(({ role, name }) => ({ role, name })), reportBrief: brief, resultRef: done.output.result_ref, reportRef: done.output.report_ref, reportBinding: { space: 'research', path: reportPath, reportId: done.report.id, fileId: libraryFile.id, exactSourceBytes: true }, evidenceRefs: [rawRef, resultsRef], publication: published, render: rendered, limits: ['Inputs and method-result rows were explicitly precomputed synthetic fixtures, not live sources or new algorithm execution.', 'Local deterministic provider verifies mechanics, not actual model reasoning quality.', 'History remains pending; no matching search or predictive probability is invented.', 'Only the isolated Store and workspace were used. PDF/PNG export was not tested.'] });
       await save('research-packet.json', packet); await save('report-manifest.json', artifact.manifest);
     }
-    t.diagnostic('Four actual native Agent Runs with separate permissions; current structure read; exact evidence handoff; user field replacement; Report/Electron Research binding and fixed revision verified.');
+    t.diagnostic('Four actual native Agent Runs with separate permissions; Research method discovery/read; exact evidence handoff; task-specific visual content; Report/Electron Research binding and fixed revision verified.');
   } finally { await app.dispose(); }
 });

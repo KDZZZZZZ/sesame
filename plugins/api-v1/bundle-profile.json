@@ -12,6 +12,7 @@
     "sesame/orchestration",
     "sesame/plugin-manager",
     "sesame/reports",
+    "sesame/research",
     "sesame/strategy-authoring",
     "sesame/ultra",
     "sesame/user-guide",

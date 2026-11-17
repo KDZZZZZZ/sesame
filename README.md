@@ -42,7 +42,7 @@ Sesame 是面向量化研究与交易的 Agent 工作台。它把对话、行情
 
 原生插件是运行在本机的可信代码，具有当前系统用户的权限；报告与指标使用浏览器隔离环境。开发者应说明联网、文件访问、外部依赖、凭证和交易写操作。公开接口、可审查源码和明确的能力说明，是使用与扩展插件的基础。
 
-当前源码与 R2 目录使用 Plugin API 2，包含 11 个基础插件和 45 个可选插件，本次不发布 Kurumi。请使用 Sesame 0.3.2；各插件的兼容范围以其声明为准。浏览[当前插件目录](plugins/api-v1/CATALOG.md)，将精确 ID 发给兼容的 Sesame 即可请求安装。旧版 API 1 宿主需要先升级本体。
+当前源码使用 Plugin API 2，包含 12 个基础插件和 46 个可选插件；安装渠道的版本与源码分别维护，本次不发布 Kurumi。各插件的宿主版本要求以其声明为准。浏览[当前插件目录](plugins/api-v1/CATALOG.md)，将精确 ID 发给兼容的 Sesame 即可请求安装。旧版 API 1 宿主需要先升级本体。
 
 ## 下载与开始使用
 
@@ -69,8 +69,8 @@ Sesame 是面向量化研究与交易的 Agent 工作台。它把对话、行情
 | 你要做什么 | 阅读资料 |
 | --- | --- |
 | 让 Sesame 或外部编码 Agent 开发插件 | [开发 Skill](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/SKILL.md) |
-| 了解接口、作用域和能力限制 | [HostContext 与产品接口](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/host-api.md) |
-| 创建、测试、安装和恢复插件 | [编写与安装](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/authoring.md) · [恢复指南](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/recovery.md) |
+| 了解接口、作用域和能力限制 | [HostContext 与产品接口](plugins/api-v1/packages/plugin-manager/references/host-api.md) |
+| 创建、测试、安装和恢复插件 | [编写与安装](plugins/api-v1/packages/plugin-manager/references/authoring.md) · [恢复指南](plugins/api-v1/packages/plugin-manager/references/recovery.md) |
 | 寻找可复用的实现 | [基础插件](plugins/api-v1/packages/) · [可选插件](plugins/optional-api-v1/packages/) |
 | 提交代码与了解分发规则 | [贡献流程](CONTRIBUTING.md) · [插件发布政策](plugins/api-v1/PUBLISHING.md) |
 

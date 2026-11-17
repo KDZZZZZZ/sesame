@@ -1,4 +1,4 @@
-import { REPORT_CALLS } from './team.js';
+import { METHOD_CALLS, REPORT_CALLS } from './team.js';
 
 import { check, configuredModel as selectModel, uniqueCalls, verifyRevisions, researchSafeCapability } from './workflow-mechanics.js';
 export { check } from './workflow-mechanics.js';
@@ -7,6 +7,8 @@ export { check } from './workflow-mechanics.js';
 const reviewedResearch = {
   // Public manifests and declared knowledge only; no installation/configuration.
   'sesame/plugin-manager#plugin_read': [],
+  'sesame/research#research_methods': [],
+  'sesame/research#research_read': [],
   'sesame/rss-collect#parse_feed': ['resources.read', 'process', 'filesystem', 'resources.publish'],
   'sesame/web-extract#extract_webpage': ['resources.read', 'process', 'filesystem', 'resources.publish'],
   'sesame/financial-research#financial_research_query': ['network', 'resources.publish', 'plugin.state.write'],
@@ -43,11 +45,13 @@ async function catalog(host, pluginId) {
   return items.filter(cap => cap.consumers.includes('agent'));
 }
 export const configuredModel = (host, selection) => selectModel(host, selection, { required: 'DEPENDENCY_UNAVAILABLE', unavailable: 'DEPENDENCY_UNAVAILABLE', changed: 'DEPENDENCY_UNAVAILABLE' });
-export async function selectResearch(host, selection) {
-  const entries = await Promise.all(selection.plugins.map(id => plugin(host, id)));
+export async function selectResearch(host, selection, { includeMethods = false } = {}) {
+  const plugins = [...new Set([...selection.plugins, ...(includeMethods ? ['sesame/research'] : [])])];
+  const entries = await Promise.all(plugins.map(id => plugin(host, id)));
   const declarations = (await Promise.all(entries.map(entry => catalog(host, entry.id)))).flat()
     .filter(cap => entries.find(entry => entry.id === cap.pluginId).delegatable_tools?.includes(cap.localId));
-  const requested = selection.tools ?? declarations.filter(readOnly).map(cap => cap.id);
+  const requested = [...new Set([...(selection.tools ?? declarations.filter(readOnly).map(cap => cap.id)),
+    ...(includeMethods ? METHOD_CALLS.map(call => `${call.pluginId}#${call.capabilityId}`) : [])])];
   const calls = requested.map(name => {
     const candidates = declarations.filter(cap => cap.id === name || cap.localId === name);
     check(candidates.length === 1, 'DEPENDENCY_UNAVAILABLE', `Select one declared research capability for ${name}; qualified pluginId#capabilityId avoids ambiguity.`);
@@ -56,7 +60,7 @@ export async function selectResearch(host, selection) {
     return { pluginId: cap.pluginId, capabilityId: cap.localId };
   });
   if (entries.length) calls.push({ pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' });
-  return freezeSelection(host, [...new Set([...selection.plugins, ...calls.map(call => call.pluginId)])], calls);
+  return freezeSelection(host, [...new Set([...plugins, ...calls.map(call => call.pluginId)])], calls);
 }
 async function freezeSelection(host, plugins, calls) {
   const pluginIds = plugins.filter(id => id !== 'host');
@@ -79,18 +83,11 @@ async function freezeSelection(host, plugins, calls) {
 }
 export const reportSelection = host => freezeSelection(host, [...new Set(REPORT_CALLS.map(call => call.pluginId))], REPORT_CALLS);
 export const synthesisSelection = (host, research) => freezeSelection(host, research.plugins,
-  research.allowedCalls.filter(call => call.pluginId === 'sesame/plugin-manager' && call.capabilityId === 'plugin_read'));
+  research.allowedCalls.filter(call => call.pluginId === 'sesame/plugin-manager' && call.capabilityId === 'plugin_read'
+    || METHOD_CALLS.some(method => method.pluginId === call.pluginId && method.capabilityId === call.capabilityId)));
 export async function stageSelection(host, research, phase) {
-  let calls;
-  if (phase === 'scope') {
-    calls = [{ pluginId: 'host', capabilityId: 'reports.describe' }, { pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' }, { pluginId: 'sesame/reports', capabilityId: 'report_structure' }];
-  } else if (phase === 'analysis') {
-    const declarations = (await Promise.all(research.plugins.map(id => catalog(host, id)))).flat();
-    calls = research.allowedCalls.filter(call => {
-      const cap = declarations.find(value => value.id === `${call.pluginId}#${call.capabilityId}`);
-      return cap && !cap.effects?.includes('network');
-    });
-  } else return research;
+  if (phase !== 'scope') return research;
+  const calls = [{ pluginId:'sesame/plugin-manager', capabilityId:'plugin_read' }, ...METHOD_CALLS];
   return freezeSelection(host, [...new Set([...research.plugins, ...calls.map(call => call.pluginId)])], calls);
 }
 export async function verifySelection(host, selection) {

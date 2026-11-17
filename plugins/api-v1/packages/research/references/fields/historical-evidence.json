@@ -1,0 +1,180 @@
+{
+  "title": "历史同类特征验证：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "outcome_series": {
+      "label": "同类情景的后续结果分布",
+      "meaning": "历史匹配样本的已登记分箱；结果提供 sampleCount、method、边界规则和收益单位。",
+      "definition": "历史匹配情景的实际已结算结果分箱计数。",
+      "inputs": "lower/upper/count、sampleCount、分箱方法、边界含义、逐案例与样本引用。",
+      "unit_time": "横轴说明收益/价格/其他结果单位，结果窗口一致，计数为已结算事件或规定单位。",
+      "interpretation": "直方图描述条件历史分布，不能直接称当前预测分布；重叠样本依赖需保留。",
+      "missing": "未结算不计入已实现结果；没有样本就没有可观察的经验分布或频率。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "对实际历史匹配后的结局分箱/计数，边界规则与样本量由真实研究记录提供，不是预测概率。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "baseline_series": {
+      "label": "条件样本与基准对照",
+      "meaning": "同一目标与期限的条件统计及可比基准；样本量、重叠处理和不确定性来自研究结果。",
+      "definition": "同一目标与结算期限下条件样本和可比基准的结果对照。",
+      "inputs": "outcome、conditional/baseline、各自样本量、基准构造、依赖处理与不确定性。",
+      "unit_time": "频率使用同分母定义和尺度，收益同币种/口径，时间窗和目标一致。",
+      "interpretation": "差异是否有意义取决于样本与方法；观察差值不是特征因果贡献。",
+      "missing": "基准不可得时明确缺失，不用 50% 或零收益默认基准。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "条件样本统计和同目标基准各自计算，窗口/样本定义由研究决定，不在报告选择基准。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "cases_series": {
+      "label": "逐次历史情景及实际结果",
+      "meaning": "逐次历史匹配事件的 ID、情景及已结算结果；少样本时优先原始点，不制造平滑密度。",
+      "definition": "每次历史匹配事件及其实际后续结果的原始点展示。",
+      "inputs": "case_id、情景/特征标签、匹配时点、结算窗、结果与案例引用。",
+      "unit_time": "结果单位、价格口径和期限一致，记录可得时间与待结算状态。",
+      "interpretation": "多个点可能属于同一事件簇；少样本优先原值，不通过抖动/平滑伪造分布厚度。",
+      "missing": "未结算点标 pending，缺结果不能记为失败或零收益。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "事件身份和原观察可获取，是否相似由匹配方法决定，后续结果由真实路径结算，逐案例保留证据。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "inference_evidence": {
+      "label": "逐项特征推断的历史验证",
+      "meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+      "definition": "逐项可检验推断与其自身同类历史结果、置信度定义及验证状态的对应。",
+      "inputs": "claim ID、观察特征、知识假说、方法、历史匹配/实际结果/基准、置信度定义、相反证据与固定引用。",
+      "unit_time": "每项单独声明目标、起点、期限、历史可得性和样本时间，置信度数值若有用 0–1。",
+      "interpretation": "理论解释须与历史统计对照；共享数据的特征不是独立票数，综合判断需另有联合方法验证。",
+      "missing": "缺少某项历史支持时该推断设 unavailable/pending 并解释，不让其他特征的样本代替。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "逐项推断是解释/预测，历史案例/实际结果是事实与统计，验证状态/置信定义为记录；不得统一标签。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "feature": {
+      "label": "特征与假设",
+      "meaning": "特征定义、版本、当前值和目标。",
+      "definition": "需要验证的当前特征及其可重复识别定义。",
+      "inputs": "特征名称/版本、原始输入、当前值或状态、观察规则、目标和知识依据。",
+      "unit_time": "保留原尺度、识别时点、首次可得时间、bar 周期与预测期限。",
+      "interpretation": "当前特征存在与该特征能预测是两件事；事后定义不得伪装事前规则。",
+      "missing": "无法复现特征或缺输入时注明未确定，不从结果倒推特征定义。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "定义/目标来自用户或方法，当前值可能获取或计算，方向假设是推断，版本是元数据。"
+      }
+    },
+    "matching": {
+      "label": "历史匹配说明",
+      "meaning": "方法提供的匹配、排除和信息可得性规则。",
+      "definition": "用于寻找历史相同或可比情景的实际纳入、排除和搜索规则。",
+      "inputs": "相似性/条件定义、参数、排除、当时信息可得性、同品种近期检索记录与最终范围。",
+      "unit_time": "明确近期窗口、历史截至日、目标结算窗及规则冻结时点。",
+      "interpretation": "先同品种近期；只有完成检索确认零匹配才跨品种并解释可比性；检索不可用不等于零匹配。",
+      "missing": "搜索失败或输入缺失用 unavailable；不得为得到更好结果随意改匹配或直接跳到跨品种。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "匹配/排除/可得性规则由所选方法预先定义，不是来源直接给出的客观相似性。"
+      }
+    },
+    "sample": {
+      "label": "样本范围",
+      "meaning": "时间范围、原始数量、事件或簇数。",
+      "definition": "历史匹配案例的数量、时间范围及处理账目。",
+      "inputs": "matched/resolved/pending/excluded、事件/簇数、有效样本量、去重/重叠处理和案例引用。",
+      "unit_time": "明确事件时间、结果结算期和历史截点，所有已结算结果应在截点可得。",
+      "interpretation": "原始行数不等于独立样本数；matched 应与已结算、待结算、排除数量对账。",
+      "missing": "零匹配、未检索和结果未结算分别表达；不人为放大有效样本数。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "原样本来自历史数据，纳入/排除和事件簇由规则产生，数量由实际记录计数。"
+      }
+    },
+    "baseline": {
+      "label": "对照基准",
+      "meaning": "同口径基准的定义与结果。",
+      "definition": "评价特征结果时使用的可比参照样本或方法结果。",
+      "inputs": "基准定义、选择理由、范围、目标/期限、结果、样本数和固定引用。",
+      "unit_time": "与条件样本保持收益、币种、时间及结算口径可比，差异须解释。",
+      "interpretation": "无条件频率、其他情景、随机规则和市场基准各有含义；基准不是统一 50%。",
+      "missing": "无法建立可比基准时明确 unavailable 与原因，不用中性数值补空。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "基准定义由用户/方法选择，其历史原值获取、对应结局统计计算。"
+      }
+    },
+    "outcomes": {
+      "label": "历史结果",
+      "meaning": "计数、条件频率与结果分布；不冒充预测概率。",
+      "definition": "匹配事件之后实际发生并已结算的目标结果统计。",
+      "inputs": "结果定义、计数、条件频率、分布、案例与基准，待结算和排除记录另列。",
+      "unit_time": "说明结算期限、阈值、单位、成本/复权口径及数据截止。",
+      "interpretation": "历史条件频率不是自动校准后的当前预测概率；类别若互斥完备应能对账。",
+      "missing": "未结算不算失败，未覆盖类别不补零；没有结果不能只给匹配案例数。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "计数/条件频率由已匹配案例的实际后续结果算出，不自动升级为当前预测概率。"
+      }
+    },
+    "uncertainty": {
+      "label": "统计不确定性",
+      "meaning": "方法提供的区间、含义和估计方式。",
+      "definition": "所选研究方法对历史统计不确定性的估计和说明。",
+      "inputs": "区间上下界、估计对象、覆盖含义、方法、样本依赖与敏感性范围。",
+      "unit_time": "区间与被估计量同单位；覆盖水平若有为 0–1，数据窗口明确。",
+      "interpretation": "参数估计区间、结果预测区间、分位范围和假设敏感性范围不同；不强制某一种统计方法。",
+      "missing": "无已执行区间估计时只描述实际样本局限，不编造置信水平。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "区间与误差按选定统计方法从实际样本计算；区间含义与假设必须明确。"
+      }
+    },
+    "validation": {
+      "label": "验证记录",
+      "meaning": "验证范围、结果、状态及来源。",
+      "definition": "历史研究实际完成的检验及其验证范围。",
+      "inputs": "方法、数据划分、规则冻结时点、评价目标、结果、状态和固定成果引用。",
+      "unit_time": "记录训练/留出/前瞻区间、结果可得时间、选择次数和样本单位。",
+      "interpretation": "文件可读或字段齐全不证明研究有效；探索、样本外与前瞻状态不可互换。",
+      "missing": "没做的检验标未验证，缺引用不声称样本外通过。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "实际验证范围/结果/状态取真实运行记录；通过标准由方法约定，结论解释另列。"
+      }
+    },
+    "applicability": {
+      "label": "当前适用性",
+      "meaning": "所选方法对当前适用性的评价。",
+      "definition": "基于样本与当前环境差异，对历史结论可迁移性的评价。",
+      "inputs": "当前与历史特征对照、资产/流动性/制度差异、时间接近性、支持和反例。",
+      "unit_time": "明确当前截点、预测期限、历史样本范围和关键尺度。",
+      "interpretation": "跨品种可比不表示同分布；知识假说与实证分歧应保留，不强制择一掩盖。",
+      "missing": "适用性证据不足时限制结论，不因无反例就宣称普适。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "把历史样本迁移到当前状态的适用性由方法判断，支持/反证与差异逐项说明。"
+      },
+      "historical": "evidence-and-judgment"
+    }
+  }
+}

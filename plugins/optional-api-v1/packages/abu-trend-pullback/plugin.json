@@ -24,7 +24,7 @@
     "examples/input.json",
     "scripts/baseline.mjs",
     "scripts/runtime.mjs",
-    "skills/abu-trend-pullback/references/method.md"
+    "references/method.md"
   ],
   "provides": {},
   "engines": {

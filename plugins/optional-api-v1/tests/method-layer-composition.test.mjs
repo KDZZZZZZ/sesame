@@ -30,7 +30,7 @@ test('method knowledge can be selected by a workflow and returns a local finding
 
 test('optional observation scripts use current public evidence and execution field names', async () => {
   for (const name of ['ict', 'price-action']) {
-    const guide = await read(name, `skills/${name}/references/execution.md`);
+    const guide = await read(name, `references/execution.md`);
     assert.doesNotMatch(guide, /dataset_id|execution_id|exit_code|snapshot_errors|input_ids|recipe_paths|ref\/raw/);
     assert.match(guide, /data_read\(\{ref/);
     assert.match(guide, /executionId/);
@@ -66,11 +66,15 @@ test('the documented ATR reuse has identical values and availability on one fixe
   assert.ok(atr(left).some(row => row.atr === null), 'warmup absence stays visible during composition');
 });
 
-test('the evaluator guide states its nested consumer boundary without dictating the caller workflow or final report', async () => {
-  const prompt = await read('factor-evaluator', 'prompt.md');
-  const protocol = await read('factor-evaluator', 'PROTOCOL.md');
-  assert.match(prompt, /nested|嵌套/);
-  assert.match(prompt, /caller|调用者/);
-  assert.doesNotMatch(protocol, /Research Agent tasks use output:none|native controller publishes one final report/);
-  assert.match(protocol, /workflow.*owns|caller.*owns/i);
+test('factor guidance exposes independent measurement and keeps strategy selection outside mining', async () => {
+  const prompt = await read('auto-factor-mining', 'prompt.md');
+  const declaration = JSON.parse(await read('auto-factor-mining', 'capabilities.json'));
+  assert.match(prompt, /已有公式直接用 `factor_compute`/);
+  assert.match(prompt, /入库不改变策略池/);
+  assert.match(prompt, /外部策略回测/);
+  assert.match(prompt, /诊断不完整要保留缺口/);
+  assert.ok(declaration.capabilities.some(cap => cap.id === 'factor_compute' && cap.consumers.includes('agent')));
+  assert.equal(declaration.capabilities.some(cap => cap.kind === 'workflow'), false);
+  assert.ok(declaration.capabilities.some(cap => cap.id === 'factor_pool' && cap.consumers.includes('agent')));
+  assert.ok(declaration.knowledge.filter(item => /reference-(?:factor|experiment)\.mjs$/.test(item.path)).every(item => item.description.startsWith('Historical')));
 });

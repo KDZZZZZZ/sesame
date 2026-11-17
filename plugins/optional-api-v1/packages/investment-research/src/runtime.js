@@ -77,7 +77,7 @@ export async function researchWorkflow(host, input, signal, execution, mode) {
     state.models ??= Object.fromEntries(stages.flat().map(role => [role, configuredModel(host, input.agent_models?.[role] ?? input.model)]));
     const models = Object.fromEntries(pendingRoles.map(role => [role, configuredModel(host, state.jobs[role]?.request?.model ?? state.models[role])]));
     if (mode === 'analyze' && pendingRoles.length) {
-      state.research ??= await selectResearch(host, input.research);
+      state.research ??= await selectResearch(host, input.research, { includeMethods: input.report_brief !== undefined });
       await verifySelection(host, state.research);
     }
     if (pendingRoles.includes(synthesis)) {
@@ -90,7 +90,7 @@ export async function researchWorkflow(host, input, signal, execution, mode) {
       if (state.members[role]) return;
       signal?.throwIfAborted();
       const member = plan.members[role], final = role === synthesis;
-      const phase = state.input.workflow_profile === 'report-research/1' ? role : null;
+      const phase = state.input.workflow_profile === 'report-research/2' ? role : null;
       state.stageSelections ??= {};
       if (!final && phase) state.stageSelections[role] ??= await stageSelection(host, state.research, phase);
       const selection = final ? state.synthesis : state.stageSelections[role] ?? state.research;

@@ -106,17 +106,15 @@ test('default report candles reuse the market runtime, preserve source times/row
   ]) assert.match(await page.evaluate(rows => { try { SesameCharts.chart('#plot', { kind: 'candlestick', rows }); return ''; } catch (error) { return error.message; } }, bad), pattern);
 });
 
-test('candlestick template includes the default runtime only when requested', { skip: !host }, async () => {
-  const { createCapabilities } = await import('../packages/reports/index.js');
-  const writes = [];
-  const template = createCapabilities({ capabilities: { invoke: async (_, input) => { writes.push(input); return { type: 'result', value: { path: input.path } }; } } }).find(item => item.name === 'report_template');
-  const args = { output_path: 'candles-demo.html', title: '演示', summary: '组件演示', data_id: 'fixed-ohlc', chart_title: '默认蜡烛', takeaway: '固定演示记录', source_note: '非市场数据', kind: 'candlestick', unit: 'demo', columns: Object.keys(rows[0]), chart_options: { digits: 2 } };
-  await template.execute(args);
-  assert.match(writes[0].content, /Lightweight Charts™ v5\.2\.1|Lightweight Charts.*v5\.2\.1/);
-  assert.match(writes[0].content, /register\('candlestick'/);
-  assert.ok(Buffer.byteLength(writes[0].content) < 1024 * 1024);
-  await template.execute({ ...args, kind: 'decision-tree' });
-  assert.doesNotMatch(writes[1].content, /register\('candlestick'/);
+test('candlestick component includes the default runtime only when requested', async () => {
+  const { renderStructuredReport } = await import('../packages/reports/report-content.js');
+  const render = block => renderStructuredReport({}, {title:'演示',data:[],provenance_kind:'demo',content:{kind:'document',sections:[{title:'',blocks:[block]}]}});
+  const candles = await render({type:'chart',kind:'candlestick',rows,options:{digits:2}});
+  assert.match(candles, /Lightweight Charts™ v5\.2\.1|Lightweight Charts.*v5\.2\.1/);
+  assert.match(candles, /register\('candlestick'/);
+  assert.ok(Buffer.byteLength(candles) < 1024 * 1024);
+  const tree=await render({type:'chart',kind:'decision-tree',rows:[{id:'root',parentId:null,label:'输入'},{id:'leaf',parentId:'root',label:'结果',condition:'已有条件'}]});
+  assert.doesNotMatch(tree, /register\('candlestick'/);
 });
 
 test('real candle hover shares axis precision, preserves missing values and formats supplied overlays', { skip: !host, timeout: 60000 }, async t => {
@@ -186,6 +184,7 @@ test('Unix candle times display as UTC dates while source seconds and selection 
     for (const content of contents) await page.addScriptTag({ content });
     await page.evaluate(() => {
       const library = LightweightCharts;
+      window.report = { track(promise) { window.numericReady = promise; return promise; } };
       window.LightweightCharts = { ...library, createChart(...args) {
         const chart = library.createChart(...args), add = chart.addSeries.bind(chart);
         chart.addSeries = (...args) => { window.numericSeries = add(...args); return numericSeries; };
@@ -198,8 +197,11 @@ test('Unix candle times display as UTC dates while source seconds and selection 
       SesameCharts.chart('#plot', { kind: 'candlestick', rows, digits: 2,
         onSelect(row, index) { numericSelections.push({ row, index, original: row === numericRows[index] }); } });
     }, fixture);
+    // Wait for the runtime's tracked canvas layout before reading coordinates.
+    await page.evaluate(() => numericReady);
     await page.waitForFunction(() => numericChart.timeScale().timeToCoordinate(numericRows[0].time) !== null);
     assert.match(await page.locator('.sc-market-values').innerText(), /^2026-11-01 06:00 UTC.*开 100\.12.*收 101\.23/);
+    assert.equal(await page.locator('.sc-market-values').getAttribute('data-report-text'), 'context');
     assert.deepEqual(await page.evaluate(() => numericRows.map(row => ({
       time: numericChart.options().localization.timeFormatter(row.time),
       tick: numericChart.options().timeScale.tickMarkFormatter(row.time),

@@ -17,7 +17,7 @@ const fPlan = () => example('factor', 'plan');
 const development = () => example('factor', 'development');
 const held = () => example('factor', 'holdout');
 
-test('Strategy declares the integrated research resources without separate retired packages', () => {
+test('factor research retains declared historical references without reviving retired packages', () => {
   const manifest = read('auto-factor-mining', 'plugin.json');
   const declaration = read('auto-factor-mining', 'capabilities.json');
   assert.equal(manifest.id, 'sesame/auto-factor-mining');
@@ -25,11 +25,11 @@ test('Strategy declares the integrated research resources without separate retir
     'references/factor-cli.md', 'references/strategy-cli.md', 'scripts/reference-factor.mjs', 'scripts/reference-experiment.mjs',
     ...['plan', 'development', 'holdout'].map(name => `examples/reference-factor/${name}.demo.json`),
     ...['plan', 'timing', 'trials', 'input'].map(name => `examples/reference-strategy/${name}.demo.json`)]) {
-    assert.ok(declaration.knowledge.some(item => item.path === path), path);
+    assert.ok(declaration.knowledge.some(item => item.path === path && item.description.startsWith('Historical')), path);
     assert.ok(readFileSync(join(packageRoot('auto-factor-mining'), path)).length, path);
   }
   const profile = JSON.parse(readFileSync(new URL('../bundle-profile.json', import.meta.url)));
-  for (const name of ['factor-research', 'strategy-research']) {
+  for (const name of ['factor-research', 'strategy-research', 'factor-evaluator']) {
     assert.equal(existsSync(packageRoot(name)), false);
     assert.ok(!profile.packages.includes(`sesame/${name}`));
   }

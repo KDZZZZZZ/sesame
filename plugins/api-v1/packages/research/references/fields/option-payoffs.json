@@ -1,0 +1,233 @@
+{
+  "title": "期权结构与损益：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "payoff_series": {
+      "label": "到期损益与价格",
+      "meaning": "指定方法已计算且包含成本的价格—到期损益；说明合约乘数、币种和提前行权假设。",
+      "definition": "给定期权组合在规定到期/结算条件下随标的价格变化的净损益。",
+      "inputs": "underlying、net_payoff、固定腿组合、成本、乘数、行权和结算假设。",
+      "unit_time": "同币种、持仓规模和到期条件，横轴价格与纵轴净金额明确。",
+      "interpretation": "到期损益图不是持有中途市值曲线；图上盈利区间不提供其发生概率。",
+      "missing": "无完整成本或结算规则时标示限制，不从图形自行生成获利概率。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "对给定合约腿/净成本计算到期损益，是条件数学结果而非发生概率；假设腿不能伪装真实报价。"
+      }
+    },
+    "max_profit": {
+      "label": "最大收益",
+      "meaning": "指定持有/结算条件、净成本和合约乘数下的金额；无上限明确说明。",
+      "definition": "在指定持有、行权与结算假设下组合可能达到的获利上界。",
+      "inputs": "金额或无上限状态、腿数量、净成本、乘数、适用价格区域与方法。",
+      "unit_time": "说明币种、每组合/每份/全仓、到期或其他持有期限。",
+      "interpretation": "最大获利不是期望收益；理论上界不保证可实现，也不能用于替代市场报价。",
+      "missing": "没有已计算上界时保持未知；无上限写状态，不把无穷填成有限数字。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "指定腿、净成本、乘数和结算假设下计算最大收益；无界情况按数学性质表达。"
+      }
+    },
+    "max_loss": {
+      "label": "最大亏损",
+      "meaning": "指定持有/结算条件、净成本和合约乘数下的金额；未限定风险明确说明。",
+      "definition": "在指定合约、成本和持有条件下的理论损失边界。",
+      "inputs": "损失金额或无有限上界状态、腿结构、乘数、行权/结算与成本假设。",
+      "unit_time": "明确币种、规模、损失正负符号和持有期限。",
+      "interpretation": "理论到期损失边界与保证金、止损和实际执行风险不同；不能忽略提前行权影响。",
+      "missing": "未覆盖风险或无有限上界时明确状态，不把权利金支出默认当全部风险。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "指定条件下的最大亏损是模型计算，可能无界；不是未来实际损失。"
+      }
+    },
+    "cost_series": {
+      "label": "权利金与成本对账",
+      "meaning": "权利金、各费用与净成本的同口径对账，不重复扣除已包含的滑点。",
+      "definition": "期权结构权利金和各项费用到净成本的已计算勾稽。",
+      "inputs": "各腿权利金、费用、滑点、现金流正负方向及净额。",
+      "unit_time": "同币种、乘数、数量和报价截点，借方/贷方符号明确。",
+      "interpretation": "权利金收入不是净利润；已包含滑点的成交价不能再次扣滑点。",
+      "missing": "费用未知时注明估计/缺口，不能以零费用冒充完整净成本。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "权利金报价为获取，费用可能源费率/用户假设，汇总净成本为计算，逐项标清是否已包含。"
+      }
+    },
+    "profit_probability": {
+      "label": "盈利概率",
+      "meaning": "明确目标为净盈利、期限、模型/统计口径；由独立方法提供并附可比历史证据，不能从损益图推算。",
+      "definition": "在规定持有和成本条件下，组合最终净损益严格大于零的概率估计。",
+      "inputs": "目标、期限、方法、结构与成本版本、概率及可比历史合约结构的实际净结算结果。",
+      "unit_time": "数值 0–1，明确每组合规模、币种、结算规则与预测截点。",
+      "interpretation": "盈利概率不同于看涨概率、价内到期概率或损益图盈利区间占比；使用其自身历史样本和基准。",
+      "missing": "没有可比已结算净损益样本时用 unavailable/pending，不从 Delta、方向胜率或图形面积补值。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "净盈利概率来自明确分布/统计方法，是预测；外部POP也是获取到的模型预测，不是事实。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "objective": {
+      "label": "结构目标",
+      "meaning": "用户希望表达的方向、波动或风险目标。",
+      "definition": "用户希望通过该期权结构表达或管理的风险与收益目标。",
+      "inputs": "方向/波动/收益/对冲目标、持有期限、成本上限、风险容忍及标的。",
+      "unit_time": "目标期限和资金单位明确，区分账户约束与行情预期。",
+      "interpretation": "目标是选择方案的条件，不是价格方向的证据，也不意味着授权交易。",
+      "missing": "用户目标未知时保留待明确项，不自动假定买涨或卖波动。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "用户希望表达的方向/波动/风险目标是任务输入，不是市场证据。"
+      }
+    },
+    "legs": {
+      "label": "合约结构",
+      "meaning": "合约、数量、乘数、期限及行权条件。",
+      "definition": "组成方案的每个期权或标的头寸的合约身份与方向。",
+      "inputs": "合约 ID、看涨/看跌/现货、买卖方向、数量、行权价、到期、乘数与行权条件。",
+      "unit_time": "同币种与参考时点，明确单位为份/张/股；不同到期逐腿保留。",
+      "interpretation": "腿定义是方案持仓，不代表已下单；合约名相似不能替代精确合约身份。",
+      "missing": "缺合约或数量时方案不完整，不用近似到期/行权价静默替换。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "真实合约ID/expiry/strike/right/乘数获取，买卖/数量/组合选择由用户或方法计划。"
+      }
+    },
+    "costs": {
+      "label": "报价与成本",
+      "meaning": "真实报价或明确的假设成本。",
+      "definition": "所选结构在真实报价或明确假设下的权利金和交易成本。",
+      "inputs": "逐腿报价类型/时间、净权利金、佣金、价差、滑点及纳入范围。",
+      "unit_time": "币种、合约乘数、数量、借贷方方向和报价同步性明确。",
+      "interpretation": "报价成本与实际成交成本不同；不能将理论中价当已成交价。",
+      "missing": "缺失费用标未知/估计，不自动视为免费交易。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "真实bid/ask/权利金获取，净成本计算，滑点/手续费可能估计或用户假设；不可混为实际成交。"
+      }
+    },
+    "payoff": {
+      "label": "情景损益",
+      "meaning": "方法计算的情景结果，不隐含发生概率。",
+      "definition": "独立方法已计算的条件价格或市场状态对应的组合损益。",
+      "inputs": "情景、标的价格/波动/时间等条件、净损益、成本、腿结构与方法。",
+      "unit_time": "结果注明币种、组合规模、到期或中途估值时间；各情景保持可比。",
+      "interpretation": "情景损益不包含情景发生概率；中途估值需要其模型不能用到期内在值冒充。",
+      "missing": "未计算情景保持缺失，不按线性插值创造期权价值。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "在明确价格情景与结算假设下计算净损益，不隐含情景概率。"
+      }
+    },
+    "risks": {
+      "label": "到期前风险",
+      "meaning": "方法提供的风险结果。",
+      "definition": "已研究的该合约结构风险及其作用条件。",
+      "inputs": "风险类型、关联腿、敞口或情景损失、触发条件、方法与证据。",
+      "unit_time": "明确风险衡量时点、单位、持有期、保证金或交割期限。",
+      "interpretation": "有限到期损失不排除流动性、提前行权或融资压力；风险清单不是概率分布。",
+      "missing": "未评估风险注明覆盖缺口，不把没提及解释成不存在。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "风险敏感度是计算，流动性/提前行权等风险判断为解释，未来损失为预测。"
+      }
+    },
+    "alternatives": {
+      "label": "替代结构",
+      "meaning": "同口径方案比较。",
+      "definition": "针对同一目标、按可比约束研究的期权、直接持有、现金或暂不参与等替代方案。",
+      "inputs": "各方案腿组合、成本、损益、风险、流动性和方法引用。",
+      "unit_time": "同标的、报价截点、规模、持有期及成本口径；不同期限明确解释。",
+      "interpretation": "不能仅按最大利润排序优劣；比较权衡由用户目标或所选方法决定。",
+      "missing": "某方案缺指标时显示未评估，不用另一个方案数值填补。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "替代腿组合由用户/方法提出，成本与风险比较为计算，优劣属于目标约束下的判断。"
+      }
+    },
+    "breakevens": {
+      "label": "盈亏平衡点",
+      "meaning": "方法计算的平衡价、期限、成本口径和条件，可有多个点。",
+      "definition": "规定持有和成本口径下净损益为零的标的价格条件。",
+      "inputs": "一个或多个平衡价/区间、腿结构、成本、结算时间及方法。",
+      "unit_time": "注明币种、乘数、规模和到期/中途估值条件，价格精度保留。",
+      "interpretation": "盈亏平衡点不是入场价、行权价或保证触达的价位；不同持有时间可改变边界。",
+      "missing": "无平衡点或无法计算分别表达，不默认为现价。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按净成本与结算公式求平衡价，可多个或不存在；不是价格目标预测。"
+      }
+    },
+    "expected_profit": {
+      "label": "期望收益",
+      "meaning": "方法按其分布计算的净期望、单位、期限与分布引用；与最大收益不同。",
+      "definition": "所选方法按明确结果分布计算的平均净损益估计。",
+      "inputs": "净期望值、分布/权重来源、期限、成本与结构版本、历史结果及方法。",
+      "unit_time": "金额单位、组合规模、币种和结算条件明确。",
+      "interpretation": "期望利润不是最大利润或典型单次收益；风险中性定价期望不同于现实收益预测。",
+      "missing": "分布、成本或历史支持缺失时不平均情景损益假装期望值。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "prediction",
+        "meaning_note": "期望净收益是对指定预测分布积分/统计；条件数学计算仍依赖预测，不等于最大收益。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "greeks": {
+      "label": "风险敏感度",
+      "meaning": "Delta/Gamma/Vega/Theta/Rho 等由方法选择；附单位、报价截点与模型。",
+      "definition": "方法对指定期权结构给出的局部风险敏感度。",
+      "inputs": "所选 Greek 名称、逐腿/净值、定价模型、基准参数、报价和方法。",
+      "unit_time": "逐项注明对标的一个价格单位、波动一个百分点、一天或利率变动单位的敏感度及规模。",
+      "interpretation": "Greeks 是局部敏感度而非概率或大幅情景损益；跨供应商单位必须核对。",
+      "missing": "缺少模型或尺度时保留原值和未知定义，不自行换算/汇总。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "statistic",
+        "meaning_note": "外部Greeks是获取的模型统计；自算是derived，合约数量加总另算，单位/模型必须保留。"
+      }
+    },
+    "liquidity": {
+      "label": "各腿流动性",
+      "meaning": "合约 bid/ask、价差、成交量和 OI，记录同步报价时点。",
+      "definition": "拟采用各腿的同期报价和交易活跃情况。",
+      "inputs": "逐合约 bid/ask、价差、成交量、OI、报价状态及来源。",
+      "unit_time": "记录逐腿时间、价格单位、量的单位和 OI 日期，异步性明确。",
+      "interpretation": "每腿流动性不能自动保证组合可按净中价成交；OI 与成交量含义不同。",
+      "missing": "单腿无有效报价则说明结构成本不确定，不以 last 或零价无说明代替。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "各腿bid/ask/量/OI是获取，价差/组合指标是计算，质量评价是解释。"
+      }
+    },
+    "settlement": {
+      "label": "行权与结算条件",
+      "meaning": "美式/欧式、到期、现金/实物、乘数、提前行权与公司行为处理。",
+      "definition": "合约到期、行权与交割的实际规则和本次模拟假设。",
+      "inputs": "美式/欧式等行权方式、到期/结算日期、现金/实物、乘数、公司行为及提前行权处理。",
+      "unit_time": "给出时区、截止时刻、交割单位和结算币种。",
+      "interpretation": "报价到期日、最后交易日、行权日和交割日可不同；规则必须来源明确。",
+      "missing": "规则未知时标记未确认，不套用另一市场的默认合约。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "fact",
+        "meaning_note": "合约行权风格、到期、现金/实物、乘数和公司行为规则取正式规格；策略假设另列。"
+      }
+    }
+  }
+}

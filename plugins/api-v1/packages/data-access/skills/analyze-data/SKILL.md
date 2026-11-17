@@ -9,7 +9,7 @@ description: 读取固定输入，在独立工作区目录执行计算，再用�
 
 已知固定 DataRef 直接 data_read({ref})；宿主登记数据使用 data_read({datasetId})。需要查登记目录时 data_read({}) 分页列出，不能把插件私有数据集 ID 或成果 ID 当成宿主 datasetId。私有数据先经所属来源查询并固定，再读取返回的 ref。
 
-将完整行写入独立计算目录的 inputs，分析从返回的实际 path 读取；sample 是摘要，预览截断不等于原始文件缺失。固定 JSON 导入上限为 100000 行、8 MiB，不能假定所有 16 MiB 采集结果都能一次导入。目录与完整引用的规则见 [执行证据](references/execution-evidence.md)。
+将完整行写入独立计算目录的 inputs，分析从返回的实际 path 读取；sample 是摘要，预览截断不等于原始文件缺失。固定 JSON 导入上限为 100000 行、8 MiB，不能假定所有 16 MiB 采集结果都能一次导入。目录与完整引用的规则见 [执行证据](../../references/execution-evidence.md)。
 
 ## 2. 编写并执行计算
 
