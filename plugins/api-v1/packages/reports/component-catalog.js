@@ -53,7 +53,7 @@ const chartMetadata = {
   'network-circular': ['环形关系网', 'relationship', '把固定节点排列在圆周上比较已有连接、方向、权重与正负关系，便于逐节点核对。', 'circular network graph edges relationships'],
   'network-force': ['力导向关系网', 'relationship', '探索已有连接形成的群组与桥接节点，适合结构尚不直观的关系网络。', 'force network graph cluster bridge relationships'],
   'decision-tree': ['条件决策树', 'relationship', '把逐层判断条件组织成分支树，清楚解释每条路径如何到达结果或行动。', 'decision tree conditions branches outcomes'],
-  candlestick: ['开高低收图', 'trend', '同时比较每个时期的开值、高值、低值和收值，观察区间波动及相邻时期的方向变化。', 'candlestick ohlc open high low close range'],
+  candlestick: ['开高低收图', 'trend', '比较各时期的开高低收与方向变化；可叠加已有同单位价格列或给定参考价，让关键位置与走势在同图可见。', 'candlestick ohlc open high low close range overlays threshold reference price 参考价 关口'],
   stream: ['构成流带图', 'composition', '观察同一总量各部分随有序维度变化的规模与占比，突出构成的扩张、收缩和替换。', 'stream composition stacked temporal change'],
   'stacked-rungs': ['堆叠刻度柱', 'composition', '比较多个对象可相加的非负构成，同时让每一格对应明确的实际数量。', 'stacked rungs composition discrete units'],
   'dot-heatmap': ['气泡矩阵', 'comparison', '在两个类别交叉的完整网格中以圆面积比较数值大小，并明确区分零值与缺失。', 'dot heatmap bubble matrix magnitude'],
@@ -104,7 +104,7 @@ const mappings = {
   flow: fields({ id: ['id', '唯一边 ID'], source: ['source', '起点 ID'], target: ['target', '终点 ID'], value: ['value', '非负流量'], batch: ['batch', '同一批次 ID'], nodeId: ['id', '独立 nodes 数据中的唯一节点 ID'], nodeLabel: ['label', '节点名称'], role: ['role', '节点 source、sink 或 transit；默认 transit'] }),
   'network-circular': { ...fields({ id: ['id', '唯一边 ID'], source: ['source', '起点 ID'], target: ['target', '终点 ID'], weight: ['weight', '非负权重'], sign: ['sign', '数值 -1、0 或 1'], nodeId: ['id', '独立 nodes 数据中的唯一节点 ID'], nodeLabel: ['label', '节点名称'] }), directed: { type: 'boolean' } },
   'decision-tree': fields({ id: ['id', '唯一节点 ID'], parent: ['parentId', '父节点 ID；唯一根为 null'], label: ['label', '判断问题或最终结果'], condition: ['condition', '进入节点的分支条件'], detail: ['detail', '补充说明'] }),
-  candlestick: { ...fields({ time: ['time', '日期、时间或 Unix 秒'], open: ['open', '开值'], high: ['high', '高值'], low: ['low', '低值'], close: ['close', '收值'] }), x: field('time 的兼容别名'), digits: { type: 'integer', minimum: 0, maximum: 8 }, overlays: array({ type: 'object', properties: { field: field('已计算的同单位价格列'), label: string, group: string, style: enumOf('solid', 'dashed'), visible: { type: 'boolean' } }, required: ['field', 'label'], additionalProperties: false }, 0, 12) },
+  candlestick: { ...fields({ time: ['time', '日期、时间或 Unix 秒'], open: ['open', '开值'], high: ['high', '高值'], low: ['low', '低值'], close: ['close', '收值'] }), x: field('time 的兼容别名'), digits: { type: 'integer', minimum: 0, maximum: 8 }, overlays: array({ type: 'object', properties: { field: field('已有同单位价格列；明确给定的参考价可映射为常数列，以参考线命名，不冒充逐日观测'), label: string, group: string, style: enumOf('solid', 'dashed'), visible: { type: 'boolean' } }, required: ['field', 'label'], additionalProperties: false }, 0, 12) },
   stream: { ...fields({ x: ['x', '至少两个有序时点'], series: ['series', '可相加的构成部分'], value: ['value', '非负数量'] }), xType },
   'stacked-rungs': { ...fields({ x: ['x', '比较对象'], series: ['series', '构成部分'], value: ['value', '非负数量'] }), unitValue },
   'dot-heatmap': { ...fields({ x: ['x', '横轴类别'], y: ['y', '纵轴类别'], value: ['value', '数值或显式 null'] }), tone: enumOf('neutral', 'signed', null) },
@@ -154,7 +154,7 @@ const chartNotes = {
   'network-circular': '需要 1–100 个独立节点、最多 500 条真实边；端点存在、无自环，权重非负，sign 为 -1/0/1。',
   'network-force': '与环形网络共用节点与边约束；布局距离和位置不代表统计强度或因果。',
   'decision-tree': '必须恰好一个根且全部节点连通无环；叶子写结果，继续判断的条件应拆成分支。',
-  candlestick: '每个时点唯一；OHLC 全缺失可留时间空位，部分缺失或高低矛盾报错；overlays 只读取已有同单位数值。',
+  candlestick: '每个时点唯一；OHLC 全缺失可留时间空位，部分缺失或高低矛盾报错；overlays 只读取已有同单位数值，给定参考线保留数值来源和适用时点，不能伪造动态指标。',
   stream: '完整非负时点×构成网格，2–300 时点、最多 8 部分；流带中心位置不编码数值。',
   'stacked-rungs': '完整非负对象×构成网格，最多 12 对象、6 部分；各值是 unitValue 整数倍，每段≤500 格、全图≤2,500 格。',
   'dot-heatmap': '完整且不重复的网格，最多 24×24；圆面积对应绝对值，signed 另编码正负，空心为零、叉号为缺失。',
@@ -218,7 +218,9 @@ function chartExample(kind) {
   } else if (['heatmap', 'matrix'].includes(kind)) {
     spec = { kind, x: 'column', y: 'row', value: 'value', rows: [{ column: '甲', row: '一', value: 2 }, { column: '乙', row: '一', value: 5 }, { column: '甲', row: '二', value: 0 }, { column: '乙', row: '二', value: null }] };
   } else if (kind === 'units') spec = { kind, x: 'label', y: 'count', unitValue: 1, rows: [{ label: '甲', count: 3 }, { label: '乙', count: 5 }] };
-  else if (kind === 'candlestick') spec = { kind, time: 'time', open: 'open', high: 'high', low: 'low', close: 'close', digits: 1, rows: [{ time: '2026-01-01', open: 10, high: 13, low: 9, close: 12 }, { time: '2026-01-02', open: 12, high: 13, low: 10, close: 11 }] };
+  else if (kind === 'candlestick') spec = { kind, time: 'time', open: 'open', high: 'high', low: 'low', close: 'close', digits: 1,
+    overlays: [{ field: 'reference_low', label: '参考下界', group: '给定参考区间', style: 'dashed' }, { field: 'reference_high', label: '参考上界', group: '给定参考区间', style: 'dashed' }],
+    rows: [{ time: '2026-01-01', open: 10, high: 13, low: 9, close: 12, reference_low: 9.5, reference_high: 12.5 }, { time: '2026-01-02', open: 12, high: 13, low: 10, close: 11, reference_low: 9.5, reference_high: 12.5 }] };
   else if (kind === 'decision-tree') spec = { kind, rows: [{ id: 'root', parentId: null, label: '容量是否充足？' }, { id: 'yes', parentId: 'root', condition: '容量充足', label: '开始处理' }, { id: 'no', parentId: 'root', condition: '容量不足', label: '等待空闲容量' }] };
   if (!spec) throw new Error(`Missing chart example: ${kind}`);
   const { rows, nodes, kind: ignoredKind, ...options } = spec;

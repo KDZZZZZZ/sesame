@@ -5915,7 +5915,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.1",
+      "version": "8.0.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6082,7 +6082,7 @@
     },
     {
       "id": "sesame/research",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "distribution": "core",
       "state": "mounted",
       "engines": {

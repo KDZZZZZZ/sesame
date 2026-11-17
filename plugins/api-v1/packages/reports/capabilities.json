@@ -4280,7 +4280,7 @@
       "id": "visual-compose",
       "kind": "skill",
       "path": "skills/visual-compose/SKILL.md",
-      "description": "根据初稿的表达意图设计图文，尽可能把数据转为直观图表，再组合报告。"
+      "description": "初稿后统一做图文编辑：组织内容、润色段落、设计图的重点，使图文共同解释判断，再组合报告。"
     },
     {
       "id": "report-delivery",
@@ -4292,13 +4292,13 @@
       "id": "reference-composing",
       "kind": "reference",
       "path": "references/composing.md",
-      "description": "报告首屏与正文必需结构、正文组件组合与数据图表选择。"
+      "description": "统一图文编辑中的构图与组合；按表达意图设计图的重点、参照、尺度与已有标注，不以图数验收。"
     },
     {
       "id": "reference-text",
       "kind": "reference",
       "path": "references/text.md",
-      "description": "标题、开篇结论、关键结果、正文和索引摘要各自的文字职责。"
+      "description": "读者导向的段落组织、用词与证据校准、图文分工、改写示例和统一文字位置。"
     },
     {
       "id": "reference-data-binding",
