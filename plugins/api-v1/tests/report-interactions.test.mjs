@@ -20,6 +20,17 @@ const group = () => ({ type: 'group', layout: 'stack', controls: [select('asset'
 const content = () => ({ kind: 'document', sections: [{ title: '', blocks: [group(), group()] }] });
 const render = content => renderStructuredReport({}, { title: 'Fixed record views', data: [], provenance_kind: 'demo', locale: 'en', content });
 
+test('static and interactive tables keep distinct element ids', async () => {
+  const html = await renderStructuredReport({}, { title: 'Tables', data: [], provenance_kind: 'demo', locale: 'en', content: { kind: 'document', sections: [{ title: 'Rows', blocks: [
+    { type: 'table', columns: ['a'], rows: [['static']] },
+    { type: 'table', columns: ['a'], rows: [['one'], ['two']], page_size: 1 },
+  ] }] } });
+  assert.equal(html.match(/id="report-table-1"/g).length, 1);
+  assert.match(html, /id="report-table-2"/);
+  const payload = JSON.parse(html.match(/<script id="sesame-report-interactions" type="application\/json">(.*?)<\/script>/)[1]);
+  assert.deepEqual(payload.tables.map(table => table.id), ['report-table-2']);
+});
+
 test('controlled views validate local fields without mutating records or inventing calculations', async () => {
   const source = content(), before = structuredClone(source);
   assert.equal((await validateComponents({}, { content: source, provenance_kind: 'demo' })).valid, true);
