@@ -4436,7 +4436,7 @@
       "id": "visual-compose",
       "kind": "skill",
       "path": "skills/visual-compose/SKILL.md",
-      "description": "初稿后的统一图文编辑：按问题安排全文，在同一步骤内编排信息层次、编辑语言并审读成品。"
+      "description": "初稿后的统一图文编辑：按问题组织全文，编排图文，用自然中文重新解释已有研究，再单独逐段审读。"
     },
     {
       "id": "report-delivery",
@@ -4454,7 +4454,7 @@
       "id": "reference-text",
       "kind": "reference",
       "path": "references/text.md",
-      "description": "按用户问题组织文章，建立论证层次与段落衔接，校准用词、条件和图文职责，含改写示例。"
+      "description": "将研究记录重写为读者能理解的中文解释：具体对象、动作、已有机制、时间与条件，含14组转换示例、文字位置及逐段审读方法。"
     },
     {
       "id": "reference-data-binding",
