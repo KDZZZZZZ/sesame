@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "视觉组件与报告",
   "description": "将研究初稿统一做图文编辑：按问题组织全文，用自然中文重新解释已有研究，逐段审读并编排图表，以受控组件呈现报告或回答，保持事实与判断边界。",
-  "version": "8.0.6",
+  "version": "8.0.7",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"

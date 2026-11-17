@@ -5,7 +5,7 @@
 | 插件 | 责任 | 主要入口 |
 | --- | --- | --- |
 | `sesame/research` 1.0.7 | 找到适合问题的调查方法，组织证据与回答，复核结论 | `research_methods` 查方法，`research_read` 批量读资料 |
-| `sesame/reports` 8.0.6 | 把已有初稿编辑为图文文章，使用统一组件呈现报告与回答，管理样式、交互及交付 | `components_show`；不熟悉组件时查 `components_list` / `components_describe` |
+| `sesame/reports` 8.0.7 | 把已有初稿编辑为图文文章，使用统一组件呈现报告与回答，管理样式、交互及交付 | `components_show`；不熟悉组件时查 `components_list` / `components_describe` |
 
 ## Reports 的层次
 

@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.6",
+      "version": "8.0.7",
       "directory": "reports",
-      "treeDigest": "sha256:8503a74f45bf6d70e820cc1f6077462cdeba58ecb6cce64585e980880362af0b",
+      "treeDigest": "sha256:064bcbc0afbd0ba20353936e2e3cf987e327bcd9b25b37bd84e0cbddcd5993e5",
       "files": [
         {
           "path": "LICENSE",
@@ -684,12 +684,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "9d3a53b0832f45fb270034114ae434736ced0331caa68676aa041834c916da59",
+          "sha256": "b4ca6e99a04fac483a5a9ea6fbcfa7c7ea4d7bc7d5830abc85fca7f720c39fce",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "1728b9a74f4303af53f00e8e6f05b124817a6049cb74aa351e4ce5c7fb0cdf1e",
+          "sha256": "9689d5f8a4c362fd9fe8def524b4bc68d03d60a59d1f76a521f4d0ad75b7fc3a",
           "bytes": 2181
         },
         {
@@ -729,8 +729,8 @@
         },
         {
           "path": "references/text.md",
-          "sha256": "e90524cfb91049e22ec1b60e7afaf706719e259b3b98970d807868e1871744fa",
-          "bytes": 13816
+          "sha256": "9a3d8c164001371d487b0ecd89dd2d2f8c3913a94ee636bd60ba78fa1c3fdc43",
+          "bytes": 13849
         },
         {
           "path": "renderer/builtins.js",
