@@ -4731,6 +4731,16 @@
               },
               "renderer": {
                 "const": "sesame/reports#components_render"
+              },
+              "provenance": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": ["observed", "derived", "user_input", "demo"]
+                  }
+                },
+                "required": ["kind"]
               }
             },
             "required": [
@@ -4738,7 +4748,8 @@
               "protocol",
               "path",
               "title",
-              "renderer"
+              "renderer",
+              "provenance"
             ]
           }
         ]

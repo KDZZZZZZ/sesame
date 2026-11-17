@@ -48,7 +48,8 @@ export async function publishAnswerComponent(host, publication, envelope, render
       source: { content: file.content, encoding: file.encoding } }, options(`file:${hash(file.path)}`));
   }
   const result = await host.resources.publish(root, { kind: 'resource', schemaVersion: '1.0.0',
-    content: { type: 'component-json', protocol: COMPONENT_PROTOCOL, path: JSON_PATH, title: saved.metadata.title, renderer: RENDERER },
+    content: { type: 'component-json', protocol: COMPONENT_PROTOCOL, path: JSON_PATH, title: saved.metadata.title, renderer: RENDERER,
+      provenance: { kind: saved.metadata.provenanceKind } },
     dependencies, blobs: files.map(file => ({ entry: file.path, path: file.path, mediaType: file.mediaType })) },
   { ...options('publish'), ...(publication.artifact_id ? { artifactId: publication.artifact_id, expectedRevision: publication.expected_revision ?? null } : {}) });
   check(result.ref?.kind === 'resource', '/: Component publication must return a fixed resource reference');

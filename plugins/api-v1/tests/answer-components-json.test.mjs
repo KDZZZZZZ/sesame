@@ -51,7 +51,7 @@ test('answer content is fixed JSON and stateless rendering never creates a repor
   assert.equal(result.ref.kind, 'resource');
   assert.deepEqual(result.componentRef.ref, result.ref);
   const artifact = app.runtime.contractArtifacts.read(result.ref);
-  assert.deepEqual(artifact.manifest.content, { type: 'component-json', protocol: 'sesame-components/1', path: 'component.json', title: 'Closing prices', renderer: 'sesame/reports#components_render' });
+  assert.deepEqual(artifact.manifest.content, { type: 'component-json', protocol: 'sesame-components/1', path: 'component.json', title: 'Closing prices', renderer: 'sesame/reports#components_render', provenance: { kind: 'user_input' } });
   assert.deepEqual(artifact.manifest.blobs.map(blob => blob.path), ['component.json']);
   const saved = JSON.parse(app.runtime.contractArtifacts.resource(result.ref, 'component.json').bytes);
   assert.equal(saved.input.target, 'answer');
@@ -90,6 +90,24 @@ test('fixed input, data rows and graph nodes are materialized and preserve their
   app.host.resources.read = async (ref, options) => { assert.deepEqual(ref, shown.ref, 'Rendering needs only the fixed component snapshot'); return read(ref, options); };
   const view = await app.call('components_render', { ref: shown.ref });
   assert.match(view.files[0].content, /network-force/);
+  assert.equal(app.store.list('report').length, 0);
+});
+
+test('demo components retain provenance when reused and cannot be relabelled observed', { skip: !hostRoot, timeout: 30000 }, async t => {
+  const app = await fixture(t);
+  const source = await app.call('components_show', { target: 'answer', component, provenance_kind: 'demo' });
+  for (const relation of [{ references: [source.ref] }, { related: [{ role: 'source', artifact: source.ref }] }]) {
+    const request = { target: 'answer', component, ...relation };
+    const shown = await app.call('components_show', request);
+    const saved = JSON.parse(app.runtime.contractArtifacts.resource(shown.ref, 'component.json').bytes);
+    assert.equal(saved.metadata.provenanceKind, 'demo', 'A reused demo component must keep demo provenance');
+    assert.equal(app.runtime.contractArtifacts.read(shown.ref).manifest.content.provenance.kind, 'demo');
+    const view = await app.call('components_render', { ref: shown.ref });
+    assert.match(view.files.find(file => file.path === view.entry).content, /data-sesame-provenance="demo"/);
+    const before = app.store.list('contract_artifact').length;
+    await assert.rejects(app.call('components_show', { ...request, provenance_kind: 'observed' }), /Fixed demo data must retain demo provenance/);
+    assert.equal(app.store.list('contract_artifact').length, before, 'Relabelling is rejected before publication');
+  }
   assert.equal(app.store.list('report').length, 0);
 });
 
