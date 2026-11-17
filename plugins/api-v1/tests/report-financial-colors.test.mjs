@@ -7,7 +7,7 @@ import { renderStructuredReport } from '../packages/reports/report-content.js';
 
 // Synthetic software fixtures; these are not market results.
 const content = blocks => ({ kind: 'document', sections: [{ title: '颜色测试', blocks }] });
-const render = blocks => renderStructuredReport({}, { title: '合成样本', lead: '合成样本中的盈亏保留金融语义配色。', summary: '仅测试显示', locale: 'zh-CN', provenance_kind: 'demo', data: [], content: content(blocks) });
+const render = blocks => renderStructuredReport({}, { title: '合成样本', target: 'answer', summary: '仅测试显示', locale: 'zh-CN', provenance_kind: 'demo', data: [], content: content(blocks) });
 
 test('financial content colours are explicit and never inferred from labels or formatted numbers', async () => {
   const html = await render([

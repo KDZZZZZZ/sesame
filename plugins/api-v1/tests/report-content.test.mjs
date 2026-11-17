@@ -15,7 +15,7 @@ const fixed = (id = 'synthetic-results', digit = '1') => ({ id, revision: 'fixtu
 const content = blocks => ({ kind: 'document', sections: [{ title: '合成测试判断', blocks }] });
 const args = (body = content([{ type: 'paragraph', text: '明确标记的合成软件样本' }]), extra = {}) => ({
   operation_id: 'synthetic-content-test', title: '内容接口 · 合成测试', summary: '仅验证软件边界',
-  lead: '以下合成样本用于验证统一视觉。', locale: 'zh-CN', provenance_kind: 'demo', data: [], content: body, ...extra,
+  lead: '以下合成样本用于验证统一视觉。', highlights: [{ label: 'Fixture result', value: 'Supplied' }], locale: 'zh-CN', provenance_kind: 'demo', data: [], content: body, ...extra,
 });
 const chart = extra => ({ type: 'chart', title: '固定样本', kind: 'bar', columns: ['label', 'value'],
   options: { x: 'label', y: 'value' }, ...extra });

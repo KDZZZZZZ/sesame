@@ -120,7 +120,7 @@ test('real API2 Report stores versioned styles and renders content bound to exac
         data_id: 'comparison' },
       { type: 'details', title: '完整合成证据说明', blocks: [{ type: 'paragraph', text: '<script>Not executable</script> 是原始文字' }] },
     ] }] };
-    const args = { title: '真实隔离宿主 · 合成内容验收', lead: '合成结果保留精确数据和选择的统一样式。', summary: 'DEMO：只验证 API2 内容、样式和渲染契约', provenance_kind: 'demo', locale: 'zh-CN', data, content, style: first.style };
+    const args = { title: '真实隔离宿主 · 合成内容验收', lead: '合成结果保留精确数据和选择的统一样式。', highlights: [{ label: 'Fixture result', value: 'Supplied' }], summary: 'DEMO：只验证 API2 内容、样式和渲染契约', provenance_kind: 'demo', locale: 'zh-CN', data, content, style: first.style };
     const preview = await invoke('components_validate', args);
     assert.equal(preview.valid, true, JSON.stringify(preview));
     const invalidStyle = await invoke('components_validate', { ...args, style: { saved_id: create.id, saved_version: 99 } });
@@ -152,7 +152,7 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     assert.equal(description.provider.pluginId,'sesame/reports');
     assert.ok(description.inputSchema.$defs.block,'host describes the selected plugin component schema');
     assert.equal(runtime.plugins.definitions({conversationId:'conv_main'}).some(tool=>tool.name==='report_render'),false,'internal renderer is not an agent tool');
-    const completeInput={content,lead:args.lead,style:first.style};
+    const completeInput={content,lead:args.lead,highlights:args.highlights,style:first.style};
     const inputBytes=JSON.stringify(completeInput);
     const inputResource=await host.resources.create({kind:'file',name:'input.json',lifetime:'durable',source:{content:inputBytes,encoding:'utf8'}});
     const inputArtifact=await host.resources.publish(inputResource,{kind:'resource',schemaVersion:'1.0.0',content:{title:'Synthetic complete provider input'},dependencies:[snapshot.ref],blobs:[{entry:'input.json',path:'input.json',mediaType:'application/json'}]}, {operationId:'synthetic-provider-input'});

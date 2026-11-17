@@ -6,7 +6,7 @@ import { renderReport } from '../packages/reports/report-provider.js';
 import { createCapabilities } from '../packages/reports/index.js';
 
 const content = { kind: 'document', sections: [{ title: 'Evidence', blocks: [{ type: 'paragraph', text: 'Supplied supporting evidence.' }] }] };
-const base = { title: 'Synthetic research', lead: 'The supplied comparison supports the stated conclusion.', summary: 'Index-only description', locale: 'en', provenance_kind: 'demo', data: [], content };
+const base = { title: 'Synthetic research', lead: 'The supplied comparison supports the stated conclusion.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], summary: 'Index-only description', locale: 'en', provenance_kind: 'demo', data: [], content };
 const capability = (host, name) => createCapabilities(host).find(item => item.name === name).execute;
 const fixed = (id, kind = 'report') => ({ id, kind, revision: 'fixture-v1', digest: `sha256:${'1'.repeat(64)}`, schemaVersion: '1.0.0' });
 
@@ -50,7 +50,7 @@ test('report convenience calls require lead before any publication side effect',
     assert.equal(validation.diagnostics[0].path, '/title');
   }
   assert.equal(writes.length, 0);
-  await show({ ...input, lead: base.lead });
+  await show({ ...input, lead: base.lead, highlights: base.highlights });
   assert.equal(writes.length, 1);
   assert.equal(writes[0].request.input.lead, base.lead);
   assert.equal(writes[0].request.input.content.sections.length, 1);
@@ -68,7 +68,7 @@ test('fixed input and direct provider rendering enforce the same report structur
   assert.equal(publications, 0);
   const envelope = { metadata: { title: base.title, summary: base.summary, locale: 'en', provenanceKind: 'derived' }, data: [], related: [], references: [], input: stored };
   await assert.rejects(renderReport(host, envelope), /lead/);
-  stored = { ...stored, lead: base.lead };
+  stored = { ...stored, lead: base.lead, highlights: base.highlights };
   const titleless = { ...args }; delete titleless.title;
   await assert.rejects(capability(host, 'components_show')(titleless), /title/);
   assert.equal(publications, 0);

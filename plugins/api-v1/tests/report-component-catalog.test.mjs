@@ -16,20 +16,20 @@ const publicBlocks = publicationSchema.$defs.block.oneOf;
 const publicKinds = publicBlocks.find(item => item.properties.type.const === 'chart').properties.kind.enum;
 const all = listComponents({ limit: 100 });
 const details = all.items.flatMap((_, index, items) => index % 12 ? [] : describeComponents(items.slice(index, index + 12).map(item => item.id)).items);
-const asDocument = item => ({ kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] });
-const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, target: 'answer', content: asDocument(item) });
+const asDocument = item => item.id === 'report.highlights' ? item.exampleContext.content : ({ kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] });
+const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, ...(item.id === 'report.highlights' ? { highlights: item.example } : {}), content: asDocument(item) });
 
 test('catalog exposes exactly the public document components and no internal projections', async () => {
   assert.equal(COMPONENT_PROTOCOL, 'sesame-components/1');
   assert.equal(all.schemaVersion, 1);
-  assert.equal(all.total, 55);
+  assert.equal(all.total, 56);
   assert.equal(publicKinds.length, 38);
   assert.equal(publicBlocks.length, 15);
   assert.deepEqual(all.items.filter(item => item.id.startsWith('chart.')).map(item => item.id.slice(6)).sort(), [...publicKinds].sort());
   assert.deepEqual(all.items.filter(item => item.id.startsWith('block.')).map(item => item.id.slice(6)).sort(), publicBlocks.map(item => item.properties.type.const).sort());
-  assert.deepEqual(all.items.filter(item => !/^(chart|block)\./.test(item.id)).map(item => item.id).sort(), ['layout.columns', 'layout.stack']);
-  assert.equal(new Set(all.items.map(item => item.id)).size, 55);
-  assert.equal(all.categories.reduce((sum, category) => sum + category.count, 0), 55);
+  assert.deepEqual(all.items.filter(item => !/^(chart|block)\./.test(item.id)).map(item => item.id).sort(), ['layout.columns', 'layout.stack', 'report.highlights']);
+  assert.equal(new Set(all.items.map(item => item.id)).size, 56);
+  assert.equal(all.categories.reduce((sum, category) => sum + category.count, 0), 56);
   for (const item of all.items) {
     assert.match(item.label, /[\u3400-\u9fff]/);
     assert.match(item.whenToUse, /[\u3400-\u9fff]/);
@@ -56,11 +56,11 @@ test('catalog exposes exactly the public document components and no internal pro
 test('pagination is bounded, stable and bound to the current search', () => {
   const first = listComponents();
   assert.equal(first.items.length, 20);
-  assert.equal(first.total, 55);
+  assert.equal(first.total, 56);
   assert.ok(first.nextCursor);
   const second = listComponents({ cursor: first.nextCursor });
   const third = listComponents({ cursor: second.nextCursor });
-  assert.equal(third.items.length, 15);
+  assert.equal(third.items.length, 16);
   assert.equal(Object.hasOwn(third, 'nextCursor'), false);
   assert.deepEqual([...first.items, ...second.items, ...third.items].map(item => item.id), all.items.map(item => item.id));
   for (const limit of [0, -1, 101, 1.5, '20', null]) assert.throws(() => listComponents({ limit }), /limit/);
@@ -157,7 +157,7 @@ test('all public chart kinds mount in the actual browser and match the renderer 
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.route('**/*', route => route.abort());
-  const content = { kind: 'document', sections: details.map(item => ({ title: item.id, blocks: [item.example] })) };
+  const content = { kind: 'document', sections: details.filter(item => !item.id.startsWith('report.')).map(item => ({ title: item.id, blocks: [item.example] })) };
   // The document has a public 50-section limit; combine adjacent examples.
   content.sections = content.sections.flatMap((section, index, sections) => index % 2 ? [] : [{ title: section.title,
     blocks: [section.blocks[0], ...(sections[index + 1]?.blocks ?? [])] }]);

@@ -13,7 +13,7 @@ const document = blocks => ({ kind: 'document', sections: [{ title: 'Synthetic c
 const chart = extra => ({ type: 'chart', kind: 'bar', title: 'Supplied counts', columns: ['label', 'value'],
   options: { x: 'label', y: 'value' }, ...extra });
 const args = (content = document([{ type: 'paragraph', text: 'Synthetic test only' }]), extra = {}) => ({
-  title: 'Components fixture', lead: 'The supplied components present the synthetic comparison.', locale: 'en', provenance_kind: 'demo', data: [], content, ...extra,
+  title: 'Components fixture', lead: 'The supplied components present the synthetic comparison.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], locale: 'en', provenance_kind: 'demo', data: [], content, ...extra,
 });
 const capability = (host, name) => {
   const value = createCapabilities(host).find(item => item.name === name);
@@ -165,7 +165,7 @@ test('component capabilities use the shared catalog and expose bounded discovery
     assert.equal(cap.binding.type, 'native'); assert.ok(plugin.mcp_export.includes(name));
     assert.ok(JSON.stringify(cap.inputSchema).length < 20000, 'tool schemas must not embed the full component catalog');
   }
-  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '7.0.0');
+  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '8.0.0');
   const listing = manifest.capabilities.find(item => item.id === 'components_list').inputSchema;
   assert.equal(listing.properties.limit.default, 20); assert.equal(listing.properties.limit.maximum, 100);
   assert.ok(plugin.resources.includes('references/composing.md'));
@@ -280,7 +280,7 @@ test('show performs the same fixed-row preflight without requiring a validation 
 test('single and multiple components use the existing document layout and default empty data', async () => {
   const calls = [], host = { capabilities: { invoke: async (id, request) => { calls.push({ id, request }); return { type: 'result', value: { ref: fixed('convenience', 'report') } }; } } };
   const one = chart({ rows: [{ label: 'A', value: 2 }, { label: 'B', value: 4 }] });
-  const single = { title: 'One supplied component', lead: 'B has twice the supplied count of A.', provenance_kind: 'demo', component: one };
+  const single = { title: 'One supplied component', lead: 'B has twice the supplied count of A.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], provenance_kind: 'demo', component: one };
   const validated = await capability(host, 'components_validate')(single);
   assert.equal(validated.valid, true); assert.equal(calls.length, 0);
   await capability(host, 'components_show')({ ...single, operation_id: 'single-component' });
@@ -289,7 +289,7 @@ test('single and multiple components use the existing document layout and defaul
   assert.equal(calls[0].request.input.content.sections[0].title, '', 'the wrapper must not repeat the report title');
   assert.deepEqual(calls[0].request.input.content.sections[0].blocks, [one]);
   const components = [{ type: 'judgment', text: 'Compare the supplied counts' }, one];
-  await capability(host, 'components_show')({ title: 'Two supplied components', lead: single.lead, provenance_kind: 'demo', operation_id: 'multiple-components', components, layout: 'columns' });
+  await capability(host, 'components_show')({ title: 'Two supplied components', lead: single.lead, highlights: single.highlights, provenance_kind: 'demo', operation_id: 'multiple-components', components, layout: 'columns' });
   assert.equal(calls[1].request.input.content.sections[0].title, '');
   assert.deepEqual(calls[1].request.input.content.sections[0].blocks, [{ type: 'group', layout: 'columns', blocks: components }]);
   assert.equal(Object.hasOwn(calls[1].request, 'components'), false);
@@ -348,12 +348,12 @@ test('show rejects alternate layouts, active uploads and provider overrides befo
 
 test('show checks document inputRef without rewriting its fixed identity and lets the host publish it', async () => {
   const fixture = readonlyHost(), ref = fixed('prepared-input', 'resource'), calls = [];
-  fixture.put(ref, { content: args().content, lead: args().lead }, { path: 'input.json' });
+  fixture.put(ref, { content: args().content, lead: args().lead, highlights: args().highlights }, { path: 'input.json' });
   fixture.host.capabilities.invoke = async (id, request) => { calls.push({ id, request }); return { type: 'result', value: { ref: fixed('out', 'report') } }; };
-  const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content; delete input.lead;
+  const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content; delete input.lead; delete input.highlights;
   await capability(fixture.host, 'components_show')(input);
   assert.deepEqual(calls[0].request.inputRef, input.input_ref); assert.equal(Object.hasOwn(calls[0].request, 'input'), false);
-  fixture.put(ref, { content: { kind: 'backtest' }, lead: args().lead }, { path: 'input.json' });
+  fixture.put(ref, { content: { kind: 'backtest' }, lead: args().lead, highlights: args().highlights }, { path: 'input.json' });
   await assert.rejects(capability(fixture.host, 'components_show')(input), /document/);
   fixture.put(ref, { content: args().content }, { path: 'input.json', mediaType: 'text/html' });
   await assert.rejects(capability(fixture.host, 'components_show')(input), /JSON|json/);
@@ -375,7 +375,7 @@ test('answer components validate and publish the same pinned surface metadata', 
   assert.equal(calls[0].request.input.target, 'answer'); assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
   assert.deepEqual(calls[0].rendered.presentation.metadata, { layout: 'unified', surface: 'answer', protocol });
   assert.deepEqual(shown.renderer, calls[0].rendered.presentation); assert.equal(shown.renderStatus, 'not_checked');
-  const defaultInput = { ...input, lead: 'The supplied count is four.' }; delete defaultInput.target;
+  const defaultInput = { ...input, lead: 'The supplied count is four.', highlights: [{ label: 'Fixture result', value: 'Supplied' }] }; delete defaultInput.target;
   const ordinary = await capability(host, 'components_validate')(defaultInput);
   assert.deepEqual(ordinary.renderer.metadata, { layout: 'unified' });
   for (const extra of [{ target: 'raw-html' }, { css: 'body{display:none}' }, { html: '<script>bad</script>' }]) {
@@ -397,7 +397,7 @@ test('fixed inputRef owns its answer target and rejects external target override
     calls.push({ id, request });
     return { type: 'result', value: { ref: fixed('answer-from-ref', 'report'), presentation: rendered.presentation } };
   };
-  const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content; delete input.lead;
+  const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content; delete input.lead; delete input.highlights;
   const shown = await capability(fixture.host, 'components_show')(input);
   assert.deepEqual(calls[0].request.inputRef, input.input_ref); assert.equal(Object.hasOwn(calls[0].request, 'input'), false);
   assert.equal(Object.hasOwn(calls[0].request, 'target'), false); assert.equal(shown.renderer.metadata.surface, 'answer');
@@ -421,7 +421,7 @@ test('answer HTML retains compact chrome and interactions when the host rebuilds
   for (const [target, rebuildRoot] of [['report', false], ['answer', false], ['report', true], ['answer', true]]) {
     const page = await browser.newPage({ viewport: { width: 640, height: 600 } });
     page.on('pageerror', error => errors.push(error.message));
-    const rendered = await renderReport({}, { ...base, input: { content, lead: 'B has twice the supplied count of A.', target } });
+    const rendered = await renderReport({}, { ...base, input: { content, lead: 'B has twice the supplied count of A.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], target } });
     let html = rendered.files[0].content;
     if (rebuildRoot) html = await page.evaluate(source => {
       // artifact-host retains head/body contents and lang, then creates new roots.
@@ -469,7 +469,7 @@ test('a combined component document renders its bound chart through the existing
   ] }]);
   const fixture = readonlyHost(); fixture.put(data[0].ref, rows);
   assert.equal((await capability(fixture.host, 'components_validate')(args(content, { data }))).valid, true);
-  const result = await renderReport({}, { metadata: { title: 'Synthetic components', summary: '', locale: 'en', provenanceKind: 'demo', features: ['interactive'] }, data, related: [], references: [], input: { content, lead: args().lead } });
+  const result = await renderReport({}, { metadata: { title: 'Synthetic components', summary: '', locale: 'en', provenanceKind: 'demo', features: ['interactive'] }, data, related: [], references: [], input: { content, lead: args().lead, highlights: args().highlights } });
   const { chromium } = createRequire(join(process.env.SESAME_HOST_ROOT, 'package.json'))('playwright');
   const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1000, height: 800 } }), errors = [];

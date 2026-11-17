@@ -269,7 +269,7 @@ function add(id, metadata, detail) {
 const publicKinds = blockDefinition('chart').properties.kind.enum;
 if (publicKinds.length !== Object.keys(chartMetadata).length || publicKinds.some(kind => !chartMetadata[kind] || !mappings[kind])) throw new Error('Component catalog must cover every public chart kind');
 for (const kind of publicKinds) add(`chart.${kind}`, chartMetadata[kind], {
-  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。图表 title 可省略；解释放独立 paragraph/markdown。示例按 exampleContext 作为 answer 组件调用；完整报告另需顶层 title、lead 和非空正文。'],
+  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。图表 title 可省略；解释放独立 paragraph/markdown。示例按 exampleContext 作为 answer 组件调用；完整报告另需顶层 title、lead、highlights 和非空正文。'],
 });
 for (const schema of blockDefinitions) {
   const type = schema.properties.type.const;
@@ -292,6 +292,12 @@ for (const layout of ['columns', 'stack']) {
     placement: blocksPlacement, inputSchema: schema, example: { ...clone(blockExamples.group), layout }, notes: ['实际输入为 type: group；最多 12 个子块，嵌套深度最多 5，子块复用公开 block schema。'],
   });
 }
+add('report.highlights', ['首屏关键结果', 'content', '让读者在开篇快速读到最重要的已有数值或短定性结论；完整报告必用1–6项，无框大字网格。', 'report opening highlights metrics key results 首屏'], {
+  placement: ['highlights', 'input.highlights'], inputSchema: clone(publicationSchema.properties.highlights),
+  example: [{ label: '样本数量', value: 24 }, { label: '已有判断', value: '需要继续观察' }],
+  exampleContext: { target: 'report', title: '合成结果示例', lead: '样本结果需要继续观察。', content: { kind: 'document', sections: [{ title: '已有结果', blocks: [{ type: 'paragraph', text: '这是结构和视觉演示，不是研究结论。' }] }] } },
+  notes: ['复用 block.metrics.items 的 {label,value,tone?}；将 example 数组直接放入 components_show 的 highlights，或完整 provider input.highlights，不包在 component 内。', '呈现顺序：title → lead → highlights → content.sections。完整报告同时提供这四项；普通强调用蓝色，明确盈亏用原有 positive/negative tone。只展示已有结果，不自动提取正文，也不必凑满6项。', '首屏仅作快速概览，不能替代正文趋势、比较、分布或条件关系的图表设计。'],
+});
 freeze([...entries.values()]);
 
 function entry(id) {

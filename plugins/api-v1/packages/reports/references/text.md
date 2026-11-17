@@ -2,7 +2,7 @@
 
 报告 title 是页面标题，section.title 标识章节，chart.title/table.caption 给视觉命名。相邻同名标题自动去重。
 
-完整报告的 lead 必填，直接给出回答用户核心问题的一小段关键结论和主要理由；它在标题后、章节前独立展示。正文使用 paragraph/markdown 或 judgment 补充分析，不再重复 lead。summary 只作为报告元数据，不能代替 lead；不增加固定“摘要”标题、目录、背景铺垫或工作过程。
+完整报告的 lead 必填，直接给出回答用户核心问题的一小段关键结论和主要理由；highlights 随后以无框大字结果栏呈现 1–6 项关键数值或定性判断。标签说明含义和必要单位，value 保持简短；不照搬所有指标，也不塞入大段说明。两者均位于正文章节前。正文使用 paragraph/markdown 或 judgment 补充分析，不再重复首屏。summary 只作为报告元数据，不能代替 lead；不增加固定“摘要”标题、目录、背景铺垫或工作过程。
 
 正文与必要解释只用 paragraph/markdown。一句重点可用 judgment，并列已有判断可用 judgments。图表标题后不重复结论、来源小字、通用说明或工作过程。formula、metrics、range、scores 不接收独立 note/caption；需要用户阅读的内容放正文。
 

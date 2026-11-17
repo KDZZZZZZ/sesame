@@ -18,7 +18,7 @@ const group = () => ({ type: 'group', layout: 'stack', controls: [select('asset'
   { type: 'chart', kind: 'bar', rows: records, options: { x: 'id', y: 'risk' }, filter: [{ field: 'id', control: 'record' }] },
 ] });
 const content = () => ({ kind: 'document', sections: [{ title: '', blocks: [group(), group()] }] });
-const render = content => renderStructuredReport({}, { title: 'Fixed record views', lead: 'Supplied records can be compared in controlled views.', data: [], provenance_kind: 'demo', locale: 'en', content });
+const render = content => renderStructuredReport({}, { title: 'Fixed record views', lead: 'Supplied records can be compared in controlled views.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], data: [], provenance_kind: 'demo', locale: 'en', content });
 
 test('controlled views validate local fields without mutating records or inventing calculations', async () => {
   const source = content(), before = structuredClone(source);
