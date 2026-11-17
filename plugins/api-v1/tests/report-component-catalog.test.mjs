@@ -17,7 +17,7 @@ const publicKinds = publicBlocks.find(item => item.properties.type.const === 'ch
 const all = listComponents({ limit: 100 });
 const details = all.items.flatMap((_, index, items) => index % 12 ? [] : describeComponents(items.slice(index, index + 12).map(item => item.id)).items);
 const asDocument = item => ({ kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] });
-const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, content: asDocument(item) });
+const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, target: 'answer', content: asDocument(item) });
 
 test('catalog exposes exactly the public document components and no internal projections', async () => {
   assert.equal(COMPONENT_PROTOCOL, 'sesame-components/1');
@@ -161,7 +161,7 @@ test('all public chart kinds mount in the actual browser and match the renderer 
   // The document has a public 50-section limit; combine adjacent examples.
   content.sections = content.sections.flatMap((section, index, sections) => index % 2 ? [] : [{ title: section.title,
     blocks: [section.blocks[0], ...(sections[index + 1]?.blocks ?? [])] }]);
-  const html = await renderStructuredReport({}, { title: '组件目录浏览器演示', locale: 'zh-CN', provenance_kind: 'demo', data: [],
+  const html = await renderStructuredReport({}, { title: '组件目录浏览器演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], target: 'answer',
     ...details.find(item => item.id === 'block.attachments').exampleContext, content });
   await page.setContent(html.replace('</head>', '<script>window.report={track:promise=>(window.catalogRender=promise,promise)};</script></head>'));
   await page.evaluate(() => window.catalogRender);

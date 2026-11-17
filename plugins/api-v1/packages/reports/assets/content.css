@@ -1,4 +1,5 @@
 /* Generic content around the shared chart and typography primitives. */
+.report-lead{margin:0 0 2rem;color:var(--report-ink);font-size:1.13em;font-weight:500;line-height:1.75;white-space:pre-line}
 .kit-section{counter-increment:none}
 .kit-section h2::before,.report-reasoning-steps li::before{content:none}
 .report-reasoning-steps{counter-reset:none}

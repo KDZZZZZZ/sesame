@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "6.0.3",
+      "version": "7.0.0",
       "directory": "reports",
-      "treeDigest": "sha256:e17c0138ec2529b4bef9fd19c7a783d9762b06e6362f183534707924d94caf98",
+      "treeDigest": "sha256:cef471fc166fa1ce46896dc2d3d29e0cbe50d90ba280abc9e507dc75a70e6415",
       "files": [
         {
           "path": "LICENSE",
@@ -544,8 +544,8 @@
         },
         {
           "path": "assets/content.css",
-          "sha256": "746ff6eb543b8ed1612f7fcb4e3ffa99b23b9eb7f5803eba63c74352fd15cd3d",
-          "bytes": 2908
+          "sha256": "e744ba607501d69a459440797d0021f3c383e9488cdb1a74354773d254d95232",
+          "bytes": 3033
         },
         {
           "path": "assets/editorial-charts.js",
@@ -634,13 +634,13 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "6e2d118bff5549501e6930bb4cff02a6e59c237454a01f5ae6a2834b71a7fc26",
-          "bytes": 139822
+          "sha256": "603815aae10d8fe49c260421220920d73f2064ed97501ed59221909a12ba46a8",
+          "bytes": 148559
         },
         {
           "path": "component-catalog.js",
-          "sha256": "7cf451fd90ad72d402bf07e9ae0a8838b6b619ede4d9b7230344ae0076dfd635",
-          "bytes": 39619
+          "sha256": "1a2a825b3e210ef01d1390b2bca9be9dfe46885714075b88ba0f2eb9eafc778b",
+          "bytes": 39699
         },
         {
           "path": "component-input.js",
@@ -649,8 +649,8 @@
         },
         {
           "path": "component-tools.js",
-          "sha256": "6e800fc5d796d121f973919b0ae078556601a9b99af135197625409bd64796cb",
-          "bytes": 16841
+          "sha256": "075627333b6ad956f9951c5cacdd21d96a773cb8888d90040c55016bff004fc7",
+          "bytes": 17501
         },
         {
           "path": "examples/composition-fixtures.json",
@@ -679,23 +679,23 @@
         },
         {
           "path": "package.json",
-          "sha256": "f3d291ff11c12e82e62a5bf3a3daad4ce84b06f952d5ebb7d1e5098165df09f8",
+          "sha256": "8eb4b8ec34dcc9c7dfc29aae74df794fb300c8e944804df267cdeb6d9cad1094",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "81999bc5daa1080feda0edd991f9979a400316b5e5a1b433aa53a6632c1800ed",
-          "bytes": 2151
+          "sha256": "bb9eb566aba61340aa6a8951d91fc36195147c0e54c6d8e27f65989ec495c426",
+          "bytes": 2176
         },
         {
           "path": "prompt.md",
-          "sha256": "37c2a83bc77f1f8f5e53cfe3af02dcfa8e6588136fdc9679baeba3db66914a91",
-          "bytes": 1998
+          "sha256": "b9526dd8fea7b3a98ab676625f9c02dbceafd17e6cb50ae0d1180ceae7901384",
+          "bytes": 2324
         },
         {
           "path": "references/composing.md",
-          "sha256": "261f4c73b03d385181d24ec4328dc95bc09df09d3ef736f57e17e92038874d7a",
-          "bytes": 3251
+          "sha256": "7bd537ddd310968e4d95d2a03fcf5a716033f066fdab233f1c4ac9fd8fecbc63",
+          "bytes": 3672
         },
         {
           "path": "references/data-binding.md",
@@ -704,8 +704,8 @@
         },
         {
           "path": "references/delivery.md",
-          "sha256": "0a508d5d23e07f3bf83ccf695d477d0ec4959a62ea9dc7c3e47fd3f48af876ff",
-          "bytes": 1678
+          "sha256": "54f9bf1f2402b5945f865a19c77e8504a921de961bf6974fb705c28c8d0c1038",
+          "bytes": 1795
         },
         {
           "path": "references/interactions.md",
@@ -724,8 +724,8 @@
         },
         {
           "path": "references/text.md",
-          "sha256": "d6fbddf0f28d43a927b500e258e3811c84d5f670994510192180624d4d8a09ff",
-          "bytes": 1605
+          "sha256": "c323ab9662dddeb2c3666353e6365878c8e889a0e9e6f23a098dee08a886fa91",
+          "bytes": 1704
         },
         {
           "path": "renderer/builtins.js",
@@ -749,8 +749,8 @@
         },
         {
           "path": "report-content.js",
-          "sha256": "2a3218c03fbd25eaf3adff69dd163d8f9ff44dd015c02f3063eafd6da2d1cc68",
-          "bytes": 16696
+          "sha256": "32de87393e6d94ba535f76d8af2cd43c130d3e0eab77127630239a388f5792ef",
+          "bytes": 17680
         },
         {
           "path": "report-interactions.js",
@@ -769,8 +769,8 @@
         },
         {
           "path": "report-provider.js",
-          "sha256": "7a013a5795348740a435c592e9ea7cdf54d8706bf592b856bd312984a681cf12",
-          "bytes": 8680
+          "sha256": "8be19560263c7c12db6915f41bab11be7936bb09af9ff5b4df6c2f94820179c3",
+          "bytes": 8694
         },
         {
           "path": "report-styles.js",
@@ -814,21 +814,21 @@
         },
         {
           "path": "skills/report-delivery/SKILL.md",
-          "sha256": "8c6744eba12e1c168dce1c93c5a9502224c468dd82df2bd2e5e5aebde6004ae9",
-          "bytes": 924
+          "sha256": "9ad3235c9b7248b84af106d4c9c510f028d7990e0f03000929cfa3fd3de278bb",
+          "bytes": 1205
         },
         {
           "path": "skills/visual-compose/SKILL.md",
-          "sha256": "bd595035c8b1bb75764d6c2e39a4e961f9661acc69165ce2bc635c68a43200ed",
-          "bytes": 2204
+          "sha256": "881213385ee219e5990fdaebeed33e6a0eb761b0dd538c4f3e55f01b33399a87",
+          "bytes": 2630
         }
       ]
     },
     {
       "id": "sesame/research",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "directory": "research",
-      "treeDigest": "sha256:a51968c343da5733b953c831f0145c5be3d4cd4fd7e4b22b5ea26102a1947d8f",
+      "treeDigest": "sha256:6f198053fe4c8e9839d3b621888fa5a8b456a599611fb988b3e09a33784e2048",
       "files": [
         {
           "path": "LICENSE",
@@ -857,23 +857,23 @@
         },
         {
           "path": "package.json",
-          "sha256": "26732b423e17addd881e9c165b8ebac46e59a42ddbe99e24fd6cbaa279327b41",
+          "sha256": "218a1d75f56df37340d97388df97e3fa3d1e448d997bcdf44ca26cc02b5613a1",
           "bytes": 102
         },
         {
           "path": "plugin.json",
-          "sha256": "163c5c14de7c858ac006c77530731057534b6b61efcb71541d4a0d1a4b2aa6b1",
+          "sha256": "4d3db896e1dd769783fda3b47b23f38de13c4be3f2e8d6afb8de4b0fae44f13f",
           "bytes": 2766
         },
         {
           "path": "prompt.md",
-          "sha256": "1f67e15fbd31e34ef9dda2d134969a04d5ad4762f0f4d5c7829e39ab1c22af61",
-          "bytes": 1646
+          "sha256": "3b41cc26746d8ad2d3236edd074855cd30c158a091e11500dfced36bfa38b2ef",
+          "bytes": 1829
         },
         {
           "path": "references/adapt-and-compose.md",
-          "sha256": "c9e74978011c448f3cfd5431d21afc488da60fb7f2390847979ffab49c160788",
-          "bytes": 3218
+          "sha256": "ff90ef37c888a5e86a0851a40f5e256357e9ba8417bbd4146b3e0715c84777ba",
+          "bytes": 3356
         },
         {
           "path": "references/evidence-and-judgment.md",
@@ -1092,8 +1092,8 @@
         },
         {
           "path": "skills/research/SKILL.md",
-          "sha256": "7c11a20be71bba9a4f610a4c0cdd23f14fd83f0404ed40455722678a802fc669",
-          "bytes": 2650
+          "sha256": "0cfc470a18549cba497ac83ab2acbcc4c407a7ea58002063f20e96b091f22235",
+          "bytes": 2848
         }
       ]
     },

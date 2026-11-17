@@ -18,11 +18,11 @@ const group = () => ({ type: 'group', layout: 'stack', controls: [select('asset'
   { type: 'chart', kind: 'bar', rows: records, options: { x: 'id', y: 'risk' }, filter: [{ field: 'id', control: 'record' }] },
 ] });
 const content = () => ({ kind: 'document', sections: [{ title: '', blocks: [group(), group()] }] });
-const render = content => renderStructuredReport({}, { title: 'Fixed record views', data: [], provenance_kind: 'demo', locale: 'en', content });
+const render = content => renderStructuredReport({}, { title: 'Fixed record views', lead: 'Supplied records can be compared in controlled views.', data: [], provenance_kind: 'demo', locale: 'en', content });
 
 test('controlled views validate local fields without mutating records or inventing calculations', async () => {
   const source = content(), before = structuredClone(source);
-  assert.equal((await validateComponents({}, { content: source, provenance_kind: 'demo' })).valid, true);
+  assert.equal((await validateComponents({}, { content: source, provenance_kind: 'demo', target: 'answer' })).valid, true);
   await render(source); assert.deepEqual(source, before);
   for (const mutate of [g => g.controls.push(g.controls[0]), g => g.blocks[0].filter[0].control = 'outside',
     g => g.blocks[0].filter[0].field = 'missing', g => g.controls[1].options[1].value = 'calculated',

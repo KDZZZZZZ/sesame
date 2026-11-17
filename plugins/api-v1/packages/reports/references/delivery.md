@@ -9,7 +9,7 @@
 长草案按 host.reports.publish 外壳写 UTF-8 JSON，report_prepare({operation_id,path}) 校验并登记完整固定输入，按返回请求发布，不复制重写内容。最小宿主请求示例：
 
 ```json
-{"operationId":"report-demo-1","title":"演示比较","summary":"","provenanceKind":"demo","data":[],"input":{"content":{"kind":"document","sections":[{"title":"","blocks":[{"type":"table","columns":["项目","数量"],"rows":[["A",2],["B",4]]}]}]}}}
+{"operationId":"report-demo-1","title":"演示比较","summary":"","provenanceKind":"demo","data":[],"input":{"lead":"演示：B 的数量是 A 的两倍。","content":{"kind":"document","sections":[{"title":"数量比较","blocks":[{"type":"chart","kind":"bar","rows":[{"项目":"A","数量":2},{"项目":"B","数量":4}],"options":{"x":"项目","y":"数量"}}]}]}}}
 ```
 
 report_check 检查当前 ref 的真实浏览器结果，核对统一样式、数据、长文本/公式、桌面与窄屏及关键交互。本次 rendered receipt 应对应当前修订，schema 通过不能代替浏览器检查。

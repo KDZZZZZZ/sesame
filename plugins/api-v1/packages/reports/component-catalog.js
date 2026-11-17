@@ -264,12 +264,12 @@ const entries = new Map();
 function add(id, metadata, detail) {
   const [label, category, whenToUse, keywords = ''] = metadata;
   if (!categories.some(item => item.id === category)) throw new Error(`Unknown component category: ${category}`);
-  entries.set(id, { id, label, category, whenToUse, ...detail, exampleContext: { provenance_kind: 'demo', ...detail.exampleContext }, keywords });
+  entries.set(id, { id, label, category, whenToUse, ...detail, exampleContext: { target: 'answer', provenance_kind: 'demo', ...detail.exampleContext }, keywords });
 }
 const publicKinds = blockDefinition('chart').properties.kind.enum;
 if (publicKinds.length !== Object.keys(chartMetadata).length || publicKinds.some(kind => !chartMetadata[kind] || !mappings[kind])) throw new Error('Component catalog must cover every public chart kind');
 for (const kind of publicKinds) add(`chart.${kind}`, chartMetadata[kind], {
-  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。title 可省略；解释放独立 paragraph/markdown。示例调用须包含 exampleContext 的 demo 来源。'],
+  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。图表 title 可省略；解释放独立 paragraph/markdown。示例按 exampleContext 作为 answer 组件调用；完整报告另需顶层 title、lead 和非空正文。'],
 });
 for (const schema of blockDefinitions) {
   const type = schema.properties.type.const;

@@ -11,7 +11,7 @@ test('provider uses unified structured content without writing previews or fabri
   const signal=new AbortController().signal;
   const host={capabilities:{invoke:()=>assert.fail('Rendering does not publish or write workspace files')}};
   const content={kind:'document',sections:[{title:'Supplied evidence',blocks:[{type:'paragraph',text:'Actual evidence {{TITLE}} <script>literal text</script>'},{type:'details',title:'Inspect',blocks:[{type:'paragraph',text:'Verified detail'}]}]}]};
-  const envelope={metadata:{title:'</title><script>bad()</script>',locale:'zh-CN',summary:'',provenanceKind:'derived',features:[]},data:[],related:[],references:[],input:{content}};
+  const envelope={metadata:{title:'</title><script>bad()</script>',locale:'zh-CN',summary:'',provenanceKind:'derived',features:[]},data:[],related:[],references:[],input:{content,lead:'The supplied evidence supports the stated result.'}};
   const result=await renderReport(host,envelope,signal);
   const html=result.files[0].content;
   assert.match(html,/data-sesame-report-template="report\/1"/);assert.match(html,/lang="zh-CN"/);assert.match(html,/data-report-layout="unified"/);

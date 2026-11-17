@@ -3,15 +3,14 @@
 components_list 按表达关系查目录；components_describe 返回准确 schema、何时用、数据要求及最小示例。38 种图表和 15 种内容块均可用，无需先选报告模板。
 
 ```js
-components_show({ title: "范围内的位置", target: "report", provenance_kind: "demo", components: [
-  { type: "paragraph", text: "演示：观测值位于区间中部偏上。" },
+components_show({ title: "范围内的位置", lead: "演示：观测值位于区间中部偏上。", target: "report", provenance_kind: "demo", components: [
   { type: "range", label: "观测值", min: 2, max: 8, value: 6 }
 ] })
 ```
 
-component 是单块，components 是最多 12 块的一组，layout 可选 stack/columns。长文档用 content:{kind:"document",sections:[{title:"",blocks:[...]}]}，空节标题不占一行。group 与 details 最多嵌套 5 层。没有必备首屏、摘要、情景树或附录。
+完整报告使用 title、lead 和至少一个有内容的正文章节。lead 是开篇回答，由作者明确提供，不从 summary 或图表猜测。component 是单块，components 是最多 12 块的一组，layout 可选 stack/columns；简短报告加 title、lead 即可沿用便捷调用。长文档用 content:{kind:"document",sections:[{title:"",blocks:[...]}]}，空节标题不占一行。group 与 details 最多嵌套 5 层。target=answer 的独立组件无需报告骨架。目录、摘要标题、情景树、附录不作为通用必填章节。
 
-先确定读者要看出的关系，不默认柱形，也不为增加图型数量换图。上面的示例只表示调用方式，实际选型按以下关系：
+先安排核心数据关系的视觉，再写必要解释；不能用一段数字或多张表格代替主要论据的比较、趋势、区间、分布、构成和关联。图表按数据关系选择，不默认柱形，也不为增加图型数量换图。上面的示例只表示调用方式，实际选型按以下关系：
 
 | 数据关系 | 优先表达 | 合并方式 |
 | --- | --- | --- |

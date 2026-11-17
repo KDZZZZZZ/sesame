@@ -28,6 +28,14 @@ function valueTone(tone, value, path, tonePath) {
 export const reportStyles = Object.freeze({ layouts: ['document'] });
 
 export async function renderStructuredReport(host, args, signal) {
+  const report = args.target !== 'answer';
+  if (args.lead !== undefined) check(typeof args.lead === 'string' && args.lead.length <= 20000, '/input/lead: Opening answer must be plain text up to 20,000 characters');
+  if (report) {
+    check(typeof args.title === 'string' && args.title.trim(), '/metadata/title: A report requires a nonempty title');
+    check(typeof args.lead === 'string' && args.lead.trim(), '/input/lead: A report requires an explicit opening answer to the user question; summary is only index metadata');
+    check(Array.isArray(args.content?.sections) && args.content.sections.length > 0, '/input/content/sections: A report requires at least one body section');
+    args.content.sections.forEach((section, index) => check(Array.isArray(section?.blocks) && section.blocks.length > 0, `/input/content/sections/${index}/blocks: A report body section needs content`));
+  }
   const bindings = args.data ?? [];
   const content = args.content?.kind === 'document' ? await normalizeComponentContent(host, args.content, bindings, signal) : args.content;
   const style = await resolveReportStyle(host, args.style);
@@ -166,9 +174,10 @@ export async function renderStructuredReport(host, args, signal) {
       body+=`<script id="sesame-module-charts" type="application/json">${json(charts)}</script>${assets.map(path=>`<script>${asset('assets/'+path)}</script>`).join('')}<script>${asset('assets/content-charts.js')}</script>`;
     }
   if (body.includes('data-report-svl')) body += `<script>${asset('assets/svl-graph.js')}</script><script>SesameSvlGraph.mount();</script>`;
-  // Metadata summaries belong to the report index. Visible conclusions are
-  // authored once as paragraph/judgment content, never injected here.
-  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${body}</div>`;
+  // The explicit opening answer owns its position. Metadata summaries remain
+  // index-only; the renderer never invents an answer from prose or chart data.
+  const lead = report ? `<p class="report-lead">${e(args.lead)}</p>` : '';
+  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${lead}${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${body}</div>`;
   const tokens={LOCALE:e(args.locale??'zh-CN'),TITLE:e(args.title),STYLES:asset('assets/editorial.css')+'\n'+asset('assets/content.css')+'\n'+asset('assets/svl-graph.css'),BODY:body};
   return applyReportStyle(withBuiltins(asset('renderer/document-shell.html').replace(/\{\{([A-Z_]+)\}\}/g,(token,key)=>tokens[key]??token)),style);
 }
