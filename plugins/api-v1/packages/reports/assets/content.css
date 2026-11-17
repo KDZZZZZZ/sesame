@@ -1,4 +1,11 @@
 /* Generic content around the shared chart and typography primitives. */
+.report-lead{margin:0 0 2rem;color:var(--report-ink);font-size:1.13em;font-weight:500;line-height:1.75;white-space:pre-line}
+.report-highlights{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem 2rem;margin:0 0 2.5rem}
+.report-highlights[data-count="1"]{grid-template-columns:minmax(0,1fr)}
+.report-highlights[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.report-highlights .report-metric{padding:0;border:0;overflow-wrap:anywhere;break-inside:avoid}
+.report-highlights .report-metric dd{font-size:clamp(26px,3.5vw,36px);color:var(--report-accent)}
+@media(max-width:560px){.report-highlights{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem 1rem}.report-highlights[data-count="1"]{grid-template-columns:minmax(0,1fr)}}
 .kit-section{counter-increment:none}
 .kit-section h2::before,.report-reasoning-steps li::before{content:none}
 .report-reasoning-steps{counter-reset:none}

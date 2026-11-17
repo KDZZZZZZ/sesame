@@ -9,7 +9,7 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 const refKey = ref => JSON.stringify(['id', 'revision', 'digest', 'kind', 'schemaVersion'].map(key => ref?.[key]));
 const uniqueRefs = refs => [...new Map(refs.map(ref => [refKey(ref), ref])).values()];
 const safePath = path => typeof path === 'string' && path.length <= 256 && !/^[\/]|[\\:\x00-\x1f]/.test(path) && path.split('/').every(part => part && part !== '.' && part !== '..');
-const inputKeys = ['content', 'style', 'assets', 'target'];
+const inputKeys = ['content', 'lead', 'highlights', 'style', 'assets', 'target'];
 const answerStyle = readFileSync(new URL('./assets/answer-surface.css', import.meta.url), 'utf8');
 const attachmentExtensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
 
@@ -90,7 +90,7 @@ export async function publishReport(host, args, signal) {
   const allowed = ['operation_id', 'title', 'summary', 'locale', 'space', 'provenance_kind', 'data', 'related', 'references', 'features', 'artifact_id', 'expected_revision', 'input_ref', ...inputKeys];
   check(object(args) && Object.keys(args).every(key => allowed.includes(key)), 'Unsupported publication property; custom HTML uploads and provider overrides are disabled');
   check(Boolean(args.input_ref) !== Boolean(args.content), 'Supply content or input_ref, never both');
-  if (args.input_ref) check(inputKeys.every(key => !Object.hasOwn(args, key)), 'input_ref contains the complete provider input; do not supply additional content, style, assets or target');
+  if (args.input_ref) check(inputKeys.every(key => !Object.hasOwn(args, key)), 'input_ref contains the complete provider input; do not supply additional content, lead, highlights, style, assets or target');
   const input = Object.fromEntries(inputKeys.filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]));
   // Explicit evidence refs remain fixed dependencies even through this facade.
   const references = uniqueRefs(args.references ?? []);

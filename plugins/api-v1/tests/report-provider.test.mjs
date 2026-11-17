@@ -10,8 +10,10 @@ import { resolveReportStyle } from '../packages/reports/report-styles.js';
 const ref = (id, kind='resource') => ({id,kind,revision:'fixture-v1',digest:'sha256:'+'a'.repeat(64),schemaVersion:'1.0.0'});
 const content = {kind:'document',sections:[{title:'Fixture',blocks:[{type:'paragraph',text:'Synthetic values only'}]}]};
 const metadata = {title:'Fixture',summary:'Synthetic software check',locale:'en',provenanceKind:'demo',features:['interactive']};
-const envelope = input => ({metadata,data:[],related:[],references:[],input});
-const publishArgs = extra => ({operation_id:'fixture-op',title:metadata.title,summary:metadata.summary,provenance_kind:'demo',data:[],content,...extra});
+const lead = 'The supplied fixture supports this software comparison.';
+const highlights = [{label:'Fixture result',value:'Supplied'}];
+const envelope = input => ({metadata,data:[],related:[],references:[],input:{lead,highlights,...input}});
+const publishArgs = extra => ({operation_id:'fixture-op',title:metadata.title,lead,highlights,summary:metadata.summary,provenance_kind:'demo',data:[],content,...extra});
 const freeze = value => { if(value&&typeof value==='object'){Object.values(value).forEach(freeze);Object.freeze(value);}return value; };
 
 test('a published document shows one demo label rather than duplicating renderer metadata', async () => {
@@ -57,7 +59,7 @@ test('answer target travels through the existing facade as complete provider inp
   } } };
   const result = await publishReport(host, publishArgs({ target: 'answer' }));
   assert.equal(calls[0].id, 'host.reports.publish');
-  assert.deepEqual(calls[0].request.input, { content, target: 'answer' });
+  assert.deepEqual(calls[0].request.input, { content, lead, highlights, target: 'answer' });
   assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
   assert.equal(result.presentation.metadata.surface, 'answer');
 });
@@ -83,7 +85,7 @@ test('publication facade delegates unchanged content and fixed evidence to the h
   const before=structuredClone(original),result=await publishReport(host,original,signal);
   assert.equal(result,receipt);assert.deepEqual(original,before);assert.equal(calls.length,1);
   const [id,input,options]=calls[0];assert.equal(id,'host.reports.publish');assert.equal(options.signal,signal);
-  assert.deepEqual(input.input,{content});
+  assert.deepEqual(input.input,{content,lead,highlights});
   assert.deepEqual(input.references,[source,evidence]);assert.equal(input.artifactId,'existing');assert.equal(input.expectedRevision,'current');
   assert.equal(Object.hasOwn(input,'provider'),false);assert.equal(input.input.content,content);
 });
@@ -91,10 +93,10 @@ test('publication facade delegates unchanged content and fixed evidence to the h
 test('complete inputRef is forwarded without retyping, reading or accepting an alternate provider', async () => {
   const calls=[],input_ref={ref:ref('input-json'),entry:'input.json'};
   const host={capabilities:{invoke:async(id,args)=>{calls.push({id,args});return {type:'result',value:{ref:ref('out','report')}};}},resources:{read:()=>assert.fail('Host must read inputRef')}};
-  const args=publishArgs({input_ref});delete args.content;
+  const args=publishArgs({input_ref});delete args.content;delete args.lead;delete args.highlights;
   await publishReport(host,args);
   assert.deepEqual(calls[0].args.inputRef,input_ref);assert.equal(Object.hasOwn(calls[0].args,'input'),false);
-  for(const extra of [{content},{style:{}},{target:'answer'},{target:'report'},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
+  for(const extra of [{content},{lead},{highlights},{style:{}},{target:'answer'},{target:'report'},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
   assert.equal(calls.length,1);
   await assert.rejects(publishReport({capabilities:{invoke:async()=>({type:'job',job:{}})}},args),/immediate/);
 });

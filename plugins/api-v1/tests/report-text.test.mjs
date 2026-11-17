@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderStructuredReport } from '../packages/reports/report-content.js';
 const chart = extra => ({ type:'chart',kind:'bar',title:'数量比较',rows:[{label:'A',value:0},{label:'B',value:4}],options:{x:'label',y:'value',unit:'个'},...extra });
-const render=(blocks,extra={})=>renderStructuredReport({}, {title:'数量比较',summary:'',locale:'zh-CN',provenance_kind:'demo',data:[],content:{kind:'document',sections:[{title:'数量比较',blocks}]},...extra});
+const render=(blocks,extra={})=>renderStructuredReport({}, {title:'数量比较',lead:'合成数据展示了已提供的比较结果。', highlights: [{ label: 'Fixture result', value: 'Supplied' }],summary:'',locale:'zh-CN',provenance_kind:'demo',data:[],content:{kind:'document',sections:[{title:'数量比较',blocks}]},...extra});
 const markup=html=>(html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1]??html).replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi,'');
 const count=(html,text)=>markup(html).split(text).length-1;
 test('adjacent report, section and chart titles appear once while the plot keeps its name',async()=>{

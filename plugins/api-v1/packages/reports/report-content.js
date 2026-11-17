@@ -27,7 +27,37 @@ function valueTone(tone, value, path, tonePath) {
 }
 export const reportStyles = Object.freeze({ layouts: ['document'] });
 
+function renderMetrics(items, path, opening = false) {
+  list(items, 12);
+  return `<dl class="report-metrics${opening ? ' report-highlights' : ''}"${opening ? ` data-count="${items.length}"` : ''}>${items.map((item, index) => {
+    try {
+      keys(item, ['label', 'value', 'tone']); text(item.label);
+      check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), `${path}/${index}/value: Invalid metric value`);
+      if (opening) {
+        check(item.label.trim(), `${path}/${index}/label: Opening key result needs a nonempty label`);
+        check(typeof item.value !== 'string' || item.value.trim(), `${path}/${index}/value: Opening key result needs a nonempty value`);
+      }
+      const tone = valueTone(item.tone, item.value, `${path}/${index}/value`, `${path}/${index}/tone`);
+      return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd></div>`;
+    } catch (error) {
+      if (!error.message.startsWith('/input/')) error.message = `${path}/${index}: ${error.message}`;
+      throw error;
+    }
+  }).join('')}</dl>`;
+}
+
 export async function renderStructuredReport(host, args, signal) {
+  const report = args.target !== 'answer';
+  if (args.lead !== undefined) check(typeof args.lead === 'string' && args.lead.length <= 20000, '/input/lead: Opening answer must be plain text up to 20,000 characters');
+  if (report) {
+    check(typeof args.title === 'string' && args.title.trim(), '/metadata/title: A report requires a nonempty title');
+    check(typeof args.lead === 'string' && args.lead.trim(), '/input/lead: A report requires an explicit opening answer to the user question; summary is only index metadata');
+    check(Array.isArray(args.highlights) && args.highlights.length >= 1 && args.highlights.length <= 6, '/input/highlights: A report requires 1–6 explicitly supplied key results');
+    check(Array.isArray(args.content?.sections) && args.content.sections.length > 0, '/input/content/sections: A report requires at least one body section');
+    args.content.sections.forEach((section, index) => check(Array.isArray(section?.blocks) && section.blocks.length > 0, `/input/content/sections/${index}/blocks: A report body section needs content`));
+  }
+  if (args.highlights !== undefined) check(Array.isArray(args.highlights) && args.highlights.length >= 1 && args.highlights.length <= 6, '/input/highlights: Supply 1–6 key results');
+  const highlights = args.highlights === undefined ? '' : renderMetrics(args.highlights, '/input/highlights', true);
   const bindings = args.data ?? [];
   const content = args.content?.kind === 'document' ? await normalizeComponentContent(host, args.content, bindings, signal) : args.content;
   const style = await resolveReportStyle(host, args.style);
@@ -108,7 +138,7 @@ export async function renderStructuredReport(host, args, signal) {
     }
     if (row.type === 'metrics') {
       keys(row, ['type','items']); list(row.items, 12);
-      return `<dl class="report-metrics">${row.items.map((item,index) => { keys(item,['label','value','tone']); text(item.label); check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), `${path}/items/${index}/value: Invalid metric value`); const tone = valueTone(item.tone, item.value, `${path}/items/${index}/value`, `${path}/items/${index}/tone`); return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd></div>`; }).join('')}</dl>`;
+      return renderMetrics(row.items, `${path}/items`);
     }
     if (row.type === 'reasoning') {
       keys(row, ['type','steps']); list(row.steps, 8); row.steps.forEach(text);
@@ -167,9 +197,10 @@ export async function renderStructuredReport(host, args, signal) {
       body+=`<script id="sesame-module-charts" type="application/json">${json(charts)}</script>${assets.map(path=>`<script>${asset('assets/'+path)}</script>`).join('')}<script>${asset('assets/content-charts.js')}</script>`;
     }
   if (body.includes('data-report-svl')) body += `<script>${asset('assets/svl-graph.js')}</script><script>SesameSvlGraph.mount();</script>`;
-  // Metadata summaries belong to the report index. Visible conclusions are
-  // authored once as paragraph/judgment content, never injected here.
-  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${body}</div>`;
+  // The explicit opening answer owns its position. Metadata summaries remain
+  // index-only; the renderer never invents an answer from prose or chart data.
+  const lead = report ? `<p class="report-lead">${e(args.lead)}</p>` : '';
+  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${lead}${report ? highlights : ''}${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${body}</div>`;
   const tokens={LOCALE:e(args.locale??'zh-CN'),TITLE:e(args.title),STYLES:asset('assets/editorial.css')+'\n'+asset('assets/content.css')+'\n'+asset('assets/svl-graph.css'),BODY:body};
   return applyReportStyle(withBuiltins(asset('renderer/document-shell.html').replace(/\{\{([A-Z_]+)\}\}/g,(token,key)=>tokens[key]??token)),style);
 }

@@ -77,7 +77,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
     { type: 'paragraph', text: '仅验证组件协议与渲染；不是市场研究结果。' }, line,
     { type: 'details', title: '用户主动提供的明细', blocks: [{ type: 'table', columns: ['记录', '值'], rows: [['精确原值', '9007199254740993.0000001']] }] },
   ] }] };
-  const draft = { title: '组件 MCP 合成验收', locale: 'zh-CN', provenance_kind: 'demo', data: [], content };
+  const draft = { title: '组件 MCP 合成验收', lead: '合成样本用于验证组件调用和发布。', highlights: [{ label: 'Fixture result', value: 'Supplied' }], locale: 'zh-CN', provenance_kind: 'demo', data: [], content };
   const before = app.store.list('artifact').length;
   const valid = await call('components_validate', draft);
   assert.equal(valid.valid, true, JSON.stringify(valid.diagnostics));
@@ -87,11 +87,11 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   assert.equal(rejected.valid, false);
   assert.ok(rejected.diagnostics.length > 0);
   const missingMapping = structuredClone(line); delete missingMapping.options.x;
-  const mappingFailure = await call('components_validate', { title: draft.title, provenance_kind: 'demo', component: missingMapping });
+  const mappingFailure = await call('components_validate', { title: draft.title, lead: draft.lead, highlights: draft.highlights, provenance_kind: 'demo', component: missingMapping });
   assert.equal(mappingFailure.valid, false, 'Discovery and validation use the same required chart mappings');
 
   // The short form accepts the exact discovered example without document scaffolding.
-  const concise = { operation_id: 'components-mcp-single', title: '单组件合成验收', provenance_kind: 'demo', component: line };
+  const concise = { operation_id: 'components-mcp-single', title: '单组件合成验收', lead: draft.lead, highlights: draft.highlights, provenance_kind: 'demo', component: line };
   assert.equal((await call('components_show', concise)).ref.kind, 'report');
   const simpleInput = { target: 'answer', provenance_kind: 'demo', component: line };
   assert.equal((await call('components_validate', simpleInput)).valid, true);
@@ -141,7 +141,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   assert.equal(await frame.locator('body').evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   assert.deepEqual(browserErrors, []);
   await page.close();
-  const parallel = await call('components_validate', { title: draft.title, provenance_kind: 'demo', components: [line, line], layout: 'columns' });
+  const parallel = await call('components_validate', { title: draft.title, lead: draft.lead, highlights: draft.highlights, provenance_kind: 'demo', components: [line, line], layout: 'columns' });
   assert.equal(parallel.valid, true, JSON.stringify(parallel.diagnostics));
 
   // Read fixed data through the real artifact protocol, not a mocked row reader.
@@ -149,7 +149,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   const snapshot = await host.capabilities.invoke('sesame/data-access#data_snapshot', { operationId: 'components-fixed-snapshot', title: 'Components fixed data', source: { providerId:'host#datasets', revision:'host:2' }, input: { datasetId:'components-fixed-data' } });
   assert.equal(snapshot.type, 'result');
   const boundChart = { ...line, data_id: 'series' }; delete boundChart.rows;
-  const bound = { title: draft.title, provenance_kind: 'demo', component: boundChart, data: [{ id: 'series', ref: snapshot.value.ref, usage: 'Synthetic component series' }] };
+  const bound = { title: draft.title, lead: draft.lead, highlights: draft.highlights, provenance_kind: 'demo', component: boundChart, data: [{ id: 'series', ref: snapshot.value.ref, usage: 'Synthetic component series' }] };
   const boundValidation = await call('components_validate', bound);
   assert.equal(boundValidation.valid, true, JSON.stringify(boundValidation.diagnostics));
   const boundReport = await call('components_show', { ...bound, operation_id: 'components-mcp-bound' });

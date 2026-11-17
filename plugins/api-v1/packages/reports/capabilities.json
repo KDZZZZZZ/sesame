@@ -152,7 +152,7 @@
           "宿主报告渲染器可用；已发布该 ref。"
         ],
         "limitations": [
-          "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。",
+          "rendered 才证明本次检查通过；失败根据具体诊断修正受控组件或数据，发布新 revision 再检查。无渲染器时明确未验证。",
           "rendered 不等于可导出；receipt.exportability 是源级建议，真实静态准备检查另用 report_export_check。"
         ]
       },
@@ -273,7 +273,7 @@
       ],
       "usage": {
         "purpose": "Prepare large structured reports without copying their complete content into another tool call.",
-        "inputs": "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and any original optional metadata or fixed references. locale belongs to this outer envelope.",
+        "inputs": "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and original optional metadata or fixed references. Full reports require input.lead, 1–6 input.highlights and nonempty input.content.sections. locale belongs to this outer envelope.",
         "outputs": "provider and publication. Pass publication unchanged to host_reports_publish. inputRef names an immutable application/json resource; no report exists until publication succeeds.",
         "prerequisites": [
           "The selected provider is sesame/reports.",
@@ -1078,6 +1078,76 @@
                 ],
                 "default": "report",
                 "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
+              },
+              "lead": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000,
+                "pattern": "\\S",
+                "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+              },
+              "highlights": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "maxLength": 20000,
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "value": {
+                      "type": [
+                        "string",
+                        "number"
+                      ],
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "tone": {
+                      "type": "string",
+                      "enum": [
+                        "auto",
+                        "positive",
+                        "negative",
+                        "neutral"
+                      ],
+                      "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "value"
+                  ],
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "tone": {
+                            "const": "auto"
+                          }
+                        },
+                        "required": [
+                          "tone"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
               }
             },
             "required": [
@@ -2005,7 +2075,45 @@
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "not": {
+                    "properties": {
+                      "target": {
+                        "const": "answer"
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ]
+                  }
+                },
+                "then": {
+                  "required": [
+                    "lead",
+                    "highlights"
+                  ],
+                  "properties": {
+                    "content": {
+                      "properties": {
+                        "sections": {
+                          "minItems": 1,
+                          "items": {
+                            "properties": {
+                              "blocks": {
+                                "minItems": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         "required": [
@@ -2100,7 +2208,7 @@
       ],
       "usage": {
         "purpose": "Host-only presentation service for supplied results.",
-        "inputs": "metadata/data/related/references/input; plugin-defined input contains content and optional user style/source evidence/attachments.",
+        "inputs": "metadata/data/related/references/input. Reports require metadata.title, input.lead, 1–6 input.highlights and nonempty input.content.sections. target=answer is an independent component surface without a report skeleton. Optional input.style/assets preserve supplied styling and attachments; summary remains index metadata. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
         "outputs": "entry, files and presentation identity; host publishes the exact package.",
         "prerequisites": [
           "Host selected this report provider."
@@ -2121,7 +2229,7 @@
         "agent",
         "host"
       ],
-      "description": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+      "description": "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2158,7 +2266,7 @@
         "read"
       ],
       "usage": {
-        "purpose": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+        "purpose": "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs.",
         "inputs": "Optional query/category, opaque cursor and limit (default 20, maximum 100).",
         "outputs": "Compact component IDs, categories and whenToUse guidance with a continuation cursor.",
         "prerequisites": [],
@@ -2178,7 +2286,7 @@
         "agent",
         "host"
       ],
-      "description": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+      "description": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2207,7 +2315,7 @@
         "read"
       ],
       "usage": {
-        "purpose": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+        "purpose": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.",
         "inputs": "IDs returned by components_list; choose only the components needed for the current content.",
         "outputs": "Selected component schemas and examples derived from the current renderer contract.",
         "prerequisites": [],
@@ -2227,7 +2335,7 @@
         "agent",
         "host"
       ],
-      "description": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
+      "description": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked. 完整报告必须提供标题、lead 开篇回答、1–6项 highlights 关键结果和非空正文章节；target=answer 的单独图表或内容块不需要报告骨架。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2235,11 +2343,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1000,
-            "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
+            "description": "完整报告必填：非空报告标题；target=answer 的独立组件可省略。"
           },
           "summary": {
             "type": "string",
-            "maxLength": 20000
+            "maxLength": 20000,
+            "description": "仅用于目录索引的元数据，不展示为报告开篇结论；开篇回答写入 lead。"
           },
           "locale": {
             "type": "string",
@@ -2756,7 +2865,7 @@
           },
           "content": {
             "type": "object",
-            "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+            "description": "正文组件文档。完整报告至少一个非空 section，与顶层 title、lead、highlights 共同构成报告；仅有图表也可组成正文。组件的精确字段可按需 components_describe。",
             "properties": {
               "kind": {
                 "const": "document"
@@ -2803,6 +2912,76 @@
             ],
             "default": "report",
             "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
+          },
+          "lead": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "pattern": "\\S",
+            "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+          },
+          "highlights": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 20000,
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "number"
+                  ],
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "tone": {
+                  "type": "string",
+                  "enum": [
+                    "auto",
+                    "positive",
+                    "negative",
+                    "neutral"
+                  ],
+                  "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "tone": {
+                        "const": "auto"
+                      }
+                    },
+                    "required": [
+                      "tone"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
           }
         },
         "required": [],
@@ -2884,6 +3063,114 @@
                 ]
               }
             }
+          },
+          {
+            "if": {
+              "not": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "target": {
+                        "const": "answer"
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "input_ref"
+                    ]
+                  }
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "title",
+                "lead",
+                "highlights"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "title": "合成比较示例",
+            "lead": "B 的样本数量是 A 的两倍。",
+            "provenance_kind": "demo",
+            "content": {
+              "kind": "document",
+              "sections": [
+                {
+                  "title": "样本数量",
+                  "blocks": [
+                    {
+                      "type": "chart",
+                      "kind": "bar",
+                      "rows": [
+                        {
+                          "item": "A",
+                          "value": 2
+                        },
+                        {
+                          "item": "B",
+                          "value": 4
+                        }
+                      ],
+                      "options": {
+                        "x": "item",
+                        "y": "value"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "highlights": [
+              {
+                "label": "A",
+                "value": 2
+              },
+              {
+                "label": "B",
+                "value": 4
+              },
+              {
+                "label": "Comparison",
+                "value": "B is twice A"
+              }
+            ]
+          },
+          {
+            "target": "answer",
+            "provenance_kind": "demo",
+            "component": {
+              "type": "chart",
+              "kind": "bar",
+              "rows": [
+                {
+                  "item": "A",
+                  "value": 2
+                },
+                {
+                  "item": "B",
+                  "value": 4
+                }
+              ],
+              "options": {
+                "x": "item",
+                "y": "value"
+              }
+            }
           }
         ]
       },
@@ -2896,7 +3183,7 @@
       ],
       "usage": {
         "purpose": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
-        "inputs": "Exactly one of component, components or content; layout stack/columns applies only to shorthand components. data defaults to []. Preserve original references/assets/style/title/summary/locale/provenance_kind/related. Omitted title is Component validation; omitted locale uses widest existing limits; omitted provenance_kind is derived.",
+        "inputs": "Exactly one of component, components or content; layout stack/columns applies only to shorthand components. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; target=answer needs no report skeleton. data defaults to []. Preserve original references/assets/style/summary/locale/provenance_kind/related; summary is index-only and cannot replace lead. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
         "outputs": "valid, status (valid/invalid/incomplete), diagnostics[{path,message}], protocol and explicit schema/renderer/fixedData/assets/browser coverage. A failed resource read is incomplete, never valid.",
         "prerequisites": [
           "Fixed bindings and attachment references must be accessible and complete."
@@ -2919,7 +3206,7 @@
         "agent",
         "host"
       ],
-      "description": "Show a component or up to 12 related components in one call. Supply chart type/kind, rows or a fixed data_id, and necessary options; titles, columns and publication metadata are optional. The tool normalizes and validates, then publishes through the host-selected provider. Use target:answer for concise answers; report is the default. Discovery and separate validation are optional.",
+      "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer shows standalone components without a report skeleton. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes, validates and publishes through the host-selected provider. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2927,11 +3214,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1000,
-            "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
+            "description": "完整报告必填：非空报告标题；target=answer 的独立组件可省略。"
           },
           "summary": {
             "type": "string",
-            "maxLength": 20000
+            "maxLength": 20000,
+            "description": "仅用于目录索引的元数据，不展示为报告开篇结论；开篇回答写入 lead。"
           },
           "locale": {
             "type": "string",
@@ -3448,7 +3736,7 @@
           },
           "content": {
             "type": "object",
-            "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+            "description": "正文组件文档。完整报告至少一个非空 section，与顶层 title、lead、highlights 共同构成报告；仅有图表也可组成正文。组件的精确字段可按需 components_describe。",
             "properties": {
               "kind": {
                 "const": "document"
@@ -3592,6 +3880,76 @@
               ]
             },
             "maxItems": 3
+          },
+          "lead": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "pattern": "\\S",
+            "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+          },
+          "highlights": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 20000,
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "number"
+                  ],
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "tone": {
+                  "type": "string",
+                  "enum": [
+                    "auto",
+                    "positive",
+                    "negative",
+                    "neutral"
+                  ],
+                  "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "tone": {
+                        "const": "auto"
+                      }
+                    },
+                    "required": [
+                      "tone"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
           }
         },
         "required": [],
@@ -3741,8 +4099,127 @@
                     "required": [
                       "target"
                     ]
+                  },
+                  {
+                    "required": [
+                      "lead"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "highlights"
+                    ]
                   }
                 ]
+              }
+            }
+          },
+          {
+            "if": {
+              "not": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "target": {
+                        "const": "answer"
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "input_ref"
+                    ]
+                  }
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "title",
+                "lead",
+                "highlights"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "operation_id": "synthetic-report-example",
+            "title": "合成比较示例",
+            "lead": "B 的样本数量是 A 的两倍。",
+            "provenance_kind": "demo",
+            "content": {
+              "kind": "document",
+              "sections": [
+                {
+                  "title": "样本数量",
+                  "blocks": [
+                    {
+                      "type": "chart",
+                      "kind": "bar",
+                      "rows": [
+                        {
+                          "item": "A",
+                          "value": 2
+                        },
+                        {
+                          "item": "B",
+                          "value": 4
+                        }
+                      ],
+                      "options": {
+                        "x": "item",
+                        "y": "value"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "highlights": [
+              {
+                "label": "A",
+                "value": 2
+              },
+              {
+                "label": "B",
+                "value": 4
+              },
+              {
+                "label": "Comparison",
+                "value": "B is twice A"
+              }
+            ]
+          },
+          {
+            "target": "answer",
+            "provenance_kind": "demo",
+            "component": {
+              "type": "chart",
+              "kind": "bar",
+              "rows": [
+                {
+                  "item": "A",
+                  "value": 2
+                },
+                {
+                  "item": "B",
+                  "value": 4
+                }
+              ],
+              "options": {
+                "x": "item",
+                "y": "value"
               }
             }
           }
@@ -3757,14 +4234,14 @@
         "artifact.write"
       ],
       "usage": {
-        "purpose": "Show one component, up to 12 components, or a complete document as a real report. Automatically runs the same static validation, then publishes through the host-selected provider; returns the fixed report reference. Discovery and a separate validation call are optional.",
-        "inputs": "operation_id, title and provenance_kind; exactly one of component, components, content or complete fixed input_ref. Shorthand inputs accept layout stack/columns. data defaults to []; optional summary defaults to empty. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed.",
+        "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer shows standalone components without a report skeleton. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes, validates and publishes through the host-selected provider. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
+        "inputs": "Exactly one of component, components, content or complete fixed input_ref. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; shorthand components wrap the body automatically. target=answer needs no title, lead or highlights. input_ref owns content/lead/highlights/style/assets/target; its report title remains an outer argument. data defaults to []; summary is index-only. operation_id is optional when trusted invocation identity is available. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
         "outputs": "Original host publication receipt plus protocol, actual renderer identity and componentRef containing the same fixed report ref and inputDigest when supplied by the host.",
         "prerequisites": [
           "Content must use this catalog’s document layout; the host chooses the renderer."
         ],
         "limitations": [
-          "No provider override, free HTML/CSS/scripts, MCP Apps resource or answer display target.",
+          "No provider override, free HTML/CSS/scripts or MCP Apps resource. Answer components use the existing report surface with target=answer.",
           "Show automatically performs the same schema, fixed-row, server-renderer and attachment preflight; the host repeats its required publication checks. renderStatus still does not imply visual inspection.",
           "Use the returned immutable report ref for inspection and later reuse."
         ]
@@ -3797,31 +4274,31 @@
       "id": "reports-entry",
       "kind": "prompt",
       "path": "prompt.md",
-      "description": "统一视觉的职责边界与直接调用入口。"
+      "description": "统一视觉职责、报告必需结构与直接调用入口。"
     },
     {
       "id": "visual-compose",
       "kind": "skill",
       "path": "skills/visual-compose/SKILL.md",
-      "description": "用已有内容选择并组合受控视觉组件。"
+      "description": "根据初稿的表达意图设计图文，尽可能把数据转为直观图表，再组合报告。"
     },
     {
       "id": "report-delivery",
       "kind": "skill",
       "path": "skills/report-delivery/SKILL.md",
-      "description": "发布、修订、真实渲染检查与按需导出。"
+      "description": "检查报告结构与统一视觉，发布、修订及按需导出。"
     },
     {
       "id": "reference-composing",
       "kind": "reference",
       "path": "references/composing.md",
-      "description": "组件与通用文档组合"
+      "description": "报告首屏与正文必需结构、正文组件组合与数据图表选择。"
     },
     {
       "id": "reference-text",
       "kind": "reference",
       "path": "references/text.md",
-      "description": "文字职责及展示位置"
+      "description": "标题、开篇结论、关键结果、正文和索引摘要各自的文字职责。"
     },
     {
       "id": "reference-data-binding",

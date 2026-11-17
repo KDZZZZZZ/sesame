@@ -7,7 +7,7 @@ import { renderStructuredReport } from '../packages/reports/report-content.js';
 
 const readJSON = async path => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
 const document = blocks => ({ kind: 'document', sections: [{ title: '', blocks }] });
-const args = content => ({ title: 'Supplied results', content, data: [], provenance_kind: 'derived', locale: 'en' });
+const args = content => ({ title: 'Supplied results', lead: 'The supplied results support this comparison.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], content, data: [], provenance_kind: 'derived', locale: 'en' });
 
 test('Reports exposes one visual publication path and only generic document input', async () => {
   const manifest = await readJSON('../packages/reports/capabilities.json');
@@ -16,7 +16,7 @@ test('Reports exposes one visual publication path and only generic document inpu
   assert.deepEqual(manifest.capabilities.map(item => item.id).sort(), ids);
   assert.deepEqual(createCapabilities({}).map(item => item.name).sort(), ids);
   const provider = manifest.capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
-  assert.deepEqual(Object.keys(provider.properties).sort(), ['assets', 'content', 'style', 'target']);
+  assert.deepEqual(Object.keys(provider.properties).sort(), ['assets', 'content', 'highlights', 'lead', 'style', 'target']);
   assert.equal(provider.properties.content.properties.kind.const, 'document');
   assert.deepEqual(Object.keys(provider.properties.content.properties).sort(), ['kind', 'sections']);
   const catalog = listComponents({ limit: 100 });

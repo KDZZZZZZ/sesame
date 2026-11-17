@@ -7,7 +7,7 @@ import { renderReport } from '../packages/reports/report-provider.js';
 const ref = {id:'axis-fixture',revision:'fixed-v1',digest:'sha256:'+'a'.repeat(64),kind:'data',schemaVersion:'1.0.0'};
 const kinds = ['line','area','bar','hbar','scatter'];
 const metadata = {title:'Axis contract fixture',summary:'Synthetic software test',locale:'en',provenanceKind:'demo',features:['interactive']};
-const envelope = (content, data=[]) => ({metadata,data,related:[],references:[],input:{content}});
+const envelope = (content, data=[]) => ({metadata,data,related:[],references:[],input:{content,target:'answer'}});
 const chart = (kind, options, rows) => ({type:'chart',kind,title:'Recorded values',columns:['day','index'],options,
   rows});
 const document = block => ({kind:'document',sections:[{title:'Fixture',blocks:[block]}]});

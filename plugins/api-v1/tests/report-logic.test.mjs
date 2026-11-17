@@ -9,7 +9,7 @@ import { renderStructuredReport } from '../packages/reports/report-content.js';
 const host=process.env.SESAME_HOST_ROOT;
 const flow={title:'已有处理过程',nodes:[{id:'a',label:'已有输入',detail:'保留原始记录'},{id:'b',label:'条件判断'},{id:'c',label:'结果甲'},{id:'d',label:'结果乙'}],edges:[{from:'a',to:'b'},{from:'b',to:'c',label:'甲'},{from:'b',to:'d',label:'乙'}]};
 const content={kind:'document',sections:[{title:'',blocks:[{type:'logic',...flow}]}]};
-const args={title:'通用逻辑图',locale:'zh-CN',provenance_kind:'demo',data:[],content};
+const args={title:'通用逻辑图',target:'answer',locale:'zh-CN',provenance_kind:'demo',data:[],content};
 test('generic dependencies preserve shared inputs and labels while rejecting broken identities',async()=>{
   const data={...flow,nodes:flow.nodes.map(n=>({...n})),edges:[...flow.edges,{from:'a',to:'d'}]};
   data.nodes[0].label='<img src=x onerror=alert(1)>';const before=structuredClone(data),html=renderLogicDiagram(data);
@@ -22,7 +22,7 @@ test('generic dependencies preserve shared inputs and labels while rejecting bro
 test('components and provider accept the same generic diagram schema', {skip:!host},async()=>{
   const {validateSchemas}=await import(pathToFileURL(join(host,'modules/shared/schema-service.js')).href);
   const contract=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
-  const values={components_show:{operation_id:'diagram-fixture',title:'演示',provenance_kind:'demo',content},report_render:{metadata:{title:'演示',summary:'软件测试',locale:'zh-CN',provenanceKind:'demo',features:[]},data:[],related:[],references:[],input:{content}}};
+  const values={components_show:{operation_id:'diagram-fixture',title:'演示',target:'answer',provenance_kind:'demo',content},report_render:{metadata:{title:'演示',summary:'软件测试',locale:'zh-CN',provenanceKind:'demo',features:[]},data:[],related:[],references:[],input:{content,target:'answer'}}};
   for(const[id,value]of Object.entries(values))await validateSchemas([{schema:contract.capabilities.find(c=>c.id===id).inputSchema,value}]);
 });
 test('shared canvas retains ports, selection, zoom, narrow layout and exact supplied node detail', {skip:!host,timeout:30000},async t=>{
