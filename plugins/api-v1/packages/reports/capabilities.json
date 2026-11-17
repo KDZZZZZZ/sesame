@@ -3206,7 +3206,7 @@
         "agent",
         "host"
       ],
-      "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
+      "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to edit the draft's organization, prose and visual expression together, prioritizing the user's question and preserving its evidence and meaning, then publish once.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -4234,7 +4234,7 @@
         "artifact.write"
       ],
       "usage": {
-        "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
+        "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to edit the draft's organization, prose and visual expression together, prioritizing the user's question and preserving its evidence and meaning, then publish once.",
         "inputs": "Exactly one of component, components, content or complete fixed input_ref. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; shorthand components wrap the body automatically. target=answer needs no title, lead or highlights. input_ref owns content/lead/highlights/style/assets/target; its report title remains an outer argument. data defaults to []; summary is index-only. operation_id is optional when trusted invocation identity is available. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
         "outputs": "A fixed ref and componentRef using sesame-components/1. Answer refs are independent resources containing component JSON and copied attachments; report refs retain the host publication receipt.",
         "prerequisites": [
@@ -4430,13 +4430,13 @@
       "id": "reports-entry",
       "kind": "prompt",
       "path": "prompt.md",
-      "description": "统一视觉职责、报告必需结构与直接调用入口。"
+      "description": "图文编辑职责、问题优先的报告结构与统一组件入口。"
     },
     {
       "id": "visual-compose",
       "kind": "skill",
       "path": "skills/visual-compose/SKILL.md",
-      "description": "初稿后统一做图文编辑：组织内容、润色段落、设计图的重点，使图文共同解释判断，再组合报告。"
+      "description": "初稿后的统一图文编辑：按问题安排全文，在同一步骤内编排信息层次、编辑语言并审读成品。"
     },
     {
       "id": "report-delivery",
@@ -4448,13 +4448,13 @@
       "id": "reference-composing",
       "kind": "reference",
       "path": "references/composing.md",
-      "description": "统一图文编辑中的构图与组合；按表达意图设计图的重点、参照、尺度与已有标注，不以图数验收。"
+      "description": "用现有小标题、段落、列表、表格与图表表达信息关系，组织构图重点、参照和标注，合并冗余表达。"
     },
     {
       "id": "reference-text",
       "kind": "reference",
       "path": "references/text.md",
-      "description": "读者导向的段落组织、用词与证据校准、图文分工、改写示例和统一文字位置。"
+      "description": "按用户问题组织文章，建立论证层次与段落衔接，校准用词、条件和图文职责，含改写示例。"
     },
     {
       "id": "reference-data-binding",

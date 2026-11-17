@@ -229,7 +229,7 @@ function chartExample(kind) {
 
 const paragraph = { type: 'paragraph', text: '演示说明：以下内容使用虚构样本。' };
 const blockExamples = {
-  paragraph, markdown: { type: 'markdown', text: '**演示**：用短段落补充说明。' },
+  paragraph, markdown: { type: 'markdown', text: '### 两种方案的取舍（演示）\n\n- **方案甲：** 优先速度。\n- **方案乙：** 优先完整性。' },
   attachments: { type: 'attachments', items: [{ label: '演示数据', path: 'evidence/demo.json' }] },
   judgment: { type: 'judgment', text: '演示：当前容量足够完成任务。' },
   formula: { type: 'formula', latex: 'r=\\frac{a}{b}' },
@@ -237,7 +237,7 @@ const blockExamples = {
   range: { type: 'range', label: '演示位置', min: 0, max: 10, value: 6 },
   scores: { type: 'scores', min: 0, max: 10, items: [{ label: '演示尺度甲', value: 6 }, { label: '演示尺度乙', value: 8 }] },
   reasoning: { type: 'reasoning', steps: ['演示：需求为 6。', '演示：容量为 10，足以覆盖需求。'] },
-  table: { type: 'table', columns: ['项目', '数量'], rows: [['演示甲', 2], ['演示乙', 5]] },
+  table: { type: 'table', columns: ['方案', '适用侧重点'], rows: [['演示甲', '时效优先'], ['演示乙', '覆盖优先']] },
   group: { type: 'group', layout: 'columns', blocks: [paragraph, { type: 'metrics', items: [{ label: '演示数量', value: 12 }] }] },
   details: { type: 'details', title: '演示依据', blocks: [paragraph] },
   chart: chartExample('line'),
@@ -245,8 +245,8 @@ const blockExamples = {
   logic: { type: 'logic', title: '演示依赖关系', nodes: [{ id: 'input', label: '已有输入' }, { id: 'result', label: '输出结果' }], edges: [{ from: 'input', to: 'result' }] },
 };
 const blockMetadata = {
-  paragraph: ['段落', 'content', '用简短自然语言解释背景、方法、限制或图表中的关键观察。', 'paragraph text prose'],
-  markdown: ['Markdown 文本', 'content', '需要加粗、列表或链接等基础格式时，组织补充说明与阅读结构。', 'markdown formatted text list'],
+  paragraph: ['段落', 'content', '连贯解释一个判断的依据、机制和意义，连接相关证据与论点。', 'paragraph text prose'],
+  markdown: ['Markdown 文本', 'content', '用章节内小标题区分论证任务，以列表组织并列证据；支持加粗、链接及基础表格。', 'markdown headings subheading formatted text list hierarchy'],
   attachments: ['证据附件', 'content', '向读者提供已打包数据、文本或图片的下载入口，便于核对完整材料。', 'attachments evidence files download'],
   judgment: ['一句判断', 'content', '突出一个已有的核心判断。', 'judgment conclusion statement'],
   formula: ['数学公式', 'content', '以 LaTeX 表达变量关系、计算定义或方法中的关键公式。', 'formula latex math equation'],
@@ -254,9 +254,9 @@ const blockMetadata = {
   range: ['区间位置', 'comparison', '在明确上下界内定位一个真实数值，突出它距两端的相对位置。', 'range bounded position'],
   scores: ['同尺度数值', 'comparison', '在统一且已说明的数值范围内并列比较多个已提供结果。', 'scores common scale values comparison'],
   reasoning: ['推理步骤', 'content', '按顺序列出从已有事实到结论的解释步骤，便于逐步核查。', 'reasoning ordered steps explanation'],
-  table: ['数据表', 'content', '需要精确读数、混合字段或逐行核对时，直接保留原始标量记录。', 'table records exact values'],
+  table: ['数据表', 'content', '逐项对照平行情景、方案取舍、定性条件或精确数值；单元格支持文字及标量。', 'table comparison scenarios qualitative records exact values'],
   group: ['内容组合', 'layout', '把相关内容按并列或纵向关系组成一组，保持同一阅读上下文。', 'group layout columns stack composition'],
-  details: ['折叠详情', 'layout', '把完整证据、方法或长说明放入可展开区域，减少主叙述中的干扰。', 'details disclosure evidence'],
+  details: ['折叠详情', 'layout', '提供读者确需查阅的明细，默认收起；内部工作记录无需自动转成详情。', 'details disclosure evidence'],
   chart: ['通用图表入口', 'content', '把固定源数据映射到一种已支持图型，具体选择与参数由 chart.* 目录提供。', 'chart builtin visualization'],
   judgments: ['分项判断', 'content', '并列展示已有的标签和判断；需要明细时显式提供命名的值。', 'judgments results evidence conditions'],
   logic: ['逻辑依赖图', 'relationship', '展示多个输入、步骤和结果之间的有向依赖，适合包含共享输入或汇合的无环结构。', 'logic dag dependency directed graph'],

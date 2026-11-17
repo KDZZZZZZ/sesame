@@ -41,3 +41,15 @@ Reports 8.0.4 已通过 Skill、包锁、inventory 与 diff 检查，并安装�
 复测已完成并另存《XAUUSD周报与三日展望｜图文编辑复测》。成品与准备稿一致，15 个固定数据引用、9 行 OHLC、23 例历史结果和 4 个证据附件保持不变，原报告及此前测试版本未修改；1000/390 宽度检查均无诊断。新版将美元与实际收益率缺口写为未来观察条件，纪要只保留会期、CPI 前的时间范围与关注重点，未读讲话和通用日历提醒不再堆进正文；实质反证和适用条件仍在。
 
 独立复核仍指出一句“利率与美元的响应决定……”比原稿的条件性关联稍强。此处作为表达残留记录，没有手工修改模型产出，也未追加提示重跑。完整测试与版本证据位于 `outputs/report-editorial-conditions-test-20261117/test-result.json`；本次未验证导出。
+
+## 文章组织与信息层次
+
+新反馈指出：精简后仍像依次排列的研究成果，用户关心的预测条件出场过晚；部分段落把不同任务挤在一起，图表也可能重复占用注意力。本轮在同一个图文编辑步骤内明确全文组织、表达编排、语言编辑与成品审读，不新增工作流、固定章节或宿主接口。
+
+改动计划：按用户主问题先完整呈现回答和必要条件，再展开论据；区分连续解释、并列证据、横向比较与递进分支，利用现有小标题、列表、表格和图表；允许合并或去掉不增加理解的图，保留尾部和反证。图标题或已有标签点明比较重点，必要的单位与范围仍清楚，不增设每图一段长图注。简单差值与单位转换可由固定输入核对，新统计与实质判断仍交研究。重写相关指导，清理相互矛盾的强制选图规则，避免持续叠加个案要求。
+
+核实了上游 [WRITER.md](https://github.com/K-Dense-AI/claude-scientific-writer/blob/main/.claude/WRITER.md)、[Figures & Tables](https://github.com/K-Dense-AI/claude-scientific-writer/blob/main/skills/scientific-writing/references/figures_tables.md)、[Report Structure Guide](https://github.com/K-Dense-AI/claude-scientific-writer/blob/main/skills/market-research-reports/references/report_structure_guide.md)：采纳问题优先、骨架先行、图文分工和成品审读。顶层固定图数与下层按需原则有冲突，不采纳配额；上游也未要求每图另加结论句。反馈中的具体删图意见作为编辑判断，不固定删除某种图；其示例新增的“更长时间维持高利率”不作为本报告事实。
+
+验证沿用组件、Markdown、目录及包校验，测试已有表达能力和例子，不写镜像提示词的测试。安装后仍使用同一份原始初稿与简短任务说明独立复测，检查主问题位置、层次、图文互补、证据保真及渲染结果；保留模型原样产出与此前报告。
+
+Reports 8.0.5 已实现并安装到当前工作区。组件目录同步公开小标题、列表和定性对照用法，交付指南残留的强制画树口径也已清理；输入输出契约逐项对照未改变。目录示例与文字组件测试 11 通过、0 失败、2 项宿主/浏览器检查跳过；Skill、语法、包锁、inventory 与 diff 检查通过。9 份安装文件与源码逐字节一致，真实模型已读取新版本 visual-compose 与 text.md。复测请求为 94 字中性说明加同一份初稿，输出及验收记录放在 `outputs/report-editorial-structure-test-20261117/`。
