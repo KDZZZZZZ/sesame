@@ -29,7 +29,8 @@ test('seven public tools expose independent native steps without a research sche
   const manifest = read('plugin.json'), declaration = read('capabilities.json');
   const capabilities = declaration.capabilities;
   assert.equal(manifest.title, '因子研究');
-  assert.equal(manifest.version, '3.0.0');
+  assert.match(manifest.version, /^3\.\d+\.\d+$/);
+  assert.equal(manifest.version, read('package.json').version);
   assert.deepEqual(capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id),
     ['factor_environment', 'factor_prepare', 'factor_search', 'factor_compute', 'factor_evaluate', 'factor_library', 'factor_pool']);
   const workflows = capabilities.filter(cap => cap.kind === 'workflow');

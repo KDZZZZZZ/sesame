@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4950,7 +4950,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.6",
+      "version": "3.1.7",
       "distribution": "core",
       "state": "mounted",
       "engines": {

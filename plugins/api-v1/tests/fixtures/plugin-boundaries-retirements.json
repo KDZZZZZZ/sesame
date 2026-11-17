@@ -2,76 +2,48 @@
   "schemaVersion": 1,
   "status": "approved",
   "baselineDigest": "sha256:f04b89485709457112cd5d5aa624d02d654162009d9c93f7b8cb2c883af6acfb",
-  "reviewedAt": "2026-10-28",
-  "authorization": "User explicitly requested removal of the two independent compatibility packages; no same-name routing aliases remain.",
+  "reviewedAt": "2026-11-17",
+  "authorization": "User explicitly requested removal of the two independent compatibility packages and, on 2026-11-17, removal of all 18 historical v1 materials from auto-factor-mining. Current declared v3 guides replace the earlier byte-retention requirement; no compatibility aliases are restored. Frozen baselines and historical release records remain unchanged.",
   "entries": [
     {
       "pluginId": "sesame/factor-research",
       "sourcePath": "plugins/optional-api-v1/packages/factor-research",
-      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。 2026-11-16: retained CLI guidance now reuses existing fixed data references with Reports components; research semantics and executable fixtures remain unchanged.",
+      "reason": "2026-11-17：用户明确要求删除 auto-factor-mining 中全部旧 v1 材料、声明和引用。本次以已声明的 v3 因子研究 Skill、搜索和评价指南替代原参考 CLI、示例与旧方法文档的字节保留要求；独立 factor-research 包继续退役，冻结基线和历史发布记录保持不变。",
       "replacementPluginId": "sesame/auto-factor-mining",
       "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "retainedResources": [
         {
-          "path": "scripts/reference-factor.mjs",
-          "sha256": "sha256:2d6902e93a9f5f2562dce0ada58becc81473a05362ede7ab7fc9aa90a5b45d80"
+          "path": "skills/auto-factor-mining/SKILL.md",
+          "sha256": "sha256:5cb98bfc9b8fc875b13606de296baf8c4b5e1d406430c51b2810705f65033a66"
         },
         {
-          "path": "examples/reference-factor/plan.demo.json",
-          "sha256": "sha256:6594aa712ea775f08a3d64eef7b6a7788982c597fb350f544f1b359e18ecad32"
+          "path": "references/search.md",
+          "sha256": "sha256:86650263943ae30f0dc711645a2fc3b6e015a50ecf90784c4d24c0be532909cc"
         },
         {
-          "path": "examples/reference-factor/development.demo.json",
-          "sha256": "sha256:d2a27cffd87889b52bde17f2214c7554c59713cdce738d1976e3885be88eb64b"
-        },
-        {
-          "path": "examples/reference-factor/holdout.demo.json",
-          "sha256": "sha256:19813672a64b27426ec97b5fefee17f35635ebb9abb4d22055e1ed514ca6f7f8"
-        },
-        {
-          "path": "references/factor-method.md",
-          "sha256": "sha256:1a73d8be9ca3e1a43543b018ae358a54aaf0323f18e3862ba1962d2ea6b6cf44"
-        },
-        {
-          "path": "references/factor-cli.md",
-          "sha256": "sha256:9722216db89fe16f40c14880f796fedb80a3ee8ccea0ef56c888e4ff2dac357b"
+          "path": "references/evaluation.md",
+          "sha256": "sha256:3e754b9ea5669f59d0812760d5de9c2e6a2b24a4b93881fa7cb544c25b5332a0"
         }
       ]
     },
     {
       "pluginId": "sesame/strategy-research",
       "sourcePath": "plugins/optional-api-v1/packages/strategy-research",
-      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。 2026-11-16: retained CLI guidance now reuses existing fixed data references with Reports components; research semantics and executable fixtures remain unchanged.",
+      "reason": "2026-11-17：用户明确要求删除 auto-factor-mining 中全部旧 v1 材料、声明和引用。本次以已声明的 v3 接口、纯因子评价和执行指南替代原策略参考 CLI、示例与旧证据文档的字节保留要求；指南明确策略应用评价和因子池选择由外部 Agent/工作流承担，独立 strategy-research 包继续退役，冻结基线和历史发布记录保持不变。",
       "replacementPluginId": "sesame/auto-factor-mining",
       "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "retainedResources": [
         {
-          "path": "scripts/reference-experiment.mjs",
-          "sha256": "sha256:58e88721a18f8cdfda49062e943d32a5913ab87c99552ce7e40f7e7f71d03875"
+          "path": "references/contracts.md",
+          "sha256": "sha256:483fe158d199d17b166a09f07475dc703fb8072430c8f5928cbe26fff5a5b47f"
         },
         {
-          "path": "examples/reference-strategy/plan.demo.json",
-          "sha256": "sha256:73fe9eb776ca0b94a6bf54694acb580ee5c3215f16ee9cb22d2c095f20ad187d"
+          "path": "references/evaluation.md",
+          "sha256": "sha256:3e754b9ea5669f59d0812760d5de9c2e6a2b24a4b93881fa7cb544c25b5332a0"
         },
         {
-          "path": "examples/reference-strategy/timing.demo.json",
-          "sha256": "sha256:a05a37303b0cd4daffbaf64e9fad9f9b5b65d11c6215304bd844ff9a92fb10aa"
-        },
-        {
-          "path": "examples/reference-strategy/trials.demo.json",
-          "sha256": "sha256:fc7baa3193097c468af2004fbe50207fdb4bbee25e1462064243fb60a0c757e4"
-        },
-        {
-          "path": "examples/reference-strategy/input.demo.json",
-          "sha256": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e"
-        },
-        {
-          "path": "references/strategy-evidence.md",
-          "sha256": "sha256:29418455e743eb10df3c7ae2b593890bfd1288ae9135ef1233dbeedda4c78865"
-        },
-        {
-          "path": "references/strategy-cli.md",
-          "sha256": "sha256:f4a638f7f5e247457d7dce1a9774182d12455f0954e4d1623eeeb2be513b3b6c"
+          "path": "references/execution.md",
+          "sha256": "sha256:c859a272c4a1288900aaac4c859d88fb38177fbf358a5e00c1345d88456b2b4b"
         }
       ]
     }

@@ -13,7 +13,7 @@
     {
       "pluginId": "sesame/auto-factor-mining",
       "before": "1.1.0",
-      "after": "3.1.1"
+      "after": "3.1.2"
     },
     {
       "pluginId": "sesame/backtrader",
@@ -73,7 +73,7 @@
     {
       "pluginId": "sesame/plugin-manager",
       "before": "3.0.1",
-      "after": "3.1.5"
+      "after": "3.1.7"
     },
     {
       "pluginId": "sesame/portfolio-execution",
@@ -7180,9 +7180,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:7d521410351de05abe0b1565e8e9d01f0d81660ee87af287940027e76ece7906",
-      "afterDigest": "sha256:f915ba548fdf16c6949f21ff494c753664b791b9b0cc10a786c1d2c8a185848b",
+      "afterDigest": "sha256:b0efe8ba3b28f7acf09e345aa8c172b31916b756b720288354898bc4760901b0",
       "decision": "approved",
-      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7298,114 +7298,6 @@
               "path": "references/external-factor-sources.md",
               "kind": "reference",
               "description": "External formula reference links, semantic checks and on-demand registration into the user factor library. Contains no bundled upstream formula catalog or code."
-            },
-            {
-              "id": "final-report-example",
-              "path": "examples/report.demo.html",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "knowledge-4",
-              "path": "examples/demo-run.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-references-research-guide-md",
-              "path": "references/research-guide.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-references-factor-method-md",
-              "path": "references/factor-method.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-references-factor-cli-md",
-              "path": "references/factor-cli.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-references-strategy-evidence-md",
-              "path": "references/strategy-evidence.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-references-strategy-cli-md",
-              "path": "references/strategy-cli.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-scripts-reference-factor-mjs",
-              "path": "scripts/reference-factor.mjs",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-scripts-reference-experiment-mjs",
-              "path": "scripts/reference-experiment.mjs",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-factor-development-demo-json",
-              "path": "examples/reference-factor/development.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-factor-holdout-demo-json",
-              "path": "examples/reference-factor/holdout.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-factor-plan-demo-json",
-              "path": "examples/reference-factor/plan.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-strategy-input-demo-json",
-              "path": "examples/reference-strategy/input.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-strategy-plan-demo-json",
-              "path": "examples/reference-strategy/plan.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-strategy-timing-demo-json",
-              "path": "examples/reference-strategy/timing.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "integrated-examples-reference-strategy-trials-demo-json",
-              "path": "examples/reference-strategy/trials.demo.json",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "native-validation",
-              "path": "references/native-validation.md",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
-            },
-            {
-              "id": "native-roundtrip-example",
-              "path": "examples/native-roundtrip.py",
-              "kind": "reference",
-              "description": "Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md."
             }
           ],
           "impact": "resource-declaration-review"
@@ -29083,6 +28975,46 @@
             ]
           },
           "impact": "authorization-restriction"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/auto-factor-mining",
+      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "component": "removed path:examples/demo-run.json",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/auto-factor-mining",
+      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "component": "removed path:examples/report.demo.html",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
         }
       ],
       "findings": []

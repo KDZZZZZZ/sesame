@@ -1484,9 +1484,9 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "directory": "auto-factor-mining",
-      "treeDigest": "sha256:b13a1400131a9189b2b6d43a2337fb693d9b654cd27517e5395d427dad0c1e8b",
+      "treeDigest": "sha256:b8956892a0fd66828b3d3e93a0b74381408bfbc281d2d3df9e568b7b939d94b5",
       "files": [
         {
           "path": "LICENSE",
@@ -1495,13 +1495,13 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "27644d07694fbb345afd11a1b06d97fcd89e86d5d98d6620c4fc37777566c7e0",
-          "bytes": 2296
+          "sha256": "5a98d6a0dac93aec67125559d3f1dca13c0b7e517f5578155900c01b8e2a5e1c",
+          "bytes": 2022
         },
         {
           "path": "README.md",
-          "sha256": "d5a5062c3f5b30ed88e1557b4c912d2f943b6d06b8fa38a3a84e7a5d9c47afd8",
-          "bytes": 4493
+          "sha256": "e83a65a884710197c61aa1473b5bfde321efb5835014e6b5109dbdc3e12b4c94",
+          "bytes": 4385
         },
         {
           "path": "VALIDATION.md",
@@ -1520,8 +1520,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "2713d3e7ad259d3551ff08b9f05b5877ef6b036c0ebfbd5e73cd6f030dacbc55",
-          "bytes": 177070
+          "sha256": "22341e742d299f8f0ea2e638454c732959c8f4720c4536788b1bcb1a08b40572",
+          "bytes": 171348
         },
         {
           "path": "compute.js",
@@ -1542,56 +1542,6 @@
           "path": "evaluate.js",
           "sha256": "10e9372e2493cf15c88adf3cf18e320fa17ac68c808743638d9cdd9b868035f5",
           "bytes": 412
-        },
-        {
-          "path": "examples/demo-run.json",
-          "sha256": "80b32d8eb1a4a4b02bc9a8b9f2f168159375016e36385466f0954dbe0734ec86",
-          "bytes": 14199
-        },
-        {
-          "path": "examples/native-roundtrip.py",
-          "sha256": "5c67a6cc00c4c6a8a2e6dae357306e102b07a84283fb08f995fe9add50c21d2f",
-          "bytes": 440
-        },
-        {
-          "path": "examples/reference-factor/development.demo.json",
-          "sha256": "d2a27cffd87889b52bde17f2214c7554c59713cdce738d1976e3885be88eb64b",
-          "bytes": 44404
-        },
-        {
-          "path": "examples/reference-factor/holdout.demo.json",
-          "sha256": "19813672a64b27426ec97b5fefee17f35635ebb9abb4d22055e1ed514ca6f7f8",
-          "bytes": 22197
-        },
-        {
-          "path": "examples/reference-factor/plan.demo.json",
-          "sha256": "6594aa712ea775f08a3d64eef7b6a7788982c597fb350f544f1b359e18ecad32",
-          "bytes": 1943
-        },
-        {
-          "path": "examples/reference-strategy/input.demo.json",
-          "sha256": "4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
-          "bytes": 1023
-        },
-        {
-          "path": "examples/reference-strategy/plan.demo.json",
-          "sha256": "73fe9eb776ca0b94a6bf54694acb580ee5c3215f16ee9cb22d2c095f20ad187d",
-          "bytes": 1993
-        },
-        {
-          "path": "examples/reference-strategy/timing.demo.json",
-          "sha256": "a05a37303b0cd4daffbaf64e9fad9f9b5b65d11c6215304bd844ff9a92fb10aa",
-          "bytes": 4548
-        },
-        {
-          "path": "examples/reference-strategy/trials.demo.json",
-          "sha256": "fc7baa3193097c468af2004fbe50207fdb4bbee25e1462064243fb60a0c757e4",
-          "bytes": 2278
-        },
-        {
-          "path": "examples/report.demo.html",
-          "sha256": "d68bdf0254ec45cec5ae633a0b5a43f3fd8f4b9239b25b03600d5954bd5e9a68",
-          "bytes": 73483
         },
         {
           "path": "execution.js",
@@ -1625,18 +1575,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "5ddd4f2fd370838f6f0b4bc8e877ab600f08cb1039e1d0a313af6b865cf5f34e",
+          "sha256": "0fa9e8e2ce0b8c39bf28b836c665946876c03495e53eeea1f7d1ff8ae91d372f",
           "bytes": 283
         },
         {
           "path": "plugin.json",
-          "sha256": "b739415bdcbf1b4183a9b2e60fd83c364c48c9b93cb9e6abb7f639a689498604",
+          "sha256": "f232a1dc8724ffd68c74ca46519edbc0b42490b6ef8e97d6e14b502736ee11a3",
           "bytes": 717
         },
         {
           "path": "prompt.md",
-          "sha256": "011df72f362bb66851c327d022eb05652a5c9530a48fb2d0fa46ec028dd22470",
-          "bytes": 2798
+          "sha256": "e0380deeed5d6adc528a0c21f78c39d3ff69838bd6b3fb2ae3e1856897cde69c",
+          "bytes": 2739
         },
         {
           "path": "python/compute.py",
@@ -1704,54 +1654,14 @@
           "bytes": 3163
         },
         {
-          "path": "references/factor-cli.md",
-          "sha256": "9722216db89fe16f40c14880f796fedb80a3ee8ccea0ef56c888e4ff2dac357b",
-          "bytes": 5698
-        },
-        {
-          "path": "references/factor-method.md",
-          "sha256": "1a73d8be9ca3e1a43543b018ae358a54aaf0323f18e3862ba1962d2ea6b6cf44",
-          "bytes": 3002
-        },
-        {
-          "path": "references/native-validation.md",
-          "sha256": "5c46185deda222759f84afdb416589e076029050187f0dee845fa7ca1fcaa885",
-          "bytes": 10992
-        },
-        {
-          "path": "references/research-guide.md",
-          "sha256": "c5f0b021823f2b5bd6d7e31092458238f17b014460081d2921849cdb9c96fc54",
-          "bytes": 7659
-        },
-        {
           "path": "references/search.md",
           "sha256": "86650263943ae30f0dc711645a2fc3b6e015a50ecf90784c4d24c0be532909cc",
           "bytes": 7998
         },
         {
-          "path": "references/strategy-cli.md",
-          "sha256": "f4a638f7f5e247457d7dce1a9774182d12455f0954e4d1623eeeb2be513b3b6c",
-          "bytes": 4182
-        },
-        {
-          "path": "references/strategy-evidence.md",
-          "sha256": "29418455e743eb10df3c7ae2b593890bfd1288ae9135ef1233dbeedda4c78865",
-          "bytes": 1957
-        },
-        {
           "path": "scripts/generate-contracts.mjs",
-          "sha256": "2ae910bb6700cbe449f602f154fd2c965aa005574a6606d826d1bbad96ea14bd",
-          "bytes": 21146
-        },
-        {
-          "path": "scripts/reference-experiment.mjs",
-          "sha256": "58e88721a18f8cdfda49062e943d32a5913ab87c99552ce7e40f7e7f71d03875",
-          "bytes": 12988
-        },
-        {
-          "path": "scripts/reference-factor.mjs",
-          "sha256": "2d6902e93a9f5f2562dce0ada58becc81473a05362ede7ab7fc9aa90a5b45d80",
-          "bytes": 21727
+          "sha256": "a85251ec07be735f568e5832c63f2585edeec24a47af3e21ecd242592c64993a",
+          "bytes": 20046
         },
         {
           "path": "scripts/test.mjs",
@@ -1857,6 +1767,11 @@
           "path": "tests/journal.test.js",
           "sha256": "5de971da38ab4d0b8ebf3fe95bfaf6e5c345f967de308d0cda6d769183b2dbc6",
           "bytes": 5250
+        },
+        {
+          "path": "tests/knowledge.test.js",
+          "sha256": "01cddb82f06a3b01b3fbea26f5aec69ef21ac5ee4434e3ad821421acdb3da392",
+          "bytes": 2749
         },
         {
           "path": "tests/library.test.js",
