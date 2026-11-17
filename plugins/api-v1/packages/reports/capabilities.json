@@ -3206,7 +3206,7 @@
         "agent",
         "host"
       ],
-      "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer shows standalone components without a report skeleton. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes, validates and publishes through the host-selected provider. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
+      "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -4234,22 +4234,178 @@
         "artifact.write"
       ],
       "usage": {
-        "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer shows standalone components without a report skeleton. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes, validates and publishes through the host-selected provider. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
+        "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to design the supplied draft visually while preserving its meaning, then publish once.",
         "inputs": "Exactly one of component, components, content or complete fixed input_ref. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; shorthand components wrap the body automatically. target=answer needs no title, lead or highlights. input_ref owns content/lead/highlights/style/assets/target; its report title remains an outer argument. data defaults to []; summary is index-only. operation_id is optional when trusted invocation identity is available. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
-        "outputs": "Original host publication receipt plus protocol, actual renderer identity and componentRef containing the same fixed report ref and inputDigest when supplied by the host.",
+        "outputs": "A fixed ref and componentRef using sesame-components/1. Answer refs are independent resources containing component JSON and copied attachments; report refs retain the host publication receipt.",
         "prerequisites": [
-          "Content must use this catalog’s document layout; the host chooses the renderer."
+          "Content must use this catalog’s document layout."
         ],
         "limitations": [
-          "No provider override, free HTML/CSS/scripts or MCP Apps resource. Answer components use the existing report surface with target=answer.",
-          "Show automatically performs the same schema, fixed-row, server-renderer and attachment preflight; the host repeats its required publication checks. renderStatus still does not imply visual inspection.",
-          "Use the returned immutable report ref for inspection and later reuse."
+          "No provider override, free HTML/CSS/scripts or MCP Apps resource.",
+          "Show performs schema, fixed-row, server-renderer and attachment preflight; browser layout is not inspected.",
+          "Reuse the returned fixed ref. Answer components do not create reports or report files."
         ]
       },
       "binding": {
         "type": "native",
         "name": "components_show"
       }
+    },
+    {
+      "id": "components_render",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Render one fixed answer component JSON resource into a temporary visual package. Read-only; never publishes reports or imports workspace files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "enum": [
+                  "resource",
+                  "report"
+                ]
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "ref"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1
+          },
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 254,
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                },
+                "mediaType": {
+                  "type": "string",
+                  "maxLength": 128,
+                  "minLength": 1
+                },
+                "content": {
+                  "type": "string",
+                  "maxLength": 44739244
+                },
+                "encoding": {
+                  "enum": [
+                    "utf8",
+                    "base64"
+                  ]
+                }
+              },
+              "required": [
+                "path",
+                "mediaType",
+                "content",
+                "encoding"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "presentation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 256,
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              "metadata": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "locale": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "entry",
+          "files",
+          "presentation",
+          "title",
+          "locale"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "Host-only view of fixed answer component JSON.",
+        "inputs": "Exact component resource ArtifactRef, or an existing answer-surface report reference for read-only recovery.",
+        "outputs": "title, locale, entry, files and presentation; temporary display only.",
+        "prerequisites": [
+          "A fixed component resource is available."
+        ],
+        "limitations": [
+          "Does not publish, invoke models or read current workspace files."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "components_render"
+      },
+      "resultRetention": "summary"
     }
   ],
   "sources": [],
@@ -4456,10 +4612,10 @@
   ],
   "artifactSchemas": [
     {
-      "id": "report-input",
+      "id": "report-input-or-component",
       "kind": "resource",
       "schemaVersion": "1.0.0",
-      "schema": {
+      "schema": { "oneOf": [{
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -4554,6 +4710,37 @@
           "path",
           "provider",
           "provenance"
+        ]
+      },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "component-json"
+              },
+              "protocol": {
+                "const": "sesame-components/1"
+              },
+              "path": {
+                "const": "component.json"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "renderer": {
+                "const": "sesame/reports#components_render"
+              }
+            },
+            "required": [
+              "type",
+              "protocol",
+              "path",
+              "title",
+              "renderer"
+            ]
+          }
         ]
       }
     }

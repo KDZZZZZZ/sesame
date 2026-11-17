@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createCapabilities } from '../packages/reports/index.js';
 import { renderReport } from '../packages/reports/report-provider.js';
 
@@ -46,12 +47,28 @@ const readonlyHost = () => {
   return { host, entries, reads, writes, put };
 };
 
+const answerHost = (fixture = readonlyHost()) => {
+  const calls = [], handles = new Map();
+  fixture.host.context = { sessionId: 'answer-fixture' };
+  fixture.host.resources.create = async input => {
+    const ref = { id: `handle-${handles.size}` }; handles.set(ref.id, input); return ref;
+  };
+  fixture.host.resources.publish = async (root, manifest, options) => {
+    const source = [...handles.values()].findLast(item => item.parent?.id === root.id && item.name === 'component.json');
+    const saved = JSON.parse(source.source.content), ref = fixed(`answer-${calls.length}`, 'resource');
+    fixture.entries.set(ref.id, { ref, path: 'component.json', bytes: Buffer.from(source.source.content), manifest });
+    calls.push({ root, manifest, options, saved });
+    return { ref };
+  };
+  return { ...fixture, calls };
+};
+
 test('minimal calls derive stable invocation identity and preserve unadorned component content', async () => {
   const calls = [], host = { context: { sessionId: 'session-a' }, capabilities: { invoke: async (id, request) => {
     calls.push({ id, request }); return { type: 'result', value: { ref: fixed('minimal', 'report') } };
   } } };
   const component = { type: 'chart', kind: 'bar', rows: [{ item: 'A', count: 2 }, { item: 'B', count: 4 }], options: { x: 'item', y: 'count' } };
-  const input = { component, target: 'answer' }, before = structuredClone(input);
+  const input = { component, target: 'report', title: 'Supplied counts', lead: 'The supplied counts are two and four.', highlights: [{ label: 'Result', value: 'Supplied' }] }, before = structuredClone(input);
   const validate = capability(host, 'components_validate'), show = capability(host, 'components_show');
   assert.equal((await validate(input)).valid, true);
   await show(input, undefined, { callId: 'call-1' });
@@ -98,34 +115,32 @@ test('single, grouped and full document inputs share inference and located mappi
 });
 
 test('submitted prose defaults to derived and demo references cannot be relabelled', async () => {
-  const fixture = readonlyHost(), calls = [], source = fixed('demo-reference', 'resource');
+  const fixture = answerHost(), calls = fixture.calls, source = fixed('demo-reference', 'resource');
   fixture.put(source, { evidence: 'Synthetic source' });
-  fixture.host.capabilities.invoke = async (_id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('prose', 'report') } }; };
   const input = { operation_id: 'supplied-prose', target: 'answer', component: { type: 'paragraph', text: 'Submitted explanation' } };
   await capability(fixture.host, 'components_show')(input);
-  assert.equal(calls[0].provenanceKind, 'derived');
+  assert.equal(calls[0].saved.metadata.provenanceKind, 'derived');
   await capability(fixture.host, 'components_show')({ ...input, references: [source] });
-  assert.equal(calls[1].provenanceKind, 'demo');
+  assert.equal(calls[1].saved.metadata.provenanceKind, 'demo');
   await assert.rejects(capability(fixture.host, 'components_show')({ ...input, references: [source], provenance_kind: 'user_input' }), /demo/);
   assert.equal(calls.length, 2); assert.deepEqual(fixture.writes, []);
 });
 
 test('minimal fixed data inherits provenance and title without weakening mapped-row checks', async () => {
-  const fixture = readonlyHost(), ref = fixed('minimal-counts'), calls = [];
+  const fixture = answerHost(), ref = fixed('minimal-counts'), calls = fixture.calls;
   fixture.put(ref, [{ item: 'A', count: 2 }, { item: 'B', count: 4 }]);
   fixture.entries.get(ref.id).manifest.content.columns = ['item', 'count'];
   fixture.entries.get(ref.id).manifest.content.provenance.title = 'Recorded counts';
-  fixture.host.capabilities.invoke = async (id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('inherited', 'report') } }; };
   const input = { operation_id: 'inherit', target: 'answer', data: [{ id: 'counts', ref, usage: 'Recorded counts' }],
     component: { type: 'chart', kind: 'bar', data_id: 'counts', options: { x: 'item', y: 'count' } } };
   assert.equal((await capability(fixture.host, 'components_validate')({ ...input, operation_id: undefined })).valid, false, 'validate does not accept publication-only properties');
   await capability(fixture.host, 'components_show')(input);
-  assert.equal(calls[0].title, 'Recorded counts'); assert.equal(calls[0].provenanceKind, 'demo');
-  assert.deepEqual(calls[0].input.content.sections[0].blocks[0].columns, ['item', 'count']);
+  assert.equal(calls[0].saved.metadata.title, 'Recorded counts'); assert.equal(calls[0].saved.metadata.provenanceKind, 'demo');
+  assert.deepEqual(calls[0].saved.input.content.sections[0].blocks[0].columns, ['item', 'count']);
   await assert.rejects(capability(fixture.host, 'components_show')({ ...input, provenance_kind: 'observed' }), /demo/i);
   fixture.entries.get(ref.id).manifest.content.provenance.kind = 'observed';
   await capability(fixture.host, 'components_show')({ ...input, operation_id: 'observed' });
-  assert.equal(calls[1].provenanceKind, 'observed');
+  assert.equal(calls[1].saved.metadata.provenanceKind, 'observed');
   fixture.put(ref, [{ item: 'A', wrong: 2 }]);
   fixture.entries.get(ref.id).manifest.content.columns = ['item', 'count'];
   const invalid = await capability(fixture.host, 'components_validate')({ target: 'answer', data: input.data, components: [{ type: 'paragraph', text: 'Supplied context' }, input.component] });
@@ -134,16 +149,15 @@ test('minimal fixed data inherits provenance and title without weakening mapped-
 });
 
 test('minimal fixed input remains complete and immutable after column inference', async () => {
-  const fixture = readonlyHost(), inputRef = fixed('minimal-input', 'resource'), dataRef = fixed('minimal-rows'), calls = [];
+  const fixture = answerHost(), inputRef = fixed('minimal-input', 'resource'), dataRef = fixed('minimal-rows'), calls = fixture.calls;
   const stored = { target: 'answer', content: { kind: 'document', sections: [{ title: '', blocks: [
     { type: 'chart', kind: 'bar', data_id: 'counts', options: { x: 'item', y: 'count' } },
   ] }] } };
   fixture.put(inputRef, stored, { path: 'input.json' }); fixture.put(dataRef, [{ item: 'A', count: 3 }]);
-  fixture.host.capabilities.invoke = async (id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('fixed-minimal', 'report') } }; };
   const input = { operation_id: 'fixed-minimal', input_ref: { ref: inputRef, entry: 'input.json' }, data: [{ id: 'counts', ref: dataRef, usage: 'Recorded count' }] };
   await capability(fixture.host, 'components_show')(input);
-  assert.equal(calls[0].provenanceKind, 'demo'); assert.deepEqual(calls[0].inputRef, input.input_ref);
-  assert.equal(Object.hasOwn(calls[0], 'input'), false);
+  assert.equal(calls[0].saved.metadata.provenanceKind, 'demo'); assert.deepEqual(calls[0].manifest.dependencies, [dataRef, inputRef]);
+  assert.deepEqual(calls[0].saved.input.content.sections[0].blocks[0].rows, [{ item: 'A', count: 3 }]);
   assert.deepEqual(JSON.parse(fixture.entries.get(inputRef.id).bytes.toString('utf8')), stored);
   assert.deepEqual(fixture.writes, []);
 });
@@ -165,7 +179,7 @@ test('component capabilities use the shared catalog and expose bounded discovery
     assert.equal(cap.binding.type, 'native'); assert.ok(plugin.mcp_export.includes(name));
     assert.ok(JSON.stringify(cap.inputSchema).length < 20000, 'tool schemas must not embed the full component catalog');
   }
-  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '8.0.2');
+  assert.equal(plugin.execution, 'native'); assert.match(plugin.version, /^\d+\.\d+\.\d+$/);
   const listing = manifest.capabilities.find(item => item.id === 'components_list').inputSchema;
   assert.equal(listing.properties.limit.default, 20); assert.equal(listing.properties.limit.maximum, 100);
   assert.ok(plugin.resources.includes('references/composing.md'));
@@ -310,8 +324,8 @@ test('validation reuses fixed attachment checks and reads workspace attachments 
   assert.equal((await validate(args(content, { assets: [asset], references: [ref] }))).valid, true);
   const mismatched = await validate(args(content, { assets: [asset], references: [{ ...ref, revision: 'changed' }] }));
   assert.equal(mismatched.valid, false); assert.equal(mismatched.diagnostics[0].path, '/assets/0/ref');
-  const workspace = await mkdtemp(resolve('tests', '.components-workspace-'));
-  t.after(async () => { const target = resolve(workspace); assert.ok(target.startsWith(resolve('tests') + '\\')); await rm(target, { recursive: true, force: true }); });
+  const workspace = await mkdtemp(join(tmpdir(), 'components-workspace-'));
+  t.after(async () => { const target = resolve(workspace); assert.ok(target.startsWith(resolve(tmpdir()) + sep)); await rm(target, { recursive: true, force: true }); });
   fixture.host.context = { workspaceRoot: workspace };
   await writeFile(join(workspace, 'fixture.json'), '{"synthetic":true}');
   assert.equal((await validate(args(content, { assets: [{ path: asset.path, media_type: 'application/json', source_path: 'fixture.json' }] }))).valid, true);
@@ -361,20 +375,16 @@ test('show checks document inputRef without rewriting its fixed identity and let
 });
 
 test('answer components validate and publish the same pinned surface metadata', async () => {
-  const calls = [], host = { capabilities: { invoke: async (id, request) => {
-    const rendered = await renderReport({}, { metadata: { title: request.title, summary: request.summary, locale: 'en', provenanceKind: request.provenanceKind, features: ['interactive'] },
-      data: request.data, related: [], references: request.references, input: request.input });
-    calls.push({ id, request, rendered });
-    return { type: 'result', value: { ref: fixed('answer-components', 'report'), presentation: rendered.presentation, renderStatus: 'not_checked' } };
-  } } };
+  const { host, calls } = answerHost();
   const component = { type: 'metrics', items: [{ label: 'Count', value: 4 }] };
   const input = { title: 'Synthetic answer', provenance_kind: 'demo', target: 'answer', component };
   const valid = await capability(host, 'components_validate')(input);
   assert.equal(valid.valid, true); assert.equal(valid.renderer.metadata.surface, 'answer'); assert.equal(calls.length, 0);
   const shown = await capability(host, 'components_show')({ ...input, operation_id: 'answer-components' });
-  assert.equal(calls[0].request.input.target, 'answer'); assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
-  assert.deepEqual(calls[0].rendered.presentation.metadata, { layout: 'unified', surface: 'answer', protocol });
-  assert.deepEqual(shown.renderer, calls[0].rendered.presentation); assert.equal(shown.renderStatus, 'not_checked');
+  assert.equal(calls[0].saved.input.target, 'answer'); assert.equal(shown.ref.kind, 'resource');
+  const rendered = await capability(host, 'components_render')({ ref: shown.ref });
+  assert.deepEqual(rendered.presentation.metadata, { layout: 'unified', surface: 'answer', protocol });
+  assert.equal(shown.renderStatus, undefined); assert.equal(shown.renderer, undefined);
   const defaultInput = { ...input, lead: 'The supplied count is four.', highlights: [{ label: 'Fixture result', value: 'Supplied' }] }; delete defaultInput.target;
   const ordinary = await capability(host, 'components_validate')(defaultInput);
   assert.deepEqual(ordinary.renderer.metadata, { layout: 'unified' });
@@ -387,20 +397,13 @@ test('answer components validate and publish the same pinned surface metadata', 
 });
 
 test('fixed inputRef owns its answer target and rejects external target overrides before publication', async () => {
-  const fixture = readonlyHost(), ref = fixed('answer-input', 'resource'), calls = [];
+  const fixture = answerHost(), ref = fixed('answer-input', 'resource'), calls = fixture.calls;
   const stored = { content: args().content, target: 'answer' };
   fixture.put(ref, stored, { path: 'input.json' });
-  fixture.host.capabilities.invoke = async (id, request) => {
-    const original = JSON.parse(fixture.entries.get(request.inputRef.ref.id).bytes.toString('utf8'));
-    const rendered = await renderReport(fixture.host, { metadata: { title: request.title, summary: request.summary, locale: 'en', provenanceKind: request.provenanceKind, features: ['interactive'] },
-      data: request.data, related: [], references: request.references, input: original });
-    calls.push({ id, request });
-    return { type: 'result', value: { ref: fixed('answer-from-ref', 'report'), presentation: rendered.presentation } };
-  };
   const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content; delete input.lead; delete input.highlights;
   const shown = await capability(fixture.host, 'components_show')(input);
-  assert.deepEqual(calls[0].request.inputRef, input.input_ref); assert.equal(Object.hasOwn(calls[0].request, 'input'), false);
-  assert.equal(Object.hasOwn(calls[0].request, 'target'), false); assert.equal(shown.renderer.metadata.surface, 'answer');
+  assert.deepEqual(calls[0].manifest.dependencies, [ref]); assert.equal(calls[0].saved.input.target, 'answer');
+  assert.equal(shown.ref.kind, 'resource');
   assert.deepEqual(JSON.parse(fixture.entries.get(ref.id).bytes.toString('utf8')), stored);
   for (const target of ['report', 'answer']) await assert.rejects(capability(fixture.host, 'components_show')({ ...input, target }));
   assert.equal(calls.length, 1); assert.deepEqual(fixture.writes, []);

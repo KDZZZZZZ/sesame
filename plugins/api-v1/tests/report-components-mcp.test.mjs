@@ -16,7 +16,7 @@ const output = process.env.SESAME_COMPONENTS_MCP_OUTPUT;
 const core = fileURLToPath(new URL('../', import.meta.url));
 const names = ['components_list', 'components_describe', 'components_validate', 'components_show'];
 
-test('component tools cross real HTTP and stdio MCP into immutable, inspectable reports', { skip: !hostRoot, timeout: 120000 }, async t => {
+test('component tools cross HTTP and stdio MCP into independent answer JSON and ordinary reports', { skip: !hostRoot, timeout: 120000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)).href);
   const base = output || tmpdir(); await mkdir(base, { recursive: true });
   const root = await realpath(await mkdtemp(join(base, 'components-mcp-')));
@@ -67,6 +67,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   const tools = (await rpc('tools/list')).body.result.tools;
   for (const name of names) assert.equal(tools.find(tool => tool.name === name)?.inputSchema.type, 'object', name);
   assert.ok(!tools.some(tool => tool.name === 'report_render'), 'Internal HTML renderer stays private');
+  assert.ok(!tools.some(tool => tool.name === 'components_render'), 'Temporary component renderer stays host-only');
   const listed = await call('components_list', { limit: 100 });
   assert.equal(listed.items.filter(item => item.id.startsWith('chart.')).length, 38);
   const described = await call('components_describe', { ids: ['chart.line', 'layout.columns'] });
@@ -97,37 +98,38 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   assert.equal((await call('components_validate', simpleInput)).valid, true);
   const simple = await call('components_show', simpleInput);
   const simpleArtifact = app.runtime.contractArtifacts.read(simple.ref);
-  assert.equal(simpleArtifact.manifest.content.provenance.kind, 'demo');
-  const simpleStored = JSON.parse(app.runtime.contractArtifacts.resource(simple.ref, 'sesame-report-input.json').bytes.toString()).input;
+  assert.equal(simple.ref.kind, 'resource');
+  assert.equal(simpleArtifact.manifest.content.path, 'component.json');
+  const simpleJson = JSON.parse(app.runtime.contractArtifacts.resource(simple.ref, 'component.json').bytes.toString());
+  assert.equal(simpleJson.metadata.provenanceKind, 'demo');
+  const simpleStored = simpleJson.input;
   assert.deepEqual(simpleStored.content.sections[0].blocks[0].columns, [...new Set(line.rows.flatMap(Object.keys))]);
   assert.equal(simpleStored.content.sections[0].blocks[0].takeaway, undefined);
   assert.equal(simpleStored.content.sections[0].blocks[0].source_note, undefined);
   assert.notEqual((await call('components_show', simpleInput)).ref.id, simple.ref.id, 'A new MCP call with identical content is a new intent, not a content-hash retry');
   const answer = await call('components_show', { ...concise, operation_id: 'components-mcp-answer', target: 'answer', summary: '只用于报告索引的摘要' });
   const answerArtifact = app.runtime.contractArtifacts.read(answer.ref);
-  assert.deepEqual(answerArtifact.manifest.content.rendering.presentation.metadata, { layout: 'unified', surface: 'answer', protocol: 'sesame-components/1' });
-  const answerInput = JSON.parse(app.runtime.contractArtifacts.resource(answer.ref, 'sesame-report-input.json').bytes.toString());
+  assert.equal(answerArtifact.manifest.content.type, 'component-json');
+  assert.equal(answerArtifact.manifest.blobs.some(blob => blob.mediaType === 'text/html'), false);
+  const answerInput = JSON.parse(app.runtime.contractArtifacts.resource(answer.ref, 'component.json').bytes.toString());
   assert.equal(answerInput.input.target, 'answer', 'Answer placement is part of the fixed input, not just tool output');
-  // Mount the real published package through the host, which rebuilds HTML roots
-  // and verifies packaged assets. A raw HTML preview cannot prove this path.
+  // Ask the real host to render fixed JSON and mount its temporary package.
   const { chromium } = createRequire(join(hostRoot, 'package.json'))('playwright');
   const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 720, height: 800 } }), browserErrors = [];
   page.on('pageerror', error => browserErrors.push(error.message));
   await page.goto(app.launchUrl);
-  await page.evaluate(async report => {
-    const { mountArtifactReport } = await import('/modules/frontend/report-runtime/artifact-host.js');
+  await page.evaluate(async ref => {
+    const { mountComponentView } = await import('/modules/frontend/report-runtime/artifact-host.js');
     const container = document.createElement('main'); container.id = 'component-mcp-preview';
     container.style.cssText = 'position:fixed;inset:0;z-index:2147483647;overflow:auto;background:var(--bg,#fff);padding:20px';
     document.body.append(container);
-    const dispose = await mountArtifactReport(container, report, async path => {
-      const response = await fetch(`/api/v1${path}`);
-      if (!response.ok) throw new Error(`Report request failed: ${response.status}`);
-      return response.json();
-    }, { sizeToContent: true });
+    const response = await fetch(`/api/v1/components/render?ref=${encodeURIComponent(JSON.stringify(ref))}`);
+    if (!response.ok) throw new Error(`Component request failed: ${response.status}`);
+    const dispose = await mountComponentView(container, await response.json());
     container.querySelector('iframe').style.cssText += ';display:block;width:100%;border:0';
     await dispose.ready;
-  }, app.runtime.report(answer.ref.id, 1));
+  }, answer.ref);
   const frame = page.frameLocator('#component-mcp-preview iframe');
   await frame.locator('#content-chart-1 svg').waitFor();
   assert.equal(await frame.locator('.report-header').isVisible(), false);
@@ -155,7 +157,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   const boundReport = await call('components_show', { ...bound, operation_id: 'components-mcp-bound' });
   assert.ok(app.runtime.contractArtifacts.read(boundReport.ref).manifest.dependencies.some(ref => ref.digest === snapshot.value.ref.digest));
   const inherited = await call('components_show', { component: boundChart, data: bound.data, target: 'answer' });
-  assert.equal(app.runtime.contractArtifacts.read(inherited.ref).manifest.content.provenance.kind, 'demo', 'Fixed data provenance is inherited without an extra agent field');
+  assert.equal(JSON.parse(app.runtime.contractArtifacts.resource(inherited.ref, 'component.json').bytes.toString()).metadata.provenanceKind, 'demo', 'Fixed data provenance is inherited without an extra agent field');
   const publication = { ...draft, operation_id: 'components-mcp-publication' };
   const shown = await call('components_show', publication);
   assert.equal(shown.ref.kind, 'report');
@@ -182,7 +184,10 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   child.stdout.on('data', value => { stdout += value; }); child.stderr.on('data', value => { stderr += value; });
   const exited = new Promise((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
   t.after(() => { if (child.exitCode === null) child.kill(); });
-  child.stdin.end(JSON.stringify({ jsonrpc: '2.0', id: 'stdio-list', method: 'tools/call', params: { name: 'components_list', arguments: { query: 'chart', limit: 2 } } }) + '\n');
+  const replied = new Promise(resolve => { child.stdout.on('data', () => { if (stdout.includes('\n')) resolve(); }); });
+  child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id: 'stdio-list', method: 'tools/call', params: { name: 'components_list', arguments: { query: 'chart', limit: 2 } } }) + '\n');
+  await Promise.race([replied, exited.then(() => assert.fail('stdio transport exited before replying: ' + stderr))]);
+  child.stdin.end();
   assert.equal(await exited, 0, stderr);
   const stdio = stdout.trim().split(/\r?\n/).map(line => JSON.parse(line));
   assert.equal(stdio.length, 1); assert.equal(stdio[0].id, 'stdio-list');
