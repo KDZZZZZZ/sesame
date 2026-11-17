@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.3",
+      "version": "8.0.8",
       "directory": "reports",
-      "treeDigest": "sha256:9a57267654791d24d5dd14607e294894c6af925cd90821c934eb0f68c6e532ee",
+      "treeDigest": "sha256:12c3c6e7dff78b6152f3f6330e5b37d8cb70efc3516606c4ee093f417ae5bcbf",
       "files": [
         {
           "path": "LICENSE",
@@ -634,13 +634,13 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "1178ccb57650ed2b3a711b6e97a475aa5e2b7ce4c6fd4db58d166ec7b77d13fb",
-          "bytes": 163182
+          "sha256": "4fa30f633528ef6509ef666cf81bcf206a1f6c1d4bd48804b18df7222737bfd2",
+          "bytes": 163424
         },
         {
           "path": "component-catalog.js",
-          "sha256": "e4b82f76a61402ee41cdd82fc16a2e971a4e1090ae1758327996de03fcfc3e2b",
-          "bytes": 41553
+          "sha256": "b7a6129456cb5f5fefecdecf0e55c586a91406faf4b1de2c15f80c578415c208",
+          "bytes": 41776
         },
         {
           "path": "component-input.js",
@@ -684,23 +684,23 @@
         },
         {
           "path": "package.json",
-          "sha256": "07000297ce3d5ef496902cd01dc84ca27d45090b71680cb5b85bbd35a2d06f44",
+          "sha256": "d11f0bebf225b079bf45014e0f8af2e9e026d65c6944c2920d025d2858f2194e",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "d264892f105106f91bac3c2cf07a8b64c4cfa7e8ff283da9ee49f60bcf26710d",
-          "bytes": 2139
+          "sha256": "2853719746767b38e94559127c7a12aca4fd940d485b85d77951e62e5463e8f0",
+          "bytes": 2181
         },
         {
           "path": "prompt.md",
-          "sha256": "f5d308e3042a223a23318eeb0633a3b31bfabb88ecf0394cfb8652743942f828",
-          "bytes": 3651
+          "sha256": "b9de2e86e7600d71064c440b9dc6f5e00c74d288dab2ea0fc7224e1c9861a047",
+          "bytes": 4515
         },
         {
           "path": "references/composing.md",
-          "sha256": "23c81a865cbb15a83d190e8960ac86362e2d1f636343e57d3b4e91ea1391a2d8",
-          "bytes": 7199
+          "sha256": "501aacc0c97d114dbf26b210d46acda94a7b12cddcb3ecffc46f3c6ffbd3e595",
+          "bytes": 8638
         },
         {
           "path": "references/data-binding.md",
@@ -729,8 +729,8 @@
         },
         {
           "path": "references/text.md",
-          "sha256": "b2f21102fa5b825fb0a7e39573b4fc28631e71aae5eef359e5bdb4c92796c214",
-          "bytes": 6094
+          "sha256": "f0ec9966c5719d91ea6277c89e07e0e0b558dd40ce995d9cc60cdd65229627b6",
+          "bytes": 14500
         },
         {
           "path": "renderer/builtins.js",
@@ -819,13 +819,13 @@
         },
         {
           "path": "skills/report-delivery/SKILL.md",
-          "sha256": "15c7df6e017021bb2a85c995673d8fc139ea2b98c31f46b0636d9fba964a3d61",
-          "bytes": 1451
+          "sha256": "58629433f94ca7c09db7272015dab67c55901d3d3c4bda9b5321c9227818811c",
+          "bytes": 1625
         },
         {
           "path": "skills/visual-compose/SKILL.md",
-          "sha256": "9a7e7b9df62036e64f272562b32da2f3b5721ecff98dcfca1bdefe1c48ab54f7",
-          "bytes": 4217
+          "sha256": "8ef6d07ef79e38f052b0cbcb6a03300789d72d3e8bd8ce8aaf8cf44f142a06ef",
+          "bytes": 5158
         }
       ]
     },
