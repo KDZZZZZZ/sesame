@@ -25,6 +25,7 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 | --- | --- | --- |
 | auto-factor-mining | analysis：独立的因子搜索、计算、评价与库操作，研究顺序由 Agent 决定 | function：原生单步能力 |
 | investment-research | business：Research，综合投资研究主入口 | workflow：工作流 |
+| strategy-development | business，负责研究委托、策略结构、原生回测、参数择优与留出验证。根据策略用途引用独立因子评价 | workflow，开发期实验和独立确认 |
 | ict | analysis：局部结构与流动性判断 | knowledge：知识文档 |
 | abu-trend | analysis：趋势计算 | function：确定性函数 |
 | web-sources | search：网页发现与来源证据获取 | adapter：来源适配 |

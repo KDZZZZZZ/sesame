@@ -23,7 +23,7 @@ test('task responsibility groups guides with workflows and knowledge with reusab
   for (const name of ['ict', 'price-action', 'abu-trend', 'auto-factor-mining', 'strategy-authoring', 'market-data-parser']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'analysis', name);
   }
-  for (const name of ['investment-research', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra', 'deep-reasoning']) {
+  for (const name of ['investment-research', 'strategy-development', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra', 'deep-reasoning']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'business', name);
   }
   for (const name of ['mt5', 'qmt', 'binance', 'backtrader', 'vnpy', 'data-access', 'quantskills-catalog']) {
@@ -47,14 +47,14 @@ test('task responsibility groups guides with workflows and knowledge with reusab
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 
-test('all 58 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
+test('all 59 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
   const inventory = buildInventory();
-  assert.equal(inventory.packages.length, 58);
-  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 58);
+  assert.equal(inventory.packages.length, 59);
+  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 59);
   assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
   const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
-  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 8, integration: 9, platform: 6, presentation: 2, search: 4 });
-  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 5, workspace: 7 });
+  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 9, integration: 9, platform: 6, presentation: 2, search: 4 });
+  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 7 });
   for (const item of inventory.packages) {
     assert.equal(item.category, policy[item.id.slice('sesame/'.length)].category);
     assert.ok(item.implementationKinds.length > 0);
@@ -154,7 +154,7 @@ test('permission requests follow actual privileged ports, not category or native
   const expectedScopes = {
     ultra: ['capabilities.compose'],
     'canvas-control': ['capabilities.compose'], configuration: ['application.configure'], 'data-access': ['capabilities.compose'], memory: ['workspace.messages.read'], 'plugin-manager': ['plugins.manage'], workspace: ['process.execute'],
-    'auto-factor-mining': ['capabilities.compose', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'],
+    'auto-factor-mining': ['capabilities.compose', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'], 'strategy-development': ['capabilities.compose', 'process.execute'],
     'judgment-evolution': ['capabilities.compose', 'workspace.messages.read'], 'kurumi-replay': ['plugins.manage', 'workspace.messages.read'], 'market-data-parser': ['process.execute'], mt5: ['workspace.messages.read'], 'rss-collect': ['process.execute'], 'trading-decision': ['capabilities.compose'], vnpy: ['process.execute'], 'web-extract': ['process.execute'],
   };
   const packages = buildInventory().packages, byId = new Map(packages.map(item => [item.id, item]));

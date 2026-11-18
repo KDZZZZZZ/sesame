@@ -182,6 +182,14 @@
       "zh": "查询方法无需密钥或额外运行环境；研究由现有 Agent 配合所需来源与计算插件执行。"
     }
   },
+  "strategy-development": {
+    "category": "strategy",
+    "functionalCategory": "business",
+    "implementationKinds": ["workflow"],
+    "title": { "en": "Strategy development", "zh": "策略开发" },
+    "summary": { "en": "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate.", "zh": "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。" },
+    "dependencies": { "en": "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional.", "zh": "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。" }
+  },
   "strategy-authoring": {
     "category": "strategy",
     "functionalCategory": "analysis",

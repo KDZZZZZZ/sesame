@@ -1,6 +1,6 @@
 # Optional plugins / Plugin API 2
 
-The current development profile contains **46 optional packages**.
+The current development profile contains **47 optional packages**.
 `sesame/ultra` (1.0.4, Sesame >=0.3.0-dev.1 <0.4.0) ships in the default bundle
 with the built-in `/ultra` command. Ultra coordinates persistent
 parallel goals through existing workflows and domain plugins; it does not replace
@@ -17,7 +17,7 @@ enter the current eleven-package core lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
 terminal or a large Python environment.
 
-The optional source set contains independently selected backends and methods, Research and Strategy workflows, reusable factor/historical evaluators, trading decisions, judgment evolution, and separate search/source tools. Factor and strategy knowledge now lives inside Strategy. Each method is its own installable package; selecting ICT does not
+The optional source set contains independently selected backends and methods, Research and Strategy workflows, reusable factor/historical evaluators, trading decisions, judgment evolution, and separate search/source tools. Strategy Development can consume existing factor evidence. Each method is its own installable package; selecting ICT does not
 load Price Action, Elliott Wave, Wyckoff or Dow Theory.
 The development sources additionally contain [17 ABU packages with 18 actual computations](ABU-BASELINES.md)
 with native analysis tools, reproducible CLI resources and per-topic Skills. Every
@@ -49,7 +49,8 @@ host-readable without granting access to old mutable application collections.
 | `sesame/backtrader` | Real Cerebro with an authored native Strategy and fixed DataRef | Reuses or explicitly prepares Backtrader 1.9.78.123. Explicit feed timeframe/compression; stocklike cash simulation, no broker connection or SVL equivalence. Optional wrapper and engine are GPL-3.0-or-later. |
 | `sesame/ict`, `sesame/price-action`, `sesame/elliott-wave`, `sesame/wyckoff`, `sesame/dow-theory` | Five independently selected technical methods | Each retains its own sources, evidence rules and counterexamples. Only ICT/Price Action include bounded observation helpers; no performance claim. |
 | `sesame/behavioral-finance`, `sesame/institutional-analysis`, `sesame/narrative-analysis` | Three independently selected social and interpretive methods | Dated primary evidence, competing explanations and explicit limits; no automatic inference of motives or causation. |
-| `sesame/auto-factor-mining` | Strategy: single- or multi-Agent hypothesis, actual evaluator, review, frozen selection and holdout; optional native execution | Compatible host, configured role models and an explicitly selected evaluator. Input-only research methods can preserve workflow isolation; capabilities that expose independent data access use development-only evidence. [Source](packages/auto-factor-mining/README.md). |
+| `sesame/strategy-development` | Context-filled mandate, testable design hypotheses, breakout opportunity studies, modular SVL, native parameter sweeps and controlled revisions | Uses fixed development data for design studies and an authored Backtrader strategy for execution tests. [Source](packages/strategy-development/README.md). |
+| `sesame/auto-factor-mining` | Standalone factor definition library, Qlib computation, conditional search and independent factor evaluation | Optional for strategy development. A strategy can bind an existing evaluation directly. [Source](packages/auto-factor-mining/README.md). |
 | `sesame/factor-evaluator` | Independent AST calculation, task-selected diagnostics, multiple-trial analysis, conditional selection and reproducibility artifacts | Frozen data and explicit test choices. Agent thresholds are advisory; user-required constraints are binding. Other implementations can follow the [tool protocol](packages/factor-evaluator/PROTOCOL.md). |
 | `sesame/historical-evidence` | Historical scenario matching and calibration; typed historical replay stays exploratory | Fixed timestamped features, matured outcomes and code/data evidence. Actual and virtual clocks stay distinct; historical replay yields no current calibrated probability. No network or broker dependency. |
 | `sesame/abu-trade-metrics` | Trade results diagnostics: performance plus independent order/fill/replay audit | Supplied data only; no native matching. The old backtest-lab package and entry are removed, with numerical source, license and examples retained. |
