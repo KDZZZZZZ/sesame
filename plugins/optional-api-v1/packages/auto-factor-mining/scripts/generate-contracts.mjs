@@ -87,21 +87,12 @@ const caps = [
   capability('factor_configuration_read', object({}), object({ pythonPath: nullable(text(4096)), ready: boolean }), 'Read the saved environment selection for unified configuration.', '{}; reads selected configuration without installation or numerical work.', '{pythonPath,ready}; execution rechecks the actual environment before computing.', ['read'], { consumers: ['host'] }),
   capability('factor_configuration_update', object({ pythonPath: text(4096), command_id: text(128), expected_version: integer(0, 2147483647) }, ['pythonPath', 'command_id']), object({ pythonPath: nullable(text(4096)), ready: boolean }), 'Verify and select an existing compatible Python environment.', '{pythonPath,command_id,expected_version?}; only existing dependencies are probed; use factor_environment prepare for installation.', '{pythonPath,ready} after actual environment verification.', ['process', 'plugin.state.write'], { consumers: ['host'] }),
 ];
-const historical = [
-  ['final-report-example', 'examples/report.demo.html'], ['knowledge-4', 'examples/demo-run.json'],
-  ...['research-guide', 'factor-method', 'factor-cli', 'strategy-evidence', 'strategy-cli'].map(name => [`integrated-references-${name}-md`, `references/${name}.md`]),
-  ...['factor', 'experiment'].map(name => [`integrated-scripts-reference-${name}-mjs`, `scripts/reference-${name}.mjs`]),
-  ...['development', 'holdout', 'plan'].map(name => [`integrated-examples-reference-factor-${name}-demo-json`, `examples/reference-factor/${name}.demo.json`]),
-  ...['input', 'plan', 'timing', 'trials'].map(name => [`integrated-examples-reference-strategy-${name}-demo-json`, `examples/reference-strategy/${name}.demo.json`]),
-  ['native-validation', 'references/native-validation.md'], ['native-roundtrip-example', 'examples/native-roundtrip.py'],
-];
 const manifest = {
   schemaVersion: 1, apiVersion: '2', configSchema: object({}), capabilities: caps, sources: [], services: [], hooks: [], views: [],
   configuration: { title: '因子研究环境', fields: [{ id: 'pythonPath', title: 'Python 环境', description: '已核验的 CPython 3.12 与固定 Qlib、DEAP、Optuna 依赖。安装私有依赖请调用 factor_environment prepare。', schema: text(4096), binding: { type: 'capability', read: 'factor_configuration_read', update: 'factor_configuration_update', valuePath: '/pythonPath', configuredPath: '/ready', writePath: '/pythonPath' } }] },
   knowledge: [
     ...[['prompt', 'prompt.md', 'prompt'], ['readme', 'README.md', 'reference'], ['provenance', 'PROVENANCE.md', 'reference'], ['validation', 'VALIDATION.md', 'reference'], ['factor-research', 'skills/auto-factor-mining/SKILL.md', 'skill'], ['contracts', 'references/contracts.md', 'reference'], ['evaluation', 'references/evaluation.md', 'reference'], ['search', 'references/search.md', 'reference'], ['execution', 'references/execution.md', 'reference']].map(([id, path, kind]) => ({ id, path, kind, description: 'Current factor-research v3 contract, usage or verification evidence. Agent directly orchestrates each independent step.' })),
     { id: 'external-factor-sources', path: 'references/external-factor-sources.md', kind: 'reference', description: 'External formula reference links, semantic checks and on-demand registration into the user factor library. Contains no bundled upstream formula catalog or code.' },
-    ...historical.map(([id, path]) => ({ id, path, kind: 'reference', description: 'Historical v1 material retained for provenance. Its commands, metrics and protocols are not the current v3 interface; use references/contracts.md.' })),
   ],
   stateCollections: Object.values(COLLECTIONS).map(name => ({ name, schemaVersion: '1', mode: 'document', access: 'private', schema: schema(record(ref('Json'), 128)) })),
   artifactSchemas: [

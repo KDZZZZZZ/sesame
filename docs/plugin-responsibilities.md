@@ -1,16 +1,16 @@
 # 插件职责清单
 
-整理日期：2026-10-19。本文详细说明 24 个非专业能力插件；31 个专业能力包已按同一架构完成对齐，逐项责任见[专业能力职责清单](analysis-plugin-responsibilities.md)。两份清单共同覆盖 55 包，按用户要求排除 Kurumi。
+整理日期：2026-10-19。原核查覆盖 24 个非专业能力插件与 31 个专业能力包，按用户要求排除 Kurumi，逐项专业能力责任见[专业能力职责清单](analysis-plugin-responsibilities.md)。因子插件说明于 2026-11-17 单独更新为现行专业能力；其余条目及总数保留历史核查口径。
 
-本文给出已经落实到当前源码的职责，承接源码审查与[边界方案](../.omx/plans/plugin-boundaries-2026-10-19-plan.md)。24 个包保持原身份、252 个原有能力契约、权限与状态归属；统一配置另新增 MT5、QMT 各两个仅宿主适配器。当前共 256 个能力入口，168 个可供 Agent 调用、88 个仅宿主使用，见[逐项能力清单](plugin-capabilities-by-responsibility.md)。实施与验证证据见[边界实施记录](plans/2026-10-19-plugin-boundaries-implementation.md)；源码状态与已发行、已安装版本分别核对。
+本文承接当时源码审查与[边界方案](../.omx/plans/plugin-boundaries-2026-10-19-plan.md)：24 个包保持原身份、252 个原有能力契约、权限与状态归属；统一配置另新增 MT5、QMT 各两个仅宿主适配器。当时共 256 个能力入口，168 个可供 Agent 调用、88 个仅宿主使用，见[逐项能力清单](plugin-capabilities-by-responsibility.md)。实施与验证证据见[边界实施记录](plans/2026-10-19-plugin-boundaries-implementation.md)；当前全量声明见 [inventory](../plugins/api-v1/inventory.json)，源码状态与已发行、已安装版本分别核对。
 
-开发者从[统一开发指南](plugin-development.md)选择最小接口、硬性约束和同类参考实现；用户入口与使用方式由独立的 user-guide 维护，orchestration 负责协作编排方法。2026-10-26 的此次拆分保留两者纯知识身份，新增默认包不改变上文历史冻结的可调用能力契约；当前全量计数见[功能架构](plugin-functional-architecture.md)。
+开发者从[统一开发指南](plugin-development.md)选择最小接口、硬性约束和同类参考实现；用户入口与使用方式由独立的 user-guide 维护，orchestration 负责协作编排方法。2026-10-26 的此次拆分保留两者纯知识身份，新增默认包不改变上文历史冻结的可调用能力契约；分类原则见[功能架构](plugin-functional-architecture.md)。
 
-2026-10-29 当前源码为 57 包（11 核心、46 可选）；上文能力数字为历史冻结基线。当前按六类发现，新研究只推荐 Research / Strategy，因子/策略指南与参考 CLI 已融合在 Strategy 内，不再独立分发。
+2026-10-29 的源码快照为 57 包（11 核心、46 可选），下表数量沿用该日期。当前 auto-factor-mining 属于 analysis / function，由 Agent/工作流直接组合其独立能力；旧 v1 指南、参考 CLI 和示例已移除，现行使用入口是包内 Skill 与 references。
 
 ## 分类口径
 
-| 分类 | 解决的问题 | 当前数量 |
+| 分类 | 解决的问题 | 2026-10-29 数量 |
 | --- | --- | ---: |
 | 业务流程 `business` | 如何完成一项任务，如何组织研究、决策、执行和验证 | 7 |
 | 专业能力 `analysis` | 如何理解或处理一个具体领域问题，提供知识、方法原理或局部计算 | 30 |
@@ -19,15 +19,20 @@
 | 交互呈现 `presentation` | 如何把已有数据和成果展示为图表、工作台和报告 | 2 |
 | 平台管理 `platform` | 如何管理配置、插件、个人记忆、文件和产品使用规则 | 6 |
 
-主分类描述插件承担的任务责任；知识文档、函数、适配器、工作流和服务描述实现方式。业务流程可以由指南、模型协作或确定性服务实现。研究知识与参考脚本已内置 Strategy；新研究任务统一从 Research（investment-research）或 Strategy（auto-factor-mining）开始。ICT 一类局部专业知识属于专业能力。
+主分类描述插件承担的任务责任；知识文档、函数、适配器、工作流和服务描述实现方式。业务流程可以由指南、模型协作或确定性服务实现。auto-factor-mining 提供因子准备、搜索、计算、评价及库操作，不负责决定完整研究流程；Agent/工作流根据任务选择调用顺序、是否继续探索和何时交付。ICT 一类局部专业知识属于专业能力。
 
-`portfolio-execution` 归入业务流程，保留其 `service` 实现类型，inventory-policy 已同步。7/10/2/5 是 2026-10-19 排除 Kurumi 和专业能力后的历史数量；上表为当前全量分类。
+`portfolio-execution` 归入业务流程，保留其 `service` 实现类型，inventory-policy 已同步。7/10/2/5 是 2026-10-19 排除 Kurumi 和专业能力后的历史数量；上表为 2026-10-29 的分类快照。
+
+## 专业能力：当前因子研究
+
+| 插件 | 核心责任 | 主要交付与状态归属 | 协作边界 |
+| --- | --- | --- | --- |
+| [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | analysis / function：独立完成数据准备、分批公式搜索、Qlib 计算、纯因子评价、因子库和策略因子池操作 | 固定数据与计算结果、搜索检查点、单步操作账本、公式与评价证据、策略池版本；各自独立保存，不构成研究总控状态机 | Agent/工作流决定研究循环和策略选用；策略应用评价及报告生成由相应能力承担。插件不内置 Agent 团队、自动报告或旧参考 CLI |
 
 ## 业务流程：任务方法、研究、决策、执行与验证
 
 | 插件 | 核心责任 | 主要交付与状态归属 | 协作边界 |
 | --- | --- | --- | --- |
-| [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | Strategy 主入口，组织因子与策略实验：角色分工、候选提交、调用评估器、比较与反思、固定选择、最终评价和归档 | 候选/试验台账、真实评价回执、检查点、最终研究报告；拥有本研究流程的业务状态 | 评估器负责数值计算和独立留出数据规则；宿主负责 Agent/Run 执行。评价结果来自真实调用回执 |
 | [investment-research](../plugins/optional-api-v1/packages/investment-research/capabilities.json) | Research 主入口，围绕投资问题组合指定信源与互补方法，组织分析师与经理，补齐具体证据缺口，综合观点；可单独重制报告 | 固定研究成果、证据引用、成员输出、综合结论、原研究角色问答；拥有研究成果和角色任务关系 | 数据获取、局部分析、报告发布分别调用相应能力；交易目标由 trading-decision 决定。研究成果可独立于交易账户存在 |
 | [trading-decision](../plugins/optional-api-v1/packages/trading-decision/capabilities.json) | 基于固定研究、当前账户及用户风险规则，管理授权交易计划、定时/事件触发、形成并冻结目标仓位，交付执行，复盘既往决策 | 交易计划、决策与目标、触发队列、运行状态、执行回执引用、同账户决策复盘 | 消费符合契约的固定研究成果；目标执行交给选定执行能力。个人风险规则来自 memory，独立判断验证由 judgment-evolution 管理 |
 | [portfolio-execution](../plugins/optional-api-v1/packages/portfolio-execution/capabilities.json) | 将已授权的目标或单次手动指令落实到账户：绑定精确账户、计算目标差量、串行执行批次、检查未决订单、核对成交与剩余目标 | 冻结账户绑定、执行申请与批次、账户锁、订单操作与观察回执、对账结果 | MT5/QMT 负责平台原生操作。绑定属于执行业务引用；连接与凭据由选定后端管理。它消费已有目标，保持原交易授权链 |
@@ -42,7 +47,7 @@
 | 插件 | 已支持的调整 | 保留的约束 |
 | --- | --- | --- |
 | investment-research | 新 start 入口默认需求、获取、分析、报告四阶段，可调整 report_brief 与成员；旧 analyze 计划和历史 Run 仍兼容 | 结果形式不指定分析方法；来源与能力明确选择，最终综合交付固定成果与报告 |
-| auto-factor-mining | 显式 single 为一个真实 Agent 承担全部阶段，默认 multi 保留角色分工；指南已内置 | 同一真实 evaluator、资格门槛、冻结选择与留出规则；统计诊断不等于交易规则回测 |
+| auto-factor-mining | Agent 决定搜索空间、批次、计算分区、评价配置和策略池选择，逐步调用独立能力 | 固定数据和证据身份、单步请求幂等与累计预算；搜索只接受匹配的 development 评价反馈，策略应用评价独立于因子评价 |
 | trading-decision | 顺序前置复核、只形成决策与报告 | 任一复核阻止则不执行；复核无下单权限，原账户授权与风险规则有效 |
 
 已接受的 Run 冻结计划，恢复复用身份、成果和已保存回执；修改计划开启新一轮。临时调整不写入长期默认，偏好不能放宽权限、风险或证据要求。判断生命周期和账户执行中的状态/授权校验仍是业务约束，不能因为允许调整流程而绕过。

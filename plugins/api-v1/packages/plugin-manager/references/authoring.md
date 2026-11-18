@@ -6,11 +6,11 @@
 
 | 要交付的结果 | 建议接口与实现 | 不需要顺带实现的能力 | 代表性源码 |
 | --- | --- | --- | --- |
-| 宏观任务方法、研究路线和验收原则 | business / knowledge；knowledge 的 skill/reference，capabilities 可为空 | 不为了步骤说明注册 workflow，不另造调度或报告发布 | auto-factor-mining/references/research-guide.md（工作流内的研究知识） |
+| 宏观任务方法、研究路线和验收原则 | business / knowledge；knowledge 的 skill/reference，capabilities 可为空 | 不为了步骤说明注册 workflow，不另造调度或报告发布 | research/skills/research/SKILL.md、research/references/methods/ |
 | 局部领域知识、判据与反例 | analysis / knowledge；SKILL 说明输入、解释边界，长参考按需读 | 不附加联网、账户或交易，不把文档描述当计算回执 | ict 的 skills/ict、examples/ |
-| 给定输入的确定性计算、解析 | analysis / function；显式 input/outputSchema，普通 JSON 或真实固定成果 | 不另写取数、Agent 团队、账户状态或通用文件工具 | abu-trend、market-data-parser 的声明与注册入口 |
+| 给定输入的确定性计算、解析 | analysis / function；显式 input/outputSchema，普通 JSON 或真实固定成果 | 不另写取数、Agent 团队、账户状态或通用文件工具 | abu-trend、market-data-parser、auto-factor-mining 的声明与注册入口 |
 | 外部数据、终端或原生引擎 | integration / adapter；原生 function，按宿主实际 contract 声明 sources/services；订阅用 transport:subscription | 不同时负责研究结论、目标仓位或 Sesame 窗口布局 | web-sources、financial-research、mt5、qmt；backtrader/vnpy 保留独立引擎规则 |
-| 按任务组织模型、证据与业务交接 | business / workflow；kind:workflow + execution:run，调用 host.agent.run、host.capabilities、host.runs | 不复制 Agent、Run、模型认证、资源库；不强制所有任务用同一团队 | investment-research/src/{runtime,members,composition,artifacts,team}.js；auto-factor-mining |
+| 按任务组织模型、证据与业务交接 | business / workflow；kind:workflow + execution:run，调用 host.agent.run、host.capabilities、host.runs | 不复制 Agent、Run、模型认证、资源库；不强制所有任务用同一团队 | investment-research/src/{runtime,members,composition,artifacts,team}.js |
 | 兑现已有授权目标、维持业务账本 | business / service 或 workflow；原生能力、现有 source/service、私有状态 | 不自行推断授权，不把原生平台适配或用户风险记忆一并接管 | portfolio-execution；judgment-evolution |
 | 展示已有成果和数据 | presentation / service；host.views，host.resources 发布/读取；静态 views 绑定 | 不重取数据或重做研究，不创建第二套成果身份 | reports、canvas-control |
 | 管理配置、插件、文件或记忆 | platform；复用相应 host 端口和明确服务贡献 | 不把业务状态、凭据或部署权限藏到知识提示词 | configuration、plugin-manager、workspace、memory |
@@ -36,7 +36,7 @@ capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以�
 | presentation | 交互呈现：工作台、图表、报告和交互 |
 | platform | 平台管理：配置、插件、工作空间和记忆等基础管理 |
 
-implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。auto-factor-mining、investment-research 是 business / workflow，工作流内可同时声明研究 knowledge；ict 是 analysis / knowledge，abu-trend 是 analysis / function。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
+implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。investment-research 是 business / workflow，工作流内可同时声明研究 knowledge；ict 是 analysis / knowledge，abu-trend、auto-factor-mining 是 analysis / function。auto-factor-mining 提供独立的准备、搜索、计算、评价与库操作，研究顺序由调用它的 Agent 或工作流决定。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
 
 供 Agent 阅读的长期内容分四层，只建实际用到的文件。`prompt.md` 说明何时使用、负责什么、必须遵守的原则，以及数据、判断、编排或呈现交给哪项能力。`skills/<任务>/SKILL.md` 写一类任务的最短路径：识别需求、复用已有输入、执行、必要分支和验收。方法、字段、接口、案例和故障细节放包根 `references/`，材料多了再按主题分子目录。可复用的角色职责才放 `references/roles/`。本次任务的目标、输入、范围、能力和交付写进已有 Agent 调用字段，不另建合同文件，也不按每个工具拆一篇 Skill。每份正文在 knowledge 里登记一次。
 

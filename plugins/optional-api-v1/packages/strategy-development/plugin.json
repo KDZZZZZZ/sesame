@@ -1,0 +1,30 @@
+{
+  "id": "sesame/strategy-development",
+  "apiVersion": "2",
+  "version": "1.1.0",
+  "title": "策略开发 · Strategy Development",
+  "description": "从投资委托提出可检验的交易假设，研究入场后能否捕捉到行情，构建可替换的 SVL 策略，通过原生回测、逐笔诊断和对照实验选择参数与改法。按需复用已有因子。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "engines": { "sesame": ">=0.3.0-dev.2 <0.4.0" },
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": ["capabilities.compose", "process.execute"],
+    "calls": [
+      "sesame/workspace#write",
+      "sesame/strategy-authoring#strategy_publish",
+      "sesame/strategy-authoring#strategy_validate",
+      "sesame/strategy-authoring#strategy_replay",
+      "sesame/strategy-authoring#strategy_pipeline",
+      "sesame/strategy-authoring#strategy_workflow",
+      "sesame/auto-factor-mining#factor_library",
+      "sesame/backtrader#backtrader_environment",
+      "sesame/backtrader#backtrader_optimize",
+      "sesame/backtrader#backtrader_backtest",
+      "host.runs.wait",
+      "host.resources.read"
+    ]
+  }
+}

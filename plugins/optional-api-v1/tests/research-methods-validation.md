@@ -1,23 +1,21 @@
 # Historical evidence: independent optional research methods — 2026-10-10
 
-This is the retained API 1 validation record. On 2026-10-28 the two independent source packages were retired; their knowledge and reference CLIs are now part of `auto-factor-mining`. The current tests validate that integrated package. The original commands and results below describe the historical checkout only.
+This is the retained API 1 validation record. On 2026-10-28 the two independent source packages were retired and their materials were integrated into `auto-factor-mining`. On 2026-11-17 the user explicitly requested removal of those historical v1 materials and their reference-CLI tests. The original commands and results below describe the historical checkout only.
 
 Validated 2026-10-10 on macOS arm64 with Node.js 25.2.1 and a matching local
 Sesame API 1 development host. Both packages declare `engines.sesame >=0.2.0-0`.
 This record is author execution evidence, not an independent approval or a claim
 that the application has been released.
 
-## Current reproduction
+## Current verification entry points
 
-The current `research-methods.test.mjs` and `research-methods-host.test.mjs`
-exercise the integrated `auto-factor-mining` package, its declared research
-references and optional reference CLIs. The host test installs that package in a
-temporary API 2 workspace, reads the declared resources, runs the three strategy
-audit commands and selected-factor screen/select/holdout commands, then reopens
-the workspace. It does not install a fixed nine-package core bundle and does not
-publish reports. For the eight independent theory methods and the current
-`data_snapshot` → `data_read` → workspace execution → `research_register` →
-`components_show(target:"report")` path, use `method-host.test.mjs`.
+The retired `research-methods.test.mjs` and `research-methods-host.test.mjs`
+are not current reproduction commands. The current package boundary and direct
+capabilities are checked by `auto-factor-mining-packages.test.mjs`; operation,
+search, computation, evaluation, library and native lifecycle checks live in
+`../packages/auto-factor-mining/tests/`. Their current results must be obtained
+from that checkout, not inferred from the historical counts below. The current
+usage entry is the package's `skills/auto-factor-mining/SKILL.md`.
 
 The dated execution counts below apply only to the historical checkout; this
 document does not treat a renamed command as fresh validation.
@@ -68,8 +66,8 @@ host. All data and installed files are in a new temporary root:
 
 The fixture forbids network access and confirms zero requests, zero model calls
 and zero native engine calls. Temporary state is deleted after verification.
-To run the current integrated-package test against an explicitly selected
-compatible API 2 checkout (its scope is described above):
+The subsequently integrated reference-CLI test used the following opt-in command.
+It is retained as historical evidence; that test has now been removed:
 
 ```sh
 SESAME_HOST_ROOT=/absolute/path/to/host node \
@@ -77,8 +75,8 @@ SESAME_HOST_ROOT=/absolute/path/to/host node \
   --test plugins/optional-api-v1/tests/research-methods-host.test.mjs
 ```
 
-Without that environment variable the host-specific integration is explicitly
-skipped; the dependency-free public tests remain runnable on their own.
+In that historical test, omitting the environment variable skipped the
+host-specific integration. This does not describe the current package's checks.
 
 ## Limits
 

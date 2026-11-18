@@ -21,17 +21,17 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has twelve core and forty-six optional identities, including Research methods', () => {
+test('candidate distribution has twelve core and forty-seven optional identities, including Strategy Development', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 12); assert.equal(options.packages.length, 46);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 58);
+  assert.equal(defaults.packages.length, 12); assert.equal(options.packages.length, 47);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 59);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(defaults.packages.some(item => item.id === 'sesame/ultra'));
   assert.ok(!options.packages.some(item => item.id === 'sesame/ultra'));
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
   assert.ok(options.packages.some(item => item.id === 'sesame/binance'));
   for (const id of ['sesame/host-files', 'sesame/manual-trading', 'sesame/factor-research', 'sesame/strategy-research', 'sesame/abu-backtest-lab']) assert.ok(!ids.includes(id));
-  for (const id of ['sesame/research', 'sesame/investment-research', 'sesame/historical-evidence', 'sesame/trading-decision', 'sesame/ultra', 'sesame/user-guide']) assert.ok(ids.includes(id));
+  for (const id of ['sesame/research', 'sesame/investment-research', 'sesame/strategy-development', 'sesame/historical-evidence', 'sesame/trading-decision', 'sesame/ultra', 'sesame/user-guide']) assert.ok(ids.includes(id));
   const names = defaults.packages.flatMap(pkg => JSON.parse(readFileSync(join(core, 'packages', pkg.directory, 'capabilities.json'))).capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
   assert.equal(new Set(names).size, names.length);
   for (const name of ['read', 'host_files_run', 'data_read', 'research_register', 'market_read', 'components_show', 'research_methods', 'research_read', 'strategy_validate']) assert.ok(names.includes(name), name);
@@ -72,7 +72,7 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 12);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 46);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 47);
   const ultra = preview.packages.find(p => p.id === 'sesame/ultra');
   assert.equal(ultra.distribution, 'core');
   assert.equal(ultra.functionalCategory, 'business');

@@ -1,12 +1,12 @@
 # 插件功能架构与分批验收
 
-本说明适用于当前 Plugin API 2 源码：57 个插件，其中 11 个核心、46 个可选。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。分类本身不改变调用权限；2026-10-26 将产品帮助从编排中独立为默认核心插件 `sesame/user-guide`。
+本说明记录 Plugin API 2 功能架构；57 个插件（11 个核心、46 个可选）及下列分类计数为 2026-10-29 的历史快照。因子插件相关说明于 2026-11-17 按现行实现更新，当前全量清单见 [inventory](../plugins/api-v1/inventory.json)。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。分类本身不改变调用权限；2026-10-26 将产品帮助从编排中独立为默认核心插件 `sesame/user-guide`。
 
 ## 分类与清单
 
 每包在 [inventory-policy.json](../plugins/api-v1/inventory-policy.json) 中指定一个主要 `functionalCategory`，保留原 `category` 以兼容既有目录。2026-10-19 将原先混合业务主题和实现形式的九类按任务职责归并；2026-10-28 增加“搜索与来源”，形成以下六类。判据是插件负责的结果，不是它暴露的接口。这里描述本地源码；目录发布、日常安装和外部连通状态需分别核验。
 
-| 职责 | 标识 | 当前数量 | 判断依据 |
+| 职责 | 标识 | 2026-10-29 数量 | 判断依据 |
 | --- | --- | ---: | --- |
 | 业务流程 | business | 7 | 组织完整任务的目标、步骤、选择、验收与交接，包含宏观方法指南和可执行工作流 |
 | 专业能力 | analysis | 29 | 在给定证据和边界内提供可复用的知识判断、分析、计算或解析 |
@@ -15,7 +15,7 @@
 | 交互呈现 | presentation | 2 | 组织可见的工作台、图表、报告及交互 |
 | 平台管理 | platform | 6 | 管理配置、插件、工作空间、记忆与宿主使用规则 |
 
-新研究任务保留两个主入口：Research（investment-research）围绕投资问题和结果需求组织获取、分析与报告；Strategy（auto-factor-mining）组织因子与策略实验。因子与策略知识、参考 CLI 已融合到 Strategy 内，当前目录不再提供两个独立旧入口。ICT 判断和指标计算为任务提供局部能力，属于专业能力。一个专业方法包含操作步骤，不代表它负责完整业务流程。资源接入也包含离线目录、本机终端和原生引擎，不限于联网 API。
+Research（investment-research）围绕投资问题和结果需求组织获取、分析与报告。auto-factor-mining 提供由 Agent/工作流直接调度的独立因子能力：数据准备、分批搜索、Qlib 计算、纯因子评价、因子库和策略因子池；现归 analysis / function，不拥有研究总控流程。旧 v1 指南、参考 CLI 和示例已移除，现行用法见包内 Skill 与 references。策略应用评价和报告生成交给相应能力。ICT 判断和指标计算为任务提供局部能力，属于专业能力。一个专业方法包含操作步骤，不代表它负责完整业务流程。资源接入也包含离线目录、本机终端和原生引擎，不限于联网 API。
 
 `implementationKinds` 是非空、无重复数组，可组合 `knowledge`、`function`、`adapter`、`workflow`、`service`。生成器根据**实际暴露的声明及随包入口**推导最小实现：显式 agent/workflow/graph、source 或 MCP 绑定、service/view/lifecycle hook、普通 capability、最后才是纯知识。更专门的职责覆盖机械 function/lifecycle 胶水；执行时间长、存在状态回执或存在 Python/JS 参考脚本，都不自动等于 workflow/service/function。纯知识包的空原生入口也不是执行能力。
 
@@ -23,8 +23,9 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 
 | 插件 | 任务职责 | 实现类型 |
 | --- | --- | --- |
-| auto-factor-mining | business：Strategy，因子与策略实验主入口 | workflow：工作流 |
+| auto-factor-mining | analysis：独立的因子搜索、计算、评价与库操作，研究顺序由 Agent 决定 | function：原生单步能力 |
 | investment-research | business：Research，综合投资研究主入口 | workflow：工作流 |
+| strategy-development | business，负责研究委托、策略结构、原生回测、参数择优与留出验证。根据策略用途引用独立因子评价 | workflow，开发期实验和独立确认 |
 | ict | analysis：局部结构与流动性判断 | knowledge：知识文档 |
 | abu-trend | analysis：趋势计算 | function：确定性函数 |
 | web-sources | search：网页发现与来源证据获取 | adapter：来源适配 |
@@ -34,13 +35,13 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 
 ### 全量归属
 
-以下均省略 `sesame/` 前缀，每个包只列一次：
+以下均省略 `sesame/` 前缀，包名来自 2026-10-29 快照；仅 auto-factor-mining 按现行职责移入专业能力，其余条目与括号内历史数量保留原核查口径，不作为当前全量统计：
 
 | 主类 | 插件 |
 | --- | --- |
-| business（7） | auto-factor-mining、investment-research、trading-decision、portfolio-execution、judgment-evolution、kurumi-replay、ultra |
+| business | investment-research、trading-decision、portfolio-execution、judgment-evolution、kurumi-replay、ultra |
 | analysis：领域知识（8） | ict、price-action、elliott-wave、wyckoff、dow-theory、behavioral-finance、institutional-analysis、narrative-analysis |
-| analysis：局部量化处理（17） | abu-breakout、abu-exit-rules、abu-indicators、abu-ml-features、abu-model-lab、abu-moving-average、abu-parameter-search、abu-position-sizing、abu-price-structure、abu-seasonality、abu-similarity、abu-stock-screening、abu-trade-judges、abu-trade-metrics、abu-trend、abu-trend-pullback、abu-volatility |
+| analysis：局部量化处理 | auto-factor-mining、abu-breakout、abu-exit-rules、abu-indicators、abu-ml-features、abu-model-lab、abu-moving-average、abu-parameter-search、abu-position-sizing、abu-price-structure、abu-seasonality、abu-similarity、abu-stock-screening、abu-trade-judges、abu-trade-metrics、abu-trend、abu-trend-pullback、abu-volatility |
 | analysis：评估、表达与解析（4） | factor-evaluator、historical-evidence、strategy-authoring、market-data-parser |
 | search（4） | web-sources、rss-collect、web-extract、financial-research |
 | integration（9） | data-access、akshare、ccxt、binance、mt5、qmt、backtrader、vnpy、quantskills-catalog |
@@ -111,7 +112,7 @@ ICT 的验收保留原 Python 样例的 5 个区间观察及其确认时点；MT
 
 ## 分批推广与验收
 
-历史上 31 个专业能力包已完成全量架构核对与对齐，详见[逐项责任和配置审计](analysis-plugin-responsibilities.md)；其中 RSS 和网页解析在 2026-10-28 改归搜索与来源，当前专业能力为 29 包。原始 31 包及 33 个执行能力的冻结契约继续全量校验，仅在分类测试中明确这两个包的归属变化。八个知识包保持显式知识资源，十八个 ABU 包保持算法与共用证据运行时分离；三个解析器统一维护同源 transport 并独立交付；评估器和 SVL 保留已有纯计算、协议、状态与生命周期分层，未增加无实际依赖的配置项。
+历史上 31 个专业能力包已完成全量架构核对与对齐，详见[逐项责任和配置审计](analysis-plugin-responsibilities.md)；其中 RSS 和网页解析在 2026-10-28 改归搜索与来源，当时专业能力为 29 包。原始 31 包及 33 个执行能力的冻结契约继续全量校验，仅在分类测试中明确这两个包的归属变化。八个知识包保持显式知识资源，十八个 ABU 包保持算法与共用证据运行时分离；三个解析器统一维护同源 transport 并独立交付；评估器和 SVL 保留已有纯计算、协议、状态与生命周期分层，未增加无实际依赖的配置项。
 
 后续按实现类型选小批插件逐包迁移，每批完成以下步骤后再继续：
 

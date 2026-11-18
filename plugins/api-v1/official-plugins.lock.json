@@ -385,9 +385,9 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.6",
+      "version": "3.1.7",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:e5dbbcb230d7c6ebd29a14f0c4f0fc454861111ae6825f431611bed668701a0f",
+      "treeDigest": "sha256:fb66d93b1ef91cb5d45e6e2155641cadad91a1fb5deb9e76da4a6188ac1b442f",
       "files": [
         {
           "path": "LICENSE",
@@ -421,12 +421,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "b7ddafd9792b5386f252b97309d4dd4dc5d419a5e117f70faef0bef45b799769",
+          "sha256": "6f972ed0760d1e250b520c042ad8722c5bb54c00bfc7a18778671daafbb211b5",
           "bytes": 108
         },
         {
           "path": "plugin.json",
-          "sha256": "96d1dc8ec85a6e545d4debb7c9ba5ba64a07bb533ba5ec7ba6d0d1a04f0f7418",
+          "sha256": "b71ccf7375205261ef4269e81ab3a718adf1d8b26b339a1738d0511a25eea253",
           "bytes": 940
         },
         {
@@ -436,8 +436,8 @@
         },
         {
           "path": "references/authoring.md",
-          "sha256": "045f11011230672ec4d509ebf62dbfa9ab65847fbaf6fc8904ee4eba7701e56a",
-          "bytes": 19679
+          "sha256": "06a4f64624ab0b67d3b8242a2963041eb42e769be653a77dca8e91519f941864",
+          "bytes": 19800
         },
         {
           "path": "references/host-api.md",

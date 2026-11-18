@@ -1,18 +1,18 @@
 # 非专业能力类插件：能力清单
 
-基线核查日期：2026-10-19；MT5 交易权限入口于 2026-10-21 补入。依据当前源码声明与职责分类。范围为排除专业能力 31 包及 Kurumi 后的 24 包；不代表当前已安装或已发行版本。
+基线核查日期：2026-10-19；MT5 交易权限入口于 2026-10-21 补入。历史范围为排除专业能力 31 包及 Kurumi 后的 24 包；不代表当前已安装或已发行版本。因子入口于 2026-11-17 单独更新，现归专业能力；其余总数与条目保留历史核查口径，当前全量声明见 [inventory](../plugins/api-v1/inventory.json)。
 
 共 257 个声明入口：169 个可供 Agent 调用，88 个仅供宿主调用。本轮保持冻结的 252 个原能力契约，另为统一配置新增 MT5、QMT 各两个宿主适配器。数量按插件 ID 与能力 ID 的组合计算；实际权限、配置条件和运行结果沿用原契约。
 
 orchestration、user-guide 没有执行入口，其能力由知识指南提供。2026-10-26 新增独立默认 user-guide 并迁移产品帮助，orchestration 专注协作编排；上文执行能力数字保留历史核查口径，当前包数见功能架构与 inventory。
 
-2026-10-28 入口调整：综合投资研究使用 **Research**（`investment-research`），因子与策略实验使用 **Strategy**（`auto-factor-mining`）。因子与策略指南、参考 CLI 已融合进 Strategy，不再作为独立包分发；下列历史能力数字不因入口调整而冒充新的全量统计，当前声明与版本见 [57 包功能总览](../output/plugin-review-20261028/index.html)。
+2026-10-28 的入口调整记录见 [当时的 57 包功能总览](../output/plugin-review-20261028/index.html)。当前 `auto-factor-mining` 提供 Agent 直接调用的因子研究能力；旧 v1 研究总控、参考 CLI、示例和文档均已移除。研究顺序由 Agent/工作流决定，策略应用评价和报告生成由相应插件承担。现行用法见 [因子研究 Skill](../plugins/optional-api-v1/packages/auto-factor-mining/skills/auto-factor-mining/SKILL.md)。
 
 ## 总览
 
 | 职责 | 插件 | 业务能力 | Agent 可调用 | 仅宿主 |
 | --- | --- | --- | ---: | ---: |
-| 业务流程 | [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | 选择模型与研究角色；指定评估器并启动因子研究；读取共享证据；提交候选并保留真实评价回执；管理暂停、恢复与取消；读取最终报告和运行图。 | 7 | 4 |
+| 专业能力（当前） | [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | 准备环境与数据；分批搜索公式；Qlib 计算与纯因子评价；登记、查询因子库；显式维护策略因子池及应用反馈。 | 7 | 2 |
 | 业务流程 | [investment-research](../plugins/optional-api-v1/packages/investment-research/capabilities.json) | 组合信息源与互补方法开展研究，保存证据和情景；向原分析师追问具体缺口；基于已有研究生成或重生经理报告。 | 3 | 0 |
 | 业务流程 | [judgment-evolution](../plugins/optional-api-v1/packages/judgment-evolution/capabilities.json) | 事前登记可验证判断；查询到期队列；用真实数据核验并评分；证据缺失时延期；完成归因复盘；管理候选准则、前瞻验证和退休；核对回复中的判断覆盖。 | 13 | 3 |
 | 业务流程 | [portfolio-execution](../plugins/optional-api-v1/packages/portfolio-execution/capabilities.json) | 绑定已有执行适配器与精确账户；读取账户、报价、持仓及执行状态；应用工作流冻结的组合目标；执行已授权的单次手动订单；查询、恢复核对或撤销待成交委托，保留单次提交回执。 | 9 | 1 |
@@ -36,27 +36,27 @@ orchestration、user-guide 没有执行入口，其能力由知识指南提供�
 | 平台管理 | [plugin-manager](../plugins/api-v1/packages/plugin-manager/capabilities.json) | 发现已安装插件和能力，按需加载；读取发布目录并校验安装；读取知识资源、检查状态；生成插件草稿；安装、启停、版本检查更新和卸载。 | 11 | 0 |
 | 平台管理 | [workspace](../plugins/api-v1/packages/workspace/capabilities.json) | 读取、写入和精确编辑工作区文件，运行受管理命令；列出、搜索、分页读取或导入宿主文件；写文件、建目录、移动及删除普通文件或空目录；运行宿主命令并保留执行结果。 | 13 | 0 |
 
-## 业务流程
+## 专业能力：当前因子入口
 
 ### sesame/auto-factor-mining
 
-选择模型与研究角色；指定评估器并启动因子研究；读取共享证据；提交候选并保留真实评价回执；管理暂停、恢复与取消；读取最终报告和运行图。
+Agent/工作流选择调用顺序，插件独立完成环境准备、数据冻结、搜索、计算和评价，保存公式及证据。因子评价与策略应用评价分开，策略明确决定选用哪些因子；插件不内置研究总控或自动报告步骤。
 
-来源：[capabilities.json](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json)。Agent 可调用 7 项，仅宿主 4 项。
+来源：[capabilities.json](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json)。Agent 可调用 7 项，仅宿主 2 项。
 
-| 能力 ID | 消费方 | 用途（声明原文） |
+| 能力 ID | 消费方 | 用途 |
 | --- | --- | --- |
-| `auto_factor_models` | Agent / 宿主 | List configured provider/model descriptors and factor-mining roles. Select a default model and optionally a different model for each role. |
-| `auto_factor_start` | Agent / 宿主 | Start a workflow with an explicitly selected independent evaluator {plugin_id,tool,arguments?}, configured role models and arbitrary selected research plugins/tools. No evaluator or execution backend is implicit. Evaluator owns data format, calculations and gates. With general research capabilities only development-only evidence is accepted; no holdout claim. Each task run produces one final summary. |
-| `auto_factor_runs` | Agent / 宿主 | List/read persisted research runs or forward pause/resume/cancel to their original host Run. Saved role identities and stage outputs are retained; finished runs cannot be resumed. |
-| `auto_factor_context` | Agent / 宿主 | Read the current role/output contract, frozen development data, peer hypotheses, measured trials and reflections. Reuse shared evidence and existing evaluation receipts; follow pagination for the evidence needed by this assignment. No holdout observations are exposed. |
-| `auto_factor_submit` | Agent / 宿主 | Save one immutable role output. Candidates are opaque JSON defined by the selected evaluator. Candidate and selection submissions invoke that evaluator and save its actual receipt; Agent-supplied metrics are never accepted. |
-| `auto_factor_report` | Agent / 宿主 | Read the final report artifact already published by this workflow. Report publication happens inside the workflow after its actual child Runs settle; this read never recreates moved, edited or deleted user files. |
-| `auto_factor_activity` | Agent / 宿主 | Open this workflow execution in the native Run graph, with child Agents and its published report. |
-| `auto_factor_workflow` | 仅宿主 | Execute the saved factor workflow. Research roles use host.agent.run; evaluation and publication use native code. |
-| `auto_factor_activate` | 仅宿主 | Load and reconcile durable checkpoints without starting research. |
-| `auto_factor_dispose` | 仅宿主 | Cancel active work and finish durable checkpoint writes. |
-| `auto_factor_dependencies` | 仅宿主 | Read frozen input integrity and selected model/evaluator declarations before workflow admission or resume; never prepares a new evaluator session or starts an Agent. |
+| `factor_environment` | Agent / 宿主 | 检查或准备固定依赖的 Python 环境。 |
+| `factor_prepare` | Agent / 宿主 | 将显式数据来源与布局冻结为计算快照。 |
+| `factor_search` | Agent / 宿主 | 打开或读取搜索会话，按调用者指定的搜索空间和真实开发集反馈提出一批公式。 |
+| `factor_compute` | Agent / 宿主 | 在指定快照与 development/holdout 分区上用 Qlib 计算显式公式。 |
+| `factor_evaluate` | Agent / 宿主 | 按指定配置评价已计算的因子值，并归档真实评价证据。 |
+| `factor_library` | Agent / 宿主 | 登记公式及来源、查询或读取定义与评价、添加注记。 |
+| `factor_pool` | Agent / 宿主 | 读取策略因子池，显式增补、替换或移除因子，保存指定池版本的应用反馈。 |
+| `factor_configuration_read` | 仅宿主 | 读取已保存的 Python 路径与环境就绪信息。 |
+| `factor_configuration_update` | 仅宿主 | 核验并保存显式 Python 环境配置。 |
+
+## 业务流程：历史核查
 
 ### sesame/investment-research
 

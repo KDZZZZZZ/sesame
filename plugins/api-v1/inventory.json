@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2851,7 +2851,7 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4950,7 +4950,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.6",
+      "version": "3.1.7",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6374,6 +6374,148 @@
         ]
       },
       "sourcePath": "plugins/api-v1/packages/strategy-authoring"
+    },
+    {
+      "id": "sesame/strategy-development",
+      "version": "1.1.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.3.0-dev.2 <0.4.0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "strategy",
+      "functionalCategory": "business",
+      "implementationKinds": [
+        "workflow"
+      ],
+      "title": {
+        "en": "Strategy development",
+        "zh": "策略开发"
+      },
+      "summary": {
+        "en": "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate.",
+        "zh": "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。"
+      },
+      "dependencies": {
+        "en": "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional.",
+        "zh": "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。"
+      },
+      "permissions": {
+        "scopes": [
+          "capabilities.compose",
+          "process.execute"
+        ],
+        "calls": [
+          "sesame/workspace#write",
+          "sesame/strategy-authoring#strategy_publish",
+          "sesame/strategy-authoring#strategy_validate",
+          "sesame/strategy-authoring#strategy_replay",
+          "sesame/strategy-authoring#strategy_pipeline",
+          "sesame/strategy-authoring#strategy_workflow",
+          "sesame/auto-factor-mining#factor_library",
+          "sesame/backtrader#backtrader_environment",
+          "sesame/backtrader#backtrader_optimize",
+          "sesame/backtrader#backtrader_backtest",
+          "host.runs.wait",
+          "host.resources.read"
+        ]
+      },
+      "tools": [
+        "strategy_development_plan",
+        "strategy_development_build",
+        "strategy_development_backtest",
+        "strategy_development_read",
+        "strategy_development_method",
+        "strategy_development_study",
+        "strategy_development_verify",
+        "strategy_development_compare"
+      ],
+      "capabilities": [
+        {
+          "id": "strategy_development_plan",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_build",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_backtest",
+          "kind": "workflow",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "strategy_development_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_method",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_study",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_verify",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_development_compare",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/optional-api-v1/packages/strategy-development"
     },
     {
       "id": "sesame/trading-decision",
