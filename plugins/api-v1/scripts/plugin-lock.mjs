@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as yamlSource from '../../../.github/validation-transition/current-source.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
@@ -184,7 +185,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const args = process.argv.slice(2), sourceIndex = args.indexOf('--source');
   fail(args.length > 0 && args.every((arg, i) => ['--write', '--check', '--archive', '--source'].includes(arg) || ['--archive', '--source'].includes(args[i - 1])), 'Use --write, --check, or --archive <path>, with optional --source <directory>');
   fail(sourceIndex === -1 || args[sourceIndex + 1], '--source needs a directory');
-  const source = sourceIndex === -1 ? root : resolve(args[sourceIndex + 1]), lockPath = join(source, 'official-plugins.lock.json'), lock = buildLock(source), text = JSON.stringify(lock, null, 2) + '\n';
+  const source = sourceIndex === -1 ? root : resolve(args[sourceIndex + 1]), lockPath = join(source, 'official-plugins.lock.json');
+  const checkCurrentYaml = args.includes('--check') && !args.includes('--write') && !args.includes('--archive') && yamlSource.usesYaml(source);
+  const lock = checkCurrentYaml ? yamlSource.buildLock(source) : buildLock(source), text = JSON.stringify(lock, null, 2) + '\n';
   if (args.includes('--write')) writeFileSync(lockPath, text);
   if (args.includes('--check') || args.includes('--archive')) fail(readFileSync(lockPath, 'utf8') === text, 'Lock differs from source; regenerate and review it');
   const archiveIndex = args.indexOf('--archive');

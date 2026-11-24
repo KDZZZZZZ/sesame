@@ -10,6 +10,8 @@ import { buildCatalog } from '../../plugins/api-v1/scripts/catalog.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
 import { buildR2Profile } from './plugin-r2.mjs';
 import { validateRepository } from './validate-catalog.mjs';
+import * as yamlSource from '../validation-transition/current-source.mjs';
+import { createProtocolFiles } from '../validation-transition/plugins/protocol/package.mjs';
 
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 const git = (root, ...args) => execFileSync('git', ['-C', root, '-c', 'core.autocrlf=false', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', ...args], { encoding: 'utf8' }).trim();
@@ -53,6 +55,51 @@ test('current API 2 inventory validates without Git ancestors, legacy catalogs o
   assert.equal(validateRepository(root).inventory, 2);
   const result = spawnSync(process.execPath, [fileURLToPath(new URL('./validate-catalog.mjs', import.meta.url)), root], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /"remoteChecked":false/);
+});
+
+test('trusted current-source CLIs validate both declaration formats and reject stale YAML locks', t => {
+  const { root, core } = fixture(t);
+  const lockCli = fileURLToPath(new URL('../../plugins/api-v1/scripts/plugin-lock.mjs', import.meta.url));
+  const catalogCli = fileURLToPath(new URL('./validate-catalog.mjs', import.meta.url));
+  const checkLock = source => spawnSync(process.execPath, [lockCli, '--check', '--source', source], { encoding: 'utf8' });
+  const checkCatalog = () => spawnSync(process.execPath, [catalogCli, root], { encoding: 'utf8' });
+  const optional = join(root, 'plugins/optional-api-v1');
+  for (const result of [checkLock(core), checkLock(optional), checkCatalog()]) assert.equal(result.status, 0, result.stderr);
+  for (const [source, name] of [[core, 'core-one'], [optional, 'optional-one']]) {
+    const pkg = join(source, 'packages', name);
+    const profile = JSON.parse(readFileSync(join(source, 'bundle-profile.json')));
+    delete profile.packages;
+    json(join(source, 'bundle-profile.json'), { ...profile, discover: true, exclude: [] });
+    const manifestPath = join(pkg, 'plugin.json'), declarationsPath = join(pkg, 'capabilities.json');
+    const manifest = JSON.parse(readFileSync(manifestPath)), declarations = JSON.parse(readFileSync(declarationsPath));
+    rmSync(manifestPath); rmSync(declarationsPath);
+    manifest.title = name;
+    manifest.description = 'Fixture check';
+    manifest.catalog = { functionalCategory: 'analysis', title: { en: name, zh: '示例' }, summary: { en: 'Fixture check', zh: '验证样例' } };
+    if (source === optional) manifest.id = 'community/' + name;
+    declarations.capabilities[0].description = 'Read a fixture record';
+    const files = createProtocolFiles(manifest, declarations, { 'evals/cases/discovery.yaml': 'id: discovery\n' });
+    for (const [path, bytes] of Object.entries(files)) {
+      mkdirSync(dirname(join(pkg, path)), { recursive: true });
+      writeFileSync(join(pkg, path), bytes);
+    }
+    json(join(source, 'official-plugins.lock.json'), yamlSource.buildLock(source));
+  }
+  json(join(core, 'inventory-policy.json'), {});
+  const inventory = yamlSource.buildInventory(core);
+  json(join(core, 'inventory.json'), inventory);
+  for (const result of [checkLock(core), checkLock(optional), checkCatalog()]) assert.equal(result.status, 0, result.stderr);
+  json(join(core, 'inventory.json'), { ...inventory, packages: [] });
+  assert.match(checkCatalog().stderr, /inventory differs/);
+  json(join(core, 'inventory.json'), inventory);
+  const lockPath = join(optional, 'official-plugins.lock.json'), lock = JSON.parse(readFileSync(lockPath));
+  json(lockPath, { ...lock, packages: [] });
+  assert.match(checkLock(optional).stderr, /Lock differs/);
+  assert.match(checkCatalog().stderr, /source lock differs/);
+  json(lockPath, lock);
+  json(join(optional, 'packages/optional-one/surface.lock.json'), {});
+  assert.match(checkLock(optional).stderr, /Surface lock mismatch/);
+  assert.match(checkCatalog().stderr, /Surface lock mismatch/);
 });
 
 test('legacy projection retains its exact format while taxonomy projection derives only source facts', t => {
