@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/abu-trade-metrics
 title: 交易结果诊断
 description: 对已提供权益与闭合交易计算绩效，对订单与成交审计时序、限价、数量和成本。两项可独立使用的计算基线，保留固定证据；不运行回测或重建券商账单。
-version: 2.1.0
+version: 2.1.1
 license: GPL-3.0-only
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors; ABU reference by bbfamily / 阿布
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Trade results diagnostics"
+      zh: "交易结果诊断"
+    summary:
+      en: "Calculate equity performance and independently audit supplied order/fill/replay timing, cost and constraints; both operations preserve fixed input and output artifacts."
+      zh: "计算权益绩效，并独立审计已提供订单/成交/回放的时序、成本与约束；两个能力分别留存固定输入和结果工件。"
+    dependencies:
+      en: "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order."
+      zh: "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
   default_state: discoverable
   agent_scope: all
   prompts:

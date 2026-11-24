@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/historical-evidence
 title: 历史同类情景与概率校准
 description: 固定输入的历史匹配、条件频率与isotonic时间分割校准；真实预测日志和明确标记的历史回放分开，保留条件、反例、缺失与适用边界。
-version: 1.1.2
+version: 1.1.3
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Historical scenarios and probability calibration"
+      zh: "历史情景与概率校准"
+    summary:
+      en: "Match fixed comparable historical situations and evaluate calibration with separate fit/evaluation evidence; explicitly labelled present-day historical replay remains exploratory and yields no current calibrated probability."
+      zh: "匹配固定历史同类情景，并分开拟合和评价证据；明确标注的今日历史回放仅作探索诊断，不输出当前校准概率。"
+    dependencies:
+      en: "Supplied features, verified availability and matured outcomes; prospective calibration requires original timestamped predictions. Historical replay requires fixed code/data and distinct actual/virtual clocks. No network or broker."
+      zh: "需要已提供特征、可验证可见时间和到期结果；前瞻校准须原始带时间预测。历史回放须固定代码/数据并区分实际与虚拟时钟。不联网或连接券商。"
   execution: native
   default_state: discoverable
   agent_scope: all

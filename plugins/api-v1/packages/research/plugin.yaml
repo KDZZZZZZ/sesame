@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/research
 title: 金融研究方法
 description: 按金融问题发现调查方法、证据要求与回答结构；支持混合问题、定向复核及专业字段释义。
-version: 1.0.7
+version: 1.0.8
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["function"]
+    title:
+      en: "Research methods"
+      zh: "研究方法"
+    summary:
+      en: "Find financial investigation methods and question-specific answer structures; adapt them to new questions and review evidence."
+      zh: "发现金融调查方法与问题专属回答结构，适配新问题并复核研究证据。"
+    dependencies:
+      en: "Method lookup needs no credentials or external runtime. Research uses the existing agents and relevant source and calculation plugins."
+      zh: "查询方法无需密钥或额外运行环境；研究由现有 Agent 配合所需来源与计算插件执行。"
   default_state: mounted
   execution: native
   prompts:

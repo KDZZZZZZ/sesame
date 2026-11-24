@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/narrative-analysis
 title: 市场叙事研究
 description: 可组合的分析方法：实际资料支持哪些市场命题、传播关系和竞争解释，下一项观察如何区分它们；消费已有证据，返回命题与 source_cluster 表、支持/反对/缺失事实、竞争情景、触发与反证及更新条件。
-version: 2.0.1
+version: 2.0.2
 license: MIT
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Narrative analysis"
+      zh: "叙事分析"
+    summary:
+      en: "Track narratives, their propagation and counterevidence separately from price effects."
+      zh: "追踪叙事、传播及反证，并与价格影响分开。"
+    dependencies:
+      en: "Needs dated, attributable text evidence. Attention and co-movement do not prove causation."
+      zh: "需可归属且有日期的文本证据；关注度与共同变化不证明因果。"
   default_state: discoverable
   agent_scope: all
   prompts:

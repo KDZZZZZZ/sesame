@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -35,7 +36,7 @@ test('reviewed source parsing/cache functions retain their bounded effects witho
   assert.equal(readOnly({...fixedHistory,effects:[...fixedHistory.effects,'application-configuration']}),false);
 });
 test('real data-access capture declarations reach research members through explicit and default selection', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../../api-v1/packages/data-access/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../../api-v1/packages/data-access/', import.meta.url)).capabilities;
   const ids = ['data_snapshot', 'market_read', 'research_register'];
   const capabilities = ids.map(id => {
     const cap = manifest.capabilities.find(value => value.id === id);
@@ -51,7 +52,7 @@ test('real data-access capture declarations reach research members through expli
   }
 });
 test('reviewed data capture does not authorize unknown writers or expanded trading and execution effects', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../../api-v1/packages/data-access/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../../api-v1/packages/data-access/', import.meta.url)).capabilities;
   for (const id of ['data_snapshot', 'market_read', 'research_register']) {
     const cap = manifest.capabilities.find(value => value.id === id);
     assert.ok(cap);
@@ -76,7 +77,7 @@ test('research report instructions use research naming and preserve the parent d
   assert.match(instructions, /新研究的标题与文件名表达研究主题/);
   assert.match(instructions, /不使用“手工交易日报”或“交易决策日报”/);
   assert.match(instructions, /绑定父工作流的唯一报告位置/);
-  const prompt = await readFile(new URL('../packages/investment-research/prompt.md', import.meta.url), 'utf8');
+  const prompt = await readFile(new URL('../packages/investment-research/instructions.md', import.meta.url), 'utf8');
   assert.match(prompt, /host_reports_describe.*inputSchema.*host_reports_publish/);
   assert.match(prompt, /不把默认 Reports 的 content\/style 当宿主通用格式/);
   assert.match(prompt, /task\.output:\{type:"report",space:"research",path:"\.\.\.html"\}.*实际交付/);
@@ -516,7 +517,7 @@ test('large complete handoffs use a fixed data reference, never a silently trunc
 });
 
 test('workflows, scoped questions and deterministic event outcomes retain separate public contracts', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/investment-research/capabilities.json', import.meta.url)));
+  const manifest = readPackageDirectory(new URL('../packages/investment-research/', import.meta.url)).capabilities;
   assert.deepEqual(manifest.capabilities.map(cap => cap.id), ['investment_research_start', 'investment_research_analyze', 'investment_research_report', 'investment_research_ask', 'investment_research_event_outcomes']);
   assert.ok(manifest.capabilities.slice(0, 4).every(cap => cap.resumable && cap.execution === 'run'));
   assert.ok(manifest.capabilities.slice(0, 3).every(cap => cap.kind === 'workflow'));

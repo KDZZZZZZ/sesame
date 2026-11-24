@@ -65,14 +65,17 @@ test('research_register publishes verified direct inputs usable by historical_ev
     for (const ref of inputRefs) inputs.push(await invoke('sesame/data-access#data_read', { ref, directory: 'calculation' }));
     const recipe = `import { readFileSync, writeFileSync } from 'node:fs';\nconst paths = ${JSON.stringify(inputs.map(item => 'inputs/' + item.path.split(/[\\/]/).at(-1)))};\nconst all = paths.map(path => JSON.parse(readFileSync(path, 'utf8')));\nif (all.slice(1).some(rows => rows[0].synthetic !== true)) throw Error('Expected only synthetic source inputs');\nwriteFileSync('output.json', JSON.stringify(all[0]));\n`;
     await invoke('sesame/workspace#write', { path: 'calculation/reproduce.mjs', content: recipe });
+    // Present in both snapshots. Inlining the complete execution would exceed the 8 MiB source-page limit.
+    await writeFile(join(workspace, 'calculation', 'unrelated.bin'), Buffer.alloc(3 * 1024 * 1024 + 1, 65));
     const execution = await invoke('sesame/workspace#host_files_run', { argv: [process.execPath, 'reproduce.mjs'], cwd: join(workspace, 'calculation'), timeout: 30 });
     assert.equal(execution.exitCode, 0); assert.ok(execution.executionId); assert.deepEqual(execution.snapshotErrors ?? [], []);
     const args = { operationId: 'registered-history-envelope', executionId: execution.executionId, path: 'output.json', title: 'Synthetic historical replay envelope', description: 'Identity transformation for API interoperability; numerical replay remains hypothetical.', recipePaths: ['reproduce.mjs'], inputRefs: [...inputRefs, structuredClone(refs.plan)] };
+    await assert.rejects(invoke('sesame/data-access#research_register', { ...args, operationId: 'generated-recipe', recipePaths: ['output.json'] }), /absent at execution start.*output snapshot.*reproduce\.mjs/);
     const registered = await invoke('sesame/data-access#research_register', args);
     const manifest = await host.resources.read(registered.ref, { part: 'manifest' });
     const metadata = await host.resources.read(registered.ref, { part: 'metadata' });
     const evidenceManifest = await host.resources.read(registered.evidence, { part: 'manifest' });
-    assert.equal(metadata.producer.id, 'sesame/data-access'); assert.equal(metadata.producer.version, '3.0.4');
+    assert.equal(metadata.producer.id, 'sesame/data-access'); assert.equal(metadata.producer.version, lock.packages.find(p => p.id === metadata.producer.id).version);
     assert.equal(manifest.content.provenance.kind, 'demo'); assert.deepEqual(registered.provenance.references, [registered.evidence]);
     assert.deepEqual(manifest.dependencies, [registered.evidence, ...inputRefs]);
     assert.deepEqual(evidenceManifest.dependencies, args.inputRefs, 'original evidence references stay intact, including duplicates');
@@ -107,7 +110,7 @@ test('research_register publishes verified direct inputs usable by historical_ev
     assert.equal(networkCalls, 0); assert.equal(modelCalls, 0);
     if (receipts) {
       await mkdir(receipts, { recursive: true });
-      await writeFile(join(receipts, 'host-receipt.json'), JSON.stringify({ status: 'passed', checkedAt: new Date().toISOString(), dataAccessVersion: '3.0.4', historyVersion: installed.version, modelCalls, networkCalls,
+      await writeFile(join(receipts, 'host-receipt.json'), JSON.stringify({ status: 'passed', checkedAt: new Date().toISOString(), dataAccessVersion: metadata.producer.version, historyVersion: installed.version, modelCalls, networkCalls,
         executionId: execution.executionId, registered, inputRefs, directDependencies: manifest.dependencies, sourceProvenance: manifest.content.provenance,
         verified: ['real API2 install and public capabilities', 'real Node process and host-frozen input/output bytes', 'all five historical ref roles directly pinned', 'duplicate full refs deduplicated only in data edges', 'original row/evidence inputs retained', 'from_ref actual calibration matches inline', 'replay remains exploratory with no current probability', 'transitive-only code reference rejected', 'forged and unexecuted inputs rejected', 'same operation returns same immutable result before and after isolated restart'],
         result: { resultRef: delivery.result_ref, resultDependencies: resultManifest.dependencies, inputDigest: fromRef.input_digest, inputIntegrity: fromRef.input_integrity, status: fromRef.status, calibratedBrier: .14453125, currentProbability: null } }, null, 2) + '\n');

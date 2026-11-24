@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/abu-similarity
 title: 同期收益相似性基线
 description: 时间对齐的收益相关、秩相关和方向相似性。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
-version: 2.0.2
+version: 2.0.3
 license: GPL-3.0-only
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors; ABU reference by bbfamily / 阿布
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Concurrent return similarity"
+      zh: "同期收益相似性"
+    summary:
+      en: "Compare returns with exactly matching start/end timestamps using Pearson, Spearman and sign agreement; does not retrieve historical scenarios or predict probabilities."
+      zh: "以完全相同起止时点对齐收益，计算Pearson、Spearman与方向一致率；不检索历史情景或预测概率。"
+    dependencies:
+      en: "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order."
+      zh: "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
   default_state: discoverable
   agent_scope: all
   prompts:

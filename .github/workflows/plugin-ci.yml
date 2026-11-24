@@ -1,0 +1,64 @@
+name: Plugin CI
+on:
+  push:
+    branches: [main, dev]
+  pull_request_target:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plugin-static-review:
+    if: github.event_name != 'pull_request_review'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Check out trusted validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted
+          persist-credentials: false
+      - name: Check out candidate as data
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate both package locks, inventory and release plans
+        run: node trusted/.github/scripts/validate-catalog.mjs candidate
+      - name: Validate evaluation declarations and replay fixed evidence
+        run: node trusted/plugins/protocol/evaluation/verify-cases.mjs --static candidate
+
+  # Mirror the result for the existing branch rules. Both contexts can be
+  # retired when the rules on main and dev require plugin-static-review.
+  package-static-review:
+    if: always() && github.event_name == 'pull_request_target'
+    needs: plugin-static-review
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.plugin-static-review.result }}" = success
+  catalog-static-review:
+    if: always() && github.event_name == 'pull_request_target'
+    needs: plugin-static-review
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.plugin-static-review.result }}" = success
+
+  review-event:
+    if: >-
+      github.event_name == 'pull_request_review' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'dev' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Release PR review updated'

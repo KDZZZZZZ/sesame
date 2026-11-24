@@ -111,4 +111,4 @@ x-sesame:
             mt5agent_integration: file_import
             verification_level: pending_review
             workflow_stage: 研究信号 / Research signal
-          version: 4.2.0
+          version: 4.2.1

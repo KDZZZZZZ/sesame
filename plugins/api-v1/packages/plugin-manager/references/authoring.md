@@ -25,7 +25,7 @@ plugin.yaml 声明 formatVersion: 1、protocolVersion: 2026-07-28、插件 ID、
 
 ## 功能分类与文件组织
 
-官方源码保持 packages/<slug> 平铺。inventory-policy.json 的原 category 继续兼容旧目录；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。web-sources、rss-collect、web-extract、financial-research 归 search；RSS/HTML 解析器不因分类而获得搜索或抓取能力，分类也不将消息采集交给 Report。
+官方源码保持 packages/<slug> 平铺。在 plugin.yaml 的 x-sesame.catalog 填写双语 title、summary 和 functionalCategory；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。web-sources、rss-collect、web-extract、financial-research 归 search；RSS/HTML 解析器不因分类而获得搜索或抓取能力，分类也不将消息采集交给 Report。
 
 | functionalCategory | 主要职责 |
 | --- | --- |

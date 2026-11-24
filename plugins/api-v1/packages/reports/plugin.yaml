@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/reports
 title: 视觉组件与报告
 description: 将研究初稿统一做图文编辑：按问题组织全文，用自然中文重新解释已有研究，逐段审读并编排图表，以受控组件呈现报告或回答，保持事实与判断边界。
-version: 8.0.9
+version: 8.0.10
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.2 <0.4.0"
@@ -12,6 +12,19 @@ author:
 entry: index.js
 dependencies: []
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "presentation"
+    implementationKinds: ["service"]
+    title:
+      en: "Interactive reports"
+      zh: "交互报告"
+    summary:
+      en: "Present text and fixed data through shared visual components, charts, layouts and interactions in reports and answers."
+      zh: "用统一组件、图表、排版与交互在报告和回答中展示已有文字与固定数据。"
+    dependencies:
+      en: "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required."
+      zh: "需要 Sesame 0.3.0-dev.2 或更新宿主；图表随插件提供，无需 CDN。"
   default_state: mounted
   prompts:
     - instructions.md

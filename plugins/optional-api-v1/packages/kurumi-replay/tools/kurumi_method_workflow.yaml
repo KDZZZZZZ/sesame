@@ -67,7 +67,7 @@ x-sesame:
       - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
       - Main only; allowed method IDs come from status.plan. Adopt only before new-run consumption.
     limitations:
-      - Current catalog/discover inspect installed plugins via host.plugins.search; external optional packages use plugin_catalog. Installed/loaded is not applied or predictive validation. Unknown install/load retains its command identity.
+      - Current catalog/discover inspect installed plugins via host.plugins.search; external optional packages use plugin_catalog. If plugin_catalog fails once in a session, stop retrying it and rely on locally installed plugins. Installed/loaded is not applied or predictive validation. Unknown install/load retains its command identity.
   binding:
     type: native
     name: kurumi_method_workflow

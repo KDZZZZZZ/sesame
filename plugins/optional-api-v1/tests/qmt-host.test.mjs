@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Actual HostContext v2 installation/storage test; never uses native QMT. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,7 +23,7 @@ test('actual HostContext installs all QMT tools and preserves unknown trade inte
     const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');runtime.plugins.activate('conv_main',installed.id);
     host=createHostContextV2(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');assert.equal(host.context.kind,'main');
     installedRecords=await import(pathToFileURL(join(runtime.plugins.entry('sesame/qmt').root,'records.js')));
-    const manifest=JSON.parse(await readFile(new URL('../packages/qmt/capabilities.json',import.meta.url),'utf8'));
+    const manifest=readPackageDirectory(new URL('../packages/qmt/', import.meta.url)).capabilities;
     assert.deepEqual(createCapabilities(host).map(tool=>tool.name).sort(),manifest.capabilities.map(tool=>tool.id).sort());
     const declared=manifest.capabilities.filter(tool=>tool.consumers.includes('agent')).map(tool=>tool.id).filter(name=>name.startsWith('qmt_')).sort();
     const registered=runtime.plugins.definitions({conversationId:'conv_main'}).map(tool=>tool.name).filter(name=>name.startsWith('qmt_')).sort();

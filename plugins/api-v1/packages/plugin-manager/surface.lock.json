@@ -4,13 +4,13 @@
     "sesame/plugin-manager:instructions#preamble": "cc7844eede1572add8b92007afb0d869ad399a34617141044aa58b53e06196d9",
     "sesame/plugin-manager:plugin.description": "8a10230b45d9afbce28006e0fb63af032f819fe3d02248ec5bb2035707ba0d32",
     "sesame/plugin-manager:resource/README.md": "6680bc373ecd7fbcea81d9555ddebc8f6cd5a3ef38ebedd652cd870560ff204e",
-    "sesame/plugin-manager:resource/references/authoring.md": "0430b2b8296ed323c7d280359f35fb716c6c287e097b2ba9e7d5677d5fd9b798",
+    "sesame/plugin-manager:resource/references/authoring.md": "19e76ad08a997210ead6da17c656e4238b3f54735ea45763642114782183d9e7",
     "sesame/plugin-manager:resource/references/host-api.md": "9c2ef38e1481e88cc21858d2cc7828995a0539446bbf4f697f618044c9d2c52f",
     "sesame/plugin-manager:resource/references/operations.md": "355585e7077823769251e1aca9f2000d9de325decb449847a1dddc246b484c7c",
     "sesame/plugin-manager:resource/references/recovery.md": "8c40cbd274ef7802ad9daae595f1bbc34310e5eb50ddb675c687b54f1fc3651e",
-    "sesame/plugin-manager:resource/scaffold.js": "6f6952da03f27d4caa6343a88d99dd7864d240948e33a504b3062360225ee81a",
+    "sesame/plugin-manager:resource/scaffold.js": "c95339c4f27f4724815343fb91b23d38197f14f401240ef1d7b4d92670888e58",
     "sesame/plugin-manager:resource/scripts/create-plugin.mjs": "ab6cbb170864e08c5f11a3d99bee7b2bf6f74d1d980780d991a9e7582815d56b",
-    "sesame/plugin-manager:skill/develop-plugins.body": "3264df197fcf09eb0bfcab80520f82986f638110d0262ed70e7567731dce6f0f",
+    "sesame/plugin-manager:skill/develop-plugins.body": "797d6b8799206dbe4aa812f8cd0566e39d35259d3ef9301d11a71ca2e26c9e75",
     "sesame/plugin-manager:skill/develop-plugins.description": "ec506260364a56634e1a18656355bd3d02391d80e3a09cc79f654e16baf813be",
     "sesame/plugin-manager:skill/manage-plugins.body": "d4ba721d28cdbea7ac2504f43e4a0c7bc9611f0dcde01b3166a81901b19a0cbe",
     "sesame/plugin-manager:skill/manage-plugins.description": "1349ce767da64b569c673c6f1a02c9366f4638d3c4da5fbc54d3deb05654b7c8",
@@ -59,5 +59,5 @@
     "sesame/plugin-manager:tool/plugin_update.input": "955ecd3e804da4ff26255f09f5b6a9d8e7b521d9e4919453cd1b3ddf1a9fd5a7",
     "sesame/plugin-manager:tool/plugin_update.output": "47fb26a83800940533b7afe12bb6f9476ae7dc016f1581500f773179e73ce7a4"
   },
-  "digest": "46cd99c83a6bc770bde96e72b69610c827a921a9627141596c4e53e991dd79c2"
+  "digest": "7d2fe04a07b7c358d89a5e5948e2e705bf31b00d5b207fc8da27f5507b3754f2"
 }

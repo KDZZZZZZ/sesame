@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/qmt
 title: QMT 行情与股票账户
 description: 可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。
-version: 2.1.1
+version: 2.1.2
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "QMT / MiniQMT"
+      zh: "QMT / MiniQMT"
+    summary:
+      en: "Use an authorized Windows terminal for history, accounts, stock orders and manual position closing."
+      zh: "通过获授权的 Windows 终端读取历史、账户，执行股票指令与手动平仓。"
+    dependencies:
+      en: "A broker-authorized Windows terminal and xtquant environment. Windows native acceptance remains outstanding."
+      zh: "需要券商授权的 Windows 终端与 xtquant 环境；Windows 原生验收尚未完成。"
   default_state: discoverable
   main_tool_names:
     - qmt_environment

@@ -1,4 +1,6 @@
-# Historical Sesame plugin directory
+# Archived plugin directory for Sesame 0.1.4
+
+Current contributors should start with the [plugin quick start](CONTRIBUTING.md).
 
 [Browse plugins](https://sesame.bot/plugins/) · [中文插件库](https://sesame.bot/zh/plugins/) · [Historical machine-readable catalog](catalog.json)
 
@@ -35,7 +37,7 @@ MT5 plugins still require the relevant connection and user permissions.
 - [PROVENANCE.md](PROVENANCE.md): scope, source attribution and license boundaries.
 
 Publication is a maintainer decision. Automated results live in
-[GitHub Actions](https://github.com/KDZZZZZZ/sesame/actions/workflows/plugin-catalog.yml).
+[GitHub Actions](https://github.com/KDZZZZZZ/sesame/actions/workflows/plugin-ci.yml).
 `review.human: not-recorded` means no separate human code-review record is
 claimed. Neither an official badge nor a passing static check certifies safety.
 

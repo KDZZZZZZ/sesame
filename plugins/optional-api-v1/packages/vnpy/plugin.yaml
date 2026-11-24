@@ -3,12 +3,26 @@ protocolVersion: 2026-07-28
 id: sesame/vnpy
 title: VeighNa CTA 回测
 description: 计算验证能力：消费固定数据与已编写CtaTemplate运行原生回测，交付可追溯结果与假设；候选比较由工作流负责，不连接实盘。
-version: 2.0.6
+version: 2.0.7
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "vn.py backtesting"
+      zh: "vn.py 回测"
+    summary:
+      en: "Run the real CTA backtesting engine on frozen data and retain results."
+      zh: "用真实 CTA 回测引擎处理固定数据并保存结果。"
+    dependencies:
+      en: "Compatible Python with pinned vn.py / CTA dependencies. This plugin does not connect a live trading account."
+      zh: "需要兼容 Python 与固定 vn.py / CTA 依赖；此插件不连接实盘账户。"
+    implementationReason: "The native entry adapts the external vn.py engine; its dispose hook manages that engine, not an independent host service."
   default_state: discoverable
   prompts:
     - instructions.md

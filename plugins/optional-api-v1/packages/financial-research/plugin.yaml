@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/financial-research
 title: 金融研究工具
 description: 信息获取能力：取得并复用SEC/FMP/FRED/Reddit/CFTC来源证据，保留固定引用、来源、获取/可用时间及覆盖；单项解释与综合由方法和工作流负责。
-version: 2.1.1
+version: 2.1.2
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "search"
+    implementationKinds: ["adapter"]
+    title:
+      en: "Financial evidence"
+      zh: "金融研究证据"
+    summary:
+      en: "Retain sourced financial, filing, news, macro and discussion evidence with acquisition and visibility times."
+      zh: "保存财报、公告、新闻、宏观和讨论等原始证据及获取时间、可见时间。"
+    dependencies:
+      en: "Selected sources may require network access, environment credentials or identifying user agents; research prices cannot be traded directly."
+      zh: "所选来源可能需要联网、环境凭据或身份明确的 user-agent；研究价格不可直接用于成交。"
   default_state: discoverable
   main_tool_names:
     - financial_research_configure

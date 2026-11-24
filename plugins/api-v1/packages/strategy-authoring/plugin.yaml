@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/strategy-authoring
 title: SVL 策略创作
 description: 编写、可视化与重放 SVL 策略；提供指标函数、动态品种池、组合分配、风险与执行账本，以及隔离的 Agent 判断和冻结时间线。原生回测与交易由目标插件提供。
-version: 3.0.2
+version: 3.0.3
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.21 <0.4.0"
@@ -11,6 +11,19 @@ author:
   name: Sesame
 entry: index.js
 x-sesame:
+  catalog:
+    category: "strategy"
+    functionalCategory: "analysis"
+    implementationKinds: ["service"]
+    title:
+      en: "SVL strategy authoring"
+      zh: "SVL 策略创作"
+    summary:
+      en: "Author and replay SVL, construct and risk-check portfolios, reconcile execution events, and preserve isolated Agent judgments."
+      zh: "创作与重放 SVL，计算组合和风险、核验执行事件，并保存隔离的 Agent 判断。"
+    dependencies:
+      en: "Sesame 0.2.3 or newer. Source, graph, functions and fixed replay need no target backend. Agent decisions use a configured model; native execution requires a compatible optional target."
+      zh: "需要 Sesame 0.2.3 或更新版本。源、图、函数与固定重放无需后端；Agent 判断使用已配置模型，原生执行需兼容的可选目标。"
   default_state: mounted
   agent_scope: all
   prompts:

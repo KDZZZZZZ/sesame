@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,8 +10,8 @@ import { createCapabilities } from '../packages/trading-decision/index.js';
 import { closeRecords } from '../packages/trading-decision/records.js';
 
 const root = new URL('../packages/trading-decision/', import.meta.url);
-const manifest = JSON.parse(readFileSync(new URL('capabilities.json', root)));
-const plugin = JSON.parse(readFileSync(new URL('plugin.json', root)));
+const manifest = readPackageDirectory(new URL('.', root)).capabilities;
+const plugin = readPackageDirectory(new URL('.', root)).manifest;
 
 test('trading decision declares only its workflow and trading memory boundary', () => {
   assert.deepEqual(manifest.capabilities.filter(capability => capability.id.startsWith('manual_judgment_')).map(capability => capability.id), []);

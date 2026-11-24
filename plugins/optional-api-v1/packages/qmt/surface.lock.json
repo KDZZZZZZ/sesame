@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/qmt:instructions#preamble": "fdae976e95bd74b18232f8ba9e133b037c59802a8eaeab5ccbf48fdfd86a0924",
+    "sesame/qmt:instructions#preamble": "b2a4c59d19ba17dc00918f5e7aec441b1d1bdf3972efc91b36a3b3bc39cbc6a2",
     "sesame/qmt:plugin.description": "040f5ae0b91c11ddbb89e2d5ab84a914248295d6450dbce2aa93711f80fa8691",
     "sesame/qmt:resource/INTERFACES.md": "2944269c961bc35c1b96b6acbc89848191d9d30ce146406329aeaa2be5a6251d",
     "sesame/qmt:resource/README.md": "d3260c4492b4207c820b9400cb4a50843978e79ca55bf2562000b6a47948b7ec",
@@ -83,5 +83,5 @@
     "sesame/qmt:tool/qmt_trading_order.input": "fd24f4e0f923eb7b5608bc4f06febfec453096d76718baceb3256a92688b643f",
     "sesame/qmt:tool/qmt_trading_order.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d"
   },
-  "digest": "178275501d6446cb4b0b6916916ed730c6916ff299cd00d5a7fe938700b8be91"
+  "digest": "90363aefd5a931e8afef1883f2d1d0d865a451f2073a9cf3cc2e4b0eb2118bd2"
 }

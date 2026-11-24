@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/ccxt
 title: CCXT optional backend
 description: 信息获取能力：Kraken/Coinbase/OKX公开现货目录与K线，经统一行情入口冻结证据供方法/工作流复用；无账户、交易或API Key。
-version: 2.0.9
+version: 2.0.10
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -12,6 +12,19 @@ author:
   url: https://github.com/KDZZZZZZ/sesame
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "CCXT public markets"
+      zh: "CCXT 公开行情"
+    summary:
+      en: "Read explicitly selected Kraken, Coinbase or OKX spot candles."
+      zh: "读取明确选择的 Kraken、Coinbase 或 OKX 现货 K 线。"
+    dependencies:
+      en: "Native Python and CCXT 4.5.85, reused or explicitly prepared. Public reads only; one-second polling after each completed read, bounded by network and exchange limits. No private account or orders."
+      zh: "复用或明确准备原生 Python 与 CCXT 4.5.85；仅公开读取；每次读取完成后间隔一秒轮询，受网络与交易所限速约束，不含账户或下单。"
   default_state: discoverable
   prompts:
     - instructions.md

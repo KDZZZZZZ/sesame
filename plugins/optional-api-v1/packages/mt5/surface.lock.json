@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/mt5:instructions#preamble": "35493b6b5d3b512b5389fa66671e05bfa7a86f7cfdfcf25f257a70c3e5541ecf",
+    "sesame/mt5:instructions#preamble": "801652c56ad030b1d7a0f30f8e4777b8f20bf25f586dab07b41b4550f919539c",
     "sesame/mt5:instructions#tools/authoring/prompt.md/preamble": "bcfe1a865400d273075de982988ca14fd9de87b2c6d223d2d713adfd2011fa21",
     "sesame/mt5:instructions#tools/charts/prompt.md/preamble": "040cb4dbc007b3c0fc89ba9b3b172d1d46b312b204fedb5eb45636cbbb5b3de7",
     "sesame/mt5:instructions#tools/deployment/prompt.md/preamble": "ba69aa5a0e5d6ac6414a3858da934cc890e32d0e36f811beb8dc85856ce51a20",
@@ -210,5 +210,5 @@
     "sesame/mt5:tool/mt5_update_configuration.input": "43b5e57ec9df2e4efef718be385533e7f58d399cf8bacc3ad98c24d00a67756f",
     "sesame/mt5:tool/mt5_update_configuration.output": "f9b8cc917bb80835ae1ca8357507efbd0f62d726308c1d715555136287f58617"
   },
-  "digest": "bd10a9d4aa533fa1ef0f2a28fb165dd77f43e3a8fc03aa5eec005952ff6fb70a"
+  "digest": "3409488e48f5c8ecfcca7e54938a5b790a29a5c11db70c5c9b2ac3021bd4398d"
 }

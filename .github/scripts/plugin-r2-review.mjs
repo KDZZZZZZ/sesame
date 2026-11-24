@@ -33,6 +33,7 @@ export async function publicationReview(root, plan, planPath) {
     try {
       execFileSync('gh', ['run', 'download', String(run.id), '--repo', repository, '--name', name, '--dir', directory], { stdio: ['ignore', 'pipe', 'pipe'] });
       const snapshot = JSON.parse(readFileSync(join(directory, 'review-gate.json'), 'utf8'));
+      if (snapshot.headSha !== pr.head.sha) continue;
       gate = validateGateSnapshot(pr, semantic, snapshot, run, artifact, workflow.id);
       git(root, ['merge-base', '--is-ancestor', run.head_sha, pr.merge_commit_sha]);
       break;

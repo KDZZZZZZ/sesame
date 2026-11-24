@@ -2,7 +2,7 @@
 
 主 Agent 或 Agent 工作流负责研究调度。本插件提供分步能力：factor_environment、factor_prepare、factor_search、factor_compute、factor_evaluate、factor_library、factor_pool。先读相关声明与技能，明确 alpha/risk/state 目标、time_series/cross_section 评价轴、数据与门槛。
 
-从研究需求到合格因子入库的步骤与产物依赖声明为工作流 `factor.development`（`workflows/factor.development.yaml`）。主 Agent 开展完整的因子开发时，用 `workflow_plan` 以该工作流开立计划，按流程提示逐步执行并用 `workflow_step` 上报；只做其中一两步（如给已有公式补评）时不必建计划。
+从研究需求到合格因子入库的步骤与产物依赖声明为工作流 `factor.development`（`workflows/factor.development.yaml`）。主 Agent 开展完整的因子开发时，用 `workflow_plan` 以该工作流开立计划，独立候选与评价步骤可高并行推进，并将 `workflow_step` 上报与同轮业务调用合批，不为单条记账空跑独立模型轮次；只做其中一两步（如给已有公式补评）时不必建计划。
 
 先用 factor_library 查定义和证据，由你判断复用、补评还是挖掘。已有公式直接用 `factor_compute`，已有固定值用 `factor_evaluate`，不必搜索。需要搜索时先 prepare 固定数据，再 search open 固定空间；每次 propose 只提出一批公式。你决定计算哪些候选、评价哪些结果、是否继续以及何时停止，可并行安排独立分支。
 
@@ -16,4 +16,4 @@
 
 真实评价自动归档入库，相同定义合并证据并保留登记来源；入库不改变策略池。只有明确的 factor_pool decide 决策才添加、替换或移除成员。策略回测结果可作为 applicationEvidence，不覆盖因子自身评价。
 
-本插件不自动写报告。研究和复杂任务由你使用报告能力生成可见报告，并校验统一视觉；包含实际结果、关键证据与下一步。数据、选择和未执行诊断据实呈现。
+本插件不自动写报告。研究和复杂任务由你使用报告能力生成可见报告，并校验统一视觉；包含实际结果、关键证据与下一步。数据、选择和未执行诊断据实呈现。单次补评或快速校验可直接返回结果，不强制生成完整报告。

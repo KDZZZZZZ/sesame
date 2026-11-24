@@ -46,15 +46,15 @@ function decodeHeader(bytes) {
   const ext = source['x-sesame'] ?? {}, contributions = ext.contributions ?? {};
   check(object(ext) && object(contributions), 'Invalid x-sesame contributions');
   for (const reserved of [...publicFields, 'formatVersion', 'protocolVersion', 'apiVersion', 'capability_manifest']) check(!has(ext, reserved), 'Reserved x-sesame field: ' + reserved);
-  const manifest = { default_state: 'discoverable', ...without(ext, ['contributions']), ...select(source, publicFields), apiVersion: '2', capability_manifest: 'capabilities.json' };
-  return { manifest, contributions };
+  const manifest = { default_state: 'discoverable', ...without(ext, ['contributions', 'catalog']), ...select(source, publicFields), apiVersion: '2', capability_manifest: 'capabilities.json' };
+  return { manifest, contributions, catalog: ext.catalog };
 }
 export function readProtocolHeader(bytes) {
   const {manifest, contributions} = decodeHeader(bytes);
   return {manifest, hooks: contributions.hooks ?? []};
 }
 function build(files) {
-  const { manifest, contributions } = decodeHeader(files['plugin.yaml']);
+  const { manifest, contributions, catalog } = decodeHeader(files['plugin.yaml']);
   const elements = new Map();
   const element = (id, value) => {
     const full = manifest.id + ':' + id;
@@ -148,7 +148,7 @@ function build(files) {
   check(object(requirements) && typeof requirements.goal === 'string' && object(requirements.acceptance), 'Invalid requirements.yaml');
   const entries = Object.fromEntries([...elements].sort(([a],[b])=>a<b?-1:a>b?1:0));
   const surface = {formatVersion:1,elements:entries,digest:sha(JSON.stringify(entries))};
-  return {manifest,capabilities,tools,workflows,messages,requirements,surface};
+  return {manifest,capabilities,tools,workflows,messages,requirements,surface, ...(catalog === undefined ? {} : {catalog})};
 }
 export function buildSurfaceLock(files) { return build(files).surface; }
 export function readProtocolPackage(files, {verifyLock = true} = {}) {

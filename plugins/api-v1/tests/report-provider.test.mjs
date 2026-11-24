@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -35,7 +36,7 @@ test('answer surface is pinned in provider output while default report output st
   assert.match(answer.files[0].content, /<html\b[^>]*data-report-surface="answer"/);
   assert.match(answer.files[0].content, /<style data-report-answer-style>/);
   assert.match(answer.files[0].content, /Synthetic values only/);
-  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   const providerSchema = manifest.capabilities.find(item => item.id === 'report_render').inputSchema;
   assert.equal(Object.hasOwn(providerSchema.properties, 'target'), false, 'target belongs only to plugin-owned input');
   assert.deepEqual(Errors(providerSchema, envelope({ content, target: 'answer' })), []);
@@ -65,7 +66,7 @@ test('answer target travels through the existing facade as complete provider inp
 });
 
 test('Report declares a host-only immediate provider with plugin-owned recursive content schema', async () => {
-  const c=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
+  const c=readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   const provider=c.capabilities.find(item=>item.id==='report_render');
   assert.deepEqual(c.services,[{id:'report',contract:'sesame.report/1',consumer:'host',configSchema:{type:'object',properties:{},additionalProperties:false},operations:{render:'report_render'}}]);
   assert.deepEqual(provider.consumers,['host']);assert.equal(provider.execution,'immediate');

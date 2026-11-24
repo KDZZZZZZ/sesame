@@ -1,6 +1,8 @@
 # Default plugins / Plugin API 2
 
-**Current packages use Plugin API 2 and declare their minimum Sesame version individually.** The updated configuration, orchestration and plugin-manager packages require Sesame >=0.2.4; unchanged packages retain >=0.2.3. Each package explicitly declares capabilities, schemas, consumers and dependencies. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). API 1 hosts must upgrade before installing these packages. Source, published archives and the install catalog may select different package versions.
+[插件贡献速查 / Contributor quick start](../CONTRIBUTING.md)
+
+Each package declares its host version range in `plugin.yaml`. The orchestration navigator requires Sesame 0.3.2 or later within the 0.3 series. Source packages target MCP 2026-07-28 and keep their native bindings and host permissions in `x-sesame`.
 
 This directory contains twelve default packages for the current 0.3 development bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
@@ -12,7 +14,7 @@ The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
 Canvas and settings are discoverable; the other ten are mounted. Product help
 belongs to `user-guide`; research coordination and host Run guidance belong to
 `orchestration`. `research` owns investigation methods and question-specific answer structures;
-`reports` presents already-formed content with shared visual components. Each keeps its role and general rules in `prompt.md`, task
+`reports` presents already-formed content with shared visual components. Each keeps its role and general rules in `instructions.md`, task
 procedures in `SKILL.md`, and detailed reference material loaded on demand. Ultra
 ships with the built-in `/ultra` command while retaining its business workflow
 responsibility and public plugin interfaces. No market,
@@ -39,13 +41,15 @@ They are shipped inside plugin-manager so internal and external Agents learn fro
 The [portable scaffold CLI](packages/plugin-manager/scripts/create-plugin.mjs) requires only Node;
 actual installation and activation are checked by a matching Sesame host.
 
-- `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
+- `packages/<name>/plugin.yaml` holds identity and native host contributions. Each public tool is specified in `tools/<name>.yaml`.
+- `surface.lock.json` pins the individual model-visible elements. `requirements.yaml` and `evals/cases/` describe and test the package outcome.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
 - `official-plugins.lock.json`: every packaged byte and package tree digest.
 - `bundle-profile.json`: the reviewed, exact twelve-package distribution set.
 - `catalog.json` / `catalog.sources.json`: retired API 1 historical records, not the current installation channel.
 - `inventory.json`: the descriptive source inventory, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
+- `scripts/verify-protocol-migration.mjs` checks the 59 original packages against their fixed source baseline.
 - `tests/`: source-repository tests; never included in the application bundle.
 
 Native plugins export `createCapabilities(host)` and optional `activate(host)`. They use

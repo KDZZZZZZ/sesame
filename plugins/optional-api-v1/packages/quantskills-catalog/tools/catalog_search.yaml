@@ -89,4 +89,4 @@ x-sesame:
               verification_level: pending_review
           count: 1
           query: alpha191
-          version: 4.2.0
+          version: 4.2.1

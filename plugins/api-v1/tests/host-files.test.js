@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, rm, readFile, realpath } from 'node:fs/promises';
@@ -10,7 +11,7 @@ import { resourceHost } from './core-v2-fixture.mjs';
 test('host file capabilities are explicitly declared and import immutable actual bytes', async t => {
  const root=await mkdtemp(join(tmpdir(),'host-file-v2-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const f=resourceHost({workspaceRoot:root,filePolicy:{protectedRoots:[],readRoots:[root],writeRoots:[root]}}), tools=createCapabilities(f.host);
- const declarations=JSON.parse(await readFile(new URL('../packages/workspace/capabilities.json',import.meta.url),'utf8')).capabilities.filter(c=>c.id.startsWith('host_files_'));
+ const declarations=readPackageDirectory(new URL('../packages/workspace/', import.meta.url)).capabilities.capabilities.filter(c=>c.id.startsWith('host_files_'));
  assert.deepEqual(tools.map(t=>t.name).sort(),declarations.map(c=>c.id).sort());assert.equal(tools.length,9);
  const source=join(root,'source.txt');await writeFile(source,'actual imported bytes');
  const result=await tools.find(t=>t.name==='host_files_import').execute({path:source});await writeFile(source,'changed later');

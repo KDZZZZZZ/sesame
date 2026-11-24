@@ -3,12 +3,26 @@ protocolVersion: 2026-07-28
 id: sesame/workspace
 title: 工作区、文件与执行
 description: 插件本地文件业务与宿主管理的进程Run；路径保护、原子写入、冲突检查和精确编辑。
-version: 3.0.2
+version: 3.0.3
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["service"]
+    title:
+      en: "Files & execution"
+      zh: "文件与执行"
+    summary:
+      en: "Work with task files, existing host files and managed local commands."
+      zh: "使用任务文件、已有宿主文件与受任务管理的本机命令。"
+    dependencies:
+      en: "Uses the current OS user's permissions and existing shell/runtime. Does not grant administrator rights."
+      zh: "使用当前系统用户权限与已有 shell/环境，不自动提权。"
+    implementationReason: "Functions adapt host workspace files and artifacts; the service boundary is the host port, not a declared source."
   default_state: mounted
   prompts:
     - instructions.md

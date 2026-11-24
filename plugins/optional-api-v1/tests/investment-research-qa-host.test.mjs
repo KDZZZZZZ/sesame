@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Real installer, host Agent transport and Run/resource records; the model and all evidence are local fixtures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,7 +39,7 @@ async function installedFixture(responseHandler, extraPackages = []) {
   const { fixture } = await load('tests/fixture-provider.js');
   const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
   const { validateCapabilityManifest } = await load('modules/plugins/capability-contract.js');
-  const definition = JSON.parse(await readFile(join(packageRoot, 'capabilities.json'), 'utf8'));
+  const definition = readPackageDirectory(join(packageRoot)).capabilities;
   const checked = await validateCapabilityManifest(definition, { pluginId });
   assert.equal(checked.valid, true, JSON.stringify(checked.diagnostics));
   const declared = definition.capabilities.find(item => item.id === 'investment_research_ask');

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -14,8 +15,8 @@ const catalog = json('methods/index.json');
 const entries = new Map(catalog.entries.map(entry => [entry.id, entry]));
 const content = id => read(entries.get(id).path);
 const fields = id => JSON.parse(content(id)).fields;
-const manifest = json('plugin.json');
-const declarations = json('capabilities.json');
+const manifest = readPackageDirectory(root).manifest;
+const declarations = readPackageDirectory(root).capabilities;
 const migration = JSON.parse(readFileSync(new URL('./fixtures/research-migration-coverage.json', import.meta.url)));
 
 test('Research is a mounted native read-only plugin with exactly two narrow tools', async () => {
@@ -218,6 +219,6 @@ test('The shipping package is clean, self-contained and passes the existing pack
   assert.ok(files.every(file => !/migration|legacy|archive|backup|module-catalog|analysis-questions/.test(file.path)));
   assert.ok(files.every(file => file.bytes < 128 * 1024));
   assert.deepEqual(readdirSync(join(root, 'skills')), ['research']);
-  assert.ok(read('prompt.md').length < 1000);
+  assert.ok(read('instructions.md').length < 1000);
   assert.ok(read('skills/research/SKILL.md').length < 2000);
 });

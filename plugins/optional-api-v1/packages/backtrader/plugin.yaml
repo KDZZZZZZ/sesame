@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/backtrader
 title: BACKTRADER optional backend
 description: 计算验证能力：消费固定数据与已编写策略运行Cerebro回测或有界optstrategy原生优化，保留各次实际结果与引用；参数选择由工作流负责，不连接实盘。
-version: 2.1.0
+version: 2.1.1
 license: GPL-3.0-or-later
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -12,6 +12,20 @@ author:
   url: https://github.com/KDZZZZZZ/sesame
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "Backtrader"
+      zh: "Backtrader 回测"
+    summary:
+      en: "Run native Cerebro against fixed data and preserve equity, trades and source."
+      zh: "用固定数据运行原生 Cerebro，保存权益、交易与策略源。"
+    dependencies:
+      en: "Native Python with Backtrader 1.9.78.123; GPL-3.0-or-later optional wrapper and engine. No live trading or SVL equivalence claim."
+      zh: "需原生 Python 与 Backtrader 1.9.78.123；可选封装及引擎为 GPL-3.0-or-later。不含实盘，不声明 SVL 等价。"
+    implementationReason: "The native entry adapts the external Backtrader engine; its dispose hook manages that engine, not an independent host service."
   default_state: discoverable
   prompts:
     - instructions.md

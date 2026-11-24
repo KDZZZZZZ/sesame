@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/ultra
 title: Ultra 持续协作
 description: 把当前用户目标组织成持久、并行、可恢复的研究和盯盘交易周期，组合现有工作流、知识与数据插件；真实任务完成后续办，达到目标或用户停止后结束。
-version: 1.0.7
+version: 1.0.8
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -11,6 +11,20 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["workflow", "service"]
+    title:
+      en: "Ultra continuous collaboration"
+      zh: "Ultra 持续协作"
+    summary:
+      en: "Coordinate persistent parallel research and monitoring goals using existing agents, workflows and domain plugins."
+      zh: "围绕用户目标持续并行协作，组合现有 Agent、工作流、知识、数据与执行插件。"
+    dependencies:
+      en: "A configured model and the selected domain capabilities. Uses native Run checkpoints and completion notifications; trading follows the selected execution backend and existing user authorization."
+      zh: "需要已配置模型及所选领域能力；复用宿主 Run 检查点和完成通知，交易沿用执行后端与既有用户授权。"
+    implementationReason: "A resumable native workflow owns planning and waits; function controls persist, dispatch and stop the same goal through public host ports."
   default_state: mounted
   agent_scope: all
   permissions:

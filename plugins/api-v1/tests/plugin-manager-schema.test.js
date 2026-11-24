@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -6,7 +7,7 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 import { createCapabilities } from '../packages/plugin-manager/tools.js';
 
 test('committed manager schemas match the SDK factories and expose only explicit install/update inputs', () => {
-  const declarations=JSON.parse(readFileSync(new URL('../packages/plugin-manager/capabilities.json', import.meta.url))).capabilities;
+  const declarations=readPackageDirectory(new URL('../packages/plugin-manager/', import.meta.url)).capabilities.capabilities;
   const tools=declarations.map(item=>({name:item.id,parameters:item.inputSchema}));
   assert.deepEqual(createCapabilities({}).map(item=>item.name),tools.map(item=>item.name));
   const schema = tools.find(tool => tool.name === 'plugin_install_catalog').parameters;
@@ -21,7 +22,7 @@ test('committed manager schemas match the SDK factories and expose only explicit
 });
 
 test('management declarations reject identities and conditional inputs that their implementations reject', () => {
-  const declarations = JSON.parse(readFileSync(new URL('../packages/plugin-manager/capabilities.json', import.meta.url))).capabilities;
+  const declarations = readPackageDirectory(new URL('../packages/plugin-manager/', import.meta.url)).capabilities.capabilities;
   const schema = id => declarations.find(item => item.id === id).inputSchema;
   const catalog = { plugin_id: 'sesame/mt5', catalog_digest: `sha256:${'1'.repeat(64)}`, command_id: 'catalog-command-0001' };
   const create = { name: 'sample', description: 'Fixture', command_id: 'create-command-0001' };
@@ -35,6 +36,6 @@ test('management declarations reject identities and conditional inputs that thei
   for (const input of [catalog, { ...catalog, action: 'install' }, { ...catalog, action: 'update', expected_digest: digest }]) assert.equal(Value.Check(schema('plugin_install_catalog'), input), true);
   for (const input of [{ ...catalog, action: 'update' }, { ...catalog, expected_digest: digest }, { ...catalog, action: 'install', expected_digest: digest }]) assert.equal(Value.Check(schema('plugin_install_catalog'), input), false);
   assert.equal(Value.Check(schema('plugin_read'), { pluginId: 'sesame/ict', part: 'resource' }), false);
-  assert.equal(Value.Check(schema('plugin_read'), { pluginId: 'sesame/ict', part: 'resource', path: 'prompt.md' }), true);
+  assert.equal(Value.Check(schema('plugin_read'), { pluginId: 'sesame/ict', part: 'resource', path: 'instructions.md' }), true);
   assert.equal(Value.Check(schema('plugin_read'), { pluginId: 'sesame/ict', part: 'manifest' }), true);
 });

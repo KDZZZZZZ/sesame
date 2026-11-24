@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/backtrader:instructions#preamble": "5ef0d0859ff49bba0c4f806015eb95c35952dd26c6ae014f25e7841b84c53c81",
+    "sesame/backtrader:instructions#preamble": "1f18301e8fac0e3fc4e038d3bbcd64ed26f858ea99884abbf7fb4cb5dfed0d04",
     "sesame/backtrader:plugin.description": "238f5c661a7ceccea1b9a380ec4f0dd1ddeca4e553caadcd2efbd1cc380f2786",
     "sesame/backtrader:resource/INTERFACES.md": "5fd345e94fd42bb04a281892d65c0615aaac8004a796ddac7e4b5a81f76e25f8",
     "sesame/backtrader:resource/PROVENANCE.md": "4394d0973d5b2a0cb1f6df646f9b611700cfcc95fc94fee0912c54bcaea1cc5b",
@@ -29,5 +29,5 @@
     "sesame/backtrader:tool/backtrader_result.input": "23e883c0c0098e0cd55cf15fb5659804a9871df6d1f32c6362ecb69bd0c9f05c",
     "sesame/backtrader:tool/backtrader_result.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842"
   },
-  "digest": "dc50680b787a3aa6a6eac9e37eb92cb064974ad4b2dc5123ab607f7b951f74b3"
+  "digest": "ac0f292767c22388ed96bafe52a973408e474c36c4586e3c140da58e3f7815b5"
 }

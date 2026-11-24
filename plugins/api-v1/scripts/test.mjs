@@ -17,6 +17,6 @@ if (process.argv.includes('--python')) {
 const loader = process.env.SESAME_PLUGIN_SDK_LOADER;
 if (sdk && !loader) throw new Error('test:sdk needs SESAME_PLUGIN_SDK_LOADER from the matching application SDK. No private implementation is copied into this repository.');
 const files = readdirSync(join(root, 'tests')).filter(name => sdk ? /\.test\.(?:mjs|js)$/.test(name) : /\.test\.mjs$/.test(name)).sort().map(name => join(root, 'tests', name));
-const result = spawnSync(process.execPath, [...sdk ? ['--import', loader] : [], '--test', ...files], { cwd: root, stdio: 'inherit' });
+const result = spawnSync(process.execPath, [...loader ? ['--import', loader] : [], '--test', ...files], { cwd: root, stdio: 'inherit' });
 if (result.error) throw result.error;
 process.exitCode = result.status ?? 1;

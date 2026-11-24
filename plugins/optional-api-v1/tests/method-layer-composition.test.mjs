@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -9,9 +10,9 @@ const read = (name, file) => readFile(new URL(`${name}/${file}`, root), 'utf8');
 
 test('method knowledge can be selected by a workflow and returns a local finding instead of starting another full research process', async () => {
   for (const name of methods) {
-    const prompt = await read(name, 'prompt.md');
+    const prompt = await read(name, 'instructions.md');
     const skill = await read(name, `skills/${name}/SKILL.md`);
-    const declaration = JSON.parse(await read(name, 'capabilities.json'));
+    const declaration = readPackageDirectory(new URL(name+'/',root)).capabilities;
     assert.doesNotMatch(prompt + skill, /仅在用户选择本方法|不自动加载其它方法|不加载其它方法|只执行用户指定/);
     assert.match(prompt, /工作流/);
     assert.match(skill, /已有.*证据|已固定.*证据/);
@@ -42,14 +43,14 @@ test('optional observation scripts use current public evidence and execution fie
 
 test('all numerical methods declare how to reuse evidence and return it without duplicate independent votes', async () => {
   for (const { directory } of abu) {
-    const declaration = JSON.parse(await read(directory, 'capabilities.json'));
+    const declaration = readPackageDirectory(new URL(directory+'/',root)).capabilities;
     for (const { usage } of declaration.capabilities) {
       assert.match(usage.outputs, /调用者/);
       assert.match(usage.outputs, /input_artifact/);
       assert.match(usage.outputs, /result_artifact/);
       assert.match(usage.limitations.join('\n'), /同源.*独立证据/);
     }
-    assert.match(await read(directory, 'prompt.md'), /复用/);
+    assert.match(await read(directory, 'instructions.md'), /复用/);
   }
 });
 
@@ -67,8 +68,8 @@ test('the documented ATR reuse has identical values and availability on one fixe
 });
 
 test('factor guidance exposes independent measurement and keeps strategy selection outside mining', async () => {
-  const prompt = await read('auto-factor-mining', 'prompt.md');
-  const declaration = JSON.parse(await read('auto-factor-mining', 'capabilities.json'));
+  const prompt = await read('auto-factor-mining', 'instructions.md');
+  const declaration = readPackageDirectory(new URL('auto-factor-mining'+'/',root)).capabilities;
   assert.match(prompt, /已有公式直接用 `factor_compute`/);
   assert.match(prompt, /入库不改变策略池/);
   assert.match(prompt, /外部策略回测/);

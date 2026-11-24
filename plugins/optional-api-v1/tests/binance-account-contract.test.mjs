@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -32,7 +33,7 @@ test('account presentation retains the actual read window, not the requested his
 });
 
 test('all 28 native bindings and standard services match the package declaration', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/binance/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/binance/', import.meta.url)).capabilities;
   assert.deepEqual(createCapabilities({ context: { storageRoot: 'unused' } }).map(row => row.name).sort(), manifest.capabilities.map(row => row.binding.name).sort());
   assert.equal(manifest.capabilities.length, 28);
   assert.equal(manifest.sources[0].contract, 'sesame.market/1'); assert.equal(manifest.sources[1].contract, 'sesame.account/1');

@@ -1,3 +1,4 @@
+import {createProtocolFiles} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -51,9 +52,10 @@ test('reintroducing a package/binding or modifying retained numerical bytes fail
   cpSync(join(root, item.replacementSourcePath), join(temp, item.replacementSourcePath), { recursive: true });
   assert.doesNotThrow(() => check(review, temp));
   mkdirSync(join(temp, item.sourcePath)); assert.throws(() => check(review, temp), /alias/); rmSync(join(temp, item.sourcePath), { recursive: true });
-  const alias = join(temp, 'plugins/optional-api-v1/packages/alias/capabilities.json'); mkdirSync(dirname(alias));
-  writeFileSync(alias, JSON.stringify({ capabilities: [{ id: 'unrelated', binding: { name: 'abu_backtest_lab_analyze' } }] }));
+  const alias = join(temp,'plugins/optional-api-v1/packages/alias/plugin.yaml'); mkdirSync(dirname(alias));
+  const files=createProtocolFiles({id:'sesame/alias',version:'1.0.0',title:'Alias',description:'Retired binding'}, {capabilities:[{id:'unrelated',consumers:['host'],binding:{name:'abu_backtest_lab_analyze'}}]});
+  for(const [file,bytes] of Object.entries(files)) writeFileSync(join(dirname(alias),file),bytes);
   assert.throws(() => check(review, temp), /alias/); rmSync(dirname(alias), { recursive: true });
   const algorithm = join(temp, item.replacementSourcePath, 'scripts/audit.mjs'); writeFileSync(algorithm, readFileSync(algorithm) + '\n// changed\n');
-  assert.throws(() => check(review, temp), /algorithm bytes changed/);
+  assert.throws(() => check(review, temp), /algorithm bytes changed|Surface lock mismatch/);
 });

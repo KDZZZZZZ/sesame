@@ -44,11 +44,31 @@ test('binding freezes native identity and declares complete composable execution
     assert(identity.readTools.every(name => identity.tools.includes(name)));
     if (backend === 'mt5') assert.deepEqual(identity.readTools, [CONTEXT, 'mt5_execution_identity', 'mt5_execution_snapshot', 'mt5_execution_recover', 'mt5_execution_command', 'mt5_catalog', 'mt5_call']);
     assert.equal(identity.quantityRules.integer, backend === 'qmt');
+    assert.equal(identity.quantityRules.supportsAttachedStops, backend === 'mt5');
     assert.deepEqual(identity.fillSources, backend === 'mt5' ? [{ pluginId: 'sesame/mt5', provider: 'mt5/python/history_deals_get' }] : []);
     f.account.revision = '2';
     await assert.rejects(f.execution.context({ binding_id: 'binding', action: 'snapshot' }), { code: 'ACCOUNT_CHANGED' });
     await assert.rejects(f.execution.configure({ id: 'binding', backend }), { code: 'BINDING_CHANGED' });
     assert.equal((await f.execution.configure({ id: 'new-binding', backend })).arguments.binding_id, 'new-binding');
+  }
+});
+
+test('attached stops reject unsupported, zero and malformed targets before applying a delegated batch', async () => {
+  for (const backend of ['mt5', 'qmt']) {
+    const f = fixture({ backend, apply() { assert.fail('Invalid protection reached the execution service'); } });
+    await f.delegated();
+    const target = { symbol: 'X', unit: backend === 'mt5' ? 'lots' : 'shares', quantity: '1' };
+    f.run.decision.unchanged = false;
+    for (const field of ['stop_loss', 'take_profit']) {
+      const cases = backend === 'mt5'
+        ? [[{ quantity: '0', [field]: '10' }, 'INVALID_ARGUMENT'], [{ quantity: '-0.00', [field]: '10' }, 'INVALID_ARGUMENT'],
+          ...['0', '0.00', -10, '-1', '', '1e4', '0'.repeat(41)].map(price => [{ [field]: price }, 'INVALID_ARGUMENT'])]
+        : [[{ [field]: '10' }, 'UNSUPPORTED_CAPABILITY']];
+      for (const [values, code] of cases) {
+        f.run.decision.targets = [{ ...target, ...values }];
+        await assert.rejects(f.execution.apply(f.args), { code });
+      }
+    }
   }
 });
 
@@ -96,6 +116,37 @@ test('bindings cannot be read or reused by another main owner or an unrelated ch
   await assert.rejects(f.execution.configure({ id: 'binding', backend: 'qmt' }), { code: 'FORBIDDEN' });
   Object.assign(f.host.context, { kind: 'subagent', sessionId: 'child' });
   await assert.rejects(f.execution.context({ binding_id: 'binding', action: 'snapshot' }), { code: 'FORBIDDEN' });
+});
+
+test('the workflow controller reads only its frozen account snapshot and gains no apply authority', async () => {
+  const f = fixture();
+  await f.execution.configure({ id: 'binding', backend: 'mt5' });
+  const host = f.host;
+  Object.assign(host.context, { kind: 'subagent', sessionId: 'child', runId: 'workflow', ownerSessionId: 'owner' });
+  const caller = { pluginId: 'sesame/trading-decision', capabilityId: 'sesame/trading-decision#trading_decision_workflow_execute', sessionId: 'child', runId: 'workflow' };
+  const provenance = { workflow: { runId: 'workflow', sessionId: 'child', ownerSessionId: 'owner' }, caller,
+    chain: [caller, { pluginId: PLUGIN, capabilityId: PLUGIN + '#' + CONTEXT }] };
+  const scoped = createExecution(host, { provenance });
+  const frozen_context = { bindingId: 'binding', backend: 'mt5', account: f.account };
+  const request = { binding_id: 'binding', action: 'snapshot', history_days: 30, frozen_context };
+  f.calls.length = 0;
+  assert.deepEqual((await scoped.context(request)).account, f.account);
+  assert.deepEqual(f.calls.map(c => [c.name, c.arguments]), [['mt5_execution_snapshot', { history_days: 30, expected_account: f.account }]]);
+  for (const override of [
+    { action: 'identity' }, { frozen_context: undefined },
+    { frozen_context: { ...frozen_context, bindingId: 'other' } },
+    { frozen_context: { ...frozen_context, backend: 'qmt' } },
+    { frozen_context: { ...frozen_context, account: { ...f.account, revision: 'new' } } },
+  ]) await assert.rejects(scoped.context({ ...request, ...override }), { code: 'FORBIDDEN' });
+  for (const overrides of [
+    { workflow: { ...provenance.workflow, ownerSessionId: 'other' } },
+    { workflow: { ...provenance.workflow, sessionId: 'other' } },
+    { workflow: { ...provenance.workflow, runId: 'other' } },
+    { caller: { ...caller, pluginId: 'another/plugin' } }, { chain: [] },
+    { agent: { pluginId: caller.pluginId } },
+  ]) await assert.rejects(createExecution(host, { provenance: { ...provenance, ...overrides } }).context(request), { code: 'FORBIDDEN' });
+  await assert.rejects(scoped.apply(f.args), { code: 'FORBIDDEN' });
+  assert.equal(f.calls.length, 1);
 });
 
 test('an older native plugin is rejected while binding, before a workflow can schedule incompatible execution', async () => {

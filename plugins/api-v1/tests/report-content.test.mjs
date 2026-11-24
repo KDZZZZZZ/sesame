@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
@@ -211,7 +212,7 @@ test('attachment links reject URL syntax, traversal, active files and undeclared
 });
 
 test('component and provider schemas expose the same inert attachment contract', async () => {
-  const { capabilities } = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const { capabilities } = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   const provider = capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
   const block = provider.$defs.block.oneOf.find(item => item.properties.type.const === 'attachments');
   assert.deepEqual(block.properties.items.items.required,['label','path']);

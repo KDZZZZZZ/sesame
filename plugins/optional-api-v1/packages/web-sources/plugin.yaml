@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/web-sources
 title: 网页搜索与取证
 description: 搜索与来源：免Key关键词搜索、站点筛选，抓取选定HTTP/HTTPS原文并保存固定引用；与RSS、正文解析和金融来源独立协作。
-version: 3.1.0
+version: 3.1.1
 license: MIT
 engines:
   sesame: ">=0.2.3"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "search"
+    implementationKinds: ["adapter"]
+    title:
+      en: "Web search and evidence"
+      zh: "网页搜索与取证"
+    summary:
+      en: "Discover candidate links with keyless search, then fetch selected web evidence into fixed datasets with source metadata."
+      zh: "无需来源Key搜索候选链接，并将选定网页原始证据与来源信息保存为固定数据。"
+    dependencies:
+      en: "Network access to the selected source; parsing is provided by separate optional tools."
+      zh: "需访问所选来源；解析由独立可选工具提供。"
   default_state: discoverable
   prompts:
     - instructions.md

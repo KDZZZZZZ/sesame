@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/financial-research:instructions#preamble": "f17b001542d14093d355378e3c1c15188c2eaa30aafb132b1345607fcd24cfe3",
+    "sesame/financial-research:instructions#preamble": "7be3fbeaca99373bd3e106a478398fab5fe044082bdc4039feaccb633557b67d",
     "sesame/financial-research:plugin.description": "55351a606c4b62805474aa9e3552efb8ede40fea989f7691708006e24bc7d1f5",
     "sesame/financial-research:resource/INTERFACES.md": "7396c3e62dc84535c259e7ae3f15920bc8a374083eb8ffae280a1274af1d45b8",
     "sesame/financial-research:resource/PROVENANCE.md": "7554ec013eda6e31d7e65f90d5c6fa2398856314065598069adc7416f7c3b481",
@@ -23,5 +23,5 @@
     "sesame/financial-research:tool/financial_research_status.input": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
     "sesame/financial-research:tool/financial_research_status.output": "861743bebbd8f2755473ee177bd69fcbef83635e7829d8df08cd9d0d0fefe96e"
   },
-  "digest": "c7d4158c93bc78f439c2a28ffc878d3e0e959aed35fd2bf1f48c800109ebd3ce"
+  "digest": "bf417d16a22b4784b021f073db7d7cb4ba033e6c40d205c35b08c6ad576b9ca3"
 }

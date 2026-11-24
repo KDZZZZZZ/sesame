@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Actual API2 installation/update over an isolated R2 transport fixture. No live service is used. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -24,8 +25,8 @@ async function call(runtime, name, args) {
 function catalogForFinancialResearch() {
   const sourceCommit = 'a'.repeat(40), lock = buildLock(optionalSource), pkg = lock.packages.find(item => item.id === 'sesame/financial-research');
   assert.ok(pkg, 'financial-research exists in the API2 optional source');
-  const manifest = JSON.parse(readFileSync(join(optionalSource, 'packages', pkg.directory, 'plugin.json')));
-  const declaration = JSON.parse(readFileSync(join(optionalSource, 'packages', pkg.directory, manifest.capability_manifest)));
+  const manifest = readPackageDirectory(join(optionalSource, 'packages', pkg.directory)).manifest;
+  const declaration = readPackageDirectory(join(optionalSource, 'packages', pkg.directory)).capabilities;
   const release = { transport: 'r2', tag: 'r2-optional-api-v1-dev.99', profile: 'optional', sourceRoot: 'plugins/optional-api-v1', sourceCommit, releaseCommit: 'f'.repeat(40),
     archive: { url: 'https://dl.sesame.bot/plugins/api-v1/releases/dev.99/optional/plugins.tar.gz', sha256: 'a'.repeat(64) },
     lock: { url: 'https://dl.sesame.bot/plugins/api-v1/releases/dev.99/optional/official-plugins.lock.json', sha256: 'b'.repeat(64) },
@@ -60,7 +61,7 @@ test('API2 plugin manager self-updates and installs financial-research through f
     const main = await open(), work = runtime.workspaces.root('conv_main'), previous = join(work, 'manager-previous'), current = join(work, 'manager-current');
     await cp(join(coreSource, 'packages/plugin-manager'), previous, { recursive: true });
     await cp(join(coreSource, 'packages/plugin-manager'), current, { recursive: true });
-    const currentManifest = JSON.parse(await readFile(join(current, 'plugin.json'), 'utf8'));
+    const currentManifest = readPackageDirectory(join(current)).manifest;
     // Only the synthetic version differs. Both sides implement the current API2 boundary.
     for (const file of ['plugin.json', 'package.json']) {
       const value = JSON.parse(await readFile(join(previous, file), 'utf8')); value.version = '2.9.9';

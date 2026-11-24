@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -5,7 +6,7 @@ import { MT5Official } from '../packages/mt5/backend/official.js';
 import { officialTool } from '../packages/mt5/backend/plugin-tools.js';
 import { PYTHON_TOOLS } from '../packages/mt5/backend/python-tools.js';
 
-const manifest = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url)));
+const manifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
 const definitions = new Map(manifest.capabilities.map(cap => [cap.id, cap]));
 const routing = Object.create(MT5Official.prototype);
 const writes = [

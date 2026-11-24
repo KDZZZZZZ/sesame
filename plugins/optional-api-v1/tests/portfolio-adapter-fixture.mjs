@@ -1,10 +1,11 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Isolated native boundary fixture: exercise the real adapters against existing
  * scripted native envelopes, never a terminal, worker, AppData or real account. */
 import { readFileSync } from 'node:fs';
 import { createExecutionAdapter as mt5Adapter } from '../packages/mt5/backend/execution-adapter.js';
 import { createExecutionAdapter as qmtAdapter } from '../packages/qmt/execution-adapter.js';
 
-export const manifests = Object.fromEntries(['mt5', 'qmt'].map(backend => [backend, JSON.parse(readFileSync(new URL(`../packages/${backend}/capabilities.json`, import.meta.url), 'utf8'))]));
+export const manifests = Object.fromEntries(['mt5', 'qmt'].map(backend => [backend, readPackageDirectory(new URL(`../packages/${backend}/`, import.meta.url)).capabilities]));
 export function declaredPlugins(read = async () => ({})) {
   return async (id, options = {}) => {
     const status = await read(id, { part: 'status' }), backend = id.split('/').at(-1);
@@ -37,4 +38,15 @@ export function nativeAdapterFixture(host, { now = Date.now } = {}) {
     return { type: 'result', value: await adapters[backend][name.slice(prefix.length)](input, options.signal) };
   };
   return host;
+}
+
+export function delegated(backend, account) {
+  const execution = { pluginId: 'sesame/portfolio-execution', applyTool: 'portfolio_execution_apply', contextTool: 'portfolio_execution_context', account, context: { backend, account } };
+  return { provenance: { agent: { pluginId: 'fixture/workflow', status: 'running', sessionId: 'child', taskId: 'task', runId: 'task', input: {
+    role: 'executor', runId: 'run', tradingPlan: { id: 'plan', ownerConversationId: 'owner', account }, execution,
+  } }, chain: [
+    { pluginId: 'fixture/workflow', capabilityId: 'fixture/workflow#apply' },
+    { pluginId: 'sesame/portfolio-execution', capabilityId: 'sesame/portfolio-execution#portfolio_execution_apply' },
+    { pluginId: `sesame/${backend}`, capabilityId: `sesame/${backend}#${backend}_execution_submit` },
+  ] } };
 }

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,21 +13,20 @@ const root = fileURLToPath(new URL('../../../', import.meta.url));
 // sources, published catalog, reviewed plans or application lock.
 function candidate(name, optional = false) {
   const sourceRoot = `plugins/${optional ? 'optional-api-v1' : 'api-v1'}`, path = `${sourceRoot}/packages/${name}`;
-  const manifest = JSON.parse(readFileSync(join(root, path, 'plugin.json')));
-  const declaration = JSON.parse(readFileSync(join(root, path, manifest.capability_manifest)));
+  const {manifest,capabilities:declaration,surface} = readPackageDirectory(join(root,path));
   const files = packageFiles(join(root, path));
   const pkg = { id: manifest.id, directory: name, version: manifest.version, files, treeDigest: treeDigest(files) };
   const tag = `plugins-${optional ? 'optional-' : ''}api-v1-dev.999999`, base = `https://github.com/KDZZZZZZ/sesame/releases/download/${tag}`;
   const release = { tag, sourceRoot, sourceCommit: 'a'.repeat(40), releaseCommit: 'b'.repeat(40),
     archive: { url: `${base}/sesame-${optional ? 'optional' : 'official'}-plugins-api-v1-dev.999999.tar.gz`, sha256: 'c'.repeat(64) },
     lock: { url: `${base}/official-plugins.lock.json`, sha256: 'd'.repeat(64) }, review: { url: `${base}/review.json`, sha256: 'e'.repeat(64) } };
-  return { pkg, manifest, declaration, release, entry: catalogPackage(pkg, manifest, declaration, release) };
+  return { pkg, manifest, declaration, release, surface, entry: catalogPackage(pkg, manifest, declaration, release,{surface}) };
 }
 
 test('catalog API 2 projects only explicit capabilities for native, MCP and knowledge-only packages', () => {
   for (const [name, optional] of [['workspace', false], ['investment-research', true], ['trading-decision', true], ['market-data-parser', true], ['behavioral-finance', true]]) {
     const f = candidate(name, optional);
-    assert.equal(f.entry.apiVersion, '2'); assert.equal(f.entry.capabilityManifest, f.manifest.capability_manifest);
+    assert.equal(f.entry.apiVersion, '2'); assert.equal(f.entry.capabilityManifest, 'plugin.yaml');
     assert.deepEqual(f.entry.tools, f.declaration.capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
     assert.deepEqual(f.entry.capabilities.map(cap => cap.id), f.declaration.capabilities.map(cap => cap.id));
     assert.deepEqual(f.entry.capabilities.map(cap => cap.binding), f.declaration.capabilities.map(cap => cap.binding));
@@ -43,14 +43,12 @@ test('API 1 manifests, mismatched declarations and undeclared capability files c
   for (const [manifest, declaration] of [
     [{ ...f.manifest, apiVersion: '1' }, f.declaration],
     [f.manifest, { ...f.declaration, apiVersion: '1' }],
-    [{ ...f.manifest, capability_manifest: '../outside.json' }, f.declaration],
-    [{ ...f.manifest, capability_manifest: 'missing.json' }, f.declaration],
-  ]) assert.throws(() => catalogPackage(f.pkg, manifest, declaration, f.release), /API 2|capability manifest/);
+  ]) assert.throws(() => catalogPackage(f.pkg, manifest, declaration, f.release, {surface:f.surface}), /API 2|capability manifest/);
 });
 
 test('optional catalog labels preserve legacy bytes and never replace package authority', () => {
   const f = candidate('workspace'), baseline = JSON.stringify(f.entry);
-  const project = classification => catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { classification });
+  const project = classification => catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { surface:f.surface, classification });
   for (const classification of [undefined, {}, { category: 'workspace', title: { en: 'Historical', zh: '历史' } }]) {
     assert.equal(JSON.stringify(project(classification)), baseline);
   }
@@ -81,7 +79,7 @@ test('the current reader consumes generated API 2 summaries and rejects an API 1
 
 test('search classification reaches the catalog reader and keyword discovery without changing package authority', async () => {
   const f = candidate('web-sources', true);
-  const entry = catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { classification: { functionalCategory: 'search', implementationKinds: ['adapter'] } });
+  const entry = catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { surface:f.surface, classification: { functionalCategory: 'search', implementationKinds: ['adapter'] } });
   const catalog = { schemaVersion: 1, apiVersion: '2', channel: 'development', releases: [f.release], plugins: [entry] };
   const fetcher = async () => new Response(JSON.stringify(catalog));
   for (const query of ['search', '搜索与来源']) {

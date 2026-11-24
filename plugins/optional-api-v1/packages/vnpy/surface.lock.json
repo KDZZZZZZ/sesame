@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/vnpy:instructions#preamble": "8aef38a5211905918ee98276b9ca2cb2c79d3fba55573425924d28f69142e171",
+    "sesame/vnpy:instructions#preamble": "4a314af86d08e1d21c8a9b60164cc4d500dcfda1e5a6e57d2bd606d6eb2189b2",
     "sesame/vnpy:plugin.description": "28e53c497ddbed8bb5deff551279952536a730f2f7ccfdf8ab9914f03cfb1825",
     "sesame/vnpy:resource/INTERFACES.md": "390d6fec961ed2c84c9c6183d2f7a160ebc44193c571e6f120090e2e15c0f930",
     "sesame/vnpy:resource/PREPARATION-VALIDATION.md": "6751a5a9a482b8e3deb40f13544209bb87d2eade972ac834a1bb9ac200a2a6c1",
@@ -31,5 +31,5 @@
     "sesame/vnpy:tool/vnpy_result.input": "23e883c0c0098e0cd55cf15fb5659804a9871df6d1f32c6362ecb69bd0c9f05c",
     "sesame/vnpy:tool/vnpy_result.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842"
   },
-  "digest": "b621a5499e2647f957c49da7a44a4bd20b60e8f189c645b54bd5833fbe38d6ca"
+  "digest": "18722948aba8026bee07dc6d32963096177d2807ca40c2929a41878346c70620"
 }

@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/strategy-development
 title: 策略开发 · Strategy Development
 description: 从投资委托提出可检验的交易假设，研究入场后能否捕捉到行情，构建可替换的 SVL 策略，通过原生回测、逐笔诊断和对照实验选择参数与改法。按需复用已有因子。提供产物依赖工作流 strategy.development。
-version: 1.1.0
+version: 1.1.1
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.2 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "strategy"
+    functionalCategory: "business"
+    implementationKinds: ["workflow"]
+    title:
+      en: "Strategy development"
+      zh: "策略开发"
+    summary:
+      en: "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate."
+      zh: "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。"
+    dependencies:
+      en: "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional."
+      zh: "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。"
   default_state: discoverable
   agent_scope: all
   permissions:

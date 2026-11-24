@@ -1,35 +1,38 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildCatalog } from '../../plugins/api-v1/scripts/catalog.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
+import { parseYaml, writeYaml } from '../../plugins/protocol/package.mjs';
 import { buildR2Profile } from './plugin-r2.mjs';
 import { validateRepository } from './validate-catalog.mjs';
-import * as yamlSource from '../validation-transition/current-source.mjs';
-import { createProtocolFiles } from '../validation-transition/plugins/protocol/package.mjs';
+
+import { writeFixturePackage } from './fixtures/protocol-package.mjs';
 
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 const git = (root, ...args) => execFileSync('git', ['-C', root, '-c', 'core.autocrlf=false', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', ...args], { encoding: 'utf8' }).trim();
-function fixture(t, { taxonomy = false } = {}) {
+function fixture(t, { taxonomy = false, discover = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sesame-api2-inventory-'));
   t.after(() => { assert.equal(dirname(resolve(root)), resolve(tmpdir())); rmSync(root, { recursive: true, force: true }); });
-  const policy = {};
+  const policy = {}, definitions = {};
   for (const [source, kind, name] of [['api-v1', 'core', 'core-one'], ['optional-api-v1', 'optional', 'optional-one']]) {
     const directory = join(root, 'plugins', source), pkg = join(directory, 'packages', name);
     mkdirSync(pkg, { recursive: true });
-    json(join(directory, 'bundle-profile.json'), { schemaVersion: 1, kind, engines: { sesame: '>=0.2.0-0' }, packages: [`sesame/${name}`] });
-    json(join(pkg, 'plugin.json'), { id: `sesame/${name}`, apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: kind === 'core' ? 'mounted' : 'discoverable',
+    json(join(directory, 'bundle-profile.json'), { schemaVersion: 1, kind, engines: { sesame: '>=0.2.0-0' }, ...(discover ? { discover: true, exclude: [] } : { packages: [`sesame/${name}`] }) });
+    const manifest = { id: `sesame/${name}`, apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: kind === 'core' ? 'mounted' : 'discoverable',
       entry: 'index.js', capability_manifest: 'capabilities.json', engines: { sesame: taxonomy ? '>=0.3.0-dev.1 <0.4.0' : '>=0.2.3' },
-      ...(taxonomy ? { permissions: { scopes: [], calls: ['host.resources.read'] } } : {}) });
+      ...(taxonomy ? { permissions: { scopes: [], calls: ['host.resources.read'] } } : {}) };
     json(join(pkg, 'package.json'), { version: '1.0.0', type: 'module', license: 'MIT' });
-    json(join(pkg, 'capabilities.json'), { schemaVersion: 1, apiVersion: '2', capabilities: [{ id: 'read', kind: 'function', consumers: ['agent', 'host'], execution: 'immediate',
+    const declaration = { schemaVersion: 1, apiVersion: '2', capabilities: [{ id: 'read', kind: 'function', consumers: ['agent', 'host'], execution: 'immediate',
       inputSchema: {}, outputSchema: {}, binding: { type: 'native', name: 'read' }, usage: { purpose: 'Read fixture', inputs: 'Empty object', outputs: 'Fixture record', prerequisites: [], limitations: [] } }],
-      sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] });
+      sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] };
+    definitions[name] = { pkg, manifest, declaration };
+    writeFixturePackage(pkg, manifest, declaration);
     writeFileSync(join(pkg, 'LICENSE'), 'MIT\n');
     writeFileSync(join(pkg, 'index.js'), "throw new Error('candidate plugin must never execute');\n");
     json(join(directory, 'official-plugins.lock.json'), buildLock(directory));
@@ -44,7 +47,7 @@ function fixture(t, { taxonomy = false } = {}) {
   mkdirSync(join(root, '.github'));
   json(join(root, '.github/application-release.json'), { schemaVersion: 1, repository: 'KDZZZZZZ/sesame', tag: 'v0.2.3', releaseId: 123,
     assets: ['INSTALL.md', 'Sesame-0.2.3-linux-x64.AppImage', 'Sesame-0.2.3-linux-x64.deb', 'Sesame-0.2.3-mac-arm64.dmg', 'Sesame-0.2.3-win-x64.exe', 'SHA256SUMS.txt'].map(name => ({ name, size: 10, sha256: 'a'.repeat(64) })) });
-  return { root, core, policy };
+  return { root, core, policy, definitions };
 }
 
 test('current API 2 inventory validates without Git ancestors, legacy catalogs or remote releases', t => {
@@ -57,49 +60,54 @@ test('current API 2 inventory validates without Git ancestors, legacy catalogs o
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /"remoteChecked":false/);
 });
 
-test('trusted current-source CLIs validate both declaration formats and reject stale YAML locks', t => {
-  const { root, core } = fixture(t);
-  const lockCli = fileURLToPath(new URL('../../plugins/api-v1/scripts/plugin-lock.mjs', import.meta.url));
-  const catalogCli = fileURLToPath(new URL('./validate-catalog.mjs', import.meta.url));
-  const checkLock = source => spawnSync(process.execPath, [lockCli, '--check', '--source', source], { encoding: 'utf8' });
-  const checkCatalog = () => spawnSync(process.execPath, [catalogCli, root], { encoding: 'utf8' });
-  const optional = join(root, 'plugins/optional-api-v1');
-  for (const result of [checkLock(core), checkLock(optional), checkCatalog()]) assert.equal(result.status, 0, result.stderr);
-  for (const [source, name] of [[core, 'core-one'], [optional, 'optional-one']]) {
-    const pkg = join(source, 'packages', name);
-    const profile = JSON.parse(readFileSync(join(source, 'bundle-profile.json')));
-    delete profile.packages;
-    json(join(source, 'bundle-profile.json'), { ...profile, discover: true, exclude: [] });
-    const manifestPath = join(pkg, 'plugin.json'), declarationsPath = join(pkg, 'capabilities.json');
-    const manifest = JSON.parse(readFileSync(manifestPath)), declarations = JSON.parse(readFileSync(declarationsPath));
-    rmSync(manifestPath); rmSync(declarationsPath);
-    manifest.title = name;
-    manifest.description = 'Fixture check';
-    manifest.catalog = { functionalCategory: 'analysis', title: { en: name, zh: '示例' }, summary: { en: 'Fixture check', zh: '验证样例' } };
-    if (source === optional) manifest.id = 'community/' + name;
-    declarations.capabilities[0].description = 'Read a fixture record';
-    const files = createProtocolFiles(manifest, declarations, { 'evals/cases/discovery.yaml': 'id: discovery\n' });
-    for (const [path, bytes] of Object.entries(files)) {
-      mkdirSync(dirname(join(pkg, path)), { recursive: true });
-      writeFileSync(join(pkg, path), bytes);
-    }
-    json(join(source, 'official-plugins.lock.json'), yamlSource.buildLock(source));
+test('an optional publisher contributes a self-describing directory without registering its identity in central files', t => {
+  const { core, policy, definitions } = fixture(t, { taxonomy: true, discover: true });
+  const { pkg, manifest, declaration } = definitions['optional-one'];
+  const added = join(dirname(pkg), 'daily-notes');
+  cpSync(pkg, added, { recursive: true });
+  const catalog = { functionalCategory: 'analysis', title: { en: 'Daily notes', zh: '研究笔记' }, summary: { en: 'Read analyst notes.', zh: '阅读研究笔记。' } };
+  const header = { ...manifest, id: 'lab.tools/daily-notes', catalog };
+  writeFixturePackage(added, header, declaration);
+  const entry = buildInventory(core).packages.find(item => item.id === header.id);
+  assert.deepEqual(entry.title, catalog.title);
+  assert.deepEqual(entry.summary, catalog.summary);
+  assert.deepEqual(entry.implementationKinds, ['function']);
+  assert.equal(entry.distribution, 'optional');
+  assert.equal(entry.state, 'discoverable');
+  assert.deepEqual(entry.permissions, manifest.permissions);
+  assert.equal(Object.hasOwn(policy, 'daily-notes'), false);
+  const optional = join(core, '../optional-api-v1'), profilePath = join(optional, 'bundle-profile.json');
+  const profile = JSON.parse(readFileSync(profilePath));
+  json(profilePath, { ...profile, exclude: ['daily-notes'] });
+  assert.deepEqual(buildLock(optional).packages.map(pkg => pkg.id), [manifest.id]);
+  assert.ok(!buildInventory(core).packages.some(pkg => pkg.id === header.id));
+  json(profilePath, profile);
+  for (const overrides of [{ permissions: { scopes: [] } }, { title: { en: 'Missing translation' } }]) {
+    writeFixturePackage(added, { ...header, catalog: { ...catalog, ...overrides } }, declaration);
+    assert.throws(() => buildInventory(core), /unknown x-sesame.catalog field|English and Chinese/);
   }
-  json(join(core, 'inventory-policy.json'), {});
-  const inventory = yamlSource.buildInventory(core);
-  json(join(core, 'inventory.json'), inventory);
-  for (const result of [checkLock(core), checkLock(optional), checkCatalog()]) assert.equal(result.status, 0, result.stderr);
-  json(join(core, 'inventory.json'), { ...inventory, packages: [] });
-  assert.match(checkCatalog().stderr, /inventory differs/);
-  json(join(core, 'inventory.json'), inventory);
-  const lockPath = join(optional, 'official-plugins.lock.json'), lock = JSON.parse(readFileSync(lockPath));
-  json(lockPath, { ...lock, packages: [] });
-  assert.match(checkLock(optional).stderr, /Lock differs/);
-  assert.match(checkCatalog().stderr, /source lock differs/);
-  json(lockPath, lock);
-  json(join(optional, 'packages/optional-one/surface.lock.json'), {});
-  assert.match(checkLock(optional).stderr, /Surface lock mismatch/);
-  assert.match(checkCatalog().stderr, /Surface lock mismatch/);
+  writeFixturePackage(added, { ...header, id: 'lab.tools/wrong' }, declaration);
+  assert.throws(() => buildLock(optional), /publisher identity/);
+  const official = definitions['core-one'];
+  writeFixturePackage(official.pkg, { ...official.manifest, id: 'lab.tools/core-one' }, official.declaration);
+  assert.throws(() => buildLock(core), /publisher identity/);
+});
+
+test('an existing package projects the same inventory through its display metadata and legacy fallback', t => {
+  const { core, policy } = fixture(t, { taxonomy: true, discover: true });
+  const source = new URL('../../plugins/optional-api-v1/packages/ict/', import.meta.url);
+  const dest = join(core, '../optional-api-v1/packages/ict');
+  cpSync(source, dest, { recursive: true });
+  const path = join(dest, 'plugin.yaml'), header = parseYaml(readFileSync(path));
+  const legacy = JSON.parse(readFileSync(new URL('../../plugins/api-v1/inventory-policy.json', import.meta.url))).ict;
+  const entry = () => buildInventory(core).packages.find(pkg => pkg.id === 'sesame/ict');
+  const actual = entry();
+  json(join(core, 'inventory-policy.json'), { ...policy, ict: { ...legacy, title: { en: 'Old name', zh: '旧标题' } } });
+  assert.deepEqual(entry(), actual, 'the package text takes precedence over fallback translations');
+  delete header['x-sesame'].catalog;
+  writeFileSync(path, writeYaml(header));
+  json(join(core, 'inventory-policy.json'), { ...policy, ict: legacy });
+  assert.deepEqual(entry(), actual, 'a package without catalog fields still reads its original reviewed explanation');
 });
 
 test('legacy projection retains its exact format while taxonomy projection derives only source facts', t => {
@@ -142,12 +150,18 @@ test('stale locks, source bytes and display metadata cannot pass inventory valid
     ['plugins/api-v1/official-plugins.lock.json', value => { value.packages[0].treeDigest = `sha256:${'0'.repeat(64)}`; }, /source lock differs/],
     ['plugins/optional-api-v1/official-plugins.lock.json', value => { value.packages = []; }, /source lock differs/],
     ['plugins/api-v1/inventory.json', value => { value.packages[0].license = 'invented'; }, /inventory differs/],
-    ['plugins/api-v1/packages/core-one/capabilities.json', value => { delete value.capabilities[0].usage; }, /incomplete capability/],
-    ['plugins/api-v1/packages/core-one/plugin.json', value => { value.license = 'invented'; }, /per-package license/],
     ['plugins/api-v1/bundle-profile.json', value => { value.packages = ['sesame/wrong']; }, /Package set/],
     ['.github/application-release.json', value => { value.assets.pop(); }, /schemaVersion 1 requires exactly 6 assets/],
   ]) {
     const { root } = fixture(t), target = join(root, path), value = JSON.parse(readFileSync(target)); mutate(value); json(target, value);
+    assert.throws(() => validateRepository(root), message);
+  }
+  for (const [alter, message] of [
+    [({ declaration }) => { delete declaration.capabilities[0].usage; }, /incomplete capability/],
+    [({ manifest }) => { manifest.license = 'invented'; }, /per-package license/],
+  ]) {
+    const { root, definitions } = fixture(t), def = definitions['core-one'];
+    alter(def); writeFixturePackage(def.pkg, def.manifest, def.declaration);
     assert.throws(() => validateRepository(root), message);
   }
   const { root } = fixture(t); writeFileSync(join(root, 'plugins/api-v1/packages/core-one/index.js'), 'changed source bytes');
@@ -197,13 +211,13 @@ test('taxonomy requires a complete consistent format and does not silently accep
 
 test('taxonomy cannot manufacture knowledge-only packages or hide exposed workflow and source capabilities', t => {
   for (const kind of ['knowledge', 'workflow', 'source']) {
-    const { root, core, policy } = fixture(t, { taxonomy: true });
-    const path = join(core, 'packages/core-one/capabilities.json'), declaration = JSON.parse(readFileSync(path));
+    const { root, core, policy, definitions } = fixture(t, { taxonomy: true });
+    const { pkg, manifest, declaration } = definitions['core-one'];
     policy['core-one'].implementationReason = 'A candidate explanation cannot remove an exposed implementation.';
     if (kind === 'knowledge') policy['core-one'].implementationKinds = ['knowledge'];
     if (kind === 'workflow') declaration.capabilities[0].kind = 'workflow';
     if (kind === 'source') declaration.sources.push({ id: 'fixture-source', contract: 'fixture/1', operations: {} });
-    json(path, declaration); json(join(core, 'official-plugins.lock.json'), buildLock(core));
+    writeFixturePackage(pkg, manifest, declaration); json(join(core, 'official-plugins.lock.json'), buildLock(core));
     json(join(core, 'inventory-policy.json'), policy);
     assert.throws(() => validateRepository(root), /cannot create or hide exposed execution|cannot hide a declared/);
   }
@@ -232,19 +246,25 @@ test('new API 2 plans reconstruct exact source and reject changed digests after 
   git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'fresh root');
   const sourceCommit = git(root, 'rev-parse', 'HEAD');
   const profiles = [['core', 'api-v1', 'core-one'], ['optional', 'optional-api-v1', 'optional-one']].map(([profile, directory, name]) => {
-    const draft = { profile, sourceRoot: `plugins/${directory}`, sourceCommit, id: 'dev.5', packages: [`sesame/${name}`], archiveSha256: '0'.repeat(64), lockSha256: '0'.repeat(64) };
+    const draft = { profile, sourceRoot: `plugins/${directory}`, sourceCommit, id: 'dev.999999', packages: [`sesame/${name}`], archiveSha256: '0'.repeat(64), lockSha256: '0'.repeat(64) };
     const built = buildR2Profile(root, draft, { verifyDigests: false });
     return { profile, sourceRoot: draft.sourceRoot, packages: draft.packages, archiveSha256: built.archiveSha256, lockSha256: built.lockSha256 };
   });
-  const plan = { schemaVersion: 1, id: 'dev.5', sourceCommit, pullRequest: 100, title: 'Fresh API 2 publication', profiles };
-  const path = join(root, '.github/plugin-r2-api2/dev.5.json'); mkdirSync(dirname(path)); json(path, plan);
+  const plan = { schemaVersion: 1, id: 'dev.999999', sourceCommit, pullRequest: 100, title: 'Fresh API 2 publication', profiles };
+  const path = join(root, '.github/plugin-r2-api2/dev.999999.json'); mkdirSync(dirname(path)); json(path, plan);
   assert.equal(validateRepository(root).r2Plans, 1);
   plan.profiles[0].archiveSha256 = '0'.repeat(64); json(path, plan);
   assert.throws(() => validateRepository(root), /archive digest differs/);
 });
 
 test('GitHub catalog projects taxonomy from each fixed source without changing release or package identities', t => {
-  const { root, core, policy } = fixture(t, { taxonomy: true });
+  const { root, core, policy, definitions } = fixture(t, { taxonomy: true, discover: true });
+  const optional = join(core, '../optional-api-v1'), item = definitions['optional-one'];
+  const communityId = 'lab.tools/optional-one', display = { ...policy['optional-one'], functionalCategory: 'business' };
+  writeFixturePackage(item.pkg, { ...item.manifest, id: communityId, catalog: display }, item.declaration);
+  delete policy['optional-one'];
+  json(join(core, 'inventory-policy.json'), policy);
+  json(join(optional, 'official-plugins.lock.json'), buildLock(optional));
   git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'fixed API 2 source');
   const sourceCommit = git(root, 'rev-parse', 'HEAD');
   const plans = [['api-v1', 'core'], ['optional-api-v1', 'optional']].map(([directory, profile]) => {
@@ -258,11 +278,13 @@ test('GitHub catalog projects taxonomy from each fixed source without changing r
   for (const plan of plans) json(join(root, `.github/plugin-releases/${plan.tag}.json`), plan);
   git(root, 'add', '.'); git(root, 'commit', '-qm', 'reviewed publication plans');
   const releaseCommit = git(root, 'rev-parse', 'HEAD');
-  const sources = { schemaVersion: 1, releases: plans.map(plan => ({ tag: plan.tag, releaseCommit, reviewSha256: 'a'.repeat(64) })) };
+  const sources = { schemaVersion: 1, withdrawn: [communityId], releases: plans.map(plan => ({ tag: plan.tag, releaseCommit, reviewSha256: 'a'.repeat(64) })) };
   const catalog = buildCatalog(root, sources);
+  assert.equal(catalog.plugins.find(plugin => plugin.id === communityId).status, 'withdrawn');
   for (const plugin of catalog.plugins) {
-    assert.equal(plugin.functionalCategory, policy[plugin.name].functionalCategory);
-    assert.deepEqual(plugin.implementationKinds, policy[plugin.name].implementationKinds);
+    const expected = plugin.id === communityId ? display : policy[plugin.name];
+    assert.equal(plugin.functionalCategory, expected.functionalCategory);
+    assert.deepEqual(plugin.implementationKinds, expected.implementationKinds);
     assert.equal(plugin.source.commit, sourceCommit);
     assert.equal(plugin.engines.sesame, '>=0.3.0-dev.1 <0.4.0');
     const plan = plans.find(item => item.tag === plugin.release);

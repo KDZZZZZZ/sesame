@@ -1,3 +1,4 @@
+import { readProtocolPackage } from '../../plugins/protocol/package.mjs';
 import { execFileSync } from 'node:child_process';
 import { cpSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,7 +16,7 @@ export const API2_PLAN_DIRECTORY = '.github/plugin-r2-api2';
 const assert = (value, message) => { if (!value) throw new Error(message); };
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const hex = (value, length) => typeof value === 'string' && new RegExp(`^[a-f0-9]{${length}}$`).test(value);
-const packageId = value => /^sesame\/[a-z][a-z0-9-]*$/.test(value || '');
+const packageId = value => typeof value === 'string' && /^[a-z0-9][a-z0-9.-]*\/[a-z][a-z0-9-]*$/.test(value);
 const releaseId = value => /^dev\.[1-9][0-9]*$/.test(value || '');
 const releaseNumber = value => {
   const match = /^dev\.([1-9][0-9]*)$/.exec(value || '');
@@ -33,7 +34,7 @@ function validateProfilePlan(profile, index) {
   assert(['core', 'optional'].includes(profile.profile), 'Plan must contain exactly core and optional profiles');
   assert(profile.sourceRoot === SOURCE_ROOTS[profile.profile], `${profile.profile}: sourceRoot differs from profile`);
   assert(Array.isArray(profile.packages) && profile.packages.length > 0, `${profile.profile}: packages are required`);
-  assert(profile.packages.every(packageId) && new Set(profile.packages).size === profile.packages.length, `${profile.profile}: packages must be explicit unique Sesame IDs`);
+  assert(profile.packages.every(id => packageId(id) && (profile.profile === 'optional' || id.startsWith('sesame/'))) && new Set(profile.packages).size === profile.packages.length, `${profile.profile}: packages must be explicit unique plugin IDs for the profile`);
   assert(hex(profile.archiveSha256, 64) && hex(profile.lockSha256, 64), `${profile.profile}: release digests must be fixed`);
   assert(Object.keys(profile).every(key => ['profile', 'sourceRoot', 'packages', 'archiveSha256', 'lockSha256'].includes(key)), `${profile.profile}: unknown profile field`);
   return profile;
@@ -94,7 +95,7 @@ function buildSubsetSource(source, profilePlan, fullLock) {
       assert(pkg, `${profilePlan.profile}: selected package does not exist in source lock: ${id}`);
       cpSync(join(source, 'packages', pkg.directory), join(directory, 'packages', pkg.directory), { recursive: true, errorOnExist: true, force: false });
     }
-    writeFileSync(join(directory, 'bundle-profile.json'), jsonBytes({ ...profile, packages: profilePlan.packages }));
+    writeFileSync(join(directory, 'bundle-profile.json'), jsonBytes({ schemaVersion: profile.schemaVersion, kind: profile.kind, engines: profile.engines, packages: profilePlan.packages }));
     const lock = buildLock(directory);
     assert(canonical(lock.packages.map(pkg => pkg.id).sort()) === canonical([...selected].sort()), `${profilePlan.profile}: selected lock differs from plan`);
     const lockBytes = jsonBytes(lock), archive = createArchive(directory, lock);
@@ -105,11 +106,11 @@ function buildSubsetSource(source, profilePlan, fullLock) {
   }
 }
 
-function readManifestEntry(repository, sourceCommit, profilePlan, release, pkg, classification) {
-  const path = `${profilePlan.sourceRoot}/packages/${pkg.directory}`;
-  const manifest = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/plugin.json`]));
-  const declaration = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/capabilities.json`]));
-  const entry = catalogPackage(pkg, manifest, declaration, release, { classification });
+function readManifestEntry(profilePlan, release, pkg, classification) {
+  const prefix = pkg.treeDigest.slice(7) + '/';
+  const files = Object.fromEntries(pkg.files.map(file => [file.path, profilePlan.fileBytes.get(prefix + file.path)]));
+  const { manifest, capabilities: declaration, surface, catalog } = readProtocolPackage(files);
+  const entry = catalogPackage(pkg, manifest, declaration, release, { classification, surface, catalog });
   return { ...entry, package: { ...entry.package, baseUrl: `${PACKAGE_BASE}/${pkg.treeDigest.slice(7)}` } };
 }
 
@@ -170,7 +171,7 @@ export function buildR2Publication(repository, input, { releaseCommit, review })
     addObject(objects, `${prefix}/official-plugins.lock.json`, profile.lockBytes);
     addObject(objects, `${prefix}/application-official-plugins.lock.json`, profile.pinBytes);
     for (const [name, bytes] of profile.fileBytes) addObject(objects, `plugins/api-v1/packages/${name}`, bytes);
-    for (const pkg of profile.lock.packages) plugins.push(readManifestEntry(repository, prepared.plan.sourceCommit, profile, release, pkg, Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined));
+    for (const pkg of profile.lock.packages) plugins.push(readManifestEntry(profile, release, pkg, pkg.id === 'sesame/' + pkg.directory && Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined));
   }
   plugins.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   releases.sort((a, b) => a.profile < b.profile ? -1 : a.profile > b.profile ? 1 : 0);
@@ -197,12 +198,72 @@ function listPlans(root) {
   });
 }
 
+// These packages used the previous on-disk declarations. Pin the seven plans
+// already published by the repository before the YAML source migration.
+const archived = JSON.parse(readFileSync(new URL('./historical-r2-plans.json', import.meta.url)));
+
+export function isArchivedR2Plan(plan) {
+  if (!Object.hasOwn(archived, plan.id)) return false;
+  assert(sha256(jsonBytes(plan)) === archived[plan.id], 'Archived R2 release plan is immutable: ' + plan.id);
+  return true;
+}
+
+export function generateR2Plan(repository, pullRequest, { include = [] } = {}) {
+  assert(Number.isSafeInteger(pullRequest) && pullRequest > 0, 'Use release --pr <positive dev-to-main PR number>');
+  const plans = listPlans(repository).map(path => {
+    const plan = validateR2Plan(JSON.parse(readFileSync(path)));
+    assert(basename(path) === plan.id + '.json', 'Plan filename must match id');
+    isArchivedR2Plan(plan);
+    return plan;
+  });
+  assert(Array.isArray(include) && include.every(packageId) && new Set(include).size === include.length,
+    'Use one --include <publisher/slug> per additional package');
+  const sourceCommit = git(repository, ['rev-parse', '--verify', 'HEAD^{commit}']).toString().trim();
+  const inputs = Object.values(SOURCE_ROOTS).flatMap(root =>
+    ['packages', 'bundle-profile.json', 'official-plugins.lock.json'].map(file => root + '/' + file));
+  inputs.push('plugins/api-v1/inventory-policy.json');
+  const pending = git(repository, ['status', '--porcelain', '--untracked-files=all', '--', ...inputs]);
+  assert(!pending.length, 'Commit package, profile and lock changes before generating a release plan');
+  const previous = plans.find(plan => plan.pullRequest === pullRequest);
+  if (previous) {
+    const changed = git(repository, ['diff', '--name-only', previous.sourceCommit, sourceCommit, '--', ...inputs]);
+    assert(!changed.length, 'This PR already has a plan for different package sources');
+    const selected = new Set(previous.profiles.flatMap(profile => profile.packages));
+    assert(include.every(id => selected.has(id)), 'This PR already has a plan with a different package selection');
+    prepareR2Release(repository, previous);
+    return { path: join(API2_PLAN_DIRECTORY, previous.id + '.json'), plan: previous };
+  }
+  // Inherit reviewed package selection from the fixed commit. Uncommitted
+  // drafts reserve a number but cannot add packages to the next release.
+  const tracked = git(repository, ['ls-tree', '-r', '--name-only', sourceCommit, '--', API2_PLAN_DIRECTORY])
+    .toString().trim().split('\n').filter(path => /^dev\.[1-9][0-9]*\.json$/.test(basename(path)))
+    .sort((a, b) => releaseNumber(basename(b, '.json')) - releaseNumber(basename(a, '.json')));
+  const latest = tracked.length ? validateR2Plan(JSON.parse(git(repository, ['show', sourceCommit + ':' + tracked[0]]))) : undefined;
+  const selected = latest ? new Set([...latest.profiles.flatMap(profile => profile.packages), ...include]) : undefined;
+  const n = Math.max(0, ...Object.keys(archived).map(releaseNumber), ...plans.map(plan => releaseNumber(plan.id)),
+    latest ? releaseNumber(latest.id) : 0) + 1;
+  const id = 'dev.' + n;
+  const profiles = Object.entries(SOURCE_ROOTS).map(([profile, sourceRoot]) => {
+    const sourceLock = JSON.parse(git(repository, ['show', sourceCommit + ':' + sourceRoot + '/official-plugins.lock.json']));
+    const packages = sourceLock.packages.map(pkg => pkg.id).filter(id => !selected || selected.has(id));
+    const bytes = buildR2Profile(repository, { profile, sourceRoot, sourceCommit, packages, id,
+      archiveSha256: '0'.repeat(64), lockSha256: '0'.repeat(64) }, { verifyDigests: false });
+    return { profile, sourceRoot, packages, archiveSha256: bytes.archiveSha256, lockSha256: bytes.lockSha256 };
+  });
+  assert(include.every(id => profiles.some(profile => profile.packages.includes(id))), 'An included package is missing from the fixed source locks');
+  const plan = validateR2Plan({ schemaVersion: 1, id, sourceCommit, pullRequest, title: 'Sesame plugin release ' + id, profiles });
+  const path = join(API2_PLAN_DIRECTORY, id + '.json');
+  mkdirSync(dirname(join(repository, path)), { recursive: true });
+  writeFileSync(join(repository, path), jsonBytes(plan), { flag: 'wx' });
+  return { path, plan };
+}
+
 export function checkR2Plans(repository) {
   const plans = listPlans(repository);
   for (const path of plans) {
     const plan = validateR2Plan(JSON.parse(readFileSync(path)));
     assert(basename(path) === `${plan.id}.json`, `R2 plan filename must match id: ${basename(path)}`);
-    prepareR2Release(repository, plan);
+    if (!isArchivedR2Plan(plan)) prepareR2Release(repository, plan);
   }
   return { plans: plans.length };
 }

@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/judgment-evolution:instructions#preamble": "4246da56529be82e686410d82a8b48f959a10178e562cf7f06a8412866aca405",
+    "sesame/judgment-evolution:instructions#preamble": "45a6e0e8914933f0ba7d8fbe4df5e2c8209519d9580723c485317ab1680409fe",
     "sesame/judgment-evolution:plugin.description": "50a8f01743e9e9dd71732e61cc7cdd8d4fea7d943afdf52955b421a9718d73b7",
     "sesame/judgment-evolution:resource/references.md": "6b19231032dc55357dc951053dcfca32ec8b3b58aac83314817803de64cf9f2e",
     "sesame/judgment-evolution:skill/judgment-review.body": "2f400ed8735492b86f69485836222da84492bba2c773f8f29954542db13d1c87",
@@ -59,5 +59,5 @@
     "sesame/judgment-evolution:tool/judgment_rules.input": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
     "sesame/judgment-evolution:tool/judgment_rules.output": "a92feb2bdb8e294bb67c34a53d7f195b4e640261b52fc764a1728f3a184dd59a"
   },
-  "digest": "d16bb0e43b46c9b27f86ce09be779def2f7859b3f80997ab81140fd6f93d410d"
+  "digest": "199bd228496b18e2112de6be6d7ee915a45ba6ab78df40211b674a77a04d84b4"
 }

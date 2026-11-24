@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/abu-ml-features
 title: 交易特征基线
 description: 严格按时点生成回归、分位、波动和跳空特征。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
-version: 2.0.1
+version: 2.0.2
 license: GPL-3.0-only
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors; ABU reference by bbfamily / 阿布
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Point-in-time features"
+      zh: "时点特征"
+    summary:
+      en: "Construct regression, quantile, volatility and gap features without future observations."
+      zh: "严格按时点生成回归、分位、波动和跳空特征。"
+    dependencies:
+      en: "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order."
+      zh: "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
   default_state: discoverable
   agent_scope: all
   prompts:

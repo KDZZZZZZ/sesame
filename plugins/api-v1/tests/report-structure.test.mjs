@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -82,7 +83,7 @@ test('fixed input and direct provider rendering enforce the same report structur
 });
 
 test('discoverable full-report and answer examples validate through the actual tools', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   const writes = [];
   const host = { context: { sessionId: 'examples' }, capabilities: { invoke: async (_id, request) => {
     writes.push(request); return { type: 'result', value: { ref: fixed('example') } };

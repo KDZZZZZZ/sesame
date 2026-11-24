@@ -1,4 +1,4 @@
-import { formatRef, parseToken, STEP_NAME, ARTIFACT_NAME, OUTCOME_NAME } from './definition.mjs';
+import { formatRef, parseToken, ARTIFACT_NAME, OUTCOME_NAME } from './definition.mjs';
 
 // Pure plan arithmetic. Nothing here reads the host or remembers a previous answer.
 
@@ -690,56 +690,6 @@ export function resolve(definition, plan) {
   }
   const progress = { done: active.filter(name => plan.steps[name]?.status === 'done').length, total: active.length };
   return { status, progress, necessary: unfinished, partition, ready, running, waiting, failed, blocked, externalInputs, goals: goalNames(definition, plan), active };
-}
-
-export function adhocDefinition(steps) {
-  if (!Array.isArray(steps) || steps.length < 2 || steps.length > 20) return reject('invalid_plan', { detail: '临时计划需要 2–20 步' });
-  const names = [];
-  const after = new Map();
-  for (const item of steps) {
-    if (!item || typeof item.step !== 'string' || (!STEP_NAME.test(item.step) || item.step in Object.prototype)) return reject('invalid_plan', { detail: '步骤名只能用小写字母、数字和下划线' });
-    if (names.includes(item.step)) return reject('invalid_plan', { detail: `步骤名 ${item.step} 重复` });
-    if (typeof item.title !== 'string' || !item.title.trim() || item.title.length > 120) return reject('invalid_plan', { detail: `${item.step} 需要不超过 120 字的 title` });
-    const deps = item.after ?? [];
-    if (!Array.isArray(deps) || deps.length > 19 || deps.some(dep => typeof dep !== 'string')) return reject('invalid_plan', { detail: `${item.step} 的 after 不合法` });
-    names.push(item.step);
-    after.set(item.step, deps);
-  }
-  for (const [name, deps] of after) {
-    for (const dep of deps) if (!names.includes(dep) || dep === name) return reject('invalid_plan', { detail: `${name} 的 after 引用了计划外的步骤` });
-  }
-  const color = new Map();
-  const stack = [];
-  const visit = name => {
-    color.set(name, 'gray');
-    stack.push(name);
-    for (const next of after.get(name)) {
-      if (color.get(next) === 'gray') return true;
-      if (!color.has(next) && visit(next)) return true;
-    }
-    stack.pop();
-    color.set(name, 'black');
-    return false;
-  };
-  for (const name of names) if (!color.has(name) && visit(name)) return reject('invalid_plan', { detail: 'after 不能成环' });
-  const pointed = new Set(names.flatMap(name => after.get(name)));
-  const sinks = names.filter(name => !pointed.has(name));
-  const product = name => `Adhoc${name.replace(/(^|_)([a-z])/g, (_, __, letter) => letter.toUpperCase())}`;
-  const definition = {
-    id: 'adhoc', adhoc: true, goal: product(sinks[0]), goals: sinks.map(product), description: '',
-    outcomes: {}, imports: {}, producers: {}, externals: [], conditions: [], artifacts: [], steps: {},
-  };
-  for (const name of names) {
-    definition.steps[name] = {
-      title: steps.find(item => item.step === name).title.trim(),
-      requires: after.get(name).map(dep => ({ name: product(dep), outcome: null })),
-      requires_any: [], requires_if_valid: [], uses: [], uses_any: [],
-      produces: [product(name)], fallback: null, when: null, hint: steps.find(item => item.step === name).title.trim(),
-    };
-    definition.producers[product(name)] = name;
-    definition.artifacts.push(product(name));
-  }
-  return { ok: true, definition };
 }
 
 export function inputTokens(definition, plan, name) {

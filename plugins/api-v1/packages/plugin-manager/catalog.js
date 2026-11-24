@@ -70,12 +70,18 @@ function validateR2Release(release, releases) {
   releases.set(release.tag, release);
 }
 
+const packageId = value => typeof value === 'string' && /^[a-z0-9][a-z0-9.-]*\/[a-z][a-z0-9-]*$/.test(value);
+
+// Match the package version accepted by the distribution lock.
+const packageVersion = value => typeof value === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
+
 function validateEntry(entry, releases, schemaVersion) {
   check(entry && typeof entry === 'object', 'Invalid catalog entry');
-  check(/^sesame\/[a-z][a-z0-9-]*$/.test(entry.id), 'Catalog identity must be unique');
-  check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '2' && ['sesame-native', 'sesame-mcp'].includes(entry.format), 'Invalid catalog version, format or status');
+  check(packageId(entry.id), 'Catalog identity must be unique');
+  check(packageVersion(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '2' && ['sesame-native', 'sesame-mcp'].includes(entry.format), 'Invalid catalog version, format or status');
   const slug = entry.id.split('/')[1], release = releases.get(entry.release);
   check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
+  check(release.sourceRoot === 'plugins/optional-api-v1' || entry.id.startsWith('sesame/'), 'Core catalog entries require a Sesame publisher');
   if (schemaVersion === 1) {
     if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines?.sesame, 'Package compatibility differs from its released profile');
     check(entry.package?.baseUrl === undefined, 'Legacy package entries must not declare R2 package URLs');
@@ -144,7 +150,7 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
   check(host.context.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
   const action = args.action ?? 'install';
   check(['install', 'update'].includes(action), 'Choose install or explicit update');
-  check(/^sesame\/[a-z][a-z0-9-]*$/.test(args.plugin_id) && /^sha256:[a-f0-9]{64}$/.test(args.catalog_digest) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id), 'Invalid catalog operation identity');
+  check(packageId(args.plugin_id) && /^sha256:[a-f0-9]{64}$/.test(args.catalog_digest) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id), 'Invalid catalog operation identity');
   check(action === 'update' ? /^sha256:[a-f0-9]{64}$/.test(args.expected_digest) : args.expected_digest === undefined, 'Explicit update requires expected_digest; install must omit it', 'CATALOG_UPDATE_REQUIRED');
   const fingerprint = hash(JSON.stringify([host.context.sessionId ?? null, args.plugin_id, args.catalog_digest, action, args.expected_digest ?? null]));
   const result = await operation(host, `catalog:${args.command_id}`, fingerprint, async () => {

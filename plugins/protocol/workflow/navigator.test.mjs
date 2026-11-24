@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseToken, parseWorkflow, validateWorkflowSet, WorkflowSyntaxError } from './definition.mjs';
-import { adhocDefinition, closestName, createPlanState, dependencyMet, necessaryUnfinished, reportStep, resolve, resumeAfterChild, revisePlan, closePlan } from './resolver.mjs';
+import { closestName, createPlanState, dependencyMet, necessaryUnfinished, reportStep, resolve, resumeAfterChild, revisePlan, closePlan } from './resolver.mjs';
+
+import { createTodoPlan } from './todos.mjs';
 
 const factorUrl = new URL('../../optional-api-v1/packages/auto-factor-mining/workflows/factor.development.yaml', import.meta.url);
 const strategyUrl = new URL('../../optional-api-v1/packages/strategy-development/workflows/strategy.development.yaml', import.meta.url);
@@ -199,16 +201,18 @@ test('a finished plan reopens when a conditional step is requested', async () =>
 });
 
 test('temporary plans become ready from after, and refuse cycles', () => {
-  const built = adhocDefinition([
+  const openTodos = steps => createTodoPlan({
+    id:'padhoc', title:'黄金周度复盘', steps:steps.map(item=>({...item,description:item.title})),
+  });
+  const built = openTodos([
     { step: 'collect', title: '取行情与事件' },
     { step: 'structure', title: '价格结构分析', after: ['collect'] },
     { step: 'events', title: '事件影响分析', after: ['collect'] },
     { step: 'report', title: '综合并发布报告', after: ['structure', 'events'] },
   ]);
   assert.equal(built.ok, true);
-  const state = open(built.definition, { id: 'padhoc', title: '黄金周度复盘' });
-  assert.deepEqual(resolve(built.definition, state.plan).ready.map(item => item.step), ['collect']);
-  const cycled = adhocDefinition([{ step: 'a', title: '甲', after: ['b'] }, { step: 'b', title: '乙', after: ['a'] }]);
+  assert.deepEqual(built.view.todos.filter(todo=>todo.state==='ready').map(todo=>todo.step), ['collect']);
+  const cycled = openTodos([{ step: 'a', title: '甲', after: ['b'] }, { step: 'b', title: '乙', after: ['a'] }]);
   assert.equal(cycled.ok, false);
   assert.equal(cycled.error.code, 'invalid_plan');
 });

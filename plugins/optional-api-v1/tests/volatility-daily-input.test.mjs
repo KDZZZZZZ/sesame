@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -29,7 +30,7 @@ function fixture() {
 for (const name of ['abu-volatility', 'abu-indicators']) {
   const root = new URL(`../packages/${name}/`, import.meta.url);
   const { analyze } = await import(new URL('scripts/baseline.mjs', root));
-  const declaration = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8')).capabilities[0];
+  const declaration = readPackageDirectory(new URL('.', root)).capabilities.capabilities[0];
 
   test(`${name}: real date-only input computes the gap-inclusive ten-day TR average`, () => {
     const input = fixture(), saved = structuredClone(input);

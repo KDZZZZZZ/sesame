@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -142,7 +143,7 @@ test('long feed and currency outputs expose only resource entries that actually 
     assert.equal(rows.length, 1);
     if (name === 'rss-collect') assert.equal(rows[0].entries[0].title, 'Decision');
     else assert.equal(Object.keys(rows[0].rates).length, 3000);
-    const declaration = JSON.parse(await readFile(new URL(`../packages/${name}/capabilities.json`, import.meta.url)));
+    const declaration = readPackageDirectory(new URL(`../packages/${name}/`, import.meta.url)).capabilities;
     for (const cap of declaration.capabilities) {
       assert.ok(cap.usage.outputs.includes('entry:result_entries.structured'));
       assert.ok(!cap.usage.outputs.includes('entry:"text.txt"'));

@@ -5,27 +5,34 @@ import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, sym
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createProtocolFiles } from '../../plugins/protocol/package.mjs';
+import { readPackageDirectory } from '../../plugins/protocol/directory.mjs';
 import { buildLock, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { catalogPackage, readCatalogPolicy } from '../../plugins/api-v1/scripts/catalog.mjs';
-import { buildR2Publication, buildR2Profile, checkR2Plans, prepareR2Release, validateR2Plan } from './plugin-r2.mjs';
+import { buildR2Publication, buildR2Profile, checkR2Plans, generateR2Plan, isArchivedR2Plan, prepareR2Release, validateR2Plan } from './plugin-r2.mjs';
 import { readCatalog } from '../../plugins/api-v1/packages/plugin-manager/catalog.js';
 
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 const git = (root, args) => execFileSync('git', ['-C', root, '-c', 'core.autocrlf=false', '-c', 'user.name=R2 test', '-c', 'user.email=r2-test@example.invalid', ...args], { encoding: 'utf8' }).trim();
 
-function packageAt(root, sourceRoot, name, version = '1.0.0', marker = name) {
+function packageAt(root, sourceRoot, name, version = '1.0.0', marker = name, publisher = 'sesame') {
   const dir = join(root, sourceRoot, 'packages', name);
   mkdirSync(dir, { recursive: true });
-  json(join(dir, 'plugin.json'), { id: `sesame/${name}`, apiVersion: '2', version, title: name, description: `${name} fixture`, license: 'MIT',
+  const manifest = { id: `${publisher}/${name}`, apiVersion: '2', version, title: name, description: `${name} fixture`, license: 'MIT',
     default_state: sourceRoot.includes('optional') ? 'discoverable' : 'mounted', entry: 'index.js',
-    capability_manifest: 'capabilities.json', engines: { sesame: '>=0.2.3' } });
+    capability_manifest: 'capabilities.json', engines: { sesame: '>=0.2.3' } };
   json(join(dir, 'package.json'), { type: 'module', version, license: 'MIT' });
   const capability = (suffix, consumers) => ({ id: `${name.replaceAll('-', '_')}_${suffix}`, kind: 'function', description: marker,
     inputSchema: { type: 'object' }, outputSchema: { type: 'object' }, consumers, execution: 'immediate', effects: [],
     binding: { type: 'native', name: suffix }, usage: { purpose: marker, inputs: 'An empty object.', outputs: 'The fixture value.', prerequisites: [], limitations: [] } });
-  json(join(dir, 'capabilities.json'), { schemaVersion: 1, apiVersion: '2', configSchema: {},
+  const capabilities = { schemaVersion: 1, apiVersion: '2', configSchema: {},
     capabilities: [capability('read', ['agent', 'host']), capability('host_only', ['host'])],
-    sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] });
+    sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] };
+  const files = createProtocolFiles(manifest, capabilities, { 'evals/cases/discovery.yaml': 'id: discovery\nenvironment: { mode: replay }\nsteps: [{ operation: server/discover }]\nexpect: [{ step: 0, pointer: /serverInfo/name, equals: ' + manifest.id + ' }]\n' });
+  for (const [path, bytes] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    writeFileSync(join(dir, path), bytes);
+  }
   writeFileSync(join(dir, 'LICENSE'), 'MIT\n');
   writeFileSync(join(dir, 'index.js'), `throw new Error('candidate code executed: ${marker}');\n`);
   writeFileSync(join(dir, 'PROVENANCE.md'), `${marker}\n`);
@@ -33,7 +40,7 @@ function packageAt(root, sourceRoot, name, version = '1.0.0', marker = name) {
 
 function sourceRoot(root, sourceRoot, kind, packages) {
   mkdirSync(join(root, sourceRoot, 'packages'), { recursive: true });
-  json(join(root, sourceRoot, 'bundle-profile.json'), { schemaVersion: 1, kind, engines: { sesame: '>=0.2.0-0' }, packages: packages.map(name => `sesame/${name}`) });
+  json(join(root, sourceRoot, 'bundle-profile.json'), { schemaVersion: 1, kind, engines: { sesame: '>=0.2.0-0' }, discover: true, exclude: [] });
   for (const name of packages) packageAt(root, sourceRoot, name, '1.0.0', name === 'excluded' ? 'EXCLUDED_SENTINEL' : name);
   json(join(root, sourceRoot, 'official-plugins.lock.json'), buildLock(join(root, sourceRoot)));
 }
@@ -48,10 +55,10 @@ function fixture(t, policy) {
   git(root, ['add', '.']);
   git(root, ['commit', '-qm', 'fixed source']);
   const sourceCommit = git(root, ['rev-parse', 'HEAD']);
-  const partial = profile => buildR2Profile(root, { profile, sourceRoot: profile === 'core' ? 'plugins/api-v1' : 'plugins/optional-api-v1', sourceCommit, id: 'dev.9',
+  const partial = profile => buildR2Profile(root, { profile, sourceRoot: profile === 'core' ? 'plugins/api-v1' : 'plugins/optional-api-v1', sourceCommit, id: 'dev.19',
     packages: profile === 'core' ? ['sesame/core-one'] : ['sesame/optional-one'], archiveSha256: '0'.repeat(64), lockSha256: '0'.repeat(64) }, { verifyDigests: false });
   const core = partial('core'), optional = partial('optional');
-  const plan = { schemaVersion: 1, id: 'dev.9', sourceCommit, pullRequest: 99, title: 'R2 fixture',
+  const plan = { schemaVersion: 1, id: 'dev.19', sourceCommit, pullRequest: 99, title: 'R2 fixture',
     profiles: [
       { profile: 'core', sourceRoot: 'plugins/api-v1', packages: ['sesame/core-one'], archiveSha256: core.archiveSha256, lockSha256: core.lockSha256 },
       { profile: 'optional', sourceRoot: 'plugins/optional-api-v1', packages: ['sesame/optional-one'], archiveSha256: optional.archiveSha256, lockSha256: optional.lockSha256 },
@@ -70,27 +77,72 @@ test('prepare builds deterministic selected source locks and archives without ca
   assert.doesNotMatch(first.profiles[1].archive.toString('latin1'), /EXCLUDED_SENTINEL/);
 });
 
+test('archived releases keep their existing metadata across the package format migration', () => {
+  const archived = JSON.parse(readFileSync(new URL('../plugin-r2-api2/dev.11.json', import.meta.url)));
+  assert.equal(isArchivedR2Plan(archived), true);
+  assert.throws(() => isArchivedR2Plan({ ...archived, sourceCommit: 'a'.repeat(40) }), /immutable/);
+  assert.equal(isArchivedR2Plan({ ...archived, id: 'dev.999' }), false);
+});
+
+test('release reuses the reviewed selection, explicitly includes community IDs, and pins reproducible bytes', async t => {
+  const { root, plan } = fixture(t);
+  const directory = join(root, '.github/plugin-r2-api2');
+  mkdirSync(directory, { recursive: true });
+  json(join(directory, plan.id + '.json'), plan);
+  const sourceRoot = 'plugins/optional-api-v1';
+  packageAt(root, sourceRoot, 'community-one', '0.1.3-dev.3.10', 'community', 'lab.tools');
+  json(join(root, sourceRoot, 'official-plugins.lock.json'), buildLock(join(root, sourceRoot)));
+  assert.throws(() => generateR2Plan(root, 100), /Commit package/);
+  git(root, ['add', '.']);
+  git(root, ['commit', '-qm', 'review selection and add new community source']);
+  const source = git(root, ['rev-parse', 'HEAD']);
+  assert.throws(() => generateR2Plan(root, 100, { include: ['lab.tools/missing'] }), /missing from/);
+  // An uncommitted plan for a different PR cannot influence this selection.
+  const draft = { ...plan, id: 'dev.21', pullRequest: 101, profiles: structuredClone(plan.profiles) };
+  draft.profiles[1].packages.push('sesame/excluded');
+  json(join(directory, 'dev.21.json'), draft);
+  const generated = generateR2Plan(root, 100, { include: ['lab.tools/community-one'] });
+  assert.equal(generated.plan.id, 'dev.22');
+  assert.equal(generated.plan.sourceCommit, source);
+  assert.deepEqual(JSON.parse(readFileSync(join(root, generated.path))), generated.plan);
+  assert.deepEqual(generated.plan.profiles.map(p => p.packages), [
+    ['sesame/core-one'], ['lab.tools/community-one', 'sesame/optional-one'],
+  ]);
+  const publication = buildR2Publication(root, generated.plan, { releaseCommit: 'b'.repeat(40), review: Buffer.from('{}') });
+  const downloaded = await readCatalog(undefined, async () => new Response(JSON.stringify(publication.catalog)));
+  assert.equal(downloaded.catalog.plugins.find(plugin => plugin.id === 'lab.tools/community-one').version, '0.1.3-dev.3.10');
+  for (const version of ['dev', '1.2', '1.2.3-', '1.2.3-dev.1+build', 123]) {
+    const invalid = structuredClone(publication.catalog);
+    invalid.plugins[0].version = version;
+    await assert.rejects(readCatalog(undefined, async () => new Response(JSON.stringify(invalid))), /Invalid catalog version/);
+  }
+  git(root, ['add', generated.path]);
+  git(root, ['commit', '-qm', 'record plan']);
+  assert.deepEqual(generateR2Plan(root, 100), generated);
+  assert.throws(() => generateR2Plan(root, 100, { include: ['sesame/excluded'] }), /different package selection/);
+});
+
 test('publication emits API 2 capabilities, R2 catalog and immutable package file objects accepted by the manager', async t => {
   const { root, plan } = fixture(t), review = Buffer.from('{"schemaVersion":1,"ok":true}\n'), releaseCommit = 'b'.repeat(40);
   const publication = buildR2Publication(root, plan, { releaseCommit, review });
   assert.equal(publication.catalog.schemaVersion, 2);
   assert.equal(publication.catalog.apiVersion, '2');
-  assert.deepEqual(publication.catalog.releases.map(release => release.tag), ['r2-core-api-v1-dev.9', 'r2-optional-api-v1-dev.9']);
-  assert.equal(publication.catalog.releases[0].archive.url, 'https://dl.sesame.bot/plugins/api-v1/releases/dev.9/core/plugins.tar.gz');
+  assert.deepEqual(publication.catalog.releases.map(release => release.tag), ['r2-core-api-v1-dev.19', 'r2-optional-api-v1-dev.19']);
+  assert.equal(publication.catalog.releases[0].archive.url, 'https://dl.sesame.bot/plugins/api-v1/releases/dev.19/core/plugins.tar.gz');
   assert.ok(!('engines' in publication.catalog.releases[0]));
   assert.equal(publication.catalog.plugins.length, 2);
   for (const plugin of publication.catalog.plugins) {
     assert.equal(plugin.apiVersion, '2');
-    assert.equal(plugin.capabilityManifest, 'capabilities.json');
+    assert.equal(plugin.capabilityManifest, 'plugin.yaml');
     assert.equal(plugin.capabilities.length, 2);
     assert.deepEqual(plugin.tools, [`${plugin.name.replaceAll('-', '_')}_read`]);
     assert.match(plugin.package.baseUrl, /^https:\/\/dl\.sesame\.bot\/plugins\/api-v1\/packages\/[a-f0-9]{64}$/);
     for (const file of plugin.package.files) assert.equal(publication.objects.has(`plugins/api-v1/packages/${plugin.package.treeDigest.slice(7)}/${file.path}`), true);
   }
-  assert.equal(publication.objects.get('plugins/api-v1/releases/dev.9/review.json').equals(review), true);
-  assert.equal(publication.objects.has('plugins/api-v1/releases/dev.9/core/application-official-plugins.lock.json'), true);
-  assert.equal(publication.objects.has('plugins/api-v1/releases/dev.9/catalog.json'), true);
-  assert.equal(sha256(publication.objects.get('plugins/api-v1/releases/dev.9/review.json')), publication.catalog.releases[0].review.sha256);
+  assert.equal(publication.objects.get('plugins/api-v1/releases/dev.19/review.json').equals(review), true);
+  assert.equal(publication.objects.has('plugins/api-v1/releases/dev.19/core/application-official-plugins.lock.json'), true);
+  assert.equal(publication.objects.has('plugins/api-v1/releases/dev.19/catalog.json'), true);
+  assert.equal(sha256(publication.objects.get('plugins/api-v1/releases/dev.19/review.json')), publication.catalog.releases[0].review.sha256);
   const downloaded = await readCatalog(undefined, async () => new Response(JSON.stringify(publication.catalog)));
   assert.deepEqual(downloaded.catalog, publication.catalog);
 });
@@ -133,14 +185,14 @@ test('missing and legacy policies retain original catalog serialization and immu
       const profile = publication.profiles.find(item => item.profile === plugin.distribution);
       const pkg = profile.lock.packages.find(item => item.id === plugin.id);
       const path = join(root, profile.sourceRoot, 'packages', pkg.directory);
-      const entry = catalogPackage(pkg, JSON.parse(readFileSync(join(path, 'plugin.json'))), JSON.parse(readFileSync(join(path, 'capabilities.json'))),
-        publication.catalog.releases.find(item => item.tag === plugin.release));
+      const { manifest, capabilities, surface } = readPackageDirectory(path);
+      const entry = catalogPackage(pkg, manifest, capabilities, publication.catalog.releases.find(item => item.tag === plugin.release), { surface });
       assert.equal(Object.hasOwn(plugin, 'functionalCategory'), false);
       assert.equal(Object.hasOwn(plugin, 'implementationKinds'), false);
       return { ...entry, package: { ...entry.package, baseUrl: plugin.package.baseUrl } };
     });
     const originalBytes = Buffer.from(JSON.stringify({ ...publication.catalog, plugins: originalPlugins }, null, 2) + '\n');
-    assert.deepEqual(publication.objects.get('plugins/api-v1/releases/dev.9/catalog.json'), originalBytes);
+    assert.deepEqual(publication.objects.get('plugins/api-v1/releases/dev.19/catalog.json'), originalBytes);
     json(join(root, 'plugins/api-v1/inventory-policy.json'), { 'core-one': { functionalCategory: 'platform', implementationKinds: ['service'] } });
     assert.deepEqual(buildR2Publication(root, plan, options).objects, publication.objects);
   }
@@ -190,14 +242,14 @@ test('CLI check allows empty infrastructure and build writes deterministic objec
     assert.equal(check.status, 0, check.stderr);
     assert.match(check.stdout, /"plans":0/);
   } finally { rmSync(empty, { recursive: true, force: true }); }
-  const { root, plan } = fixture(t), out = join(root, 'out'), review = join(root, 'review.json'), planPath = join(root, '.github/plugin-r2-api2/dev.9.json');
+  const { root, plan } = fixture(t), out = join(root, 'out'), review = join(root, 'review.json'), planPath = join(root, '.github/plugin-r2-api2/dev.19.json');
   mkdirSync(dirname(planPath), { recursive: true });
   json(planPath, plan);
   writeFileSync(review, '{"schemaVersion":1}\n');
   const built = spawnSync(process.execPath, [fileURLToPath(new URL('./plugin-r2.mjs', import.meta.url)), '--build', root, planPath, out, review, 'c'.repeat(40)], { encoding: 'utf8' });
   assert.equal(built.status, 0, built.stderr);
-  assert.equal(existsSync(join(out, 'plugins/api-v1/releases/dev.9/catalog.json')), true);
-  assert.equal(existsSync(join(out, 'plugins/api-v1/releases/dev.9/core/plugins.tar.gz')), true);
+  assert.equal(existsSync(join(out, 'plugins/api-v1/releases/dev.19/catalog.json')), true);
+  assert.equal(existsSync(join(out, 'plugins/api-v1/releases/dev.19/core/plugins.tar.gz')), true);
 });
 
 test('CLI check rejects a plan filename that does not match its fixed id', t => {

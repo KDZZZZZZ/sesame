@@ -84,4 +84,4 @@ expect:
           name: 10 基础设施与模板
           count: 6
       total_items: 214
-      version: 4.2.0
+      version: 4.2.1

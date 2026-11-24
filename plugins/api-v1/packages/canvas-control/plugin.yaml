@@ -3,12 +3,26 @@ protocolVersion: 2026-07-28
 id: sesame/canvas-control
 title: 工作台与图表编排
 description: 主 Agent 编排水平工作台窗口，以及图表区内部的行情图、实时指标和研究曲线。
-version: 4.0.1
+version: 4.0.2
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "presentation"
+    implementationKinds: ["service"]
+    title:
+      en: "Canvas"
+      zh: "画布"
+    summary:
+      en: "Arrange charts, indicators and fixed reports in one workspace."
+      zh: "在同一工作台组织图表、指标与固定报告。"
+    dependencies:
+      en: "Charts need an explicitly selected market provider. Reports work without one."
+      zh: "行情图需要明确选择市场提供方；报告无需行情后端。"
+    implementationReason: "Host canvas commands provide presentation and persistent workspace behavior through functions, without owning a source or view contribution."
   default_state: discoverable
   agent_scope: main
   prompts:

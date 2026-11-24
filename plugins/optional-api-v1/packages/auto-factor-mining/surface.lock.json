@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/auto-factor-mining:instructions#preamble": "77890d4a246f86d0454e9e4264fb93ad135fe2de841b8dc4b2750e8a720e0b6a",
+    "sesame/auto-factor-mining:instructions#preamble": "f0a424b8116cf2b518d6e93ed0cf8b1ac9dc0520b81fc088287971ff3623f9a6",
     "sesame/auto-factor-mining:plugin.description": "dbb9015824d8304a81b7fc22b0f7c62660b237e629208f79b22fddb691b53d94",
     "sesame/auto-factor-mining:resource/PROVENANCE.md": "5a98d6a0dac93aec67125559d3f1dca13c0b7e517f5578155900c01b8e2a5e1c",
     "sesame/auto-factor-mining:resource/README.md": "e83a65a884710197c61aa1473b5bfde321efb5835014e6b5109dbdc3e12b4c94",
@@ -53,5 +53,5 @@
     "sesame/auto-factor-mining:workflow/factor.development.step/sanity_check": "cef40e7f38156d50b08b6d998b5b800d4c24a541d11cd0e6b90cacfd8f2f9d46",
     "sesame/auto-factor-mining:workflow/factor.development.step/search_space": "43b183fb93dfc8deac5dd9d757935a60f1bab7365236ee60658b5fff528fce27"
   },
-  "digest": "e074669c4097ee48f11c433007685a69dd0c9ac36209b08d73815fb96bf0a684"
+  "digest": "d892bd6130e45d113590f64205db951a844e725430ac16df2f42ca612735397a"
 }

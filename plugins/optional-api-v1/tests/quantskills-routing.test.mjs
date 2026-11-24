@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -24,7 +25,7 @@ test('a successful search cannot leak into the next unknown tool response', () =
   assert.equal(first.result.structuredContent.count, 1);
   assert.equal(missing.error.code, -32601);
   assert.equal(missing.result, undefined);
-  assert.deepEqual(next.result.structuredContent, { found: false, name: 'missing', version: json('plugin.json').version });
+  assert.deepEqual(next.result.structuredContent, { found: false, name: 'missing', version: readPackageDirectory(root).manifest.version });
 });
 
 test('invalid JSON and invalid limits return errors without terminating the MCP process', () => {
@@ -33,7 +34,8 @@ test('invalid JSON and invalid limits return errors without terminating the MCP 
     call(6, 'catalog_search', { query: ['alpha'] }), call(7, 'catalog_search', { query: ' '.repeat(4) }),
     call(8, 'catalog_recommend', { need: 'unrecognized' }), call(9, 'catalog_list_categories')];
   const responses = exchange(requests);
-  for (const response of responses.slice(0, -1)) assert.equal(response.error.code, -32602);
+  for (const response of responses.slice(0, 2)) assert.equal(response.error.code, -32602);
+  for (const response of responses.slice(2, -1)) assert.equal(response.result.structuredContent.error.code, 'invalid_input');
   assert.equal(responses.at(-1).result.structuredContent.total_items, 214);
 });
 
@@ -48,11 +50,11 @@ test('research routing exposes investment-research and one strategy need, and re
   assert.match(strategy.workflow.selection, /factor_compute/);
   assert.doesNotMatch(strategy.workflow.selection, /auto_factor_|factor-evaluator/);
   assert.deepEqual(research.workflow.primary_plugins, ['sesame/investment-research']);
-  const guidance = json('capabilities.json').capabilities.find(item => item.id === 'catalog_recommend').usage;
+  const guidance = readPackageDirectory(root).capabilities.capabilities.find(item => item.id === 'catalog_recommend').usage;
   assert.match(guidance.outputs, /need:strategy/);
   assert.doesNotMatch(JSON.stringify(guidance), /factor-research|strategy-research|accepted as aliases/);
   for (const response of exchange(['factor-research', 'strategy-research', 'research'].map((need, i) => call(i, 'catalog_recommend', { need })))) {
-    assert.equal(response.error.code, -32602);
+    assert.equal(response.result.structuredContent.error.code, 'invalid_input');
   }
   for (const route of Object.values(json('workflows.json').workflows)) {
     assert.ok(!route.primary_plugins.some(id => ['sesame/factor-research', 'sesame/strategy-research'].includes(id)));
@@ -92,12 +94,12 @@ test('selecting only ICT returns no other theory, and does not mutate later choi
   assert.deepEqual(all.result.structuredContent.workflow.primary_plugins, []);
   assert.equal(all.result.structuredContent.selection_required, true);
   assert.equal(all.result.structuredContent.workflow.method_choices.ict, 'sesame/ict');
-  assert.equal(mismatch.error.code, -32602);
+  assert.equal(mismatch.result.structuredContent.error.code, 'invalid_input');
 });
 
 test('runtime schema, route references and preserved source snapshot agree', () => {
   const [tools] = exchange([{ jsonrpc: '2.0', id: 1, method: 'tools/list' }]);
-  assert.deepEqual(tools.result.tools, json('capabilities.json').capabilities.map(item => ({ name: item.binding.name, description: item.description, inputSchema: item.inputSchema, outputSchema: item.outputSchema })));
+  assert.deepEqual(tools.result.tools, readPackageDirectory(root).tools.map(({errors,...tool})=>tool));
   const snapshot = json('catalog.json');
   assert.equal(snapshot.meta.total_items, snapshot.items.length);
   const names = new Set(snapshot.items.map(item => item.name));
@@ -112,7 +114,7 @@ test('runtime schema, route references and preserved source snapshot agree', () 
 });
 
 test('all retained package tool assertions pass through a real stdio server', () => {
-  const tests = json('plugin.json').tests;
+  const tests = readPackageDirectory(root).manifest.tests;
   const replies = exchange(tests.map((entry, index) => call(index, entry.tool, entry.arguments)));
   for (let index = 0; index < tests.length; index++) assert.deepEqual(replies[index].result.structuredContent, tests[index].expected);
 });

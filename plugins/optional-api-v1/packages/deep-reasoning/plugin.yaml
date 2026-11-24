@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/deep-reasoning
 title: 深度推理
 description: 解释复杂市场现象的成因与演变：从共同证据出发，独立开展历史类比、矛盾分析和博弈分析，再定向复核分歧并综合为可检验的判断。由 Agent 使用宿主已有编排能力执行。
-version: 1.0.1
+version: 1.0.2
 license: UNLICENSED
 engines:
   sesame: ">=0.3.0-dev.1"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Deep reasoning"
+      zh: "深度推理"
+    summary:
+      en: "Explain causes and evolution through independent historical, contradiction and game-theoretic analysis, targeted reconciliation and evidence-based synthesis."
+      zh: "独立开展历史类比、矛盾分析与博弈分析，定向复核分歧，形成有证据和可检验条件的整体解释。"
+    dependencies:
+      en: "No keys or external runtime. Agents use existing host orchestration and selected evidence/report capabilities; loading the method starts no background work."
+      zh: "无需密钥或额外运行环境；Agent 使用现有宿主编排及按任务选择的证据、报告能力。加载方法不会自行启动后台工作。"
   default_state: discoverable
   agent_scope: all
   prompts:

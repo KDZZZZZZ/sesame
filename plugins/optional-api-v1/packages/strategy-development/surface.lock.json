@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/strategy-development:instructions#preamble": "647d273bc5c69a13947f1d79bd83b3f33544c9bfff3189e1029ca6c1cfc092bc",
+    "sesame/strategy-development:instructions#preamble": "9f42cd0f581e635d9e672dfb21fe44ba32a898baa6e58484518e5325bd77be3e",
     "sesame/strategy-development:plugin.description": "44ca7692a917e89f35ebbca881fd901134b63130f8962499bc8fbfb432f443cd",
     "sesame/strategy-development:resource/README.md": "1251f7d69d16d6d1f5776ad4772ba719d5b9a20a6d85a1db8527922a8e46cb86",
     "sesame/strategy-development:resource/references/baseline-construction.md": "6e770785c3ba7030914cc9bf60b6fcd7ddc56c4b2565463a01b9daefae31fe4d",
@@ -57,5 +57,5 @@
     "sesame/strategy-development:workflow/strategy.development.step/report": "b1b8dd7fab9a8f81b8cfe6c7140bc56672e5137c1730c0d68b1559ea043776a3",
     "sesame/strategy-development:workflow/strategy.development.step/validate": "698c2c4ba40526935bee4fd11306fecb4bd35ddb4c2bca1cd3c820f4b53eb05b"
   },
-  "digest": "4d69aa7338aefdaf9cbb7456bc9855bc07b2f0b29ab31c743894f675c4b44e78"
+  "digest": "79d1a5252491dbc89111c1cd440e68c18ff573698e4141e849e527458d73fb0d"
 }

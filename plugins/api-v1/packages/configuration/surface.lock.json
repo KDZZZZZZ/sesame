@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/configuration:instructions#preamble": "ddf5ce0bb53de87923cbfbee95acc7d144f3cd902b8d7c9103a5321a21c9ddd4",
+    "sesame/configuration:instructions#preamble": "4ddb1a96b7ed1f3ed30a2961f06f6b78029b8c3f0fa71fe22a5cd34044a4f25e",
     "sesame/configuration:plugin.description": "fb178c80e9f1cc68662800d14628e3826d19061f4e17886c915212a0ea04d922",
     "sesame/configuration:resource/README.md": "a684959edce4852f38a65b1b2ac1d70e76e981cdfcaa1de5679f48d5ac443ef6",
     "sesame/configuration:skill/configure-application.body": "96a1c4622004261641e70827c3a1e62bda8bb172bfc71de1ea0a2744f50b7860",
@@ -35,5 +35,5 @@
     "sesame/configuration:tool/configuration_update.input": "0cd846d24b27b7d3724271d84cdc6cc1e80991412f6b3f6b21eefef7616977a1",
     "sesame/configuration:tool/configuration_update.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842"
   },
-  "digest": "59284f40d8091bd96ab919cfb0f16a557975dd5eb49fdf0f91514842101307e5"
+  "digest": "fe6f6aaae308df225bd8e59d28c7fce64f44e308e7ced6dfe9eaaac9a76c2f0a"
 }

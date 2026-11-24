@@ -1,46 +1,29 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Actual host installation and tool-enabled Agent loop; local model + fictional account only. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, readFile } from 'node:fs/promises';
+import { cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { respond, taskInput, toolResponses } from './fixtures/trading-agent-model.mjs';
+import { createExecutionAdapter } from '../packages/mt5/backend/execution-adapter.js';
+import { records as nativeRecords } from '../packages/mt5/backend/records.js';
+import { positionProjection } from '../packages/mt5/backend/execution-evidence.js';
 import { assertTradingTask, verifyExecutionAuthorization } from '../packages/mt5/tools/trading-context.js';
 
 const root = process.env.SESAME_HOST_ROOT;
 const packageRoot = new URL('../packages/trading-decision/', import.meta.url);
 let sequence = 0;
 
-function respond(response, text, tool) {
-  const delta = tool ? { role: 'assistant', tool_calls: [{ index: 0, id: `call_manual_fixture_${++sequence}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.arguments) } }] } : { role: 'assistant', content: text };
-  const chunk = (value, reason) => JSON.stringify({ id: 'trading-decision-fixture', object: 'chat.completion.chunk', created: 1, model: 'fixture', choices: [{ index: 0, delta: value, finish_reason: reason }] });
-  response.writeHead(200, { 'Content-Type': 'text/event-stream' });
-  response.end(`data: ${chunk(delta, null)}\n\ndata: ${chunk({}, tool ? 'tool_calls' : 'stop')}\n\ndata: [DONE]\n\n`);
-}
-
-function taskInput(body) {
-  const message = body.messages.filter(value => value.role === 'user').at(-1)?.content;
-  const text = typeof message === 'string' ? message : message?.map(part => part.text ?? '').join('');
-  const marker = '\n\nInput JSON:\n';
-  const offset = text?.lastIndexOf(marker) ?? -1;
-  return offset < 0 ? null : JSON.parse(text.slice(offset + marker.length));
-}
-
-function toolResponses(body) {
-  const calls = new Map(body.messages.flatMap(message => message.tool_calls ?? []).map(call => [call.id, call.function.name]));
-  return body.messages.filter(message => message.role === 'tool').map(message => {
-    const text = typeof message.content === 'string' ? message.content : message.content.map(part => part.text ?? '').join('');
-    return { name: calls.get(message.tool_call_id), value: JSON.parse(text) };
-  });
-}
-
 test('installed workflow composes independent portfolio execution and produces one final report per run through the actual host', { skip: !root, timeout: 180000 }, async t => {
+  process.env.SESAME_OPTIONAL_PLUGINS_DIR ??= fileURLToPath(new URL('../packages/', import.meta.url));
   const { fixture, eventually } = await import(pathToFileURL(join(root, 'tests/fixture-provider.js')));
   const { createTools } = await import(pathToFileURL(join(root, 'modules/agent/tools.js')));
   const { createHostContextV2 } = await import(pathToFileURL(join(root, 'modules/plugins/host-v2/context.js')));
   const contexts = [], modelRequests = [], backendCalls = [], actualFills = [], authorizations = [], commands = new Map(), transportFailures = [];
   const account = { accountId: '42', server: 'Fictional-Agent-Demo', revision: '1' };
   const quoteClockRevision = 'fixture-agent-utc-v1';
-  let latestQuoteClock;
+  let latestQuoteClock, nativeStore;
   const positions = [
     { ticket: '7001', symbol: 'QUANT_FIXTURE', type: 0, volume: 0.3, price_open: 99, profit: 0, magic: 777, comment: 'fictional quantitative strategy position' },
     { ticket: '7002', symbol: 'MANUAL_FIXTURE', type: 1, volume: 0.1, price_open: 101, profit: 0, magic: 0, comment: 'fictional manual position' },
@@ -72,10 +55,13 @@ test('installed workflow composes independent portfolio execution and produces o
     account, capturedAt: Date.now(), summary: { balance: 10000, equity: 10000, currency: 'USD' }, positions: structuredClone(currentPositions),
     deployments: [{ id: 'fixture-ea', status: deploymentStatus, symbol: 'QUANT_FIXTURE' }],
     orders: [], fills: [{ ticket: 'fixture-fill', symbol: 'QUANT_FIXTURE', volume: 0.3, time_msc: Date.now() - 60000 }, ...structuredClone(actualFills)], historicalOrders: [{ ticket: 'fixture-order', symbol: 'QUANT_FIXTURE' }],
-    historyCoverage: { requestedDays: 30, complete: true, source: 'fictional-fixture' },
+    historyCoverage: { requestedFrom: Math.floor(Date.now() / 1000) - 30 * 86400, requestedTo: Math.floor(Date.now() / 1000), scope: 'native_requested_range', complete: false, limitations: ['Only simulated native records were observed.'] },
   });
-  const app = await fixture({ responseHandler: (body, response) => {
+  const app = await fixture({ reportRenderer: 'electron', optionalPlugins: ['investment-research'], responseHandler: (body, response) => {
     try {
+    const curation = body.messages.some(message => ['system', 'developer'].includes(message.role)
+      && typeof message.content === 'string' && message.content.includes('Return only JSON {"entries":[...]}'));
+    if (curation) { respond(response, JSON.stringify({ entries: [] })); return true; }
     const input = taskInput(body);
     if (!input) { respond(response, 'Local fixture ready.'); return true; }
     modelRequests.push({ role: input.role, runId: input.runId, tools: body.tools.map(tool => tool.function.name) });
@@ -134,15 +120,9 @@ test('installed workflow composes independent portfolio execution and produces o
       const installedMemory = await app.runtime.plugins.manager.install('conv_main', { path: memoryDraft, digest: checkedMemory.digest, ...(memory ? { expected_digest: memory.digest } : {}) }, Boolean(memory));
       assert.equal(installedMemory.runtime_status, 'ready');
     }
-    const baselineDraft = join(app.runtime.workspaces.root('conv_main'), 'abu-indicators-draft');
-    await cp(fileURLToPath(new URL('../packages/abu-indicators/', import.meta.url)), baselineDraft, { recursive: true });
-    const baselineChecked = await app.runtime.plugins.manager.test('conv_main', { path: baselineDraft });
-    assert.equal(baselineChecked.passed, true, JSON.stringify(baselineChecked.results));
-    const baselineInstalled = await app.runtime.plugins.manager.install('conv_main', { path: baselineDraft, digest: baselineChecked.digest });
-    assert.equal(baselineInstalled.runtime_status, 'ready');
-    const backendManifest = JSON.parse(await readFile(new URL('../packages/mt5/plugin.json', import.meta.url)));
-    const backendManifestV2 = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url)));
-    const fixtureTools = ['mt5_trading_context', 'mt5_trading_pause', 'mt5_catalog', 'mt5_call', 'mt5_python', 'mt5_trading_order', 'mt5_trading_command', 'mt5_settings'];
+    const backendManifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).manifest;
+    const backendManifestV2 = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
+    const fixtureTools = [...backendManifestV2.capabilities.map(capability => capability.id).filter(id => id.startsWith('mt5_execution_')), 'mt5_trading_context', 'mt5_trading_pause', 'mt5_catalog', 'mt5_call', 'mt5_python', 'mt5_trading_order', 'mt5_trading_command', 'mt5_settings'];
     const capabilities = fixtureTools.map(name => {
       const declaration = backendManifestV2.capabilities.find(capability => capability.id === name);
       assert.ok(declaration, `Published backend capability missing: ${name}`);
@@ -156,73 +136,90 @@ test('installed workflow composes independent portfolio execution and produces o
       id: 'sesame/mt5', apiVersion: '2', version: backendManifest.version, digest: `sha256:${'c'.repeat(64)}`, title: 'Fictional account fixture', description: 'Only static account observations; no broker I/O.',
       default_state: 'mounted', agent_scope: 'all', execution: 'native', runtime_status: 'ready', tool_names: definitions.map(definition => definition.name),
       main_tool_names: backendManifest.main_tool_names.filter(name => fixtureTools.includes(name)), definitions, resources: [], skills: [], diagnostics: [], dependency_lock: [],
-      capabilityManifest: { ...backendManifestV2, capabilities, sources: [], services: [], hooks: [], views: [], knowledge: [], stateCollections: [], artifactSchemas: [] },
-      module: Promise.resolve({ createCapabilities: backendHost => capabilities.map(capability => ({ name: capability.id, execute: async (args, _signal, executionContext) => {
-        const name = capability.id;
-        backendCalls.push({ name, args: structuredClone(args), scope: backendHost.context.kind });
-        if (!closePhase) assert.equal(name, 'mt5_trading_context', 'An unchanged decision must not invoke a broker action.');
-        let value;
-        if (name === 'mt5_trading_context') {
-          assert.ok(['identity', 'snapshot'].includes(args.action));
-          value = args.action === 'identity' ? { account } : snapshot();
-        } else if (name === 'mt5_trading_pause') {
-          assertAuthorized(backendHost, name, args, executionContext);
-          assert.equal(args.deployment_id, 'fixture-ea'); assert.deepEqual(args.account, account);
-          assert.match(args.reason, /风险/);
-          deploymentStatus = 'stopped';
-          value = { status: 'stopped', deployment: { id: 'fixture-ea', status: deploymentStatus, symbol: 'QUANT_FIXTURE' }, reason: args.reason };
-        } else if (name === 'mt5_catalog') {
-          value = { items: [{ server: 'python', tools: [{ name: 'order_send', callable: true, inputSchema: { properties: { execution_guard: { type: 'object' } } } }] }] };
-        } else if (name === 'mt5_python') {
-          assert.equal(args.server, 'python');
-          const native = {
-            account_info: { login: 42, server: account.server, balance: 10000, equity: 10000, currency: 'USD', trade_allowed: true, trade_expert: true },
-            terminal_info: { connected: true },
-            symbol_info: { name: args.arguments.symbol, volume_min: 0.01, volume_max: 1, volume_step: 0.01, filling_mode: 2, trade_exemode: 2, trade_tick_size: 0.01, point: 0.01 },
-            positions_get: currentPositions.filter(position => position.symbol === args.arguments.symbol),
-            symbol_info_tick: { time_msc: Date.now(), bid: 100, ask: 101 },
-            orders_get: [], history_deals_get: structuredClone(actualFills),
-          };
-          assert.ok(Object.hasOwn(native, args.tool), `Unexpected fictional native read: ${args.tool}`);
-          value = { status: 'returned', result: { result: structuredClone(native[args.tool]) } };
-          if (args.tool === 'symbol_info_tick') {
-            // The registered fictional source supplies its own explicit UTC clock contract.
-            const rawTimeMs = value.result.result.time_msc;
-            value.result.quote_clock = { status: 'verified', source: 'mt5/python/symbol_info_tick', server: account.server, accountId: account.accountId, rawTimeMs, sourceTimeMs: rawTimeMs, basis: 'utc', offsetMinutes: 0, ruleId: 'fixture-agent-current-quote', ruleRevision: quoteClockRevision };
-            latestQuoteClock = structuredClone(value.result.quote_clock);
+      capabilityManifest: { ...backendManifestV2, capabilities, sources: [], services: backendManifestV2.services, hooks: [], views: [], knowledge: [], stateCollections: [], artifactSchemas: [] },
+      module: Promise.resolve({ createCapabilities: backendHost => {
+        const simulate = async (name, args, executionContext) => {
+          backendCalls.push({ name, args: structuredClone(args), scope: backendHost.context.kind });
+          if (!closePhase) assert.ok(['mt5_settings','mt5_trading_context'].includes(name), 'An unchanged decision must not invoke a broker action.');
+          let value;
+          if (name === 'mt5_trading_context') {
+            assert.ok(['identity', 'snapshot'].includes(args.action));
+            value = args.action === 'identity' ? { account } : snapshot();
+          } else if (name === 'mt5_trading_pause') {
+            assertAuthorized(backendHost, name, args, executionContext);
+            assert.equal(args.deployment_id, 'fixture-ea'); assert.deepEqual(args.account, account);
+            assert.match(args.reason, /风险/);
+            deploymentStatus = 'stopped';
+            value = { status: 'stopped', deployment: { id: 'fixture-ea', status: deploymentStatus, symbol: 'QUANT_FIXTURE' }, reason: args.reason };
+          } else if (name === 'mt5_catalog') {
+            value = { items: [{ server: 'python', tools: [{ name: 'order_send', callable: true, inputSchema: { properties: { execution_guard: { type: 'object' } } } }] }] };
+          } else if (name === 'mt5_python') {
+            assert.equal(args.server, 'python');
+            const native = {
+              account_info: { login: 42, server: account.server, balance: 10000, equity: 10000, currency: 'USD', trade_allowed: true, trade_expert: true },
+              terminal_info: { connected: true },
+              symbol_info: { name: args.arguments.symbol, volume_min: 0.01, volume_max: 1, volume_step: 0.01, filling_mode: 2, trade_exemode: 2, trade_tick_size: 0.01, point: 0.01 },
+              positions_get: currentPositions.filter(position => position.symbol === args.arguments.symbol),
+              symbol_info_tick: { time_msc: Date.now(), bid: 100, ask: 101 },
+              orders_get: [], history_orders_get: actualFills.map(fill => ({ ticket: fill.order, symbol: fill.symbol, position_id: fill.position_id })), history_deals_get: structuredClone(actualFills),
+            };
+            assert.ok(Object.hasOwn(native, args.tool), `Unexpected fictional native read: ${args.tool}`);
+            value = { status: 'returned', result: { result: structuredClone(native[args.tool]) } };
+            if (args.tool === 'symbol_info_tick') {
+              // The registered fictional source supplies its own explicit UTC clock contract.
+              const rawTimeMs = value.result.result.time_msc;
+              value.result.quote_clock = { status: 'verified', source: 'mt5/python/symbol_info_tick', server: account.server, accountId: account.accountId, rawTimeMs, sourceTimeMs: rawTimeMs, basis: 'utc', offsetMinutes: 0, ruleId: 'fixture-agent-current-quote', ruleRevision: quoteClockRevision };
+              latestQuoteClock = structuredClone(value.result.quote_clock);
+            }
+          } else if (name === 'mt5_trading_order') {
+            const task = assertAuthorized(backendHost, 'mt5_execution_submit', args, executionContext);
+            assert.equal(deploymentStatus, 'stopped', 'The risky mount must be stopped before the close reaches the native backend.');
+            assert.equal(args.server, 'python'); assert.equal(args.tool, 'order_send');
+            const { request, execution_guard: guard } = args.arguments;
+            assert.equal(request.action, 'TRADE_ACTION_DEAL'); assert.equal(request.type, 'ORDER_TYPE_SELL');
+            assert.equal(request.symbol, 'QUANT_FIXTURE'); assert.equal(request.position, '7001'); assert.equal(request.volume, 0.3);
+            assert.equal(guard.expected_account, account.accountId); assert.equal(guard.expected_server, account.server); assert.equal(guard.side, 'sell');
+            assert.equal(guard.quote_clock_revision, quoteClockRevision, 'The observed source clock revision reaches the native guard through the actual host chain.');
+            assert.equal(guard.observed_at, latestQuoteClock.sourceTimeMs);
+            assert.deepEqual(guard.expected_positions, [{ ticket: '7001', type: 0, volume: '0.3' }], 'The native guard includes every observed position for this symbol and excludes the unrelated manual symbol.');
+            assert.ok(guard.expires_at > Date.now()); assert.equal(guard.max_quote_age_ms, 5000); assert.equal(guard.max_quote_to_send_ms, 1000);
+            assert.ok(Number(guard.price_limit) <= 100);
+            assert.ok(!commands.has(args.command_id), 'The fake native endpoint must receive this close exactly once.');
+            assert.ok(currentPositions.some(position => position.ticket === '7001' && position.magic === 777));
+            tradeSends++;
+            currentPositions = currentPositions.filter(position => position.ticket !== '7001');
+            actualFills.push({ ticket: '9101', order: '9001', position_id: '7001', symbol: request.symbol, volume: request.volume, type: 1, price: 100, time_msc: Date.now(), comment: request.comment });
+            value = { status: 'returned', result: { result: { retcode: 10009, order: '9001', deal: '9101', volume: 0.3, price: 100 }, execution_timing: { quote_to_send_ms: 0, send_to_receipt_ms: 1 } } };
+            commands.set(args.command_id, { receipt: structuredClone(value), owner: task.input.tradingPlan.ownerConversationId });
+          } else if (name === 'mt5_trading_command') {
+            const command = commands.get(args.command_id);
+            assert.ok(command);
+            assert.equal(backendHost.context.kind, 'main', 'The parent conversation can recover its completed background order receipt.');
+            assert.equal(backendHost.context.sessionId, command.owner);
+            value = command.receipt;
+          } else if (name === 'mt5_settings') {
+            value = { settings: { version: 1, account: { login: 42, server: account.server } } };
+          } else throw new Error(`Unexpected fake backend tool: ${name}`);
+          return value;
+        };
+        return capabilities.map(capability => ({ name: capability.id, execute: async (args, signal, context) => {
+          const name = capability.id;
+          if (!name.startsWith('mt5_execution_')) return simulate(name, args, context);
+          backendCalls.push({ name, args: structuredClone(args), scope: backendHost.context.kind });
+          nativeStore ??= nativeRecords(backendHost);
+          const adapter = createExecutionAdapter(backendHost, { official: {
+            settings: () => ({ version: 1, account: { login: 42, server: account.server } }),
+            call: (request, _owner, _signal) => simulate(request.tool === 'order_send' ? 'mt5_trading_order' : 'mt5_python', request, context),
+            catalog: (server, query) => simulate('mt5_catalog', { server, query }, context),
+            command: command_id => simulate('mt5_trading_command', { command_id }, context),
+          } });
+          if (name === 'mt5_execution_snapshot' && !args.symbol) {
+            const value = await simulate('mt5_trading_context', { action: 'snapshot' }, context);
+            return { contract: 'sesame.execution-adapter/1', backend: 'mt5', ...value, projection: { positions: positionProjection(value.positions), orders: [] } };
           }
-        } else if (name === 'mt5_trading_order') {
-          const task = assertAuthorized(backendHost, name, args, executionContext);
-          assert.equal(deploymentStatus, 'stopped', 'The risky mount must be stopped before the close reaches the native backend.');
-          assert.equal(args.server, 'python'); assert.equal(args.tool, 'order_send');
-          const { request, execution_guard: guard } = args.arguments;
-          assert.equal(request.action, 'TRADE_ACTION_DEAL'); assert.equal(request.type, 'ORDER_TYPE_SELL');
-          assert.equal(request.symbol, 'QUANT_FIXTURE'); assert.equal(request.position, '7001'); assert.equal(request.volume, 0.3);
-          assert.equal(guard.expected_account, account.accountId); assert.equal(guard.expected_server, account.server); assert.equal(guard.side, 'sell');
-          assert.equal(guard.quote_clock_revision, quoteClockRevision, 'The observed source clock revision reaches the native guard through the actual host chain.');
-          assert.equal(guard.observed_at, latestQuoteClock.sourceTimeMs);
-          assert.deepEqual(guard.expected_positions, [{ ticket: '7001', type: 0, volume: '0.3' }], 'The native guard includes every observed position for this symbol and excludes the unrelated manual symbol.');
-          assert.ok(guard.expires_at > Date.now()); assert.equal(guard.max_quote_age_ms, 5000); assert.equal(guard.max_quote_to_send_ms, 1000);
-          assert.ok(Number(guard.price_limit) <= 100);
-          assert.ok(!commands.has(args.command_id), 'The fake native endpoint must receive this close exactly once.');
-          assert.ok(currentPositions.some(position => position.ticket === '7001' && position.magic === 777));
-          tradeSends++;
-          currentPositions = currentPositions.filter(position => position.ticket !== '7001');
-          actualFills.push({ ticket: '9101', order: '9001', position_id: '7001', symbol: request.symbol, volume: request.volume, type: 1, price: 100, time_msc: Date.now(), comment: request.comment });
-          value = { status: 'returned', result: { result: { retcode: 10009, order: '9001', deal: '9101', volume: 0.3, price: 100 }, execution_timing: { quote_to_send_ms: 0, send_to_receipt_ms: 1 } } };
-          commands.set(args.command_id, { receipt: structuredClone(value), owner: task.input.tradingPlan.ownerConversationId });
-        } else if (name === 'mt5_trading_command') {
-          const command = commands.get(args.command_id);
-          assert.ok(command);
-          assert.equal(backendHost.context.kind, 'main', 'The parent conversation can recover its completed background order receipt.');
-          assert.equal(backendHost.context.sessionId, command.owner);
-          value = command.receipt;
-        } else if (name === 'mt5_settings') {
-          assert.equal(backendHost.context.kind, 'main');
-          value = { settings: { version: 1, account: { login: 42, server: account.server } } };
-        } else throw new Error(`Unexpected fake backend tool: ${name}`);
-        return value;
-      } })) }),
+          return adapter[name.slice('mt5_execution_'.length)](args, signal, context);
+        } }));
+      } }),
     });
     const draft = join(app.runtime.workspaces.root('conv_main'), 'manual-agent-draft');
     await cp(fileURLToPath(packageRoot), draft, { recursive: true });
@@ -252,10 +249,15 @@ test('installed workflow composes independent portfolio execution and produces o
     assert.ok(descriptor?.configurationDigest, JSON.stringify(configured));
     const model = { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest };
     const execution = await main('portfolio_execution_configure', { id: 'fixture-execution', backend: 'mt5' });
-    app.runtime.plugins.activate('conv_main', baselineInstalled.id);
-    const example = JSON.parse(await readFile(new URL('../packages/abu-indicators/examples/input.json', import.meta.url), 'utf8'));
-    const preparedResearch = await main('abu_indicators_analyze', { input: example });
-    const research_refs = [preparedResearch.result_artifact];
+    const producer = app.runtime.plugins.entry('sesame/investment-research');
+    const { publishPacket } = await import(pathToFileURL(join(producer.root, 'src/artifacts.js')));
+    const summary = 'Fixed fixture research on the current holdings.';
+    const research_refs = [await publishPacket(createHostContextV2(app.runtime, producer, 'conv_main'), {
+      type: 'sesame.investment-research.result', schemaVersion: '1.0.0', status: 'complete', title: 'Simulated research',
+      question: 'What do these holdings support?', as_of: '2026-11-24', subjects: ['MANUAL_FIXTURE'], summary,
+      workflow: { stages: [[{ id: 'reviewer', role: 'manager' }]], synthesis: 'reviewer' },
+      members: [{ role: 'reviewer', markdown: summary, source_refs: [], run_ref: { id: 'fixture-research-run' } }], source_refs: [],
+    }, 'fixture-publish-research')];
     const plan = await main('trading_decision_plan', { action: 'save', plan: { title: '虚构账户日报', execution, model, research_refs, symbols: ['MANUAL_FIXTURE'], interval_minutes: 5, event_keys: ['fixture.change'], enabled: true } });
     assert.deepEqual(plan.account, account);
     assert.equal(plan.backend, undefined);
@@ -318,9 +320,9 @@ test('installed workflow composes independent portfolio execution and produces o
     const second = await finish(delivered.runs[0].id);
     assert.notEqual(targetFor(second).path, target.path, 'Each completed run keeps one final report.');
     assert.equal((await files.read({ space: target.space, path: target.path })).content, html.content, 'The later cycle must preserve the earlier report.');
-    assert.equal(backendCalls.every(call => call.name === 'mt5_trading_context'), true);
-    assert.ok(backendCalls.some(call => call.args.action === 'identity'));
-    assert.ok(backendCalls.filter(call => call.args.action === 'snapshot').length >= 6);
+    assert.equal(backendCalls.every(call => ['mt5_trading_context','mt5_settings','mt5_execution_snapshot','mt5_execution_identity'].includes(call.name)), true);
+    assert.ok(backendCalls.some(call => call.name === 'mt5_execution_identity'));
+    assert.ok(backendCalls.filter(call => call.name === 'mt5_trading_context' && call.args.action === 'snapshot').length >= 6);
     assert.ok(modelRequests.filter(request => request.role === 'manager').every(request => !request.tools.includes('trading_decision_apply')));
     assert.ok(modelRequests.filter(request => request.role === 'manager').every(request => request.tools.includes('data_read') && !request.tools.includes('abu_indicators_analyze') && !request.tools.includes('plugin_read')));
     assert.ok(modelRequests.every(request => !request.tools.some(name => ['plugin_load', 'plugin_install', 'plugin_install_catalog', 'plugin_update', 'plugin_uninstall'].includes(name))));
@@ -347,9 +349,9 @@ test('installed workflow composes independent portfolio execution and produces o
     const pauseIndex = backendCalls.findIndex(call => call.name === 'mt5_trading_pause'), sendIndex = backendCalls.findIndex(call => call.name === 'mt5_trading_order');
     assert.ok(pauseIndex >= 0 && sendIndex > pauseIndex);
     assert.equal(backendCalls[sendIndex].scope, 'subagent');
-    assert.deepEqual(authorizations.map(proof => proof.action), ['mt5_trading_pause', 'mt5_trading_order']);
+    assert.deepEqual(authorizations.map(proof => proof.action), ['mt5_trading_pause', 'mt5_execution_submit']);
     assert.ok(authorizations.every(proof => proof.runId === closed.id && proof.taskId === authorizations[0].taskId));
-    assert.ok(backendCalls.slice(pauseIndex + 1, sendIndex).some(call => call.name === 'mt5_trading_context' && call.args.action === 'identity' && call.scope === 'subagent'), 'The native adapter must obtain background account identity through the scoped context API.');
+    assert.ok(backendCalls.slice(pauseIndex + 1, sendIndex).some(call => call.name === 'mt5_execution_identity' && call.scope === 'subagent'), 'The native adapter must obtain background account identity through the scoped context API.');
     assert.ok(backendCalls.slice(pauseIndex + 1, sendIndex).some(call => call.name === 'mt5_python' && call.args.tool === 'orders_get' && call.args.arguments.symbol === 'QUANT_FIXTURE' && call.scope === 'subagent'), 'The scheduled executor reads current symbol orders before dispatching its guarded close.');
     const durable = await main('manual_trade_status', { operation_id: order.operationId });
     assert.equal(durable.id, receipt.id); assert.equal(durable.intent.positionId, '7001');
@@ -360,7 +362,7 @@ test('installed workflow composes independent portfolio execution and produces o
     assert.equal(refreshed.evidence.command.result.result.deal, '9101');
     assert.deepEqual(refreshed.evidence.deals, actualFills);
     assert.deepEqual(refreshed.evidence.positions, []);
-    assert.equal(backendCalls.filter(call => call.name === 'mt5_trading_command' && call.scope === 'main' && call.args.command_id === durable.backendCommandId).length, 1);
+    assert.equal(backendCalls.filter(call => call.name === 'mt5_execution_recover' && call.scope === 'main' && call.args.record.backendCommandId === durable.backendCommandId).length, 1);
     assert.equal(tradeSends, 1, 'Refreshing a saved plan receipt must not submit a replacement order.');
     const closedRaw = await rawFor(closed);
     assert.equal(closedRaw.decision.targets[0].quantity, '0', 'Target zero is a portfolio objective.');
@@ -378,9 +380,13 @@ test('installed workflow composes independent portfolio execution and produces o
     assert.equal(paused.enabled, false);
     await assert.rejects(main('trading_decision_run', { plan_id: plan.id, request_id: 'paused-fixture-run' }), /paused|PLAN_PAUSED/i);
     await Promise.allSettled(app.runtime.agentTasks.running.values());
-    const workflows = app.runtime.runs.list({ kind: 'workflow' });
-    assert.equal(workflows.length, 3);
-    assert.ok(workflows.every(run => run.status === 'completed' && run.executionSessionId !== 'conv_main'));
+    const workflows = await eventually(() => {
+      const runs = app.runtime.runs.list({ kind: 'workflow' });
+      return runs.length === 3 && runs.every(run => !['queued', 'running'].includes(run.status)) ? runs : false;
+    }, 10000);
+    assert.ok(workflows.every(run => run.status === 'completed' && run.executionSessionId !== 'conv_main'),
+      JSON.stringify(workflows.map(({ id, status, error }) => ({ id, status, error }))));
+
     const agents = app.runtime.runs.list({ kind: 'agent' });
     assert.equal(agents.length, 6);
     assert.ok(agents.every(run => run.status === 'completed' && workflows.some(parent => parent.id === run.parentRunId)));
@@ -405,7 +411,7 @@ test('installed workflow composes independent portfolio execution and produces o
       assert.equal(input.owner_run_id, undefined); assert.equal(reply.owner_run_id, undefined);
       assert.equal(input.content.length, 1); assert.equal(input.content[0].type, 'text');
       const text = input.content[0].text;
-      assert.match(text, /^System execution notice\./); assert.match(text, /not a new user instruction or authorization/);
+      assert.match(text, /^System execution notice\./); assert.match(text, /not new user authorization/);
       assert.deepEqual(JSON.parse(text.slice(text.indexOf('\n') + 1)), notice.content);
       assert.deepEqual(Object.keys(notice.content).sort(), ['capabilityId', 'runId', 'status', 'summary', 'title', 'type']);
       assert.equal(notice.content.summary, String(run.output?.text ?? run.output?.summary ?? '').slice(-12000), 'Only the bounded final summary is delivered, not full child messages or tool activity.');
@@ -417,5 +423,5 @@ test('installed workflow composes independent portfolio execution and produces o
     assert.equal(tradeSends, 1, 'Main continuation from completion notices cannot repeat the completed close.');
     assert.equal(backendCalls.filter(call => call.name === 'mt5_trading_order').length, 1);
     t.diagnostic(JSON.stringify({ completionNotifications: notificationDetails }));
-  } finally { await app.dispose(); }
+  } finally { nativeStore?.close(); await app.dispose(); }
 });

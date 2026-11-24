@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Actual API2 install/invoke and fixed artifact reads; isolated Store, no model/network.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -169,7 +170,7 @@ test('installed history capabilities compute inline and exact fixed refs while p
     const nonDemoInput = structuredClone(large); nonDemoInput.source_refs = [authorInput]; nonDemoInput.plan.ref = authorInput;
     const nonDemoRef = publish('user-input-envelope', [nonDemoInput], [authorInput], 'user_input');
     await readResult(await invoke('historical_evidence_from_ref', { operation: 'match', input_ref: nonDemoRef }), 'derived');
-    const declaration = JSON.parse(await readFile(join(packageRoot, 'capabilities.json'), 'utf8'));
+    const declaration = readPackageDirectory(join(packageRoot)).capabilities;
     const research = await import('../packages/investment-research/src/composition.js');
     const syntheticDescriptors = declaration.capabilities.map(cap => ({ ...cap, id: 'sesame/historical-evidence#' + cap.id }));
     assert.ok(syntheticDescriptors.every(research.readOnly));

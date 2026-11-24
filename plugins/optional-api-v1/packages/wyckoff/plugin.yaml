@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/wyckoff
 title: Wyckoff 量价与阶段研究
 description: 可组合的分析方法：固定区间中的价格推进与成交量是否支持某个阶段候选，以及什么替代解释仍成立；消费已有证据，返回价格事实/量证据/阶段或事件候选对照、替代解释、待确认资料、反证与硬失效条件。
-version: 2.0.1
+version: 2.0.2
 license: MIT
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Wyckoff"
+      zh: "威科夫"
+    summary:
+      en: "Analyze ranges, price-volume relationships and phase hypotheses."
+      zh: "研究区间、量价关系与阶段假设。"
+    dependencies:
+      en: "Requires price and volume with known units; unknown or tick volume limits conclusions."
+      zh: "需价格及单位明确的成交量；未知量或 tick volume 限制结论。"
   default_state: discoverable
   agent_scope: all
   prompts:

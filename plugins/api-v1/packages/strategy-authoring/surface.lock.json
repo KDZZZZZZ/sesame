@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/strategy-authoring:instructions#preamble": "f1314a9bcad30cec2e59222cec647eba447403423bfdf211b7f89116ae368004",
+    "sesame/strategy-authoring:instructions#preamble": "94996386909979ae8fffce70b0f6be739ab6f41002c561bc33ce1054080c49ef",
     "sesame/strategy-authoring:plugin.description": "285839bb8c60b2573ad08ee0c8e657c7db7b5388d658a6108f63634d067b8491",
     "sesame/strategy-authoring:resource/examples/close-threshold-commented.svl.json": "f2e1f0b7998054f45c3adaef8cfda31e0a4bb94660745b18b23979c38b7755ff",
     "sesame/strategy-authoring:resource/examples/close-threshold.replay.json": "df0a71d17d755a6da1629cfd7376a7a1a4fcdacafc53af15a7e9ec2379c8af1d",
@@ -54,5 +54,5 @@
     "sesame/strategy-authoring:tool/strategy_workflow.input": "6e23290f3ba7a17170227c098fa60c7123879e4145e2fc9428e0aaf9ec059d53",
     "sesame/strategy-authoring:tool/strategy_workflow.output": "47fb26a83800940533b7afe12bb6f9476ae7dc016f1581500f773179e73ce7a4"
   },
-  "digest": "613f41d3a42303631490ed0f27ca7b7450dc39385e9479dc68a0714dfba4b2c9"
+  "digest": "9e40e56d58ef9ebb61b338e751e1307b3ab4a516a158b5d397813333e25a88f1"
 }

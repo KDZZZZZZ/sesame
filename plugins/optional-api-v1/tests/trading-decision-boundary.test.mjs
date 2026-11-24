@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -6,8 +7,8 @@ import { taskPlugins, taskTools } from '../packages/trading-decision/team.js';
 import { fixture, unchanged } from './trading-decision-plans-fixture.mjs';
 
 test('the renamed package exposes only trading decisions, with fixed research inputs and two roles', async () => {
-  const plugin = JSON.parse(await readFile(new URL('../packages/trading-decision/plugin.json', import.meta.url)));
-  const manifest = JSON.parse(await readFile(new URL('../packages/trading-decision/capabilities.json', import.meta.url)));
+  const plugin = readPackageDirectory(new URL('../packages/trading-decision/', import.meta.url)).manifest;
+  const manifest = readPackageDirectory(new URL('../packages/trading-decision/', import.meta.url)).capabilities;
   assert.equal(plugin.id, 'sesame/trading-decision');
   assert.deepEqual(ROLES, ['manager', 'executor']);
   assert.ok(plugin.main_tool_names.every(name => name.startsWith('trading_decision_')));
@@ -39,8 +40,19 @@ test('a trading manager retains exact fixed research without copying its source 
   assert.equal(manager.request.plugins.includes('sesame/reports'), false);
   assert.equal(manager.request.allowedCalls.some(call => call.capabilityId === 'lookup'), false);
   assert.ok(manager.request.allowedCalls.some(call => call.capabilityId === 'data_read'));
-  await f.call('context', f.child(manager.id), run.id);
-  await f.call('decide', f.child(manager.id), run.id, unchanged);
+  const child = f.child(manager.id);
+  const scopedRead = child.plugins.read;
+  child.plugins = { read: (id, options) => {
+    assert.ok(manager.request.plugins.includes(id) || id === 'sesame/trading-decision', 'Plugin is outside the current Agent selection');
+    return scopedRead(id, options);
+  } };
+  await f.call('context', child, run.id);
+  const artifact = f.artifacts.get(ref.id), originalProducer = artifact.producer;
+  artifact.producer = { ...originalProducer, digest: 'different-package' };
+  await assert.rejects(f.call('decide', child, run.id, unchanged), { code: 'INVALID_RESEARCH_RESULT' });
+  assert.equal(f.runtime.run(run.id).decision, undefined);
+  artifact.producer = originalProducer;
+  await f.call('decide', child, run.id, unchanged);
   assert.deepEqual(f.runtime.run(run.id).decision.research_refs, [ref]);
   assert.deepEqual(f.runtime.run(run.id).evidence, [], 'Published research is referenced, not duplicated as bounded trade evidence');
   f.finish(manager.id, '## 交易经理总结\n依据固定研究保持仓位，当前未宣称成交。');
@@ -103,6 +115,10 @@ test('custom trading recovery retains its completed review and resumes the accep
   await f.waitFor(()=>f.runtime.run(run.id).status==='interrupted'&&f.runtime.running.size===0);
   const frozen=structuredClone(f.runtime.run(run.id)),hostRun=f.runs.read(frozen.workflow.id);
   await f.restart();assert.deepEqual(f.runtime.run(run.id).plan.workflow,frozen.plan.workflow);
+  assert.equal(hostRun.status,'interrupted');
+  const pendingChild=f.runs.read(manager.id).interrupts.filter(item=>item.sourceRunId===manager.id&&!item.resolvedAt);
+  assert.ok(pendingChild.length);
+  await f.runs.resume(manager.id,{interruptIds:pendingChild.map(item=>item.id),response:'Manager dependency restored'});
   await f.runs.resume(hostRun.id,{interruptIds:hostRun.interrupts.filter(item=>!item.resolvedAt).map(item=>item.id),response:'Synthetic dependency restored'});
   await f.waitFor(()=>f.active('manager').some(job=>job.id===manager.id));
   await f.call('context',f.child(manager.id),run.id);await f.call('decide',f.child(manager.id),run.id,unchanged);f.finish(manager.id,'Decision only, no order');

@@ -1,35 +1,8 @@
 # Review and withdrawal
 
-## Automated review
+Plugin PRs target `dev`. The trusted base checks the candidate’s package declarations, module boundaries, paths, licenses, evaluation fixtures, inventory and distribution digests. Authors provide separate runtime evidence for integrations and external effects. Review actual permission changes, third-party provenance and negative cases in the PR.
 
-The `Plugin catalog / catalog-static-review` job validates names, versions,
-compatibility, author/license/provenance presence, immutable Git source,
-regular file modes, safe paths, size limits, the complete file list and hashes,
-package tree digests, declared stdio entrypoints and obvious secret markers.
-It compares the candidate package with the pinned source and rejects native
-host factories advertised as installable MCP packages. The candidate's own
-validator, scripts, setup hooks and plugin code are never run by PR review.
-Actions have read-only repository permissions, no stored checkout credentials,
-and no release or deployment secrets.
-
-The result is a static validation result. It cannot prove a package is safe,
-correct, useful or free of undiscovered secrets. It is not a human review.
-
-## Maintainer review
-
-Before publishing or updating an entry, verify author control and distribution
-rights; inspect source changes, external calls and capabilities; check the
-minimum app version, static tool schema, prompt/skill instructions and license
-notices; and exercise it in a disposable isolated runtime. Preserve the test
-command and actual result in the PR. Never run untrusted code with repository
-tokens, release credentials, host mounts or production account access.
-
-The initial official export records `human: not-recorded`. Maintainer publication
-and agent-assisted static inspection do not become an invented human approval.
-An explicit human approval may be recorded using `human: approved`, a real
-`reference` to a GitHub PR review, `reviewer` and `reviewedCommit`. The validator
-verifies the review against GitHub and the configured maintainer. It is still
-not a safety certification. Re-review each released version's changed source.
+Maintainers promote packages with a fixed source commit and a reviewed `dev` → `main` PR. See [publication and review](api-v1/PUBLISHING.md) for the release command and GitHub review procedure.
 
 ## Report, withdraw, restore
 

@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/binance
 title: Binance Spot backend
 description: 币安现货与 Spot Testnet 后端：公开行情与共享实时订阅、账户余额、订单成交、幂等下单/减量改单/撤单与未知结果恢复；统一配置密钥。
-version: 1.0.4
+version: 1.0.5
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -12,6 +12,19 @@ author:
   url: https://github.com/KDZZZZZZ/sesame
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "Binance Spot"
+      zh: "币安现货"
+    summary:
+      en: "Use Binance Spot market data, streams, balances and explicit order operations with separate production and testnet identities."
+      zh: "接入币安现货行情、订阅、余额及明确订单操作，区分生产环境和测试网身份。"
+    dependencies:
+      en: "Public data needs network access. Private account and order capabilities use the unified API key/secret configuration. Native runtime; no Python dependency. Futures and margin are outside this Spot adapter."
+      zh: "公开行情需联网；账户与订单能力依赖统一配置中的 API 密钥。使用原生运行时，无 Python 依赖；本适配器负责现货。"
   default_state: discoverable
   mcp_export:
     - binance_catalog

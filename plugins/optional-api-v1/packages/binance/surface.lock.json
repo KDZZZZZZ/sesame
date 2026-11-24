@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/binance:instructions#preamble": "2e3c52f85b0be60c339827e7e9388e803d001d42c56af598c715f07b41039268",
+    "sesame/binance:instructions#preamble": "0ebfb2da6dc6354b35f55984d3b6b988ac0ef2d1e6cc4a231f2dd4a2cbf7d298",
     "sesame/binance:plugin.description": "319f6b1ca91dc4cfa1c5491e8a6fdb134b699f8440822c70d877e69120bff978",
     "sesame/binance:resource/INTERFACES.md": "efcd3a359955349152cc9f79b31bc42f7432ef9f9127f7df23723ed06f8b2376",
     "sesame/binance:resource/PROVENANCE.md": "bb0858eaa0a7b0a10e92689d7f50dd76cf24c24596415ad73e850259a8c3067e",
@@ -66,5 +66,5 @@
     "sesame/binance:tool/binance_order_test.input": "f578242c56738e584c30efd57ffe1c455a5e0b71d66dd9fca05b955e6093409b",
     "sesame/binance:tool/binance_order_test.output": "f01a083a6a21293161e9e09f3c3ea23291808722448eb5f0c3a6f68181b0080a"
   },
-  "digest": "43058108f95f2e6691362f74d41188c0e0c6ddd8b88123a89867b858e679862f"
+  "digest": "85b21c32cefd9e1cc7c1ea512dcf663a0e717341a27c90b9e96d2d7c8140e43e"
 }

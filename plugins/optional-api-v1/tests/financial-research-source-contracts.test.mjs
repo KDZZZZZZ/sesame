@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { test as nodeTest } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,7 +23,7 @@ async function fixture(t, responder) {
 }
 
 test('registered FMP statements expose annual and quarterly source periods', async t => {
-  const f = await fixture(t), manifest = JSON.parse(readFileSync(new URL('../packages/financial-research/capabilities.json', import.meta.url)));
+  const f = await fixture(t), manifest = readPackageDirectory(new URL('../packages/financial-research/', import.meta.url)).capabilities;
   const schema = manifest.capabilities.find(c => c.id === 'financial_research_query').inputSchema;
   assert.deepEqual(schema.properties.period.anyOf.map(item => item.const), ['annual', 'quarter']);
   for (const statement of ['income', 'balance', 'cashflow']) {
@@ -141,7 +142,7 @@ test('FRED metadata failures retain observations as partial and never invent uni
 
 test('registered CFTC query is anonymous, fixed to futures-only disaggregated reports and preserves source fields', async t => {
   const row = { cftc_contract_market_code: '088691', market_and_exchange_names: 'GOLD - COMMODITY EXCHANGE INC.', report_date_as_yyyy_mm_dd: '2026-10-13T00:00:00.000', contract_units: '(CONTRACTS OF 100 TROY OUNCES)', open_interest_all: '485809', m_money_positions_long_all: '177404', m_money_positions_short_all: '30068', source_extra_field: 'retained' };
-  const f = await fixture(t, () => [row]), manifest = JSON.parse(readFileSync(new URL('../packages/financial-research/capabilities.json', import.meta.url)));
+  const f = await fixture(t, () => [row]), manifest = readPackageDirectory(new URL('../packages/financial-research/', import.meta.url)).capabilities;
   const schema = manifest.capabilities.find(c => c.id === 'financial_research_query').inputSchema;
   assert.ok(schema.properties.kind.anyOf.some(item => item.const === 'cot'));
   assert.ok(schema.properties.provider.anyOf.some(item => item.const === 'cftc'));

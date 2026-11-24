@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
@@ -46,7 +47,7 @@ async function fixture(t) {
 }
 
 test('QMT positions are explicitly declared host services and the pure factory contains each binding', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/qmt/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/qmt/', import.meta.url)).capabilities;
   const { validateCapabilityManifest } = await import(new URL('../../../../mt5agent/modules/plugins/capability-contract.js', import.meta.url));
   const checked = await validateCapabilityManifest(manifest);
   assert.equal(checked.valid, true, JSON.stringify(checked.diagnostics));

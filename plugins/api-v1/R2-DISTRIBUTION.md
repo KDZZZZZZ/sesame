@@ -10,23 +10,10 @@ the history reset. API 1 hosts must upgrade before using the current catalog.
 
 ## Publication
 
-1. Land and verify infrastructure through work branch → dev → main before a
-   separate PR uses its new validator. Review plugin behavior separately from
-   the data-only static checks.
-2. Pin a public source commit in `.github/plugin-r2-api2/dev.N.json`. Select the exact
-   IDs in both `core` and `optional` profiles, their deterministic archive and
-   lock SHA-256 values, and the publishing dev → main PR number. Source packages
-   that are not selected never enter an archive, file object or catalog entry.
-   The builder checks the complete source lock before constructing either subset.
-3. Run `node .github/scripts/plugin-r2.mjs --check .`. Complete an independent
-   review on the final publishing PR head, record its actual result, and run
-   the existing `Plugin semantic review gate` before merging. The R2 publisher
-   verifies both static checks and the trusted pre-merge artifact, including
-   resolved discussions. It does not claim human approval from an agent record.
-4. Merge dev → main. `Publish plugins to Sesame R2` uses the existing
-   `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` repository
-   secrets. It writes only under `plugins/api-v1/` in `sesame-releases`.
-   The workflow can also be retried on current main.
+1. Deploy `Plugin CI`, `Plugin release approval` and their validators to trusted `main` first. Use a separate infrastructure PR for the initial rollout.
+2. Open the actual publishing PR from this repository’s `dev` to `main`. From the committed source run `node scripts/plugin.mjs release --pr <number>` using its number. The generated plan inherits the latest committed release selection. New IDs can be admitted with repeated `--include <publisher/slug>` arguments. Review the selection and commit the generated plan to the PR. The builder verifies each complete source lock before constructing its selected archive.
+3. On the final PR head, obtain a successful `plugin-static-review` from **Plugin CI** and a native GitHub **Approve** from another maintainer with `maintain` or `admin` permissions. Resolve all review discussions and change requests. Wait for the **Plugin release approval** run on `main` to upload the exact-head artifact `plugin-semantic-review-<PR number>` before merging. A new head requires a new review and artifact. [Release commands and review procedure](PUBLISHING.md#prepare-a-release)
+4. Merge `dev` into `main`. **Publish plugins to Sesame R2** runs when the merge changes the plan directory. It verifies the pre-merge evidence before using the repository’s `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` to write under `plugins/api-v1/` in the `sesame-releases` bucket. To retry publication, run this workflow on the current `main`.
 
 Immutable objects use conditional S3 writes and are read back byte-for-byte.
 Existing differing bytes fail. Public archive, lock, review and manager files

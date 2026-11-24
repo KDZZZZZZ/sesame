@@ -4,10 +4,8 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, readProfile } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
-import { validateInventoryPolicy } from '../../plugins/api-v1/scripts/plugin-taxonomy.mjs';
 import { checkR2Plans } from './plugin-r2.mjs';
 import { validateApplicationPlan } from './release-application.mjs';
-import * as yamlSource from '../validation-transition/current-source.mjs';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const jsonBytes = value => Buffer.from(JSON.stringify(value, null, 2) + '\n');
@@ -22,24 +20,18 @@ function dataFile(root, path) {
 }
 
 export function validateRepository(repository) {
-  const root = resolve(repository), counts = {}, packageNames = [];
-  let yaml;
+  const root = resolve(repository), counts = {};
   for (const [directory, kind] of [['api-v1', 'core'], ['optional-api-v1', 'optional']]) {
     const prefix = `plugins/${directory}`;
     dataFile(root, `${prefix}/bundle-profile.json`);
     const committed = dataFile(root, `${prefix}/official-plugins.lock.json`);
-    const source = join(root, prefix), hasYaml = yamlSource.usesYaml(source);
-    check(yaml === undefined || yaml === hasYaml, 'Core and optional must use the same package declaration format');
-    yaml = hasYaml;
-    check((yaml ? yamlSource.readProfile : readProfile)(source)?.kind === kind, `Current ${kind} source requires its matching distribution profile`);
-    const lock = (yaml ? yamlSource.buildLock : buildLock)(source);
+    check(readProfile(join(root, prefix))?.kind === kind, `Current ${kind} source requires its matching distribution profile`);
+    const lock = buildLock(join(root, prefix));
     check(lock.apiVersion === '2' && committed.equals(jsonBytes(lock)), `Current ${kind} source lock differs from API 2 package bytes`);
     counts[kind] = lock.packages.length;
-    packageNames.push(...lock.packages.map(pkg => pkg.directory));
   }
-  const policy = JSON.parse(dataFile(root, 'plugins/api-v1/inventory-policy.json'));
-  if (!yaml) validateInventoryPolicy(policy, packageNames);
-  const inventory = (yaml ? yamlSource.buildInventory : buildInventory)(join(root, 'plugins/api-v1'));
+  dataFile(root, 'plugins/api-v1/inventory-policy.json');
+  const inventory = buildInventory(join(root, 'plugins/api-v1'));
   check(dataFile(root, 'plugins/api-v1/inventory.json').equals(jsonBytes(inventory)), 'Descriptive inventory differs from current API 2 package facts');
   // A new root needs no old commits or GitHub plugin releases. New R2 plans,
   // when present, still reconstruct their exact Git source and verify every digest.

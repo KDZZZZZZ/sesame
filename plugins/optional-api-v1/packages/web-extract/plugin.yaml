@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/web-extract
 title: 网页正文提取
 description: 信息解析能力：从已有完整HTML提取标题、文本、绝对链接和元数据；接收冻结source_ref、inline内容或包内文件，不联网、不解释市场。source_ref输入自动保留来源引用。
-version: 3.0.2
+version: 3.0.3
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -11,6 +11,19 @@ author:
   name: Sesame
 entry: index.js
 x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "search"
+    implementationKinds: ["function"]
+    title:
+      en: "Web extraction"
+      zh: "网页提取"
+    summary:
+      en: "Extract readable content from supplied HTML and keep its origin."
+      zh: "从提供的 HTML 提取可读内容并保留来源。"
+    dependencies:
+      en: "Existing Python 3 invoked by the native host.process.exec capability; standard-library HTML parsing of supplied evidence. Package sample paths retain their declared boundary."
+      zh: "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析已有 HTML 证据；包内样本路径保留原边界。"
   default_state: discoverable
   agent_scope: all
   execution: native

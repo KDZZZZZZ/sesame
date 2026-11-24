@@ -17,9 +17,9 @@ export function buildInventory(directory = root) {
     for (const pkg of lock.packages) {
       if (ids.has(pkg.id)) throw new Error(`Duplicate package identity across distributions: ${pkg.id}`);
       ids.add(pkg.id);
-      const {manifest,capabilities:declared} = readPackageDirectory(join(source, 'packages', pkg.directory));
+      const { manifest, capabilities: declared, catalog } = readPackageDirectory(join(source, 'packages', pkg.directory));
       const paths = pkg.files.map(file => file.path);
-      const own = packageCatalog(manifest, declared, paths);
+      const own = packageCatalog(catalog, manifest, declared, paths);
       const official = pkg.id === `sesame/${pkg.directory}`;
       const display = own ?? (official && Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined);
       if (!display) throw new Error(`Missing reviewed package explanation: ${pkg.id}. Declare x-sesame.catalog in plugin.yaml`);

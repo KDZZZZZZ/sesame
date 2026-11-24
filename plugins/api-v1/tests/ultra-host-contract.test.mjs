@@ -1,3 +1,4 @@
+import {readProtocolPackage} from '../../protocol/directory.mjs';
 import '../../../../mt5agent/modules/plugins/sdk-loader.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,7 +18,7 @@ async function filesAt(base = root, prefix = '') {
 }
 
 test('official Ultra package passes the actual host package/schema/native binding contract', async () => {
-  const files = await filesAt(), manifest = JSON.parse(files['capabilities.json']);
+  const files = await filesAt(), manifest = readProtocolPackage(files).capabilities;
   const parsed = inspectPackage(files, { applicationVersion: '0.3.0-dev.1' });
   assert.equal(parsed.id, 'sesame/ultra');
   assert.equal(parsed.default_state, 'mounted');

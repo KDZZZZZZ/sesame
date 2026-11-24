@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/mt5
 title: MetaTrader 5
 description: MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。
-version: 2.2.5
+version: 2.2.6
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "MetaTrader 5"
+      zh: "MetaTrader 5"
+    summary:
+      en: "Connect a chosen terminal for market data, accounts, manual position closing and native strategy workflows."
+      zh: "连接指定终端，读取行情、账户，手动平仓并执行原生策略流程。"
+    dependencies:
+      en: "An installed, authorized MT5 terminal. Compilation and Tester need compatible native dependencies; none are bundled with Sesame."
+      zh: "需要已有、获授权的 MT5 终端。编译和 Tester 需兼容原生依赖，Sesame 不内置这些程序。"
   default_state: discoverable
   prompts:
     - instructions.md

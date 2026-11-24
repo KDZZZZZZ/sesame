@@ -2,7 +2,7 @@
 
 公开来源属于信息获取层：只有需要新的原始证据时才调用sources_fetch({url})，已有ref直接复用。
 
-先检查返回的status。available返回{status:"available",ref,text,rowCount,provenance}；text仅20000字符预览，不代表全文。ref同时冻结完整原始字节和标准数据行，可直接交给extract_webpage({source_ref:ref})、parse_feed({source_ref:ref})、parse_fx_json/parse_fx_xml({source_ref:ref})。选择与格式相符的解析能力，不让Agent复制HTML/XML/JSON长字符串，也不把data_read工作区文件路径交给包内file_path。
+先检查返回的status。available返回{status:"available",ref,text,rowCount,provenance}；text仅20000字符预览，不代表全文。ref同时冻结完整原始字节和标准数据行，可直接交给extract_webpage({source_ref:ref})、parse_feed({source_ref:ref})、parse_fx_json/parse_fx_xml({source_ref:ref})。选择与格式相符的解析能力，不让Agent复制HTML/XML/JSON长字符串，也不把data_read工作区文件路径交给包内file_path。若 extract_webpage 对前端流式渲染页面（如 React/Next.js）返回空正文，不要误判为无数据，也禁止用 8KiB 串行猜偏移：已授权脚本/解析能力时优先用脚本定位关键字段；仅有 host_resources_read 时先读 manifest 获知总字节数，再按 48KiB 满页在同一轮并行读取尾部或目标分段，拿到所需字段即停。
 
 unavailable返回{status:"unavailable",url,error:{code,message,http_status?}}，没有ref或provenance。404、403、限流、网络失败等表示这个地址没有取得可用证据，属于正常来源选择结果；按用户允许的来源范围跳过或换源，继续研究，不因此暂停自己或整队，也不能把不可用说成空数据、无事件或全网不可用。只有必要证据整体仍不可获得并妨碍目标时，研究者才判断是否需要协助。通过data.query使用http数据源时，同样先看metadata.status；unavailable时items:[]只是行页协议，不能当成功取得的空样本。
 

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,15 +14,15 @@ test('the MCP catalog returns its declared schemas and exact sample results', ()
   // The three parsers now use native capabilities. Their frozen samples and
   // transport are exercised by source-parser-transport.test.mjs.
   for (const name of ['quantskills-catalog']) {
-    const directory = fileURLToPath(new URL(`../../optional-api-v1/packages/${name}/`, import.meta.url)), manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'))), extension = manifest;
+    const directory = fileURLToPath(new URL(`../../optional-api-v1/packages/${name}/`, import.meta.url)), manifest = readPackageDirectory(join(directory)).manifest, extension = manifest;
     declaredSamples += extension.tests.length;
     assert.equal(extension.id, `sesame/${name}`); assert.equal(extension.apiVersion, '2'); assert.equal(manifest.version, JSON.parse(readFileSync(join(directory, 'package.json'))).version);
-    const operations = [{ method: 'initialize', params: {} }, { method: 'tools/list' }, ...extension.tests.map(sample => ({ method: 'tools/call', params: { name: sample.tool, arguments: sample.arguments } }))];
+    const operations = [{ method: 'server/discover', params: {} }, { method: 'tools/list' }, ...extension.tests.map(sample => ({ method: 'tools/call', params: { name: sample.tool, arguments: sample.arguments } }))];
     assert.equal(manifest.execution, 'mcp');
     const run = spawnSync(process.env.PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3'), ['-B', '-X', 'utf8', '-I', join(directory, 'server.py')], { cwd: directory, encoding: 'utf8', env: { PATH: process.env.PATH, LANG: 'en_US.UTF-8' }, timeout: 10000, maxBuffer: 1024 * 1024, input: operations.map((operation, index) => JSON.stringify({ jsonrpc: '2.0', id: index + 1, ...operation })).join('\n') + '\n' });
     assert.equal(run.status, 0, run.stderr); const responses = run.stdout.trim().split('\n').map(line => JSON.parse(line).result);
     assert.equal(responses[0].serverInfo.version, manifest.version);
-    assert.deepEqual(responses[1].tools, JSON.parse(readFileSync(join(directory, 'capabilities.json'))).capabilities.map(cap => ({name:cap.binding.name,description:cap.description,inputSchema:cap.inputSchema,outputSchema:cap.outputSchema})));
+    assert.deepEqual(responses[1].tools, readPackageDirectory(directory).tools.map(({errors,...tool})=>tool));
     extension.tests.forEach((sample, index) => { assert.equal(responses[index + 2].isError, false); assert.deepEqual(responses[index + 2].structuredContent, sample.expected); samples++; });
   }
   assert.ok(samples > 0);

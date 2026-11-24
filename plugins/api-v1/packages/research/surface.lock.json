@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/research:instructions#preamble": "77f5ae5b8151dc580a2427c20d944f7901de2e1c70a94ed007fd0a3986d7ca10",
+    "sesame/research:instructions#preamble": "03a1e85d5b990e11c912dc819ad729860b311e77b72b6e2e5a7ac20927e2bb60",
     "sesame/research:plugin.description": "0fe0d1580f7ea2107a30cf950b86a459409d75ed8acffbc7bb1d0c419d2d29f2",
     "sesame/research:resource/examples/adaptation.json": "0e4422116db5523e229d214df60a3471c087bea7c14e2f7a5f1925038a951343",
     "sesame/research:resource/methods/index.json": "960adb8a2424f417a41cc42ade578fcdcb13dd96e381167175b56e6c9b2f1fca",
@@ -60,5 +60,5 @@
     "sesame/research:tool/research_read.input": "b88de5616900179918462f4be2b5764777ea66dc927f0bf713991356ecdc6e6c",
     "sesame/research:tool/research_read.output": "57020bf44b1ec6b41002e070249185abe4ab75a8bc9a76c526360081a355c7d2"
   },
-  "digest": "b5cbd342b9c80a22b186999676cc9d8b27cef3f2c493eacfaeef0a02ee9a62ba"
+  "digest": "c701be905da05e58111a725381083913717e83ff4b45ed4afb9b38ddbbc47d1a"
 }

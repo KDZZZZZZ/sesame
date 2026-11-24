@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -5,8 +6,8 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 import { createCapabilities } from '../packages/mt5/index.js';
 import { setInstance } from '../packages/mt5/state.js';
 
-const manifest = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url), 'utf8'));
-const plugin = JSON.parse(await readFile(new URL('../packages/mt5/plugin.json', import.meta.url), 'utf8'));
+const manifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
+const plugin = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).manifest;
 const id = 'mt5_trading_permissions';
 const definition = manifest.capabilities.find(item => item.id === id);
 

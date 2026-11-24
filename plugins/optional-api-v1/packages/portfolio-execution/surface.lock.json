@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "elements": {
     "sesame/portfolio-execution:instructions#preamble": "db5a291bc77dd5c526c1b63215d453415bebf3423104dc3b7e9360e2c8c7416d",
-    "sesame/portfolio-execution:instructions#执行路由选择（行动前先定路径，二选一不绕路）": "71495c62f1c5c5962b53b82c7dd99376e8a056f2a5096f3f4c7e98f9199e2d3f",
+    "sesame/portfolio-execution:instructions#执行路由选择（行动前先定路径，二选一不绕路）": "494f44315cd64e07055f7feaf6c96ffcc6d6a3499cdf850533ff8c1bb18afb12",
     "sesame/portfolio-execution:plugin.description": "4622512e5176fd46464e75a2027f9bddb39dddfb58453d7209594ff85e07eab7",
     "sesame/portfolio-execution:resource/README.md": "37d3954ed5d40b30bd74bf20cce234f09f7208fe2ec7a1d4fe8a40c206c79dcd",
     "sesame/portfolio-execution:tool/manual_trade_cancel.description": "6497224d064f9c637f52c8886032c6a65041368bb934e5fbf6e7b6bafe22d9a5",
@@ -46,5 +46,5 @@
     "sesame/portfolio-execution:tool/portfolio_execution_status.input": "86b8515a5b3d04a396b18442758e03295395024129d3f272cc43365bef58a73d",
     "sesame/portfolio-execution:tool/portfolio_execution_status.output": "47fb26a83800940533b7afe12bb6f9476ae7dc016f1581500f773179e73ce7a4"
   },
-  "digest": "f6bfc4885273345bf7a957ecc386835d0464bcf6676cba78d28cd46597164f15"
+  "digest": "10b59083e05aeb04b5a47fe7d249fed477c0fc5576ac01cc717099d55aa57185"
 }

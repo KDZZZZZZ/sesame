@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { api } from './release-plugins.mjs';
 import { publicationReview } from './plugin-r2-review.mjs';
-import { API2_PLAN_DIRECTORY, buildR2Publication, validateR2Plan } from './plugin-r2.mjs';
+import { API2_PLAN_DIRECTORY, buildR2Publication, isArchivedR2Plan, validateR2Plan } from './plugin-r2.mjs';
 
 const exec = promisify(execFile);
 const check = (value, message) => { if (!value) throw new Error(message); };
@@ -132,6 +132,10 @@ async function main() {
   const planPath = `${API2_PLAN_DIRECTORY}/${plans.at(-1)}`, plan = JSON.parse(await readFile(join(root, planPath), 'utf8'));
   validateR2Plan(plan);
   check(plans.at(-1) === `${plan.id}.json`, 'Publication filename differs from its plan identity');
+  if (isArchivedR2Plan(plan)) {
+    console.log('The latest plan is an archived publication: ' + plan.id);
+    return;
+  }
   const store = r2Store(process.env.R2_ENDPOINT);
   const evidence = await publicationReview(root, plan, planPath);
   const recorded = await store.get(`plugins/api-v1/releases/${plan.id}/review.json`);

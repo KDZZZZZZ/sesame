@@ -71,7 +71,7 @@
     "sesame/kurumi-replay:tool/kurumi_import_fx_supplement.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
     "sesame/kurumi-replay:tool/kurumi_import_fx_supplement.input": "746ba5c35e77e91270e7196730f433daf974c94b103b6c273404f54fb93e8fe6",
     "sesame/kurumi-replay:tool/kurumi_import_fx_supplement.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
-    "sesame/kurumi-replay:tool/kurumi_method_workflow.description": "a1ed31fbc03c8d3e481a5a40a47bade9c13c42bf29bb700ab9810c75682a59c0",
+    "sesame/kurumi-replay:tool/kurumi_method_workflow.description": "0484e9f4c88904ecd14e07299b81a5d1a64ca9cc403aa7e39be35778553cc876",
     "sesame/kurumi-replay:tool/kurumi_method_workflow.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
     "sesame/kurumi-replay:tool/kurumi_method_workflow.input": "00885cc6a08501040e50ecf1f50c15d42b7a619b92ec1ddbaa36c48bf81870c7",
     "sesame/kurumi-replay:tool/kurumi_method_workflow.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
@@ -140,5 +140,5 @@
     "sesame/kurumi-replay:tool/kurumi_weekly.input": "d9ca9725301b47fa777154c8b096b42aee44c7c1902b868c3c7380cabd21a183",
     "sesame/kurumi-replay:tool/kurumi_weekly.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d"
   },
-  "digest": "45ec1cddfba7632feee38dec3f792f522fd749af88090632517039ac8cac0f55"
+  "digest": "9fe2449b544842c460f5bdc0895bdcb0fea1e68b21fa72a1a27f907f76e5bf98"
 }

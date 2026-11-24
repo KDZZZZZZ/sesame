@@ -1,31 +1,31 @@
-name: Plugin semantic review gate
+name: Plugin release approval
 on:
-  issue_comment:
-    types: [created, edited]
+  workflow_run:
+    workflows: [Plugin CI]
+    types: [completed]
+    branches: [dev]
   workflow_dispatch:
     inputs:
       pull_request:
-        description: Pull request number to verify before merging
+        description: Open dev-to-main pull request
         required: true
         type: string
 permissions:
   contents: read
   actions: read
   pull-requests: read
-  issues: read
 jobs:
   semantic-review-gate:
     if: >-
       github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main' &&
-      github.actor == 'KDZZZZZZ' &&
       (github.event_name == 'workflow_dispatch' ||
-      (github.event.issue.pull_request && github.event.comment.user.login == 'KDZZZZZZ' &&
-      (startsWith(github.event.comment.body, '<!-- sesame:agent-review:v1 -->') ||
-      github.event.comment.body == '/sesame-review')))
+      (github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.conclusion == 'success' &&
+      contains(fromJSON('["pull_request_review","pull_request_target"]'), github.event.workflow_run.event)))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Use the trusted main publisher, never candidate code
+      - name: Check out trusted default-branch validator
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.sha }}
@@ -33,17 +33,21 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
-      - name: Verify the owner requested this final review gate
-        run: node .github/scripts/contribution-policy.mjs --semantic-event
-      - name: Check exact-head completed semantic review and static checks
+      - name: Verify the open PR, exact reviewed head, checks and discussions
+        id: review
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          REVIEW_PR: ${{ github.event.issue.number || inputs.pull_request }}
-        run: node .github/scripts/release-plugins.mjs --review-check . "$REVIEW_PR" > review-gate.json
-      - name: Preserve the completed pre-merge review and resolved discussion snapshot
+          REVIEW_PR: ${{ inputs.pull_request || 'auto' }}
+        run: |
+          node .github/scripts/release-plugins.mjs --review-check . "$REVIEW_PR" > review-gate.json
+          if test -s review-gate.json; then
+            node -e 'console.log("pr=" + JSON.parse(require("fs").readFileSync("review-gate.json")).pullRequest)' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Record the verified native approval before merge
+        if: steps.review.outputs.pr != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: plugin-semantic-review-${{ github.event.issue.number || inputs.pull_request }}
+          name: plugin-semantic-review-${{ steps.review.outputs.pr }}
           path: review-gate.json
           if-no-files-found: error
           retention-days: 90

@@ -6,7 +6,9 @@ import { tmpdir } from 'node:os';
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { atLeastVersion, adapterOperation, executionTools, EXECUTION_CONTRACT } from '../packages/portfolio-execution/adapter-contract.js';
 import { createAdapters } from '../packages/portfolio-execution/adapters.js';
-import { targetOrders } from '../packages/portfolio-execution/portfolio.js';
+import { applyPortfolio, targetOrders } from '../packages/portfolio-execution/portfolio.js';
+import { closeRecords as closePortfolio } from '../packages/portfolio-execution/records.js';
+import { validateDecision } from '../packages/trading-decision/plans.js';
 import { outcome } from '../packages/portfolio-execution/service.js';
 import { createExecutionAdapter as mt5Adapter } from '../packages/mt5/backend/execution-adapter.js';
 import { executionReceipt as mt5Receipt } from '../packages/mt5/backend/execution-evidence.js';
@@ -16,7 +18,7 @@ import { createService as qmtService } from '../packages/qmt/service.js';
 import { capability as qmtCapability } from '../packages/qmt/execution.js';
 import { records as qmtRecords, closeRecords as closeQmt } from '../packages/qmt/records.js';
 import { createTradingContext as qmtContext } from '../packages/qmt/trading-context.js';
-import { manifests } from './portfolio-adapter-fixture.mjs';
+import { delegated, manifests } from './portfolio-adapter-fixture.mjs';
 
 function declarationHost(backend, version, kind = 'main') {
   const manifest = structuredClone(manifests[backend]), calls = [];
@@ -147,16 +149,6 @@ test('10025/10028 retain conservative uncertainty shared with positions; no unsu
   assert.equal(mt5Receipt({ status: 'returned', result: { submission_attempted: false, result: { retcode: 10028 } } }).status, 'rejected');
 });
 
-function delegated(backend, account) {
-  const execution = { pluginId: 'sesame/portfolio-execution', applyTool: 'portfolio_execution_apply', contextTool: 'portfolio_execution_context', account, context: { backend, account } };
-  return { provenance: { agent: { pluginId: 'fixture/workflow', status: 'running', sessionId: 'child', taskId: 'task', runId: 'task', input: {
-    role: 'executor', runId: 'run', tradingPlan: { id: 'plan', ownerConversationId: 'owner', account }, execution,
-  } }, chain: [
-    { pluginId: 'fixture/workflow', capabilityId: 'fixture/workflow#apply' },
-    { pluginId: 'sesame/portfolio-execution', capabilityId: 'sesame/portfolio-execution#portfolio_execution_apply' },
-    { pluginId: `sesame/${backend}`, capabilityId: `sesame/${backend}#${backend}_execution_submit` },
-  ] } };
-}
 const time = 1792575202000;
 function observation(backend, account) {
   return { backend, account, symbol: backend === 'mt5' ? 'EURUSD' : '600000.SH', spec: { name: 'EURUSD', volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2 }, positions: [],
@@ -187,6 +179,48 @@ test('MT5 normalized submit keeps exact workflow authority separate from host po
   assert.equal(calls[0].arguments.execution_guard.quote_clock_revision, 'fixture-clock');
   assert.equal(mt5Records(host).get('mt5_trading_commands', args.intent.backendCommandId).planId, 'plan');
   await assert.rejects(service.prepare({ ...args, userAuthorized: true }), { code: 'FORBIDDEN' });
+});
+
+test('a frozen protected MT5 target carries both prices to the simulated native order and never retries an unknown submission', async t => {
+  const storageRoot = mkdtempSync(join(tmpdir(), 'portfolio-protected-'));
+  const account = { accountId: '42', server: 'fixture', revision: '1' };
+  const { host } = declarationHost('mt5', '2.2.5', 'subagent');
+  host.context = { kind: 'subagent', sessionId: 'child', storageRoot };
+  t.after(() => { closePortfolio(host); mt5Records(host).close(); rmSync(storageRoot, { recursive: true, force: true }); });
+  const nativeSends = [];
+  const native = mt5Adapter(host, { official: {
+    settings: () => ({ account: { login: '42', server: 'fixture' }, version: 1 }),
+    call: async request => {
+      nativeSends.push(request);
+      return { status: 'returned', result: { result: { retcode: 10012, order: '0', deal: '0' } } };
+    },
+  } }, { now: () => time });
+  const proof = delegated('mt5', account);
+  const snapshot = { ...observation('mt5', account), contract: EXECUTION_CONTRACT, orders: [],
+    quote: { ...observation('mt5', account).quote, bid: '10.00', ask: '10.01' },
+    projection: { positions: [], orders: [], priceStep: '0.01' }, readStartedAt: time, capturedAt: time };
+  host.capabilities.invoke = async (id, args) => {
+    if (id === 'sesame/mt5#mt5_execution_submit') return { type: 'result', value: await native.submit(args, undefined, proof) };
+    assert.ok(['sesame/mt5#mt5_execution_snapshot', 'sesame/mt5#mt5_execution_identity'].includes(id), id);
+    return { type: 'result', value: snapshot };
+  };
+  const plan = { backend: 'mt5', account, ownerConversationId: 'owner', slippageBps: 50, symbols: ['EURUSD'],
+    execution: { quantityRules: { unit: 'lots', signed: true, integer: false, supportsAttachedStops: true } } };
+  const target = { symbol: 'EURUSD', unit: 'lots', quantity: '0.1', stop_loss: '9.85', take_profit: '10.35' };
+  const decision = validateDecision(plan, snapshot, { unchanged: false, targets: [target], rationale: 'Simulated native submission.' });
+  const run = { id: 'run', plan, decidedAt: time, decision };
+  const result = await applyPortfolio(host, run, { now: () => time, assertActive() {} });
+  assert.equal(nativeSends.length, 1, JSON.stringify(result.error ?? result.orders[0]?.receipt?.error));
+  assert.equal(nativeSends[0].arguments.request.sl, 9.85);
+  assert.equal(nativeSends[0].arguments.request.tp, 10.35);
+  assert.deepEqual(nativeSends[0].arguments.execution_guard.expected_positions, []);
+  assert.equal(result.orders[0].receipt.status, 'outcome_unknown');
+  assert.equal(result.status, 'blocked');
+  await applyPortfolio(host, run, { now: () => time, assertActive() {} });
+  assert.equal(nativeSends.length, 1);
+  const orders = targetOrders('mt5', target, [{ id: '1', symbol: 'EURUSD', side: 'sell', quantity: '0.2' }]);
+  assert.deepEqual(orders, [{ action: 'close', side: 'buy', quantity: '0.2', position_id: '1' },
+    { action: 'market', side: 'buy', quantity: '0.1', stop_loss: '9.85', take_profit: '10.35' }]);
 });
 
 function qmtFixture(t, kind = 'main') {

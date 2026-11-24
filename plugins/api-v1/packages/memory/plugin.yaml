@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/memory
 title: 长期记忆
 description: 保存有来源的长期记忆；区分个人交易风格、经确认的风险红线与策略认知，自动整理只提出风险候选，主 Agent 管理正式规则。
-version: 3.2.0
+version: 3.2.1
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["service"]
+    title:
+      en: "Memory"
+      zh: "记忆"
+    summary:
+      en: "Retain sourced preferences and knowledge, including trading style, confirmed risk rules and strategy understanding."
+      zh: "保存有来源的偏好与知识，区分个人交易风格、已确认风险红线和策略认知。"
+    dependencies:
+      en: "No external runtime or market connection."
+      zh: "无需外部运行环境或行情连接。"
   default_state: mounted
   prompts:
     - instructions.md

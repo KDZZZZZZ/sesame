@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
@@ -58,7 +59,7 @@ async function fixture(t) {
 }
 
 test('MT5 account close uses two explicit immediate host service capabilities and a pure factory', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
   const { validateCapabilityManifest } = await import(new URL('../../../../mt5agent/modules/plugins/capability-contract.js', import.meta.url));
   const checked = await validateCapabilityManifest(manifest); assert.equal(checked.valid, true, JSON.stringify(checked.diagnostics));
   const service = manifest.services.find(row => row.contract === 'sesame.positions/1');

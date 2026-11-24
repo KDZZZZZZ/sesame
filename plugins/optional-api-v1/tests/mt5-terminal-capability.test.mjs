@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -11,8 +12,8 @@ import { records } from '../packages/mt5/backend/records.js';
 import { digest, now } from '../packages/mt5/backend/support.js';
 import { stableJSON } from '../packages/mt5/backend/contracts.js';
 
-const manifest = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url), 'utf8'));
-const plugin = JSON.parse(await readFile(new URL('../packages/mt5/plugin.json', import.meta.url), 'utf8'));
+const manifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
+const plugin = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).manifest;
 const commandId = 'open-selected-terminal-01';
 const definition = manifest.capabilities.find(item => item.id === 'mt5_start_terminal');
 const tool = host => createCapabilities(host).find(item => item.name === 'mt5_start_terminal');

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -10,7 +11,7 @@ const document = blocks => ({ kind: 'document', sections: [{ title: '', blocks }
 const args = content => ({ title: 'Supplied results', lead: 'The supplied results support this comparison.', highlights: [{ label: 'Fixture result', value: 'Supplied' }], content, data: [], provenance_kind: 'derived', locale: 'en' });
 
 test('Reports exposes one visual publication path and only generic document input', async () => {
-  const manifest = await readJSON('../packages/reports/capabilities.json');
+  const manifest = readPackageDirectory(new URL('../packages/reports/',import.meta.url)).capabilities;
   const ids = ['components_list', 'components_describe', 'components_validate', 'components_show', 'report_render',
     'report_read', 'report_prepare', 'report_check', 'report_export_check', 'report_styles', 'report_style_save'].sort();
   assert.deepEqual(manifest.capabilities.map(item => item.id).sort(), ids);

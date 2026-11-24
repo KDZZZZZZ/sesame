@@ -95,7 +95,7 @@
   "packages": [
     {
       "id": "sesame/abu-breakout",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -151,7 +151,7 @@
     },
     {
       "id": "sesame/abu-exit-rules",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -207,7 +207,7 @@
     },
     {
       "id": "sesame/abu-indicators",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -263,7 +263,7 @@
     },
     {
       "id": "sesame/abu-ml-features",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -319,7 +319,7 @@
     },
     {
       "id": "sesame/abu-model-lab",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -375,7 +375,7 @@
     },
     {
       "id": "sesame/abu-moving-average",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -431,7 +431,7 @@
     },
     {
       "id": "sesame/abu-parameter-search",
-      "version": "2.0.4",
+      "version": "2.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -487,7 +487,7 @@
     },
     {
       "id": "sesame/abu-position-sizing",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -543,7 +543,7 @@
     },
     {
       "id": "sesame/abu-price-structure",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -599,7 +599,7 @@
     },
     {
       "id": "sesame/abu-seasonality",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -655,7 +655,7 @@
     },
     {
       "id": "sesame/abu-similarity",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -711,7 +711,7 @@
     },
     {
       "id": "sesame/abu-stock-screening",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -767,7 +767,7 @@
     },
     {
       "id": "sesame/abu-trade-judges",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -823,7 +823,7 @@
     },
     {
       "id": "sesame/abu-trade-metrics",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -889,7 +889,7 @@
     },
     {
       "id": "sesame/abu-trend",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -945,7 +945,7 @@
     },
     {
       "id": "sesame/abu-trend-pullback",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1001,7 +1001,7 @@
     },
     {
       "id": "sesame/abu-volatility",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1057,7 +1057,7 @@
     },
     {
       "id": "sesame/akshare",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.2",
+      "version": "3.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1386,7 +1386,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1504,7 +1504,7 @@
     },
     {
       "id": "sesame/behavioral-finance",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1548,7 +1548,7 @@
     },
     {
       "id": "sesame/binance",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1895,7 +1895,7 @@
     },
     {
       "id": "sesame/canvas-control",
-      "version": "4.0.1",
+      "version": "4.0.2",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -2024,7 +2024,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "2.0.9",
+      "version": "2.0.10",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2172,7 +2172,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "3.1.5",
+      "version": "3.1.6",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -2297,7 +2297,7 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "3.0.7",
+      "version": "3.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -2429,7 +2429,7 @@
     },
     {
       "id": "sesame/deep-reasoning",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2473,7 +2473,7 @@
     },
     {
       "id": "sesame/dow-theory",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2517,7 +2517,7 @@
     },
     {
       "id": "sesame/elliott-wave",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2561,7 +2561,7 @@
     },
     {
       "id": "sesame/financial-research",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2683,7 +2683,7 @@
     },
     {
       "id": "sesame/historical-evidence",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2763,7 +2763,7 @@
     },
     {
       "id": "sesame/ict",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2807,7 +2807,7 @@
     },
     {
       "id": "sesame/institutional-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2851,7 +2851,7 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "4.0.2",
+      "version": "4.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2957,7 +2957,7 @@
     },
     {
       "id": "sesame/judgment-evolution",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3186,7 +3186,7 @@
     },
     {
       "id": "sesame/kurumi-replay",
-      "version": "0.1.3-dev.3.9",
+      "version": "0.1.3-dev.3.10",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3741,7 +3741,7 @@
     },
     {
       "id": "sesame/market-data-parser",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3811,7 +3811,7 @@
     },
     {
       "id": "sesame/memory",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -4041,7 +4041,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "2.2.5",
+      "version": "2.2.6",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4871,7 +4871,7 @@
     },
     {
       "id": "sesame/narrative-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4915,7 +4915,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "5.0.1",
+      "version": "5.0.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -4990,7 +4990,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.8",
+      "version": "3.1.9",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5163,7 +5163,7 @@
     },
     {
       "id": "sesame/plugin-optimizer",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5410,7 +5410,7 @@
     },
     {
       "id": "sesame/portfolio-execution",
-      "version": "2.1.2",
+      "version": "2.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5644,7 +5644,7 @@
     },
     {
       "id": "sesame/price-action",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5688,7 +5688,7 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6105,7 +6105,7 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "4.2.0",
+      "version": "4.2.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6202,7 +6202,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.9",
+      "version": "8.0.10",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6377,7 +6377,7 @@
     },
     {
       "id": "sesame/research",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6443,7 +6443,7 @@
     },
     {
       "id": "sesame/rss-collect",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6503,7 +6503,7 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6664,7 +6664,7 @@
     },
     {
       "id": "sesame/strategy-development",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6806,7 +6806,7 @@
     },
     {
       "id": "sesame/trading-decision",
-      "version": "3.4.3",
+      "version": "3.4.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7031,7 +7031,7 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -7211,7 +7211,7 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -7255,7 +7255,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "2.0.6",
+      "version": "2.0.7",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7362,7 +7362,7 @@
     },
     {
       "id": "sesame/web-extract",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7422,7 +7422,7 @@
     },
     {
       "id": "sesame/web-sources",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7504,7 +7504,7 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -7685,7 +7685,7 @@
     },
     {
       "id": "sesame/wyckoff",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

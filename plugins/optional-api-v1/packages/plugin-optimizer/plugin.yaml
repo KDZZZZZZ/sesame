@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/plugin-optimizer
 title: 插件优化器
 description: 在本地授权的插件草稿中定位反馈、冻结案例、配对比较和验证变更。
-version: 1.0.0
+version: 1.0.1
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["function"]
+    title:
+      en: "Plugin optimizer"
+      zh: "插件优化器"
+    summary:
+      en: "Evaluate draft plugin surfaces against fixed cases and review changes."
+      zh: "用固定案例验证插件草稿，记录归因和变更。"
+    dependencies:
+      en: "Local drafts and session-authorized evidence."
+      zh: "本地草稿和当前会话授权的证据。"
   default_state: discoverable
   execution: native
   agent_scope: main

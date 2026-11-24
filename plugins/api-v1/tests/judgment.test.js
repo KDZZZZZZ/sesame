@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
@@ -192,8 +193,8 @@ test('coverage keeps source hashes and contiguous read progress across reopening
 });
 
 test('judgment declarations are the single source of capability schemas and hook bindings', () => {
-  const manifest = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/plugin.json', import.meta.url)));
-  const declarations = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/capabilities.json', import.meta.url)));
+  const manifest = readPackageDirectory(new URL('../../optional-api-v1/packages/judgment-evolution/', import.meta.url)).manifest;
+  const declarations = readPackageDirectory(new URL('../../optional-api-v1/packages/judgment-evolution/', import.meta.url)).capabilities;
   assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.agent_scope, 'main');
   assert.equal(manifest.capability_manifest, 'capabilities.json'); assert.equal(manifest.tool_definitions, undefined);
   assert.deepEqual(createCapabilities({ context: {} }).map(value => value.name).sort(), declarations.capabilities.map(value => value.binding.name).sort());

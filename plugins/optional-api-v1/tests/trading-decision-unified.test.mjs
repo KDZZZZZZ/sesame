@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { workflowReports } from './workflow-report-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +16,10 @@ async function fixture(t) {
   const host = { context: { pluginId: 'sesame/trading-decision', pluginVersion: 'test', pluginRevision: 'sha256:test', storageRoot: root, sessionId: 'workflow-session', runId: 'workflow-run', kind: 'subagent' }, events: { emit: async () => {} } };
   host.plugins = { read: async id => ['sesame/memory', 'sesame/data-access'].includes(id) ? { id, state: 'discoverable', digest: 'memory-fixture' } : null };
   const observations = [];
-  host.capabilities = { invoke: async (id, input) => {
+  host.capabilities = { list: async ({ ids }) => {
+    assert.deepEqual(ids, ['fixture/execution#context']);
+    return { items: [{ id: ids[0], inputSchema: { properties: { action: { type: 'string' } } } }] };
+  }, invoke: async (id, input) => {
     assert.equal(id, 'fixture/execution#context'); assert.equal(input.action, 'snapshot'); observations.push(structuredClone(input));
     return { type: 'result', value: { account: { accountId: 'fixture' }, capturedAt: 1, positions: [], orders: [], fills: [], historicalOrders: [], deployments: [], historyCoverage: { scope: 'synthetic_observed_range', complete: false } } };
   } };
@@ -31,7 +35,7 @@ async function fixture(t) {
 }
 
 test('the trading workflow declares a native Run and no custom live HTML protocol', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../packages/trading-decision/capabilities.json', import.meta.url)));
+  const manifest = readPackageDirectory(new URL('../packages/trading-decision/', import.meta.url)).capabilities;
   assert.equal(manifest.capabilities.find(cap => cap.id === 'trading_decision_workflow_execute').kind, 'workflow');
   assert.deepEqual(manifest.views, []); assert.equal(manifest.capabilities.some(cap => cap.id.startsWith('activity_')), false);
 });

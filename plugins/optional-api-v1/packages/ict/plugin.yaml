@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/ict
 title: ICT 价格结构研究
 description: 可组合的分析方法：固定参考区间中的价格分离、跨越和结构转变候选是否满足明确的观察定义；消费已有证据，返回源柱引用、三柱区间分离或其他明确规则的观察、确认时点、候选术语、替代解释及失效条件。
-version: 2.0.1
+version: 2.0.2
 license: MIT
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "ICT"
+      zh: "ICT"
+    summary:
+      en: "Study liquidity, structure and three-candle gaps using independently selected ICT guidance."
+      zh: "独立使用 ICT 指导研究流动性、结构与三柱缺口。"
+    dependencies:
+      en: "Choose a market data source for observations. Other technical theories are not loaded; helper scripts need Python 3."
+      zh: "观察需选行情来源；不加载其他技术理论，辅助脚本需 Python 3。"
   default_state: discoverable
   agent_scope: all
   prompts:

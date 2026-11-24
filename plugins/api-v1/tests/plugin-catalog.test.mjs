@@ -1,3 +1,4 @@
+import {createProtocolFiles} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -6,24 +7,24 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CATALOG_URL, catalogQuery, installCatalog, treeDigest } from '../packages/plugin-manager/catalog.js';
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
-function directory({ official = false, format = 'sesame-native' } = {}) {
+function directory({ official = false, id = 'sesame/example', format = 'sesame-native' } = {}) {
   const capabilities = [{ id: 'example_read', kind: 'function', description: 'Read the fixture.', consumers: ['agent', 'host'], execution: 'immediate', effects: [], binding: { type: 'native', name: 'read' } },
     { id: 'example_host', kind: 'function', description: 'Read through the host.', consumers: ['host'], execution: 'immediate', effects: [], binding: { type: 'native', name: 'host_read' } }];
-  const files = { 'plugin.json': Buffer.from('{"id":"sesame/example","version":"2.0.0","apiVersion":"2","capability_manifest":"capabilities.json"}'),
-    'capabilities.json': Buffer.from(JSON.stringify({ schemaVersion: 1, apiVersion: '2', capabilities })), LICENSE: Buffer.from('MIT fixture') };
+  const bytes = createProtocolFiles({id,version:'2.0.0',title:'Example',description:'Fixture only'}, {capabilities:capabilities.map(cap=>({...cap,inputSchema:{type:'object'},outputSchema:{type:'object'}}))},{LICENSE:'MIT fixture'});
+  const files = Object.fromEntries(Object.entries(bytes).map(([name,text])=>[name,Buffer.from(text)]));
   const index = Object.entries(files).map(([path, bytes]) => ({ path, bytes: bytes.length, sha256: hash(bytes).slice(7) }));
   const tag = official ? 'plugins-api-v1-dev.12' : 'plugins-optional-api-v1-dev.4', base = `https://github.com/KDZZZZZZ/sesame/releases/download/${tag}`;
   const release = { tag, sourceRoot: `plugins/${official ? 'api-v1' : 'optional-api-v1'}`, sourceCommit: 'a'.repeat(40), releaseCommit: 'b'.repeat(40),
     archive: { url: `${base}/sesame-${official ? 'official' : 'optional'}-plugins-api-v1-${tag.split('-').at(-1)}.tar.gz`, sha256: 'c'.repeat(64) },
     lock: { url: `${base}/official-plugins.lock.json`, sha256: 'd'.repeat(64) }, review: { url: `${base}/review.json`, sha256: 'e'.repeat(64) } };
-  const entry = { id: 'sesame/example', version: '2.0.0', apiVersion: '2', format, status: 'active', title: 'Example', description: 'Fixture only', release: tag,
-    capabilityManifest: 'capabilities.json', capabilities, tools: ['example_read'],
+  const entry = { id, version: '2.0.0', apiVersion: '2', format, status: 'active', title: 'Example', description: 'Fixture only', release: tag,
+    capabilityManifest:'plugin.yaml', protocolVersion:'2026-07-28', surfaceDigest:'sha256:'+JSON.parse(files['surface.lock.json']).digest, capabilities, tools: ['example_read'],
     source: { repository: 'https://github.com/KDZZZZZZ/sesame', commit: release.sourceCommit, path: `${release.sourceRoot}/packages/example` },
     package: { files: index, treeDigest: treeDigest(index) }, review: { automated: 'package-static-review', human: 'not-recorded', record: release.review } };
   return { files, entry, catalog: { schemaVersion: 1, apiVersion: '2', channel: 'development', releases: [release], plugins: [entry] } };
 }
-function r2Directory({ profile = 'optional', format = 'sesame-native' } = {}) {
-  const f = directory({ official: profile === 'core', format }), release = f.catalog.releases[0], revision = '17';
+function r2Directory({ profile = 'optional', id, format = 'sesame-native' } = {}) {
+  const f = directory({ official: profile === 'core', id, format }), release = f.catalog.releases[0], revision = '17';
   release.tag = `r2-${profile}-api-v1-dev.${revision}`; release.profile = profile; release.transport = 'r2'; delete release.engines;
   release.sourceRoot = profile === 'core' ? 'plugins/api-v1' : 'plugins/optional-api-v1';
   const base = `https://dl.sesame.bot/plugins/api-v1/releases/dev.${revision}`;
@@ -44,7 +45,7 @@ function download(f, corrupt = false) {
     if (url === CATALOG_URL) return new Response(JSON.stringify(f.catalog));
     if (f.catalog.schemaVersion === 2) assert.ok(url.startsWith(`${f.entry.package.baseUrl}/`), 'R2 package files must use the content-addressed package base URL');
     else assert.ok(url.startsWith(`https://raw.githubusercontent.com/KDZZZZZZ/sesame/${f.entry.source.commit}/${f.entry.source.path}/`));
-    const file = decodeURIComponent(url.split('/').at(-1)); return new Response(corrupt ? 'changed' : f.files[file]);
+    const file = Object.keys(f.files).find(path=>url.endsWith('/'+path)); return new Response(corrupt ? 'changed' : f.files[file]);
   } };
 }
 async function hostFixture(t, f, options = {}) {
@@ -79,9 +80,21 @@ const previous = more => ({ id: 'sesame/example', version: '1.0.0', digest: hash
 test('query accepts official native and MCP identities with fixed publication/review metadata', async () => {
   for (const format of ['sesame-native', 'sesame-mcp']) {
     const f = directory({ official: true, format }), net = download(f), queried = await catalogQuery({ plugin_id: f.entry.id }, undefined, net.fetcher);
-    assert.equal(queried.catalog_digest, hash(JSON.stringify(f.catalog))); assert.equal(queried.items[0].review.human, 'not-recorded'); assert.equal(queried.items[0].format, format); assert.equal(queried.items[0].package.files, 3); assert.equal(net.requests.length, 1);
+    assert.equal(queried.catalog_digest, hash(JSON.stringify(f.catalog))); assert.equal(queried.items[0].review.human, 'not-recorded'); assert.equal(queried.items[0].format, format); assert.equal(queried.items[0].package.files, Object.keys(f.files).length); assert.equal(net.requests.length, 1);
     f.entry.status = 'withdrawn'; assert.deepEqual((await catalogQuery({}, undefined, net.fetcher)).items, []);
   }
+});
+
+test('community publisher IDs survive optional catalog installation and cannot be used for core entries', async t => {
+  const id = 'community.tools/example';
+  const optional = r2Directory({ id }), net = download(optional);
+  const queried = await catalogQuery({ plugin_id: id }, undefined, net.fetcher);
+  assert.deepEqual(queried.items.map(entry => entry.id), [id]);
+  const fixture = await hostFixture(t, optional);
+  const result = await installCatalog(fixture.host, argsFor(optional), undefined, net.fetcher);
+  assert.equal(result.installed.id, id);
+  const core = r2Directory({ profile: 'core', id });
+  await assert.rejects(catalogQuery({}, undefined, download(core).fetcher), /Core catalog entries/);
 });
 
 test('R2 catalog query/install/update uses dl.sesame.bot package URLs only', async t => {
@@ -221,7 +234,7 @@ test('modified files clean partial downloads, and moving/withdrawn catalogs neve
 });
 
 test('floating commits, unrelated release paths/assets, fake approval and unsafe/colliding file names reject', async () => {
-  const changes = [f => { f.entry.source.commit = 'main'; }, f => { f.entry.source.path = 'plugins/packages/example'; }, f => { f.catalog.releases[0].archive.url = 'https://example.com/latest'; }, f => { f.entry.review.human = 'approved'; }, f => { f.entry.package.files[0].path = '../plugin.json'; }, f => { f.entry.package.files.push({ ...f.entry.package.files[0], path: 'PLUGIN.JSON' }); }];
+  const changes = [f => { f.entry.source.commit = 'main'; }, f => { f.entry.source.path = 'plugins/packages/example'; }, f => { f.catalog.releases[0].archive.url = 'https://example.com/latest'; }, f => { f.entry.review.human = 'approved'; }, f => { f.entry.package.files[0].path = '../plugin.json'; }, f => { f.entry.package.files.push({ ...f.entry.package.files[0], path: f.entry.package.files[0].path.toUpperCase() }); }];
   for (const change of changes) { const f = directory(); change(f); await assert.rejects(catalogQuery({}, undefined, download(f).fetcher), { code: 'CATALOG_INVALID' }); }
 });
 

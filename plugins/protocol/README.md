@@ -1,5 +1,7 @@
 # Sesame 插件协议与验证
 
+[插件贡献速查 / Contributor quick start](../CONTRIBUTING.md)
+
 包由 `plugin.yaml` 声明。工具来自 `tools/*.yaml`，需求来自 `requirements.yaml`，`surface.lock.json` 固定每个可见元素的摘要。核心包和可选包使用相同的读取器。工作流定义和 resolver 位于 `workflow/`。本体安装时同时核验包树和接口锁。
 
 在插件仓库根目录运行以下验证。

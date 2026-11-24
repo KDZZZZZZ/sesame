@@ -3,13 +3,13 @@
   "elements": {
     "sesame/rss-collect:plugin.description": "d7c400ccb3ffa9e1a434b457c57a621c2a78817ccaf95d705d08836a5d3c7941",
     "sesame/rss-collect:resource/skills/rss-collect/PROVENANCE.md": "97406cadf511c6203b75d967d80a3ad57d710e20ba886c982b0df4a02ac94890",
-    "sesame/rss-collect:skill/rss-collect.body": "0410902cf309149f16c7b4f6de4a9dd3eff5d236ba15b3ced077bfb48d42de84",
+    "sesame/rss-collect:skill/rss-collect.body": "fd0d7850cd3f05991aad1bf36cfef3c3a717411c173da0fd9b5e04110f4050d5",
     "sesame/rss-collect:skill/rss-collect.description": "dfd7cbdde8016fc2a339f68378390de341741d67ff5258fd9730eb2dff7f1996",
     "sesame/rss-collect:skill/rss-collect.file/PROVENANCE.md": "97406cadf511c6203b75d967d80a3ad57d710e20ba886c982b0df4a02ac94890",
-    "sesame/rss-collect:tool/parse_feed.description": "7514efc44e76ade62bb9742146c69d04c66e83daa2fc4a77939e1aa3a2387a4f",
+    "sesame/rss-collect:tool/parse_feed.description": "a186a7d51274e0ad979d035619df844acd33f0e9fec239a8d163573e724d1d11",
     "sesame/rss-collect:tool/parse_feed.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
     "sesame/rss-collect:tool/parse_feed.input": "ab760590e91dc456c76679c241597b891bac92ed7533fe9d7ccd221439fb39e5",
     "sesame/rss-collect:tool/parse_feed.output": "665feb2452a946d91c4a49e5fea68d829085cee1e0fb6a194a54a97edc3e68a7"
   },
-  "digest": "743cff5c339f9ce2519659cdb838dcc40466f93e2f743cc881d7f6076775493d"
+  "digest": "3af5b506f9b4c498c113b613d43d1544d32a725afcceecb7323ed85668f070dd"
 }

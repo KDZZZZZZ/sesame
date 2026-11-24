@@ -2,7 +2,7 @@
 
 用户要开发或改进可回测的策略时，先从当前对话、已有研究项目、固定数据与费用资料填写投资委托。调用 strategy_development_plan，把用户原话、项目依据、研究资料和可检验的假设分别注明来源。研究资金和成本可以提出明确的模拟情景。遇到缺字段先查资料或开展能做的工作，仅对会改变硬约束的明确冲突提出具体问题。
 
-从投资委托到通过验证的策略，步骤与产物依赖声明为工作流 `strategy.development`（`workflows/strategy.development.yaml`）。主 Agent 开发或系统性改进一个策略时，用 `workflow_plan` 以该工作流开立计划并逐步上报；因子库没有合适的合格因子时，`factors` 步骤可回退到 `sesame/auto-factor-mining:factor.development`。局部诊断或单次对照实验不必建计划。
+从投资委托到通过验证的策略，步骤与产物依赖声明为工作流 `strategy.development`（`workflows/strategy.development.yaml`）。主 Agent 开发或系统性改进一个策略时，用 `workflow_plan` 以该工作流开立计划，可并行的实验/对照步骤并发推进，`workflow_step` 与业务动作同轮合批上报；因子库没有合适的合格因子时，`factors` 步骤可回退到 `sesame/auto-factor-mining:factor.development`。局部诊断或单次对照实验不必建计划。
 
 按投资范围、假设、成本后比较目标和实际执行方式选择 framework、state_machine 或 hybrid。先建立简洁的基线，检查各槽返回的 gaps，再局部替换。需要实际报告时在委派报告作者时明确策略报告目标，传递项目及原生结果固定引用。
 

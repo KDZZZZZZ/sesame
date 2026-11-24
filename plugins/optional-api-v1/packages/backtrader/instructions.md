@@ -1,11 +1,7 @@
-本插件是计算与验证层：对一份固定数据、一份策略及明确参数执行一次原生回测，交付引擎证据。工作流负责提出研究问题、选择候选、比较方法和综合结论；本插件不选择新市场、不重新抓取输入，也不另开最终报告。可用能力是环境核验/准备、原生回测和读取冻结结果，具体形状在 INTERFACES.md。已验证环境可复用；缺依赖时才使用已知Python路径或prepare准备私有环境，不扫描全机、不升级共享环境。
+本插件是 Backtrader 原生回测引擎（计算与验证层，不联网取数、不接实盘、不另开报告）。输入须为 `market_read` / `data_snapshot` / 具备冻结证据的 `research_register` 发布的完整 DataRef（原样传递，不猜 digest）；策略为工作区单文件原生 Python（宿主当前用户权限运行，非 OS 沙箱）。`status=completed` 仅确认引擎运行完成，`failed` 按 diagnostics 修正，`unknown` 保留不确定且**不用新 `operation_id` 自动重放**；回测结果保留时间、单位、成本与撮合假设，不推成盈利保证或 SVL 等价。
 
-已有策略需参数搜索时可用 backtrader_optimize：它实际调用 Cerebro.optstrategy，附 parameter_space，最多64组合和200000 pass-bars，单进程保留所有完成/失败/未完成组。只用开发数据，目标与选择规则先冻结，随后独立holdout使用固定参数。backtrader_operation只读同operation原收据；unknown不换ID重跑。此处不规定研究方法、指标或默认策略。
+`backtrader_environment` `inspect` 返回 `ready:true` 即保存选择，要求本机 64 位 Python>=3.11、Backtrader 1.9.78.123（缺依赖才用已知路径或 `prepare` 建私有环境，不扫全机）。`backtrader_backtest` 要求 `backtrader.Strategy`、明确 UTC/offset 时间与完整 OHLCV 十进制文本，`config={capital,commission,slippage,feed:{timeframe,compression}}`（commission/slippage 为比例，现金模拟不等于保证金），返回 `data` 含 `equity/trades/orders` 可交 `data_read` 或 Reports。
 
-固定输入可由 market_read 或 data_snapshot 发布；已有适用DataRef直接复用。工作区计算结果只有具备宿主成功执行及冻结输入/输出证据时才能用 research_register 发布，普通文件路径本身不是登记凭据。data_read({ref})读取固定内容。DataRef必须原样传递，不能只传datasetId或猜digest。策略是工作区已编写的单文件原生Python，执行在当前用户宿主权限下，并非OS沙箱；本插件不连接实盘网关。输入、源代码、环境、成本和结果分别冻结；向工作流交接结果ref、原始输入ref、统计、诊断和撮合假设，便于同口径比较。
+参数搜索用 `backtrader_optimize`（调用 `Cerebro.optstrategy`，附 `parameter_space`，上限 64 组合 / 200000 pass-bars，仅用开发数据先冻结选择规则再做独立 holdout）；`backtrader_operation` 只读同 `operation_id` 原回执。
 
-status=completed 只确认引擎完成；failed按diagnostics修正实际问题，unknown保留执行不确定，不用新operation_id自动重放。新数据/源码/参数是一项新的研究操作。data中的表ref可直接交data_read或reports能力；保留demo、时间与数量单位、浮点精度和撮合假设，不把一次回测推成盈利保证或SVL等价。
-
-backtrader_environment inspect返回ready:true会保存选择；要求本机64位Python>=3.11、Backtrader1.9.78.123，不需要broker/API Key。backtrader_backtest要求backtrader.Strategy、明确UTC/offset时间与完整OHLCV十进制文本。config={capital,commission,slippage,feed:{timeframe,compression}}；commission/slippage是比例；股票现金模拟不等于衍生品保证金。回测data含equity/trades/orders。
-
-公开资源定位：本包路径以插件根目录为准；[完整接口契约](INTERFACES.md) 可由 plugin_read({pluginId:"sesame/backtrader",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](INTERFACES.md) 可由 `plugin_read({pluginId:"sesame/backtrader",part:"resource",path:"INTERFACES.md"})` 读取，无需每次调用前重复读取。

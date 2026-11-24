@@ -134,4 +134,4 @@ x-sesame:
           filters:
             category: 02 因子研发工具箱
             limit: 5
-          version: 4.2.0
+          version: 4.2.1

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Real matching host, isolated temporary state; no vendor, model or broker calls.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -47,7 +48,7 @@ test('all ABU source packages formally install, isolate skills, execute every ca
       const session = await runtime.session(conversation);
       await call(conversation, 'plugin_load', { pluginId: item.id });
       assert.deepEqual(session.resourceLoader.getSkills().skills.filter(skill => names.includes(skill.name)).map(skill => skill.name), [item.directory]);
-      const manifest = JSON.parse(await readFile(new URL(`packages/${item.directory}/plugin.json`, source)));
+      const manifest = readPackageDirectory(new URL(`packages/${item.directory}/`, source)).manifest;
       for (const path of [`skills/${item.directory}/SKILL.md`, ...manifest.resources]) {
         const resource = await call(conversation, 'plugin_read', { pluginId: item.id, part: 'resource', path });
         assert.equal(resource.content, await readFile(new URL(`packages/${item.directory}/${path}`, source), 'utf8'));

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Formal package installation + actual host composition, fictional backend only. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,10 +15,10 @@ test('formal portfolio execution package composes current-session tools and a re
     store=new Store(join(directory,'app'));runtime=new Runtime(store,{piDir:join(directory,'pi'),officialPluginsDirectory:join(directory,'empty')});await runtime.init();
     const draft=join(runtime.workspaces.root('conv_main'),'execution-draft');await cp(fileURLToPath(new URL('../packages/portfolio-execution',import.meta.url)),draft,{recursive:true});
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
-    const packageManifest=JSON.parse(await readFile(new URL('../packages/portfolio-execution/plugin.json',import.meta.url)));
+    const packageManifest=readPackageDirectory(new URL('../packages/portfolio-execution/', import.meta.url)).manifest;
     const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');assert.equal(installed.id,'sesame/portfolio-execution');assert.equal(installed.version,packageManifest.version);runtime.plugins.activate('conv_main',installed.id);
-    const backendPlugin=JSON.parse(await readFile(new URL('../packages/mt5/plugin.json',import.meta.url)));
-    const backendManifest=JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json',import.meta.url)));
+    const backendPlugin=readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).manifest;
+    const backendManifest=readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
     const service=backendManifest.services.find(item=>item.contract==='sesame.execution-adapter/1');
     assert.ok(service);
     const names=['mt5_settings','mt5_catalog','mt5_python','mt5_trade','mt5_command',...Object.values(service.operations)];

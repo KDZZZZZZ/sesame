@@ -1,10 +1,11 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildLock } from '../../api-v1/scripts/plugin-lock.mjs';
+import { buildLock, packageDirectories } from '../../api-v1/scripts/plugin-lock.mjs';
 
 const packageRoot = new URL('../packages/auto-factor-mining/', import.meta.url);
 const read = name => JSON.parse(readFileSync(new URL(name, packageRoot)));
@@ -26,7 +27,7 @@ test('the self-contained factor package passes the official package boundary val
 });
 
 test('seven public tools expose independent native steps without a research scheduler or reports', () => {
-  const manifest = read('plugin.json'), declaration = read('capabilities.json');
+  const manifest = readPackageDirectory(packageRoot).manifest, declaration = readPackageDirectory(packageRoot).capabilities;
   const capabilities = declaration.capabilities;
   assert.equal(manifest.title, '因子研究');
   assert.match(manifest.version, /^3\.\d+\.\d+$/);
@@ -47,11 +48,11 @@ test('seven public tools expose independent native steps without a research sche
   assert.deepEqual(manifest.permissions.scopes, ['capabilities.compose', 'process.execute']);
   assert.deepEqual(manifest.permissions.calls, ['host.process.exec']);
   assert.equal(existsSync(new URL('../factor-evaluator/', packageRoot)), false);
-  assert.equal(JSON.parse(readFileSync(new URL('../bundle-profile.json', import.meta.url))).packages.includes('sesame/factor-evaluator'), false);
+  assert.ok(!packageDirectories(fileURLToPath(new URL('../', import.meta.url))).includes('factor-evaluator'));
 });
 
 test('environment configuration and immutable storage are declared without blocking environment preparation', () => {
-  const declaration = read('capabilities.json'), byId = new Map(declaration.capabilities.map(cap => [cap.id, cap]));
+  const declaration = readPackageDirectory(packageRoot).capabilities, byId = new Map(declaration.capabilities.map(cap => [cap.id, cap]));
   assert.equal(byId.get('factor_environment').execution, 'run');
   for (const id of ['factor_configuration_read', 'factor_configuration_update']) {
     assert.equal(byId.get(id).execution, 'immediate');

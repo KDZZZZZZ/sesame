@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/akshare:instructions#preamble": "9633ed18bec79cb1eb04a43be9ec223e925ddf8bbd3897708b6a27e5934d36f7",
+    "sesame/akshare:instructions#preamble": "f32d1af4c3bdd12c425cdc4e80dbd2a877905cb8f7a2b3b2af2189c2a79e8f3b",
     "sesame/akshare:plugin.description": "f155d3898f9a6adddbad3237f4019ef254ad7cf5aff1c6d959ed2b25c168c12b",
     "sesame/akshare:resource/INTERFACES.md": "fd5d5491a4265f38ad29debde4b8081cd16f0ada7102bb291584a91d434ed603",
     "sesame/akshare:resource/README.md": "30e962375c11988b139ed37b26554167c9636448a442821156baf9f70399ea25",
@@ -34,5 +34,5 @@
     "sesame/akshare:tool/akshare_status.input": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
     "sesame/akshare:tool/akshare_status.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842"
   },
-  "digest": "8e8cd3c298fd8c5f040d5f79ddd411a05f0994865348e73fc54659416ac36ab1"
+  "digest": "9db656dcafd9eed15c1f6b64212404a8dea14814ccce55a907638a63881ba3f5"
 }

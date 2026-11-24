@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/akshare
 title: AKShare A股研究数据
 description: 可选只读AKShare：A股品种搜索、历史日线、报价及真实日线60秒轮询订阅；复用已有依赖，不提供交易所tick流或交易。
-version: 2.0.1
+version: 2.0.2
 license: MIT
 engines:
   sesame: ">=0.2.3"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "backend"
+    functionalCategory: "integration"
+    implementationKinds: ["adapter"]
+    title:
+      en: "AKShare"
+      zh: "AKShare"
+    summary:
+      en: "Read explicit A-share sources, historical bars and observed polling quotes."
+      zh: "读取明确的 A 股来源、历史 K 线与轮询观察报价。"
+    dependencies:
+      en: "Compatible Python and pinned AKShare. Public sources can fail; polling is not a tick feed."
+      zh: "需要兼容 Python 与固定 AKShare。公开来源可能失败；轮询不是逐笔行情。"
   default_state: discoverable
   prompts:
     - instructions.md

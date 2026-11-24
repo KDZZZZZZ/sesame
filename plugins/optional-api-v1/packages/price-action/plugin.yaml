@@ -3,7 +3,7 @@ protocolVersion: 2026-07-28
 id: sesame/price-action
 title: Price Action 价格行为
 description: 可组合的分析方法：当前价格更符合哪一种趋势或区间结构，以及什么闭柱观察会削弱该判断；消费已有证据，返回带源引用的推进/重叠/回撤观察、趋势/区间候选、确认时间、相反解释和失效条件。
-version: 2.0.1
+version: 2.0.2
 license: MIT
 engines:
   sesame: ">=0.2.3"
@@ -11,6 +11,19 @@ author:
   name: Sesame contributors
 entry: index.js
 x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Price Action"
+      zh: "Price Action 价格行为"
+    summary:
+      en: "Inspect price structure, confirmed pivots, breaks and failed moves."
+      zh: "研究价格结构、已确认摆点、突破与失败动作。"
+    dependencies:
+      en: "Fixed bars and explicit confirmation times; helper scripts need Python 3. No forced ICT or wave guidance."
+      zh: "需固定 K 线与明确确认时间；辅助脚本需 Python 3，不强制 ICT 或波浪指导。"
   default_state: discoverable
   agent_scope: all
   prompts:

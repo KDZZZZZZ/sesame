@@ -12,9 +12,7 @@ mt5_trading_prepare 的 expected_account 可选，仅组合调用需要锁定已
 
 用户要求打开本机 MT5 时，主 Agent 可直接用 mt5_start_terminal({command_id:"open-selected-terminal-01"})；使用本插件已选安装和已有数据目录，不需要 MCP 密钥、Python 或先读取 catalog。它复用原终端 profile，可能恢复其中已有 EA，因此沿用现有启动权限；不自动启用权限、传入新账户或执行保存的自定义 INI。returned/result.status=spawned 只证明启动请求已交给系统，不证明 MCP、券商、Python 或界面已经就绪；需要连接证据时再用 mt5_connect({command_id:"verify-started-terminal-01",start_if_needed:false})。同一启动动作沿用 command_id；unknown 先用 mt5_command 查回执并核对真实状态，不能换 ID 盲目重启。缺安装按 mt5_dependencies inspect 的缺项处理，缺 MCP 凭据不妨碍先打开终端供用户设置。
 
-取证使用 data_providers({contract:"sesame.market/1"})、market_instruments、market_read；已知有效来源/品种身份可直接复用。SourceRef={providerId,revision,binding?}，binding按configSchema填写，品种用搜索返回的ref，metadata.connection给出连接身份。source.revision与connection.revision含义不同。market_read的固定ref、实际范围、单位、时间口径和coverage一起交给方法层；coverage.complete:false保留真实行及缺口，不当成零行情。host专用bind/query/subscribe形状在INTERFACES.md，无需手填bindingId。
-
-只有显示任务才使用canvas_binding/canvas_apply，显示结果以canvas_inspect当前图表的status/error/bar_count/feed_status为证据。历史读取、保存图表配置和实时显示分别核验；来源协议错误按具体原因处理，重复绑定同一身份无助修复。持续订阅由宿主管理。
+标准行情读取与画布显示分别遵循 data-access 与 canvas-control，本包仅补充下方数据源专有约束。
 
 Sesame券商行情来源是sesame/mt5#market，依赖terminal MCP；marketdata是独立MetaTrader.com可选数据源，disabled不影响券商行情。mt5_chart管理终端原生窗口，canvas_*管理Sesame工作台。mt5_cache仅本地历史/显式同步，broker墙时不猜UTC。
 

@@ -5,9 +5,9 @@
   "packages": [
     {
       "id": "sesame/canvas-control",
-      "version": "4.0.1",
+      "version": "4.0.2",
       "directory": "canvas-control",
-      "treeDigest": "sha256:1952b32bb9b75b84ebc8df356ec786d7f7051b465ad4707d341b258856886ef9",
+      "treeDigest": "sha256:b40c048ee03400c5d3f590051306a94471c9a38dcb3cb21ed283e29fa9e1aa7d",
       "files": [
         {
           "path": "LICENSE",
@@ -61,13 +61,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "7c277e290a9d48448823cfb6239750c093b7c8cd7db9f88f7c15c8f0d0cd2e7c",
+          "sha256": "54ae6f1ccf42c92fd2d3197967fd276f5bd9df79be02f784f18669ca7aaa3aee",
           "bytes": 108
         },
         {
           "path": "plugin.yaml",
-          "sha256": "8e1297aa1e7c9aeb5859ef28c718d939d9f27b9608ba6fd82f2a14745e99df3c",
-          "bytes": 19613
+          "sha256": "81396ca71e13f128691e5c9d1abaffcab9f45625c74db68991e169a08a7092e3",
+          "bytes": 20295
         },
         {
           "path": "requirements.yaml",
@@ -153,9 +153,9 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "3.1.5",
+      "version": "3.1.6",
       "directory": "configuration",
-      "treeDigest": "sha256:6b54a3a962b8284e2cb7faa36eee3f4c3c742c9e72c8958212f939bbf1eaec98",
+      "treeDigest": "sha256:5f2060c942196c537d867ad52b2d42519f955007f25bbc4c2f07df6c90f5c9cb",
       "files": [
         {
           "path": "LICENSE",
@@ -179,18 +179,18 @@
         },
         {
           "path": "instructions.md",
-          "sha256": "ddf5ce0bb53de87923cbfbee95acc7d144f3cd902b8d7c9103a5321a21c9ddd4",
-          "bytes": 3621
+          "sha256": "4ddb1a96b7ed1f3ed30a2961f06f6b78029b8c3f0fa71fe22a5cd34044a4f25e",
+          "bytes": 1903
         },
         {
           "path": "package.json",
-          "sha256": "1b66cb34be3d75d2247502ce4480287c9a9126e89345bd571779c517171cbfd8",
+          "sha256": "ce6c0865ad5f592494e11841b01ea65b46c3e6e9729e3911b0d3dc1a43a7e0de",
           "bytes": 107
         },
         {
           "path": "plugin.yaml",
-          "sha256": "0de93912099f8ffb018cab957005a8c1f3ab6d97ca213633a1d724b924dab1c3",
-          "bytes": 1753
+          "sha256": "85604d43f11a34751248dd575b2846ea3507d03de35f9076f97a41f344f11afe",
+          "bytes": 2677
         },
         {
           "path": "requirements.yaml",
@@ -209,7 +209,7 @@
         },
         {
           "path": "surface.lock.json",
-          "sha256": "520a3696a0e4325148274951e1dd22243abb3613fc4a701ad03514626f0bfcf1",
+          "sha256": "d16c5afb57b2aff19ec20d3e2f43708d485e47d919797fd8d9521fa06aad83f5",
           "bytes": 4640
         },
         {
@@ -256,9 +256,9 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "3.0.7",
+      "version": "3.0.8",
       "directory": "data-access",
-      "treeDigest": "sha256:abc9ca73fced8ff6a02519a2a1ef0cd1f1edd4308e1bb92d43e1e5f6eae8fd1c",
+      "treeDigest": "sha256:0a7eb87dfdfd5a65b6313c3dab136a4b168f387372af3704d16eeb5d86a259cd",
       "files": [
         {
           "path": "LICENSE",
@@ -302,13 +302,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "97ee6e663524b7da4d35c659a76b8c49b9b3c9c0085d4664dba104ac9b0b73b6",
+          "sha256": "47efa44ac86fe57ac2cd33bb2aba6d10934513fc94224504ecd1d621406fe2bf",
           "bytes": 105
         },
         {
           "path": "plugin.yaml",
-          "sha256": "86e24895ddda804da19021110d5267b00be755a103380d67b9f22a352c405da9",
-          "bytes": 4069
+          "sha256": "fa98d604493649f8c6f3be1dbbd591f0fb70d50179cfca5bb84f2e3627eb3c84",
+          "bytes": 4745
         },
         {
           "path": "references/execution-evidence.md",
@@ -404,9 +404,9 @@
     },
     {
       "id": "sesame/memory",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "directory": "memory",
-      "treeDigest": "sha256:3f6788a4a0042ad82f2688b9f5fd6ff07dd718c14a8b64bc47be9f7dd94f10d0",
+      "treeDigest": "sha256:a4f253da7aa5e1edd3c036e7346bf063d5280d86911e8f9ef74289299057471c",
       "files": [
         {
           "path": "LICENSE",
@@ -435,18 +435,18 @@
         },
         {
           "path": "instructions.md",
-          "sha256": "0b5bb64035c02df76aa04c222608078be7cb86aebdc93252b0442201c057fe76",
-          "bytes": 6803
+          "sha256": "7b8997ecba03dd5fff957bcc4377d11fd08cbac9c8400a1389ebfd1f4d86cb2c",
+          "bytes": 1892
         },
         {
           "path": "package.json",
-          "sha256": "152e4fbf92bd16d8535f7d4cf02c9dfa07f90e27c90d3e8edf5f0b1ac50b4d17",
+          "sha256": "1d261379cda65174caca8a82bdcabc3e487f5dacf6fc6cb38fb5f50aa2989362",
           "bytes": 100
         },
         {
           "path": "plugin.yaml",
-          "sha256": "23cfdadd50419201a59b882c79520ce88f435aa59b7b4985845c76404abd45c9",
-          "bytes": 13233
+          "sha256": "cae4f0225c2fdb1b1922ba792b886befe0472aef48716ee2c7f3cd61a868e92c",
+          "bytes": 13774
         },
         {
           "path": "repository.js",
@@ -470,8 +470,8 @@
         },
         {
           "path": "skills/personal-trading-memory/SKILL.md",
-          "sha256": "b2a5212a0cecb0bfd086c7c3da0474b787b6e1f42a8f6255d68aa849c572852a",
-          "bytes": 13478
+          "sha256": "e81235c5139bbfc3de3f045fb11fbcf672dfcbe815ee579012c5fc9908656539",
+          "bytes": 13664
         },
         {
           "path": "support.js",
@@ -480,7 +480,7 @@
         },
         {
           "path": "surface.lock.json",
-          "sha256": "652f5891087c8baca1cb9548aa22bf873034709c8ae710f431bb0a96ed7705a9",
+          "sha256": "27ddd9a506ef33164e561de06460d4b966fb1c2770caf95ed7022825c828655a",
           "bytes": 3746
         },
         {
@@ -522,9 +522,9 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "5.0.1",
+      "version": "5.0.2",
       "directory": "orchestration",
-      "treeDigest": "sha256:1051196303d02f43f744fb1d2e0d72ff26d8bbfbbcff2943ec985bad54eb07e1",
+      "treeDigest": "sha256:7c57426204fdd497ca56af406aa1362e3901fbd04a8594b4dd9a8051aff10118",
       "files": [
         {
           "path": "LICENSE",
@@ -553,13 +553,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "c5304781b345c51043c1fe9b5afabae8bfa1b210ea146a3192b03e7e9e558930",
+          "sha256": "95bc56acc04697e6ac9c0f6fca942c7cf5b9366a0f5d0fe1044168c085c08573",
           "bytes": 107
         },
         {
           "path": "plugin.yaml",
-          "sha256": "2f95d8466895206016dd140a500eb76eaf8fc645c66d235bb7ea09b668de93a6",
-          "bytes": 2147
+          "sha256": "4190698d5fbeb7cd2a3354d345a43063dda94c0e1caabe60c9dc5d292afa16d1",
+          "bytes": 2804
         },
         {
           "path": "references/agent-runs.md",
@@ -615,9 +615,9 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.8",
+      "version": "3.1.9",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:43720ec0ad93d2470d4b8ed06ecbdff7ca17b297539da990d5ae5ec93c0b3901",
+      "treeDigest": "sha256:f6e9118c6f23801af125408108438378e7ce22df36315c8c6897d647b6ef1cfd",
       "files": [
         {
           "path": "LICENSE",
@@ -631,8 +631,8 @@
         },
         {
           "path": "catalog.js",
-          "sha256": "85ade3ab0534a1aff06dcd6edbd35cd98f232273fe04586b72dad405838c8386",
-          "bytes": 18918
+          "sha256": "07f4f6f739e7b46a08284025291e8f89c11399eeeb33e06a314bc5884666d277",
+          "bytes": 19296
         },
         {
           "path": "evals/cases/discovery.yaml",
@@ -656,13 +656,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "5c475bdc4ff6b87db5f2883b63adfdf97b94ac3fd5135db4f2eb766734b56169",
+          "sha256": "d2d7330a87eba7815dd985ee9d6cfe18bf2aac3fed15b4ca3da65c0fd6db3c5d",
           "bytes": 108
         },
         {
           "path": "plugin.yaml",
-          "sha256": "c40371068aecde7dddadaad73a6d73687bf1c650a14dea3edeb34ed998c7e2a2",
-          "bytes": 4331
+          "sha256": "643da72e98916aa1996541ac01ddb47f44e173c304b979baa36dbb51a40ca297",
+          "bytes": 4877
         },
         {
           "path": "protocol/directory.mjs",
@@ -671,8 +671,8 @@
         },
         {
           "path": "protocol/package.mjs",
-          "sha256": "58f174f05a85990c9fb0f40398a77c26aedbad9377c8e3e06e5772c0870a1e9a",
-          "bytes": 12629
+          "sha256": "b5d1b7c9a92c004c64c96c962437354340d4603b034738690906282b9226eaff",
+          "bytes": 12716
         },
         {
           "path": "protocol/vendor/yaml.LICENSE",
@@ -686,8 +686,8 @@
         },
         {
           "path": "references/authoring.md",
-          "sha256": "0430b2b8296ed323c7d280359f35fb716c6c287e097b2ba9e7d5677d5fd9b798",
-          "bytes": 19678
+          "sha256": "8f5e6293a52e7bef13d0d0c769ae015bf8e3ba0a3aee5acd83e7e80d0d4e6341",
+          "bytes": 19855
         },
         {
           "path": "references/host-api.md",
@@ -711,8 +711,8 @@
         },
         {
           "path": "scaffold.js",
-          "sha256": "6f6952da03f27d4caa6343a88d99dd7864d240948e33a504b3062360225ee81a",
-          "bytes": 22167
+          "sha256": "c95339c4f27f4724815343fb91b23d38197f14f401240ef1d7b4d92670888e58",
+          "bytes": 22149
         },
         {
           "path": "scripts/create-plugin.mjs",
@@ -721,8 +721,8 @@
         },
         {
           "path": "skills/develop-plugins/SKILL.md",
-          "sha256": "d70db6555d1428cafba7e269a2cabaf6382c95bb08e4624ed2e1af9e37ce81e1",
-          "bytes": 3902
+          "sha256": "1e313519171b4ec97d6c59a0a15b8ff2c28925a9113b29b72267b14bc54dddd9",
+          "bytes": 3935
         },
         {
           "path": "skills/manage-plugins/SKILL.md",
@@ -731,7 +731,7 @@
         },
         {
           "path": "surface.lock.json",
-          "sha256": "eb74338b94cd804126690a1946ef02d768dbfbf7392caf8f5f09dfc27aa249d5",
+          "sha256": "951eaf7010149d557fe48712155b45b55378b78e0153846cb437db6744b1b0be",
           "bytes": 7427
         },
         {
@@ -798,9 +798,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.9",
+      "version": "8.0.10",
       "directory": "reports",
-      "treeDigest": "sha256:070964c468b11d56c731355ce784eb895def58c458ca2bb23bfc78af225a58d6",
+      "treeDigest": "sha256:3069480e123690cb5fa142716455f1b56da2c42aea6b044fd4b58f0b51225e49",
       "files": [
         {
           "path": "LICENSE",
@@ -1009,13 +1009,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "3a4f96437b96c188d4aa8b75b5adb9a1dc0ce7f243280898c3a51b0463d93ba6",
-          "bytes": 120
+          "sha256": "886638dc5e9704d28ab66b0c028ad2ae5dc664fe00c6d60428cc9a1aa14592f6",
+          "bytes": 121
         },
         {
           "path": "plugin.yaml",
-          "sha256": "dff0656b899121c567d9ecec735ec4e97974a5869bde6e964acb484acf621619",
-          "bytes": 65031
+          "sha256": "a7a4b54ecc3c355c54262f066d6dc1a3b2e71e591f90b14e60b25c2b7bc2907e",
+          "bytes": 65705
         },
         {
           "path": "references/composing.md",
@@ -1211,9 +1211,9 @@
     },
     {
       "id": "sesame/research",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "directory": "research",
-      "treeDigest": "sha256:d9e5fb5f37485e1fab3bfdc1fd95d2275bed626c039f62f00eeacca41d63345f",
+      "treeDigest": "sha256:f8bb9725980d3a15123b2fca328dbfc4c87f0fc0ce0f79ee94882d70eadb7f79",
       "files": [
         {
           "path": "LICENSE",
@@ -1237,8 +1237,8 @@
         },
         {
           "path": "instructions.md",
-          "sha256": "77f5ae5b8151dc580a2427c20d944f7901de2e1c70a94ed007fd0a3986d7ca10",
-          "bytes": 2015
+          "sha256": "03a1e85d5b990e11c912dc819ad729860b311e77b72b6e2e5a7ac20927e2bb60",
+          "bytes": 2151
         },
         {
           "path": "methods/index.json",
@@ -1247,13 +1247,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "3978f07f179306d1c8bd216803e3f7d614f94316a96f60d0050d9a87e3c5f185",
+          "sha256": "e48ff78289ff6d9e75c2531903f70bec670927216bb64cd53f3d8d7b3e9d908f",
           "bytes": 102
         },
         {
           "path": "plugin.yaml",
-          "sha256": "965f5c78c37752909911fee9616f5263da703872fd67e677231462e75ded0a40",
-          "bytes": 13140
+          "sha256": "5c1d19fea0cfe6b511bb0ba82b4fcc80cc32dc69127a6fa774fec57eaa304c4a",
+          "bytes": 13862
         },
         {
           "path": "references/adapt-and-compose.md",
@@ -1487,7 +1487,7 @@
         },
         {
           "path": "surface.lock.json",
-          "sha256": "0eee6cd2cb7becdac337db2a6d79d7a5f637799120b7ae05301f57e1a0560c94",
+          "sha256": "639c54d733b439e2f4108a9ce8cdb7cd57559fe5c6817d5353d8c2b771dae63c",
           "bytes": 7940
         },
         {
@@ -1504,9 +1504,9 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "strategy-authoring",
-      "treeDigest": "sha256:7dd820cbc2730e55b7af41acba4bcad16e23a0d0ef97eecdb98fd10abc02faf8",
+      "treeDigest": "sha256:6d4a60c50b8057041390d4d47c6a01c2040e158d522f9198e43c6d456919b58f",
       "files": [
         {
           "path": "LICENSE",
@@ -1575,8 +1575,8 @@
         },
         {
           "path": "instructions.md",
-          "sha256": "f1314a9bcad30cec2e59222cec647eba447403423bfdf211b7f89116ae368004",
-          "bytes": 3665
+          "sha256": "94996386909979ae8fffce70b0f6be739ab6f41002c561bc33ce1054080c49ef",
+          "bytes": 803
         },
         {
           "path": "lib/agent-decision-tools.js",
@@ -1645,13 +1645,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "d2c8ac0e526e53f8b0fac0f06e4aac9e11645d75b5fe230182c5f3ff85d789e6",
+          "sha256": "436a74a731fe318ecd02e795acf046d260806f6346a2035b3494fd3174509b3b",
           "bytes": 131
         },
         {
           "path": "plugin.yaml",
-          "sha256": "ec5a0f075acba9c96271df07551696c7b16f290cb404be77961eeaa976bc9a46",
-          "bytes": 7533
+          "sha256": "76ec14e57cce65e43571f211cb671be3cbf4079a42737728f673d2d2e7956445",
+          "bytes": 8371
         },
         {
           "path": "references/agent-inputs.md",
@@ -1700,7 +1700,7 @@
         },
         {
           "path": "surface.lock.json",
-          "sha256": "d91b358879e72454471ad317b61b28ca5f0ee4dab1a52adc06c85f1b0545ce79",
+          "sha256": "4db766da830325627394610f926d223aab5115218edce08d4981b84f3af4a9de",
           "bytes": 7197
         },
         {
@@ -1747,9 +1747,9 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "directory": "ultra",
-      "treeDigest": "sha256:6774d7836bc7ff807fcb253df06471e08e00d079ab9d3e99f399a8beb2f29bdc",
+      "treeDigest": "sha256:ff1aa1c98a202e7f6f04ec5617c6b15ee78d8eb737efe353d15fb11b035e0104",
       "files": [
         {
           "path": "LICENSE",
@@ -1783,13 +1783,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "1c2b4a2fefad79253e48b420c401bd9f26057188b5b829b1b8daf7ee3a4a82f3",
+          "sha256": "873c80880a921bce087d9e3f48683a85235696c3f353caa849875175adeb2f04",
           "bytes": 173
         },
         {
           "path": "plugin.yaml",
-          "sha256": "27c7f303eef4fc9fff4d882c07e381d00102b0ac29a25339e08d9f2e1bf37389",
-          "bytes": 12135
+          "sha256": "27eb078264a7023bafcfc7f6e91972f0e82f556602e6554b747731b4272d3acd",
+          "bytes": 13139
         },
         {
           "path": "requirements.yaml",
@@ -1880,9 +1880,9 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "user-guide",
-      "treeDigest": "sha256:6d37b1cda6e3013751ffd777d02919c8530044e0c7d9ef0434e2a8809533f596",
+      "treeDigest": "sha256:2a24ebb970a59f12059e8b991e8fea35fb6fbdf08855068fdd1ddf4c501285d0",
       "files": [
         {
           "path": "LICENSE",
@@ -1901,13 +1901,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "e3ac9fcb4645302cef2e36143efe2e1cf15987746302e5d6564ff1ea74147b65",
+          "sha256": "9d7ff4e816019061e979c586e6d2f34bfe47b2f926dddb06602e2b361c5c1452",
           "bytes": 104
         },
         {
           "path": "plugin.yaml",
-          "sha256": "1c86290259c0af50cb8a94e6d85370ce43e920657e5dc75830c3e4e9e79161ed",
-          "bytes": 2243
+          "sha256": "1f65f276ea58e423599ecc03e90a2ed414faef6eda82b39e28932049ba69c38f",
+          "bytes": 2929
         },
         {
           "path": "references/chat-and-commands.md",
@@ -1963,9 +1963,9 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "workspace",
-      "treeDigest": "sha256:1270dded21930856b3307a7818368662d8accd9e142dad2a103a79214cfa2e9d",
+      "treeDigest": "sha256:224d4d17e277c5a4dda85db3af45ee54488c13dd8cbd2eb891981a113d955a41",
       "files": [
         {
           "path": "LICENSE",
@@ -1999,13 +1999,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "d10da7d455e474a5c8be11921a9c7c69800e4d866f1e72985ac582886249a8ef",
+          "sha256": "1d41e323e15cc586e923d320608d47d2dfb99363979b0dd86ff6e2598fc0bbdd",
           "bytes": 103
         },
         {
           "path": "plugin.yaml",
-          "sha256": "1a96d8e97782ca64367a06559aab86f3f32d7b1b942d6afb9f1af5a20c167766",
-          "bytes": 1432
+          "sha256": "00e0843a003c488e77726b652f0926609eb305deabf9a321ccd0537a20a02c12",
+          "bytes": 2155
         },
         {
           "path": "requirements.yaml",

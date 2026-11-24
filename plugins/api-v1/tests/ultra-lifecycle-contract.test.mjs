@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, mkdtemp, cp, rm } from 'node:fs/promises';
@@ -16,7 +17,7 @@ test('the real host lifecycle preserves the completed main input and owner bindi
   const f = fixture(); t.after(() => f.close());
   const task = await start(f.host, { objective: 'Continue the unmet goal from an actual completed main lifecycle callback.' });
   await until(() => f.store.runs.get(task.cycle.id)?.value.status === 'completed');
-  const manifest = JSON.parse(await readFile(new URL('../packages/ultra/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/ultra/', import.meta.url)).capabilities;
   const entry = { id: 'sesame/ultra', capabilityManifest: manifest };
   const declaration = manifest.hooks.find(hook => hook.event === 'lifecycle.afterAgentTurn');
   assert.equal(declaration.operations.handle, 'ultra_after_turn');

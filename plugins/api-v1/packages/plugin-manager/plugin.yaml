@@ -3,12 +3,25 @@ protocolVersion: 2026-07-28
 id: sesame/plugin-manager
 title: 插件管理
 description: 发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。
-version: 3.1.8
+version: 3.1.9
 license: MIT
 engines:
   sesame: ">=0.3.0-dev.1 <0.4.0"
 entry: index.js
 x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["service"]
+    title:
+      en: "Plugin manager"
+      zh: "插件管理"
+    summary:
+      en: "Find exact package names, verify fixed bytes and explicitly install or update."
+      zh: "按精确名称查找、核验固定内容，明确安装或更新。"
+    dependencies:
+      en: "Catalog downloads need network access. Environment preparation is a separate action."
+      zh: "下载目录包需要联网；环境准备是独立操作。"
   default_state: mounted
   execution: native
   main_tool_names:

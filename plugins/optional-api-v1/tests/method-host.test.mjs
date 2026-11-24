@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Real matching Runtime/SDK, all state temporary; no model, market, auth or account calls. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,13 +54,13 @@ test('checked API 2 installation isolates eight skills; workspace scripts regist
       if (conversationId !== 'conv_main') runtime.createConversation('orchestrator', `Isolated ${name}`, null, conversationId);
       const session = await runtime.session(conversationId);
       const loaded = await call(conversationId, 'plugin_load', { pluginId: `sesame/${name}` });
-      const expectedPrompt = (await readFile(join(packages, name, 'prompt.md'), 'utf8')).trim();
+      const expectedPrompt = (await readFile(join(packages, name, 'instructions.md'), 'utf8')).trim();
       assert.ok(loaded.plugin.prompts.some(p => p.content.includes(expectedPrompt)));
       assert.deepEqual(session.resourceLoader.getSkills().skills.filter(s => names.includes(s.name)).map(s => s.name), [name]);
       const prompt = session.resourceLoader.getSystemPrompt();
       assert.ok(prompt.includes(expectedPrompt), `${name} prompt was not loaded`);
-      for (const other of names.filter(n => n !== name)) assert.ok(!prompt.includes((await readFile(join(packages, other, 'prompt.md'), 'utf8')).trim()), `${other} leaked into ${name}`);
-      const manifest = JSON.parse(await readFile(join(packages, name, 'plugin.json'), 'utf8'));
+      for (const other of names.filter(n => n !== name)) assert.ok(!prompt.includes((await readFile(join(packages, other, 'instructions.md'), 'utf8')).trim()), `${other} leaked into ${name}`);
+      const manifest = readPackageDirectory(join(packages, name)).manifest;
       for (const path of [`skills/${name}/SKILL.md`, ...manifest.resources]) {
         const resource = await call(conversationId, 'plugin_read', { pluginId: `sesame/${name}`, part: 'resource', path });
         assert.equal(resource.content, await readFile(join(packages, name, path), 'utf8'));

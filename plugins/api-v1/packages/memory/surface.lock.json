@@ -1,11 +1,11 @@
 {
   "formatVersion": 1,
   "elements": {
-    "sesame/memory:instructions#preamble": "0b5bb64035c02df76aa04c222608078be7cb86aebdc93252b0442201c057fe76",
+    "sesame/memory:instructions#preamble": "7b8997ecba03dd5fff957bcc4377d11fd08cbac9c8400a1389ebfd1f4d86cb2c",
     "sesame/memory:plugin.description": "afe3c1f4212c886da447f1606d0d4a5e01da921e33e1fd17f6a8f0b7a28cffe0",
     "sesame/memory:skill/manage-memory.body": "a367c71a30a58fa9cef625c68c2dd7e66cfb715ebe2eabd974cf361dfe08ad83",
     "sesame/memory:skill/manage-memory.description": "7fcdbf506061e14f55cd9bd83f187df7347625deabfc994945a3a9bb1a762347",
-    "sesame/memory:skill/personal-trading-memory.body": "656b56625c8f9dbff9656f2e9409b289c5a55908d1ee5f4ddf13acb39d925452",
+    "sesame/memory:skill/personal-trading-memory.body": "cd9f1c49844dd8ebf57b4eba189d3b8fc38afe7109418f4b229e2201d1bbcdef",
     "sesame/memory:skill/personal-trading-memory.description": "976c60b74c05a3f0f228af6bcbd3caa9a8df3bd88d027ccc3647c5ab4ee7da8c",
     "sesame/memory:tool/memory_manage.description": "d41efb06a813f813cc574cb93e74bd2b207d96e2d52f3aa6d2270e57c755ffdd",
     "sesame/memory:tool/memory_manage.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
@@ -32,5 +32,5 @@
     "sesame/memory:tool/memory_trading_context.input": "3d8dc28cc27fd1be38790992fc4e12fa09233b72c9d7d6019a8643c52c0edb7e",
     "sesame/memory:tool/memory_trading_context.output": "e88dfbcb9e8f25a77fc9f34e73bb69f321f100aec5b24cb2103f2a3642f441e4"
   },
-  "digest": "a95df53b87e19aedbb98ec75ba68f76bddd9020c827a87862b97415714831a35"
+  "digest": "c883a2ef93072ab4d7f00d0415a26d9a6b006b12cf72a737d1320647576374a5"
 }

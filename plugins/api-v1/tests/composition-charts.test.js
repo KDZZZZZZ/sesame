@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -16,7 +17,7 @@ const block = chart => {
 const report = { title: 'Composition collection', locale: 'zh-CN', provenance_kind: 'demo', content: { kind: 'document', sections: fixture.charts.map(chart => ({ title: chart.spec.kind, blocks: [block(chart)] })) } };
 
 test('all selected kinds reach the production document and component interfaces', async () => {
-  const manifest = JSON.parse(await readFile(new URL('capabilities.json', pkg), 'utf8'));
+  const manifest = readPackageDirectory(new URL('.', pkg)).capabilities;
   const publicKinds = manifest.capabilities.find(c => c.id === 'report_render').inputSchema.properties.input.$defs.block.oneOf.find(b => b.properties.type.const === 'chart').properties.kind.enum;
   for (const chart of fixture.charts) assert.ok(publicKinds.includes(chart.spec.kind), `${chart.spec.kind} must pass the public schema`);
   const html = await renderStructuredReport({}, report);

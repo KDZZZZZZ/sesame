@@ -85,6 +85,7 @@ test('installed Research entry separates four actual Agent stages and publishes 
           assert.equal(last.value.provider.pluginId, 'sesame/reports');
           assert.equal(last.value.inputSchema.type, 'object');
           call('components_show', { target:'report', operation_id:'four-stage-research-publication', title:'DEMO · 用户调整后的 Research', summary:'固定合成观察的有限解释。', provenance_kind:'demo',
+            lead:'合成观察的末值高于初值。', highlights:[{label:'初值',value:'100 USD'},{label:'末值',value:'105 USD'}],
             data:[{id:'observations',ref:rawRef,usage:'Fixed fictional observations for the line chart'},{id:'research-results',ref:resultsRef,usage:'Retained precomputed fixture evidence'}], references:[rawRef,resultsRef],
             content:{kind:'document',sections:[{title:'固定观察区间末值较高',blocks:[
               {type:'markdown',text:'合成观察从 100 USD 变为 105 USD，仅描述给定区间。'},
@@ -166,6 +167,7 @@ test('installed Research entry separates four actual Agent stages and publishes 
       let retained;
       const published = await publishWorkflowReport(adapterHost, { operationId: 'fixed-provider-' + name,
         title: 'DEMO · Fixed adapter', summary: 'Real host publication of explicit synthetic content.',
+        lead: 'The adapter published the supplied synthetic observation.', highlights: [{ label: 'Observations', value: 1 }],
         content: { kind: 'document', sections: [{ title: '判断', blocks: [{ type: 'paragraph', text: 'Only the supplied synthetic observation is described.' }] }] },
         attachments: [{ path: 'run.json', mediaType: 'application/json', content: evidenceBytes }],
         references: [rawRef], onPublication: value => { retained = value; } });

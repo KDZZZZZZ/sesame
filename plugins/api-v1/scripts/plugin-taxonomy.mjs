@@ -61,9 +61,9 @@ function bilingual(name, field, value) {
 }
 
 /** Catalog facts are descriptive. Only the fixed allowlist can reach the inventory. */
-export function packageCatalog(manifest, declaration, paths) {
-  if (!Object.hasOwn(manifest, 'catalog')) return undefined;
-  const entry = manifest.catalog, name = manifest.id;
+export function packageCatalog(entry, manifest, declaration, paths) {
+  if (entry === undefined) return undefined;
+  const name = manifest.id;
   fail(object(entry) && Object.keys(entry).every(key => fields.has(key)), `${name}: unknown x-sesame.catalog field`);
   fail(functionalCategories.has(entry.functionalCategory), `${name}: invalid functional category`);
   for (const field of ['title', 'summary']) bilingual(name, field, entry[field]);
