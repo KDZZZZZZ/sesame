@@ -1,0 +1,1720 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/reports
+title: 视觉组件与报告
+description: 将研究初稿统一做图文编辑：按问题组织全文，用自然中文重新解释已有研究，逐段审读并编排图表，以受控组件呈现报告或回答，保持事实与判断边界。
+version: 8.0.10
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.2 <0.4.0"
+author:
+  name: Sesame
+entry: index.js
+dependencies: []
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "presentation"
+    implementationKinds: ["service"]
+    title:
+      en: "Interactive reports"
+      zh: "交互报告"
+    summary:
+      en: "Present text and fixed data through shared visual components, charts, layouts and interactions in reports and answers."
+      zh: "用统一组件、图表、排版与交互在报告和回答中展示已有文字与固定数据。"
+    dependencies:
+      en: "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required."
+      zh: "需要 Sesame 0.3.0-dev.2 或更新宿主；图表随插件提供，无需 CDN。"
+  default_state: mounted
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - PROVENANCE.md
+    - assets/report-kit.js
+    - assets/editorial-charts.js
+    - assets/editorial.css
+    - assets/charts-statistics.js
+    - assets/charts-temporal.js
+    - assets/charts-structure.js
+    - assets/charts-decision.js
+    - assets/charts-market.js
+    - assets/vendor/lightweight-charts-LICENSE
+    - assets/vendor/lightweight-charts.json
+    - examples/statistical-fixtures.json
+    - examples/temporal-fixtures.json
+    - examples/structural-fixtures.json
+    - assets/content-charts.js
+    - assets/report-math.js
+    - assets/vendor/katex/LICENSE
+    - assets/svl-graph.css
+    - assets/svl-graph.LICENSE.txt
+    - assets/svl-graph.sources.json
+    - assets/charts-composition.js
+    - examples/composition-fixtures.json
+    - assets/answer-surface.css
+    - references/composing.md
+    - references/text.md
+    - references/data-binding.md
+    - references/interactions.md
+    - references/delivery.md
+    - references/styles.md
+    - references/repair.md
+    - assets/content.css
+    - assets/interactions.js
+    - renderer/document-shell.html
+  templates:
+    report_repair: references/repair.md
+  agent_scope: all
+  execution: native
+  permissions:
+    scopes: []
+    calls:
+      - host.artifacts.query
+      - host.records.query
+      - host.reports.publish
+      - host.reports.describe
+  mcp_export:
+    - components_list
+    - components_describe
+    - components_validate
+    - components_show
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/report_read
+      - tool/report_check
+      - tool/report_export_check
+      - tool/report_prepare
+      - tool/report_styles
+      - tool/report_style_save
+      - id: report_render
+        kind: function
+        consumers:
+          - host
+        description: Render the selected host report provider input into a self-contained report package. Called only by host.reports.publish; does not publish, select a provider, run analysis or replace missing data.
+        inputSchema:
+          type: object
+          properties:
+            metadata:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 1000
+                  minLength: 1
+                summary:
+                  type: string
+                  maxLength: 20000
+                locale:
+                  type: string
+                  maxLength: 128
+                  minLength: 1
+                space:
+                  enum:
+                    - research
+                    - strategy
+                provenanceKind:
+                  enum:
+                    - observed
+                    - derived
+                    - user_input
+                    - demo
+                features:
+                  type: array
+                  maxItems: 3
+                  uniqueItems: true
+                  items:
+                    enum:
+                      - interactive
+                      - strategy_details
+                      - trade_details
+              required:
+                - title
+                - summary
+                - locale
+                - provenanceKind
+                - features
+              additionalProperties: false
+            data:
+              type: array
+              maxItems: 256
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    maxLength: 128
+                    minLength: 1
+                  ref:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 256
+                        minLength: 1
+                      revision:
+                        type: string
+                        maxLength: 256
+                        minLength: 1
+                      digest:
+                        type: string
+                        pattern: ^sha256:[a-f0-9]{64}$
+                      kind:
+                        type: string
+                        maxLength: 128
+                        minLength: 1
+                      schemaVersion:
+                        const: 1.0.0
+                    required:
+                      - id
+                      - revision
+                      - digest
+                      - kind
+                      - schemaVersion
+                    additionalProperties: false
+                  usage:
+                    type: string
+                    maxLength: 2000
+                    minLength: 1
+                required:
+                  - id
+                  - ref
+                  - usage
+                additionalProperties: false
+            related:
+              type: array
+              maxItems: 32
+              items:
+                type: object
+                properties:
+                  role:
+                    enum:
+                      - strategy
+                      - translation
+                      - run
+                      - result
+                      - source
+                  artifact:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 256
+                        minLength: 1
+                      revision:
+                        type: string
+                        maxLength: 256
+                        minLength: 1
+                      digest:
+                        type: string
+                        pattern: ^sha256:[a-f0-9]{64}$
+                      kind:
+                        type: string
+                        maxLength: 128
+                        minLength: 1
+                      schemaVersion:
+                        const: 1.0.0
+                    required:
+                      - id
+                      - revision
+                      - digest
+                      - kind
+                      - schemaVersion
+                    additionalProperties: false
+                  record:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 256
+                        minLength: 1
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                      - id
+                      - version
+                    additionalProperties: false
+                required:
+                  - role
+                additionalProperties: false
+                oneOf:
+                  - required:
+                      - artifact
+                    not:
+                      required:
+                        - record
+                  - required:
+                      - record
+                    not:
+                      required:
+                        - artifact
+            references:
+              type: array
+              maxItems: 256
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    maxLength: 256
+                    minLength: 1
+                  revision:
+                    type: string
+                    maxLength: 256
+                    minLength: 1
+                  digest:
+                    type: string
+                    pattern: ^sha256:[a-f0-9]{64}$
+                  kind:
+                    type: string
+                    maxLength: 128
+                    minLength: 1
+                  schemaVersion:
+                    const: 1.0.0
+                required:
+                  - id
+                  - revision
+                  - digest
+                  - kind
+                  - schemaVersion
+                additionalProperties: false
+            input:
+              type: object
+              properties:
+                content:
+                  type: object
+                  properties:
+                    kind:
+                      const: document
+                    sections:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          title:
+                            type: string
+                            maxLength: 20000
+                          blocks:
+                            type: array
+                            items:
+                              $ref: "#/$defs/block"
+                            maxItems: 100
+                        required:
+                          - title
+                          - blocks
+                        additionalProperties: false
+                      maxItems: 50
+                  required:
+                    - kind
+                    - sections
+                  additionalProperties: false
+                style:
+                  type: object
+                  properties:
+                    custom:
+                      type: object
+                      properties:
+                        reason:
+                          type: string
+                          description: User-requested presentation need
+                          minLength: 1
+                          maxLength: 2000
+                        tokens:
+                          type: object
+                          properties:
+                            accent:
+                              type: string
+                              pattern: ^#[a-fA-F0-9]{6}$
+                            context:
+                              type: string
+                              pattern: ^#[a-fA-F0-9]{6}$
+                            accent_dark:
+                              type: string
+                              pattern: ^#[a-fA-F0-9]{6}$
+                            context_dark:
+                              type: string
+                              pattern: ^#[a-fA-F0-9]{6}$
+                            heading:
+                              enum:
+                                - serif
+                                - sans
+                            body_size:
+                              type: integer
+                              minimum: 14
+                              maximum: 20
+                            content_width:
+                              type: integer
+                              minimum: 640
+                              maximum: 1440
+                            section_gap:
+                              type: integer
+                              minimum: 24
+                              maximum: 88
+                            chart_height:
+                              type: integer
+                              minimum: 180
+                              maximum: 640
+                            columns:
+                              type: integer
+                              minimum: 1
+                              maximum: 3
+                          required: []
+                          additionalProperties: false
+                      required:
+                        - reason
+                        - tokens
+                      additionalProperties: false
+                    saved_id:
+                      type: string
+                      pattern: ^[a-z][a-z0-9-]{0,63}$
+                    saved_version:
+                      type: integer
+                      minimum: 1
+                  additionalProperties: false
+                  description: One unified blue/gray frameless layout. Omit style by default. Only use custom safe tokens or a saved exact style version for user-requested presentation changes; no presets, themes, raw CSS or scripts.
+                assets:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - path
+                      - media_type
+                    properties:
+                      path:
+                        type: string
+                        description: Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.
+                        minLength: 1
+                        maxLength: 256
+                        pattern: ^(?!.*[\\:\u0000-\u001f])(?:(?!\.{1,2}/)[^/]+/)*(?!\.{1,2}$)[^/]+$
+                      source_path:
+                        type: string
+                        description: Workspace file containing this asset
+                        minLength: 1
+                        maxLength: 20000
+                      media_type:
+                        type: string
+                        description: "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments."
+                        minLength: 1
+                        maxLength: 20000
+                        pattern: ^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\s\S]*)?$
+                      ref:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            maxLength: 256
+                            minLength: 1
+                          revision:
+                            type: string
+                            maxLength: 256
+                            minLength: 1
+                          digest:
+                            type: string
+                            pattern: ^sha256:[a-f0-9]{64}$
+                          kind:
+                            type: string
+                            maxLength: 128
+                            minLength: 1
+                          schemaVersion:
+                            const: 1.0.0
+                        required:
+                          - id
+                          - revision
+                          - digest
+                          - kind
+                          - schemaVersion
+                        additionalProperties: false
+                      entry:
+                        type: string
+                        minLength: 1
+                        maxLength: 256
+                        pattern: ^(?!.*[\\:\u0000-\u001f])(?:(?!\.{1,2}/)[^/]+/)*(?!\.{1,2}$)[^/]+$
+                    additionalProperties: false
+                    oneOf:
+                      - required:
+                          - source_path
+                        not:
+                          anyOf:
+                            - required:
+                                - ref
+                            - required:
+                                - entry
+                      - required:
+                          - ref
+                          - entry
+                        not:
+                          required:
+                            - source_path
+                    allOf:
+                      - if:
+                          type: object
+                          properties:
+                            media_type:
+                              type: string
+                              pattern: ^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\s\S]*)?$
+                          required:
+                            - media_type
+                        then:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              pattern: \.(?:[jJ][sS][oO][nN])$
+                      - if:
+                          type: object
+                          properties:
+                            media_type:
+                              type: string
+                              pattern: ^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\s\S]*)?$
+                          required:
+                            - media_type
+                        then:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              pattern: \.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$
+                      - if:
+                          type: object
+                          properties:
+                            media_type:
+                              type: string
+                              pattern: ^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\s\S]*)?$
+                          required:
+                            - media_type
+                        then:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              pattern: \.(?:[pP][nN][gG])$
+                      - if:
+                          type: object
+                          properties:
+                            media_type:
+                              type: string
+                              pattern: ^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\s\S]*)?$
+                          required:
+                            - media_type
+                        then:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              pattern: \.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$
+                      - if:
+                          type: object
+                          properties:
+                            media_type:
+                              type: string
+                              pattern: ^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\s\S]*)?$
+                          required:
+                            - media_type
+                        then:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              pattern: \.(?:[wW][eE][bB][pP])$
+                  maxItems: 64
+                  description: Inert attachments only. Prefer a complete fixed ref + entry declared in envelope references. Workspace source_path is read at rendering time, not represented as historical point-in-time evidence.
+                target:
+                  type: string
+                  enum:
+                    - report
+                    - answer
+                  default: report
+                  description: Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden.
+                lead:
+                  type: string
+                  minLength: 1
+                  maxLength: 20000
+                  pattern: \S
+                  description: 完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。
+                highlights:
+                  type: array
+                  minItems: 1
+                  maxItems: 6
+                  items:
+                    type: object
+                    properties:
+                      label:
+                        type: string
+                        maxLength: 20000
+                        minLength: 1
+                        pattern: \S
+                      value:
+                        type:
+                          - string
+                          - number
+                        minLength: 1
+                        pattern: \S
+                      tone:
+                        type: string
+                        enum:
+                          - auto
+                          - positive
+                          - negative
+                          - neutral
+                        description: "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                    required:
+                      - label
+                      - value
+                    additionalProperties: false
+                    allOf:
+                      - if:
+                          type: object
+                          properties:
+                            tone:
+                              const: auto
+                          required:
+                            - tone
+                        then:
+                          type: object
+                          properties:
+                            value:
+                              type: number
+                  description: 完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。
+              required:
+                - content
+              additionalProperties: false
+              $id: urn:sesame:report:provider-input:1
+              description: Supplied document blocks, fixed data and controlled style. No research templates, calculations, HTML, CSS or scripts.
+              $defs:
+                block:
+                  oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          const: paragraph
+                        text:
+                          type: string
+                          maxLength: 20000
+                      required:
+                        - type
+                        - text
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: markdown
+                        text:
+                          type: string
+                          maxLength: 20000
+                      required:
+                        - type
+                        - text
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: attachments
+                        items:
+                          type: array
+                          minItems: 1
+                          maxItems: 64
+                          items:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                                minLength: 1
+                                maxLength: 160
+                              path:
+                                type: string
+                                minLength: 1
+                                maxLength: 256
+                                pattern: ^(?!.*[\\:%?#\u0000-\u001f\u007f])(?:(?!\.{1,2}/)[^/]+/)*(?!\.{1,2}$)[^/]+$
+                                description: "Literal packaged path matching input.assets[].path. Allowed extensions: json, txt, csv, tsv, md, log, png, jpg, jpeg, webp. Script extensions including py are not packaged attachments."
+                                allOf:
+                                  - pattern: \.(?:[jJ][sS][oO][nN]|[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG]|[pP][nN][gG]|[jJ][pP][gG]|[jJ][pP][eE][gG]|[wW][eE][bB][pP])$
+                            required:
+                              - label
+                              - path
+                            additionalProperties: false
+                      required:
+                        - type
+                        - items
+                      additionalProperties: false
+                      description: Clickable packaged evidence links. Each path must match a real input.assets entry; labels and descriptions are escaped. Prefer within a final details appendix. Markdown relative links are not a substitute.
+                    - type: object
+                      properties:
+                        type:
+                          const: judgment
+                        text:
+                          type: string
+                          maxLength: 20000
+                      required:
+                        - type
+                        - text
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: formula
+                        latex:
+                          type: string
+                          maxLength: 20000
+                        display:
+                          enum:
+                            - inline
+                            - block
+                      required:
+                        - type
+                        - latex
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: metrics
+                        items:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                                maxLength: 20000
+                              value:
+                                type:
+                                  - string
+                                  - number
+                              tone:
+                                type: string
+                                enum:
+                                  - auto
+                                  - positive
+                                  - negative
+                                  - neutral
+                                description: "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                            required:
+                              - label
+                              - value
+                            additionalProperties: false
+                            allOf:
+                              - if:
+                                  type: object
+                                  properties:
+                                    tone:
+                                      const: auto
+                                  required:
+                                    - tone
+                                then:
+                                  type: object
+                                  properties:
+                                    value:
+                                      type: number
+                          maxItems: 12
+                      required:
+                        - type
+                        - items
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: range
+                        label:
+                          type: string
+                          maxLength: 20000
+                        min:
+                          type: number
+                        max:
+                          type: number
+                        value:
+                          type: number
+                        unit:
+                          type: string
+                          maxLength: 20000
+                      required:
+                        - type
+                        - label
+                        - min
+                        - max
+                        - value
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: scores
+                        min:
+                          type: number
+                        max:
+                          type: number
+                        unit:
+                          type: string
+                          maxLength: 20000
+                        items:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                                maxLength: 20000
+                              value:
+                                type: number
+                            required:
+                              - label
+                              - value
+                            additionalProperties: false
+                          maxItems: 24
+                      required:
+                        - type
+                        - min
+                        - max
+                        - items
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: reasoning
+                        steps:
+                          type: array
+                          items:
+                            type: string
+                            maxLength: 20000
+                          maxItems: 8
+                      required:
+                        - type
+                        - steps
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: table
+                        columns:
+                          type: array
+                          items:
+                            type: string
+                            maxLength: 20000
+                          maxItems: 24
+                        rows:
+                          type: array
+                          items:
+                            type: array
+                            items:
+                              type:
+                                - string
+                                - number
+                                - boolean
+                                - "null"
+                            maxItems: 24
+                          maxItems: 2500
+                        caption:
+                          type: string
+                          maxLength: 20000
+                        column_tones:
+                          type: array
+                          maxItems: 24
+                          items:
+                            enum:
+                              - null
+                              - auto
+                              - positive
+                              - negative
+                              - neutral
+                          description: Optional one tone per column. null retains ordinary text; auto requires numeric cells; negative colours explicitly supplied loss amounts red. Drawdown and account-value columns use null. Zero and missing cells stay neutral.
+                        filter:
+                          type: array
+                          maxItems: 8
+                          items:
+                            type: object
+                            properties:
+                              field:
+                                type: string
+                                minLength: 1
+                                maxLength: 200
+                              control:
+                                type: string
+                                minLength: 1
+                                maxLength: 200
+                              operator:
+                                enum:
+                                  - eq
+                                  - between
+                            required:
+                              - field
+                              - control
+                            additionalProperties: false
+                        page_size:
+                          type: integer
+                          minimum: 1
+                          maximum: 200
+                        selection:
+                          type: object
+                          properties:
+                            column:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                            control:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                          required:
+                            - column
+                            - control
+                          additionalProperties: false
+                      required:
+                        - type
+                        - columns
+                        - rows
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: group
+                        layout:
+                          enum:
+                            - columns
+                            - stack
+                        blocks:
+                          type: array
+                          items:
+                            $ref: "#/$defs/block"
+                          maxItems: 12
+                        controls:
+                          type: array
+                          minItems: 1
+                          maxItems: 8
+                          items:
+                            oneOf:
+                              - type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 200
+                                  label:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 200
+                                  kind:
+                                    const: select
+                                  options:
+                                    type: array
+                                    minItems: 1
+                                    maxItems: 2500
+                                    items:
+                                      type: object
+                                      properties:
+                                        value:
+                                          type:
+                                            - string
+                                            - number
+                                            - boolean
+                                            - "null"
+                                        label:
+                                          type: string
+                                          minLength: 1
+                                          maxLength: 200
+                                      required:
+                                        - value
+                                      additionalProperties: false
+                                  value:
+                                    type:
+                                      - string
+                                      - number
+                                      - boolean
+                                      - "null"
+                                required:
+                                  - id
+                                  - label
+                                  - kind
+                                  - options
+                                  - value
+                                additionalProperties: false
+                              - type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 200
+                                  label:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 200
+                                  kind:
+                                    const: range
+                                  min:
+                                    type: number
+                                  max:
+                                    type: number
+                                  value:
+                                    type: array
+                                    minItems: 2
+                                    maxItems: 2
+                                    items:
+                                      type: number
+                                  step:
+                                    type: number
+                                    exclusiveMinimum: 0
+                                  format:
+                                    enum:
+                                      - number
+                                      - time
+                                required:
+                                  - id
+                                  - label
+                                  - kind
+                                  - min
+                                  - max
+                                  - value
+                                additionalProperties: false
+                      required:
+                        - type
+                        - layout
+                        - blocks
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: details
+                        title:
+                          type: string
+                          maxLength: 20000
+                        blocks:
+                          type: array
+                          items:
+                            $ref: "#/$defs/block"
+                          maxItems: 100
+                      required:
+                        - type
+                        - title
+                        - blocks
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: chart
+                        title:
+                          type: string
+                          maxLength: 20000
+                        kind:
+                          enum:
+                            - line
+                            - area
+                            - bar
+                            - hbar
+                            - scatter
+                            - heatmap
+                            - matrix
+                            - units
+                            - waterfall
+                            - dumbbell
+                            - strip
+                            - histogram
+                            - boxplot
+                            - ridgeline
+                            - violin
+                            - calendar
+                            - parallel
+                            - bump
+                            - lifecycle
+                            - treemap
+                            - threads
+                            - flow
+                            - network-circular
+                            - network-force
+                            - decision-tree
+                            - candlestick
+                            - stream
+                            - stacked-rungs
+                            - dot-heatmap
+                            - funnel
+                            - category-links
+                            - outcome-tally
+                            - paired-rungs
+                            - rank-race
+                            - spectrum
+                            - tick-donut
+                            - barcode
+                            - bubble-ledger
+                        columns:
+                          type: array
+                          items:
+                            type: string
+                            maxLength: 20000
+                            minLength: 1
+                            pattern: \S
+                          maxItems: 32
+                          minItems: 1
+                          description: Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply.
+                        options:
+                          type: object
+                        rows:
+                          type: array
+                          items:
+                            type: object
+                          maxItems: 2500
+                          minItems: 1
+                        data_id:
+                          type: string
+                          maxLength: 20000
+                          minLength: 1
+                        nodes:
+                          type: array
+                          items:
+                            type: object
+                          maxItems: 2500
+                        chart_data:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              property:
+                                const: nodes
+                              data_id:
+                                type: string
+                                maxLength: 20000
+                                minLength: 1
+                            required:
+                              - property
+                              - data_id
+                            additionalProperties: false
+                          maxItems: 1
+                        filter:
+                          type: array
+                          maxItems: 8
+                          items:
+                            type: object
+                            properties:
+                              field:
+                                type: string
+                                minLength: 1
+                                maxLength: 200
+                              control:
+                                type: string
+                                minLength: 1
+                                maxLength: 200
+                              operator:
+                                enum:
+                                  - eq
+                                  - between
+                            required:
+                              - field
+                              - control
+                            additionalProperties: false
+                        option_controls:
+                          type: object
+                          properties:
+                            x:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                            y:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                            value:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                            focus:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                            frame:
+                              type: string
+                              minLength: 1
+                              maxLength: 200
+                          additionalProperties: false
+                      required:
+                        - type
+                        - kind
+                      additionalProperties: false
+                      oneOf:
+                        - required:
+                            - rows
+                          not:
+                            required:
+                              - data_id
+                        - required:
+                            - data_id
+                          not:
+                            required:
+                              - rows
+                    - type: object
+                      properties:
+                        type:
+                          const: judgments
+                        items:
+                          type: array
+                          minItems: 1
+                          maxItems: 200
+                          items:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                                minLength: 1
+                                maxLength: 20000
+                              value:
+                                type: string
+                                minLength: 1
+                                maxLength: 20000
+                              details:
+                                type: array
+                                maxItems: 12
+                                items:
+                                  type: object
+                                  properties:
+                                    label:
+                                      type: string
+                                      minLength: 1
+                                      maxLength: 20000
+                                    value:
+                                      type: string
+                                      minLength: 1
+                                      maxLength: 20000
+                                  required:
+                                    - label
+                                    - value
+                                  additionalProperties: false
+                            required:
+                              - label
+                              - value
+                            additionalProperties: false
+                      required:
+                        - type
+                        - items
+                      additionalProperties: false
+                    - type: object
+                      properties:
+                        type:
+                          const: logic
+                        title:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                        nodes:
+                          type: array
+                          minItems: 1
+                          maxItems: 80
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                              label:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                              detail:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                            required:
+                              - id
+                              - label
+                            additionalProperties: false
+                        edges:
+                          type: array
+                          maxItems: 160
+                          items:
+                            type: object
+                            properties:
+                              from:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                              to:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                              label:
+                                type: string
+                                minLength: 1
+                                maxLength: 2000
+                            required:
+                              - from
+                              - to
+                            additionalProperties: false
+                      required:
+                        - type
+                        - title
+                        - nodes
+                        - edges
+                      additionalProperties: false
+              allOf:
+                - if:
+                    not:
+                      properties:
+                        target:
+                          const: answer
+                      required:
+                        - target
+                  then:
+                    required:
+                      - lead
+                      - highlights
+                    properties:
+                      content:
+                        properties:
+                          sections:
+                            minItems: 1
+                            items:
+                              properties:
+                                blocks:
+                                  minItems: 1
+          required:
+            - metadata
+            - data
+            - related
+            - references
+            - input
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            entry:
+              type: string
+              maxLength: 256
+              minLength: 1
+            files:
+              type: array
+              minItems: 1
+              maxItems: 254
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                    maxLength: 256
+                    minLength: 1
+                  mediaType:
+                    type: string
+                    maxLength: 128
+                    minLength: 1
+                  content:
+                    type: string
+                    maxLength: 44739244
+                  encoding:
+                    enum:
+                      - utf8
+                      - base64
+                required:
+                  - path
+                  - mediaType
+                  - content
+                  - encoding
+                additionalProperties: false
+            presentation:
+              type: object
+              properties:
+                id:
+                  type: string
+                  maxLength: 256
+                  minLength: 1
+                version:
+                  type: string
+                  maxLength: 128
+                  minLength: 1
+                metadata:
+                  type: object
+              required:
+                - id
+                - version
+              additionalProperties: false
+          required:
+            - entry
+            - files
+            - presentation
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - read
+          - resource.write
+        usage:
+          purpose: Host-only presentation service for supplied results.
+          inputs: metadata/data/related/references/input. Reports require metadata.title, input.lead, 1–6 input.highlights and nonempty input.content.sections. target=answer is an independent component surface without a report skeleton. Optional input.style/assets preserve supplied styling and attachments; summary remains index metadata. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.
+          outputs: entry, files and presentation identity; host publishes the exact package.
+          prerequisites:
+            - Host selected this report provider.
+          limitations:
+            - No analytical execution; no HTML/CSS/script uploads.
+        binding:
+          type: native
+          name: report_render
+      - tool/components_list
+      - tool/components_describe
+      - tool/components_validate
+      - tool/components_show
+      - id: components_render
+        kind: function
+        consumers:
+          - host
+        description: Render one fixed answer component JSON resource into a temporary visual package. Read-only; never publishes reports or imports workspace files.
+        inputSchema:
+          type: object
+          properties:
+            ref:
+              type: object
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              properties:
+                id:
+                  type: string
+                revision:
+                  type: string
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  enum:
+                    - resource
+                    - report
+                schemaVersion:
+                  type: string
+                  const: 1.0.0
+              additionalProperties: false
+          required:
+            - ref
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            entry:
+              type: string
+              maxLength: 256
+              minLength: 1
+            files:
+              type: array
+              minItems: 1
+              maxItems: 254
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                    maxLength: 256
+                    minLength: 1
+                  mediaType:
+                    type: string
+                    maxLength: 128
+                    minLength: 1
+                  content:
+                    type: string
+                    maxLength: 44739244
+                  encoding:
+                    enum:
+                      - utf8
+                      - base64
+                required:
+                  - path
+                  - mediaType
+                  - content
+                  - encoding
+                additionalProperties: false
+            presentation:
+              type: object
+              properties:
+                id:
+                  type: string
+                  maxLength: 256
+                  minLength: 1
+                version:
+                  type: string
+                  maxLength: 128
+                  minLength: 1
+                metadata:
+                  type: object
+              required:
+                - id
+                - version
+              additionalProperties: false
+            title:
+              type: string
+              maxLength: 1000
+            locale:
+              type: string
+              maxLength: 128
+          required:
+            - entry
+            - files
+            - presentation
+            - title
+            - locale
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - read
+        usage:
+          purpose: Host-only view of fixed answer component JSON.
+          inputs: Exact component resource ArtifactRef, or an existing answer-surface report reference for read-only recovery.
+          outputs: title, locale, entry, files and presentation; temporary display only.
+          prerequisites:
+            - A fixed component resource is available.
+          limitations:
+            - Does not publish, invoke models or read current workspace files.
+        binding:
+          type: native
+          name: components_render
+        resultRetention: summary
+    sources: []
+    views: []
+    services:
+      - id: report
+        contract: sesame.report/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          render: report_render
+    knowledge:
+      - id: reports-entry
+        kind: prompt
+        path: instructions.md
+        description: 图文编辑职责、问题优先的报告结构与统一组件入口。
+      - id: visual-compose
+        kind: skill
+        path: skills/visual-compose/SKILL.md
+        description: 初稿后的统一图文编辑：按问题组织全文，编排图文，用自然中文重新解释已有研究，再单独逐段审读。
+      - id: report-delivery
+        kind: skill
+        path: skills/report-delivery/SKILL.md
+        description: 检查报告结构与统一视觉，发布、修订及按需导出。
+      - id: reference-composing
+        kind: reference
+        path: references/composing.md
+        description: 用现有小标题、段落、列表、表格与图表表达信息关系，组织构图重点、参照和标注，合并冗余表达。
+      - id: reference-text
+        kind: reference
+        path: references/text.md
+        description: 将研究记录重写为读者能理解的中文解释：具体对象、动作、已有机制、时间与条件，含14组转换示例、文字位置及逐段审读方法。
+      - id: reference-data-binding
+        kind: reference
+        path: references/data-binding.md
+        description: 固定数据与惰性附件
+      - id: reference-interactions
+        kind: reference
+        path: references/interactions.md
+        description: 局部选择、范围、联动与分页
+      - id: reference-delivery
+        kind: reference
+        path: references/delivery.md
+        description: 发布位置、修订和验收
+      - id: reference-styles
+        kind: reference
+        path: references/styles.md
+        description: 受控样式与精确版本
+      - id: reference-repair
+        kind: reference
+        path: references/repair.md
+        description: 按当前诊断修复
+      - id: licenses
+        kind: reference
+        path: PROVENANCE.md
+        description: 内置视觉依赖与许可证来源。
+    hooks: []
+    stateCollections:
+      - name: report-styles
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[a-z][a-z0-9-]{0,63}$
+            title:
+              type: string
+              minLength: 1
+              maxLength: 200
+            description:
+              type: string
+              maxLength: 2000
+            style:
+              type: object
+              properties:
+                base:
+                  enum:
+                    - editorial
+                    - compact
+                    - visual
+                reason:
+                  type: string
+                  description: Presentation need not met by built-ins
+                  minLength: 1
+                  maxLength: 2000
+                tokens:
+                  type: object
+                  properties:
+                    accent:
+                      type: string
+                      pattern: ^#[a-fA-F0-9]{6}$
+                    context:
+                      type: string
+                      pattern: ^#[a-fA-F0-9]{6}$
+                    accent_dark:
+                      type: string
+                      pattern: ^#[a-fA-F0-9]{6}$
+                    context_dark:
+                      type: string
+                      pattern: ^#[a-fA-F0-9]{6}$
+                    heading:
+                      enum:
+                        - serif
+                        - sans
+                    body_size:
+                      type: integer
+                      minimum: 14
+                      maximum: 20
+                    content_width:
+                      type: integer
+                      minimum: 640
+                      maximum: 1440
+                    section_gap:
+                      type: integer
+                      minimum: 24
+                      maximum: 88
+                    chart_height:
+                      type: integer
+                      minimum: 180
+                      maximum: 640
+                    columns:
+                      type: integer
+                      minimum: 1
+                      maximum: 3
+                  required: []
+                  additionalProperties: false
+              required:
+                - reason
+                - tokens
+              additionalProperties: false
+            operation_id:
+              type: string
+              minLength: 1
+              maxLength: 200
+          required:
+            - id
+            - title
+            - description
+            - style
+            - operation_id
+          additionalProperties: false
+    artifactSchemas:
+      - id: report-input-or-component
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          oneOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                type:
+                  const: report-input
+                path:
+                  const: input.json
+                provider:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    pluginId:
+                      const: sesame/reports
+                    serviceId:
+                      const: report
+                    version:
+                      type: string
+                      minLength: 1
+                      maxLength: 128
+                    revision:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                  required:
+                    - pluginId
+                    - serviceId
+                    - version
+                    - revision
+                provenance:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    kind:
+                      enum:
+                        - observed
+                        - derived
+                        - user_input
+                        - demo
+                    references:
+                      type: array
+                      maxItems: 255
+                      items:
+                        type: object
+                        required:
+                          - id
+                          - revision
+                          - digest
+                          - kind
+                          - schemaVersion
+                        properties:
+                          id:
+                            type: string
+                          revision:
+                            type: string
+                          digest:
+                            type: string
+                            pattern: ^sha256:[a-f0-9]{64}$
+                          kind:
+                            type: string
+                          schemaVersion:
+                            type: string
+                            const: 1.0.0
+                        additionalProperties: false
+                  required:
+                    - kind
+                    - references
+              required:
+                - type
+                - path
+                - provider
+                - provenance
+            - type: object
+              additionalProperties: false
+              properties:
+                type:
+                  const: component-json
+                protocol:
+                  const: sesame-components/1
+                path:
+                  const: component.json
+                title:
+                  type: string
+                  maxLength: 1000
+                renderer:
+                  const: sesame/reports#components_render
+                provenance:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    kind:
+                      enum:
+                        - observed
+                        - derived
+                        - user_input
+                        - demo
+                  required:
+                    - kind
+              required:
+                - type
+                - protocol
+                - path
+                - title
+                - renderer
+                - provenance

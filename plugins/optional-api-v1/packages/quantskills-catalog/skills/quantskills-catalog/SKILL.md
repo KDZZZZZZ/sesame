@@ -9,11 +9,11 @@ description: "按用户指定的方法选择独立 Sesame 插件，只合并同�
 
 本 skill 提供 QuantSkills（https://github.com/quantskills）社区公开资产的目录查询能力。数据来源为 quantskills/quantskills 仓库 README.md 中的表格快照，共 214 项资产、10 个分类。
 
-由 Sesame 维护、在公开插件仓库独立发布，按需安装和加载，无单独密钥或到期时间。先用 `plugin_discover` 查已安装状态；未安装则用 `plugin_catalog` 核对实际可用版本和摘要，再按任务安装。随后 `plugin_load` 加载 `sesame/quantskills-catalog`，按宿主工具列表中的能力本地名称调用，例如 `catalog_search`；不要自行拼接 MCP 前缀。来源摘要与维护说明见 [PROVENANCE.md](PROVENANCE.md)。
+由 Sesame 维护、在公开插件仓库独立发布，按需安装和加载，无单独密钥或到期时间。优先以本机 `plugin_discover` 与实际环境检查为准；仅确认本机未安装且需远端安装时才调用 `plugin_catalog` 核对实际可用版本和摘要（若远端目录失败 1 次即停止重复探测），再按任务安装。随后 `plugin_load` 加载 `sesame/quantskills-catalog`，按宿主工具列表中的能力本地名称调用，例如 `catalog_search`；不要自行拼接 MCP 前缀。来源摘要与维护说明见 [PROVENANCE.md](PROVENANCE.md)。
 
 ## 先按需求去重
 
-综合投资研究使用 `catalog_recommend({"need":"investment-research"})`，推荐 Research（`sesame/investment-research`）。因子需求使用 `need:"strategy"` 发现因子研究（`sesame/auto-factor-mining`）：先查 factor_library，再由 Agent/工作流直接调用 factor_prepare/search/compute/evaluate，决定是否继续和如何并行；插件没有自动研究总控。策略创作、池成员决策、原生回测和最终报告分别使用对应能力；Historical 参考脚本不属于现行计算接口。按实际需求选择数据和回测后端。用户只要 ICT，就用 `catalog_recommend({"need":"technical-analysis","method":"ict"})`，只加载 `sesame/ict`。不传 method 时返回选择项和 `selection_required:true`，不能理解成要安装或同时启用全部方法。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。必须以当时 `plugin_catalog` 和实际环境检查为准，不安装不存在的包，不把所有 `backend_choices` 都装上。
+综合投资研究使用 `catalog_recommend({"need":"investment-research"})`，推荐 Research（`sesame/investment-research`）。因子需求使用 `need:"strategy"` 发现因子研究（`sesame/auto-factor-mining`）：先查 factor_library，再由 Agent/工作流直接调用 factor_prepare/search/compute/evaluate，决定是否继续和如何并行；插件没有自动研究总控。策略创作、池成员决策、原生回测和最终报告分别使用对应能力；Historical 参考脚本不属于现行计算接口。按实际需求选择数据和回测后端。用户只要 ICT，就用 `catalog_recommend({"need":"technical-analysis","method":"ict"})`，只加载 `sesame/ict`。不传 method 时返回选择项和 `selection_required:true`，不能理解成要安装或同时启用全部方法。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。优先以本机 `plugin_discover` 和实际环境检查为准；仅本机未安装且需远端安装时才调用 `plugin_catalog`（若远端目录失败 1 次即停止重复探测），不安装不存在的包，不把所有 `backend_choices` 都装上。
 
 | 用户需要 | need | 合并方式 |
 | --- | --- | --- |

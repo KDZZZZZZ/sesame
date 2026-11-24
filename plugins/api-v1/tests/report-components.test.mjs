@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
@@ -171,8 +172,8 @@ test('component capabilities use the shared catalog and expose bounded discovery
   assert.deepEqual(await describe({ ids }), catalog.describeComponents(ids));
   await assert.rejects(describe({ ids: [] }), /1|12|ids|component/i);
   await assert.rejects(describe({ ids: Array(13).fill(ids[0]) }), /1|12|ids|component/i);
-  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
-  const plugin = JSON.parse(await readFile(new URL('../packages/reports/plugin.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
+  const plugin = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).manifest;
   for (const name of ['components_list', 'components_describe', 'components_validate', 'components_show']) {
     const cap = manifest.capabilities.find(item => item.id === name);
     assert.equal(cap.inputSchema.type, 'object'); assert.equal(cap.outputSchema.type, 'object');

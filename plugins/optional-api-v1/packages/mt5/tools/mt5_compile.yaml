@@ -1,0 +1,68 @@
+name: mt5_compile
+title: mt5_compile
+description: 冻结已保存 revision、平台 SDK 和本机标准库，按已配置引擎调用本机 MetaEditor；默认无需虚拟机，原生进程按本次任务管理与清理。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。
+inputSchema:
+  type: object
+  required:
+    - project_id
+    - revision
+  properties:
+    project_id:
+      type: string
+      description: 工程 ID
+      minLength: 1
+      maxLength: 20000
+    revision:
+      type: integer
+      minimum: 1
+      description: 明确指定已保存的源码版本
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - private-filesystem
+    - process.exec
+  usage:
+    purpose: 编译指定冻结源码并保存真实构建结果。
+    inputs: "{project_id:<已保存工程ID>,revision:<正整数源码版本>}。"
+    outputs: 固定build记录含id/project_id/revision/status、诊断/产物摘要；成功status=succeeded、EX5摘要存在。失败以compile_failed工具错误返回build ID与diagnostics/recovery，完整构建仍可mt5_inspect读取。
+    prerequisites:
+      - mt5_project.save或translation已保存固定revision；mt5_dependencies inspect/probe说明本机MetaEditor/Windows Python/Wine前提。
+    limitations:
+      - 冻结SDK/本机标准库后运行真实编译器，可能启动原生进程；不执行EA。诊断可指导修改checkout并save新revision，不能改旧构建冒充成功。
+  binding:
+    type: native
+    name: mt5_compile
+  configurationRequirements:
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: python
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true

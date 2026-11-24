@@ -1,0 +1,350 @@
+name: trading_decision_plan
+title: trading_decision_plan
+description: List, save, pause or resume an authorized trading-decision plan. The manager consumes fixed research results, the actual account and personal risk rules; the executor applies its frozen target when execution is enabled and no review blocks it. An enabled schedule runs only within already user-approved continuing scope; saving a plan does not grant new authorization.
+inputSchema:
+  type: object
+  oneOf:
+    - type: object
+      properties:
+        action:
+          const: list
+      required:
+        - action
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: save
+        plan:
+          type: object
+          required:
+            - title
+            - execution
+            - model
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 80
+              description: Existing plan ID for update; omit for a new plan
+            title:
+              type: string
+              minLength: 1
+              maxLength: 80
+              description: User-visible plan name
+            execution:
+              type: object
+              required:
+                - plugin_id
+                - context_tool
+                - apply_tool
+              properties:
+                plugin_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Explicitly selected execution capability plugin
+                context_tool:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Declared composition identity/snapshot capability returning account, tools, readTools, taskContext and quantityRules; use the producer-returned reference.
+                apply_tool:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Declared target-portfolio apply capability from the same execution reference; a native order_send tool is not interchangeable.
+                arguments:
+                  type: object
+                  properties: {}
+                  additionalProperties: true
+                  description: Opaque binding arguments returned by the execution capability
+              additionalProperties: false
+              description: Use the exact execution reference returned by a composition implementation. sesame/portfolio-execution provides portfolio_execution_configure({backend:"mt5"|"qmt",id?}) and portfolio_execution_context({binding_id,action:"identity"}); other implementations of COMPOSITION.md are supported. MT5 native identity is only an account, not this execution contract.
+            model:
+              type: object
+              required:
+                - provider
+                - id
+              properties:
+                provider:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Configured provider ID
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Configured model ID
+                configurationDigest:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Digest returned by trading_decision_models
+              additionalProperties: false
+            agent_models:
+              type: object
+              properties:
+                manager:
+                  type: object
+                  required:
+                    - provider
+                    - id
+                  properties:
+                    provider:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Configured provider ID
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Configured model ID
+                    configurationDigest:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Digest returned by trading_decision_models
+                  additionalProperties: false
+                executor:
+                  type: object
+                  required:
+                    - provider
+                    - id
+                  properties:
+                    provider:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Configured provider ID
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Configured model ID
+                    configurationDigest:
+                      type: string
+                      minLength: 1
+                      maxLength: 200
+                      description: Digest returned by trading_decision_models
+                  additionalProperties: false
+              additionalProperties:
+                type: object
+                required:
+                  - provider
+                  - id
+                properties:
+                  provider:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                    description: Configured provider ID
+                  id:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                    description: Configured model ID
+                  configurationDigest:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                    description: Digest returned by trading_decision_models
+                additionalProperties: false
+              description: Each named Agent may select a different configured provider/model; omitted roles inherit model
+            symbols:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 100
+                description: Exact broker symbol
+              maxItems: 30
+            interval_minutes:
+              type:
+                - integer
+                - "null"
+              minimum: 5
+              maximum: 43200
+              description: Recurring execution cadence in minutes; null means no interval. Independent of analysis timeframe (H1 does not imply 60 here).
+            event_keys:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 100
+                description: Event key configured by the user
+              maxItems: 20
+            account_events:
+              type: boolean
+              description: Subscribe to available account position/order events; unsupported providers report unavailable
+            event_cooldown_seconds:
+              type: integer
+              minimum: 5
+              maximum: 86400
+            slippage_bps:
+              type: integer
+              minimum: 0
+              maximum: 500
+              description: Fresh executable quote boundary; market fills may still slip
+            enabled:
+              type: boolean
+              description: Defaults true. false saves a paused draft with no scheduled execution; resume is a separate control.
+            instructions:
+              type: string
+              maxLength: 6000
+            research_refs:
+              type: array
+              maxItems: 30
+              description: Complete fixed research result data ArtifactRefs, such as investment_research_analyze.result_ref. The manager consumes these without rerunning research. Omit only when the authorized decision does not require new research, e.g. reducing exposure.
+              items:
+                type: object
+                required:
+                  - id
+                  - revision
+                  - digest
+                  - kind
+                  - schemaVersion
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                  revision:
+                    type: string
+                    minLength: 1
+                  digest:
+                    type: string
+                    pattern: ^sha256:[a-f0-9]{64}$
+                  kind:
+                    const: data
+                  schemaVersion:
+                    const: 1.0.0
+                additionalProperties: false
+            workflow:
+              type: object
+              properties:
+                reviews:
+                  type: array
+                  maxItems: 12
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+                      title:
+                        type: string
+                        minLength: 1
+                        maxLength: 120
+                      instructions:
+                        type: string
+                        maxLength: 6000
+                    required:
+                      - id
+                    additionalProperties: false
+                execute:
+                  type: boolean
+              additionalProperties: false
+              description: Optional frozen workflow. reviews run in order before manager; each saves an immutable allow/block check and has no trading or decision-write authority. execute:false produces a saved decision and report only; apply is rejected even from the owner. Omitted keeps manager then executor.
+          additionalProperties: false
+      required:
+        - action
+        - plan
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: pause
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Existing plan ID
+      required:
+        - action
+        - plan_id
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: resume
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Existing plan ID
+      required:
+        - action
+        - plan_id
+      additionalProperties: false
+outputSchema:
+  anyOf:
+    - type: object
+      properties:
+        plans:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              enabled:
+                type: boolean
+              executionMode:
+                enum: [decision_only, target_execution]
+              supportsAttachedStops:
+                type: boolean
+            required:
+              - id
+              - enabled
+            additionalProperties: true
+      required:
+        - plans
+      additionalProperties: false
+    - type: object
+      properties:
+        id:
+          type: string
+        enabled:
+          type: boolean
+        executionMode:
+          enum: [decision_only, target_execution]
+        supportsAttachedStops:
+          type: boolean
+      required:
+        - id
+        - enabled
+      additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:plans
+    - manage:subscriptions
+    - cancel:workflow
+  binding:
+    type: native
+    name: trading_decision_plan
+  usage:
+    purpose: List, save, pause or resume an authorized trading-decision plan. The manager consumes fixed research results, the actual account and personal risk rules; the executor applies its frozen target when execution is enabled and no review blocks it. An enabled schedule runs only within already user-approved continuing scope; saving a plan does not grant new authorization.
+    inputs: action=list returns plans; save takes plan:{title,execution,model,research_refs?:[complete kind:data ArtifactRef],symbols?,instructions?,enabled?,interval_minutes?,event_keys?,account_events?,agent_models?:{manager?,executor?}}; pause/resume takes plan_id. Obtain research result_ref from a selected research workflow such as investment_research_analyze. No mode, analyst team, research plugin selection or debate configuration exists here. Optional plan.workflow:{reviews:[{id:"risk_check",instructions:"Check concentration"}],execute:false}. Reviews run sequentially before manager, block verdicts prevent execution; execute:false never starts executor. agent_models can name review IDs.
+    outputs: Lists or returns the saved plan. executionMode is decision_only for a frozen review or target_execution for a workflow allowed to apply a validated target. supportsAttachedStops reflects the bound execution adapter (true for MT5, false for QMT). An enabled plan without interval or events starts only when requested.
+    prerequisites:
+      - Main conversation and explicit user trading scope; scheduling requires authorization for recurring decisions and execution.
+      - Use an execution binding returned by portfolio_execution_configure({backend:"mt5"|"qmt"}) or another COMPOSITION.md implementation; native account identity alone is insufficient.
+      - Manager requires enabled sesame/memory with memory_trading_context/memory_read and sesame/data-access with data_read, plus the execution binding's declared account/contract reads. Configure broker/model access in their owning plugins; this plugin stores no API keys.
+      - research_refs names existing complete data ArtifactRefs. The main Agent first selects and runs the appropriate research workflow; the trading manager reads its fixed output and never starts another research team. Existing authorized risk reduction need not wait for unrelated new research.
+    limitations:
+      - The default plan uses manager and executor; optional workflow.reviews adds ordered read-only checks before the manager. execute:false or any block verdict prevents executor dispatch and target execution. The manager checks applicable confirmed risk rules, research scope/time/limitations and the current account before saving a target. Missing necessary evidence interrupts for the main Agent; changing a plan requires stopping its current execution first.
+      - Increasing risk requires applicable confirmed risk rules and verifiable contract/account inputs. Recommendations, accepted orders and strategy pauses do not prove fills or protective stops.
+      - Pausing cancels future/active decisions but cannot undo broker effects. Unknown execution results require reconciliation of original operation IDs.

@@ -1,0 +1,60 @@
+name: kurumi_pause
+title: kurumi_pause
+description: 停止后续决定并取消当前角色任务；已经原子提交的决定与成交不撤销。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision，新挑战用0
+  required:
+    - command_id
+    - expected_version
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 停止后续决定并取消当前角色任务；已经原子提交的决定与成交不撤销。
+    inputs: "{command_id,expected_version}."
+    outputs: Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - An existing challenge.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Stops future role requests/continuation and cancels the active role; committed simulation fills remain. Inspect/reconcile an uncertain current task before resuming.
+  binding:
+    type: native
+    name: kurumi_pause
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

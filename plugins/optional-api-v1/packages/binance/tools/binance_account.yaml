@@ -1,0 +1,47 @@
+name: binance_account
+title: binance_account
+description: 读取已配置币安 Spot 账户的精确身份、每资产 free/locked 余额与原生 canTrade 权限。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - network
+  usage:
+    purpose: 读取已配置币安 Spot 账户的精确身份、每资产 free/locked 余额与原生 canTrade 权限。
+    inputs: Use the declared object schema; see INTERFACES.md for concrete examples.
+    outputs: "{account:{accountId,connectionId,revision},environment,balances:[{asset,free,locked}],canTrade,permissions,observedAt}；不把多资产余额伪造成特定交易对仓位或统一币种净值。"
+    prerequisites:
+      - Configure the selected environment and HMAC API key/secret through configuration_integration_apply.
+      - Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission.
+    limitations:
+      - Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter.
+  configurationRequirements:
+    - field: environment
+      optional: true
+      reason: Select production or Spot Testnet; default is testnet.
+    - field: api_key
+      reason: Binance private account or trading operation.
+    - field: api_secret
+      reason: HMAC signing for the selected Binance account.
+  binding:
+    type: native
+    name: binance_account

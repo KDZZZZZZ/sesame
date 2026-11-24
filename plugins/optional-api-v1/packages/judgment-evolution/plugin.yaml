@@ -1,0 +1,243 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/judgment-evolution
+title: 判断复盘与准则演进
+description: 主 Agent 可见的按需复盘 skill：事前登记未来判断，自主选择时机核验、归因和迭代准则，不定时发送聊天消息。
+version: 3.0.4
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["service"]
+    title:
+      en: "Judgment review"
+      zh: "判断复盘"
+    summary:
+      en: "Keep a private evidence ledger for predictions and measured outcomes."
+      zh: "为预测和可核验结果建立插件私有证据账本。"
+    dependencies:
+      en: "No external backend; starts a new private ledger without importing old application storage."
+      zh: "无需外部后端；新建私有账本，不导入旧应用存储。"
+  default_state: discoverable
+  agent_scope: main
+  permissions:
+    scopes:
+      - capabilities.compose
+      - workspace.messages.read
+    calls:
+      - host.sessions.query
+      - host.datasets.query
+      - host.messages.query
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/judgment_review_queue
+      - tool/judgment_review_due
+      - tool/judgment_record
+      - tool/judgment_list
+      - tool/judgment_read
+      - tool/judgment_resolve
+      - tool/judgment_defer
+      - tool/judgment_reflect
+      - tool/judgment_rule
+      - tool/judgment_rules
+      - tool/judgment_retire_rule
+      - tool/judgment_audit_source
+      - tool/judgment_coverage
+      - id: judgment_activate
+        kind: function
+        consumers:
+          - host
+        description: Judgment lifecycle activate
+        inputSchema:
+          type: object
+          properties:
+            config:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: true
+          required:
+            - config
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            ready:
+              const: true
+          required:
+            - ready
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - Maintain private judgment state
+        usage:
+          purpose: Judgment lifecycle activate
+          inputs: "{config:<host plugin configuration>}."
+          outputs: "{ready:true}; initialize the private durable ledger."
+          prerequisites:
+            - Host lifecycle only.
+          limitations:
+            - Does not initiate a model turn or fetch evidence.
+        binding:
+          type: native
+          name: judgment_activate
+      - id: judgment_dispose
+        kind: function
+        consumers:
+          - host
+        description: Judgment lifecycle dispose
+        inputSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            closed:
+              const: true
+          required:
+            - closed
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - Maintain private judgment state
+        usage:
+          purpose: Judgment lifecycle dispose
+          inputs: "{}."
+          outputs: "{closed:true}; close the private ledger."
+          prerequisites:
+            - Host lifecycle only.
+          limitations:
+            - Published criteria and durable records remain.
+        binding:
+          type: native
+          name: judgment_dispose
+      - id: judgment_after_turn
+        kind: function
+        consumers:
+          - host
+        description: Judgment lifecycle afterAgentTurn
+        inputSchema:
+          type: object
+          properties:
+            conversationId:
+              type: string
+            responseId:
+              type: string
+            status:
+              type: string
+            scope:
+              enum:
+                - main
+                - subagent
+          required:
+            - conversationId
+            - responseId
+            - status
+            - scope
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            completed:
+              const: true
+          required:
+            - completed
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - Maintain private judgment state
+        usage:
+          purpose: Judgment lifecycle afterAgentTurn
+          inputs: '{conversationId,responseId,status,scope:"main"|"subagent"}; supplied by the host.'
+          outputs: "{completed:true}; applicable completed public main replies enter the coverage queue."
+          prerequisites:
+            - Host lifecycle only.
+          limitations:
+            - Does not create prospective predictions after the fact or trigger a review model.
+        binding:
+          type: native
+          name: judgment_after_turn
+    sources: []
+    views: []
+    services: []
+    hooks:
+      - id: activate
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        event: lifecycle.activate
+        operations:
+          handle: judgment_activate
+      - id: dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        event: lifecycle.dispose
+        operations:
+          handle: judgment_dispose
+      - id: afterAgentTurn
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        event: lifecycle.afterAgentTurn
+        operations:
+          handle: judgment_after_turn
+    stateCollections: []
+    artifactSchemas:
+      - id: criteria
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            type:
+              const: judgment-criteria
+            title:
+              type: string
+            path:
+              const: CRITERIA.md
+            contentDigest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+          required:
+            - type
+            - title
+            - path
+            - contentDigest
+          additionalProperties: false
+    knowledge:
+      - id: method
+        path: instructions.md
+        description: Judgment evidence and prospective validation method
+        kind: prompt
+      - id: references
+        path: references.md
+        description: Judgment evidence and prospective validation method
+        kind: reference
+      - id: judgment-review
+        path: skills/judgment-review/SKILL.md
+        description: Judgment evidence and prospective validation method
+        kind: skill

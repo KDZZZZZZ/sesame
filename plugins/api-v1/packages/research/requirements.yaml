@@ -1,0 +1,8 @@
+goal: 按金融问题发现调查方法、证据要求与回答结构；支持混合问题、定向复核及专业字段释义。
+acceptance:
+  discovery:
+    case: research-discovery
+    tools:
+      - research_methods
+      - research_read
+    resource: skills/research/SKILL.md

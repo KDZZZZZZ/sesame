@@ -1,9 +1,10 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import manifest from '../capabilities.json' with { type: 'json' };
+const manifest = readPackageDirectory(new URL('../',import.meta.url)).capabilities;
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { configurationStatus, changesSchema } from '../backend/configuration.js';
 import { records } from '../backend/records.js';

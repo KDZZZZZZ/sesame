@@ -1,0 +1,7 @@
+goal: 有限网格、开发期排名与固定样本外选择记录。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-parameter-search-discovery
+    tools:
+      - abu_parameter_search_analyze
+    resource: skills/abu-parameter-search/SKILL.md

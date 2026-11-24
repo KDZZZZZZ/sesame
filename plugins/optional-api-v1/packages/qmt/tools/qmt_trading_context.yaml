@@ -1,0 +1,234 @@
+name: qmt_trading_context
+title: qmt_trading_context
+description: Read configured identity or complete full-account raw positions/current-day orders and fills for an active workflow task with a frozen matching execution contract. No origin filter, terminal launch or trade.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: identity
+        - type: string
+          const: snapshot
+    history_days:
+      type: integer
+      minimum: 1
+      maximum: 90
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+  usage:
+    purpose: 为公开portfolio执行组合提供精确账户身份与当前原生快照。
+    inputs: '{action:"identity"} 或 {action:"snapshot",history_days:7}。'
+    outputs: identity:{account:{accountId,connectionId,revision}}；snapshot:{account,summary,positions,orders,fills,deployments:[],capturedAt,historyCoverage:{scope:"current_native_trading_day",complete:false,requestedDays,limitations}}。
+    prerequisites:
+      - 配置已授权STOCK账户；委派任务需宿主绑定的同账户执行上下文。
+    limitations:
+      - history_days记录请求意图，不扩展SDK当日历史；不得说读到了7天完整成交。
+  binding:
+    type: native
+    name: qmt_trading_context
+  configurationRequirements:
+    - field: account_id
+      reason: Account reads and commands target the explicitly configured STOCK account.
+    - field: python_path
+      reason: Native QMT calls use the saved existing Windows Python executable.
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - snapshot
+        required:
+          - action
+    - field: userdata_directory
+      reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - snapshot
+        required:
+          - action
+    - field: market_port
+      reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - snapshot
+        required:
+          - action
+  finalOutputSchema:
+    oneOf:
+      - type: object
+        properties:
+          account:
+            type: object
+            properties:
+              accountId:
+                type: string
+                minLength: 1
+              connectionId:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+            required:
+              - accountId
+              - connectionId
+              - revision
+            additionalProperties: false
+        required:
+          - account
+        additionalProperties: false
+      - type: object
+        properties:
+          account:
+            type: object
+            properties:
+              accountId:
+                type: string
+                minLength: 1
+              connectionId:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+            required:
+              - accountId
+              - connectionId
+              - revision
+            additionalProperties: false
+          summary:
+            type: object
+            additionalProperties: true
+          positions:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+          orders:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+          fills:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+          historicalOrders:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+          deployments:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+          historyCoverage:
+            type: object
+            properties:
+              scope:
+                const: current_native_trading_day
+                type: string
+              complete:
+                const: false
+                type: boolean
+              requestedDays:
+                type: integer
+                minimum: 1
+                maximum: 90
+              orders:
+                type: object
+                properties:
+                  status:
+                    const: partial
+                  scope:
+                    const: current_native_trading_day
+                required:
+                  - status
+                  - scope
+                additionalProperties: false
+              fills:
+                type: object
+                properties:
+                  status:
+                    const: partial
+                  scope:
+                    const: current_native_trading_day
+                required:
+                  - status
+                  - scope
+                additionalProperties: false
+              historicalOrders:
+                type: object
+                properties:
+                  status:
+                    const: unavailable
+                  reason:
+                    const: native_current_day_only
+                required:
+                  - status
+                  - reason
+                additionalProperties: false
+              limitations:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+            required:
+              - scope
+              - complete
+              - requestedDays
+              - orders
+              - fills
+              - historicalOrders
+              - limitations
+            additionalProperties: false
+          capturedAt:
+            type: integer
+        required:
+          - account
+          - summary
+          - positions
+          - orders
+          - fills
+          - historicalOrders
+          - deployments
+          - historyCoverage
+          - capturedAt
+        additionalProperties: false

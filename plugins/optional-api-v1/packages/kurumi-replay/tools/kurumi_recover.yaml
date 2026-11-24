@@ -1,0 +1,66 @@
+name: kurumi_recover
+title: kurumi_recover
+description: 主Agent核对真实旧任务终态及本步未提交后，用已保存的原决定执行一个真实H1；不请求模型、不伪造角色身份。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision，新挑战用0
+    decision_id:
+      type: string
+      minLength: 1
+      maxLength: 500
+      description: failed_not_committed证据中的原decision.id
+  required:
+    - command_id
+    - expected_version
+    - decision_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent核对真实旧任务终态及本步未提交后，用已保存的原决定执行一个真实H1；不请求模型、不伪造角色身份。
+    inputs: "{command_id,expected_version,decision_id:<saved original failed_not_committed or paused_without_fill decision>}."
+    outputs: Current status and separate recovery evidence after attempting only the uncommitted original decision; no new role model call.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Main has verified the old task terminal state, the actual saved decision and absence of a committed ledger step.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Unknown recovery must reconcile; committed decisions cannot be replayed. Recovery retains pending continuation.
+  binding:
+    type: native
+    name: kurumi_recover
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

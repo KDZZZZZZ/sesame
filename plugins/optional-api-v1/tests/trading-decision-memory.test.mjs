@@ -335,12 +335,15 @@ test('independent judgment resolves actual financial source evidence and publish
   const research = createResearchService(researchHost, { now: () => time, env: { FMP_API_KEY: 'fixture-only-no-network' }, fetch: async () => new Response(JSON.stringify([{ symbol: 'EURUSD', publishedDate: forecast.due_at, title: 'Confirmed source publication', url: 'https://news.example/fixed' }])) });
   const evidence = await research.query({ kind: 'news', symbol: 'EURUSD', limit: 1 });
   const resolution = { judgment_id: sourceCase.id, dataset_id: evidence.dataset_id, source: evidence.evidence.source, query: evidence.evidence.query };
+  const entry = native.runtime.plugins.entry('sesame/judgment-evolution');
+  const defaults = native.runtime.authority.list(entry.id)[0];
+  native.runtime.authority.update({ plugin_id: entry.id, expected_version: defaults.version, expected_revision: entry.digest, scopes: [], channels: [] });
   const beforeDenied = await call('read', { judgment_id: sourceCase.id });
-  await assert.rejects(call('resolve', resolution), { code: 'AUTHORITY_REQUIRED' }, 'Declaring composition must not automatically grant cross-source authority.');
+  await assert.rejects(call('resolve', resolution), { code: 'AUTHORITY_REQUIRED' }, 'A declared capability cannot bypass the saved denial of cross-source authority.');
   assert.deepEqual(await call('read', { judgment_id: sourceCase.id }), beforeDenied, 'Denied evidence reads cannot resolve or rewrite a judgment.');
   // Explicit local-administrator approval exists only in this temporary fixture.
   // It grants the one requested scope needed for this selected external source.
-  const entry = native.runtime.plugins.entry('sesame/judgment-evolution'), authority = native.runtime.authority.list(entry.id)[0];
+  const authority = native.runtime.authority.list(entry.id)[0];
   assert.ok(authority.requested.scopes.includes('capabilities.compose'));
   assert.deepEqual(authority.granted.scopes, []);
   native.runtime.authority.update({ plugin_id: entry.id, expected_version: authority.version, expected_revision: entry.digest, scopes: ['capabilities.compose'], channels: [] });

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdtemp, rm, readdir } from 'node:fs/promises';
@@ -23,7 +24,7 @@ function fixture(rows = [row, { ...row, datetime: '2024-01-02T00:00:00Z' }], ori
 
 test('vn.py declares three real tools and explicit decimal/matching inputs', async () => {
   const definitions = createCapabilities({});
-  const declaration = JSON.parse(await readFile(new URL('../packages/vnpy/capabilities.json', import.meta.url)));
+  const declaration = readPackageDirectory(new URL('../packages/vnpy/', import.meta.url)).capabilities;
   assert.equal(declaration.apiVersion, '2');
   assert.deepEqual(definitions.map(item => item.name).sort(), declaration.capabilities.map(item => item.id).sort());
   assert.deepEqual(declaration.capabilities.filter(item => item.consumers.includes('agent')).map(item => item.id).sort(), ['vnpy_backtest', 'vnpy_environment', 'vnpy_operation', 'vnpy_result']);

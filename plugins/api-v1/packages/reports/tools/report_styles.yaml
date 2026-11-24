@@ -1,0 +1,32 @@
+name: report_styles
+title: report_styles
+description: Describe the single unified default, generic content blocks and saved user styles. Components can be combined side by side or vertically; analysis methods are independent.
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: Choose general-purpose presentation and existing saved exact versions.
+    inputs: No arguments.
+    outputs: default, blocks, saved. No selectable built-in presets.
+    prerequisites: []
+    limitations:
+      - Does not select or run analytical methods.
+  binding:
+    type: native
+    name: report_styles

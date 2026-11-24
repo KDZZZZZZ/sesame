@@ -1,0 +1,114 @@
+name: catalog_get_item
+title: catalog_get_item
+description: Get full details of a catalog item by name
+inputSchema:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Exact item name (repo name)
+      maxLength: 2000
+      minLength: 1
+  required:
+    - name
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    found:
+      type: boolean
+    item:
+      type: object
+      properties:
+        name:
+          type: string
+        repo_url:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        description:
+          type: string
+        stage:
+          type: string
+        input:
+          type: string
+        output:
+          type: string
+        interface_status:
+          type: string
+        screenshot:
+          type: string
+        fetched_at:
+          type: string
+        source:
+          type: string
+        asset_type:
+          type: string
+        data_dependencies:
+          type: array
+          items:
+            type: string
+        mt5agent_integration:
+          type: string
+        verification_level:
+          type: string
+        workflow_stage:
+          type: string
+      additionalProperties: true
+    version:
+      type: string
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+  invalid_input:
+    message: Invalid catalog arguments.
+    recovery: Correct the indicated arguments and retry.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  binding:
+    type: mcp
+    server: analysis
+    name: catalog_get_item
+  usage:
+    purpose: Get full details of a catalog item by name
+    inputs: Use the catalog query fields; omitted optional filters mean no restriction.
+    outputs: Structured JSON fields follow outputSchema; original source and version are preserved.
+    prerequisites:
+      - Python 3 available to the host MCP transport.
+    limitations:
+      - Results describe supplied content or the bundled snapshot, not live network observations.
+    examples:
+      - input:
+          name: skill-factor-alpha191-alpha101
+        output:
+          found: true
+          item:
+            name: skill-factor-alpha191-alpha101
+            repo_url: https://github.com/quantskills/skill-factor-alpha191-alpha101
+            category: 02 因子研发工具箱
+            subcategory: 因子生成（26）
+            description: 从长表OHLCV CSV批量计算Alpha101和Alpha191因子并输出宽表CSV。
+            stage: factor-generation
+            input: —
+            output: —
+            interface_status: 待维护者审核 / 无公开端点
+            screenshot: ""
+            fetched_at: 2026-10-03T14:34:06.311Z
+            source: https://raw.githubusercontent.com/quantskills/quantskills/main/README.md
+            asset_type: skill
+            data_dependencies:
+              - OHLCV/CSV data
+            mt5agent_integration: file_import
+            verification_level: pending_review
+            workflow_stage: 研究信号 / Research signal
+          version: 4.2.1

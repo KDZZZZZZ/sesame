@@ -1,0 +1,114 @@
+name: judgment_defer
+title: judgment_defer
+description: 真实证据不足时保留待核验并退避重试，不能把未核验算命中或悄悄丢掉失败样本。
+inputSchema:
+  type: object
+  required:
+    - judgment_id
+    - reason
+  properties:
+    judgment_id:
+      type: string
+      description: 判断 ID
+      minLength: 1
+      maxLength: 2000
+    reason:
+      type: string
+      description: 缺少什么证据，以及下一次如何获取
+      minLength: 1
+      maxLength: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    claim:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    rationale:
+      type: string
+    probability:
+      type: number
+    baseline_probability:
+      type: number
+    due_at:
+      type: string
+    created_at:
+      type: string
+    conversation_id:
+      type: string
+    source_message_id:
+      type:
+        - string
+        - "null"
+    verification:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        properties: {}
+        required: []
+        additionalProperties: true
+    status:
+      enum:
+        - pending
+        - awaiting_evidence
+        - resolved
+    event_key:
+      type: string
+    next_review_at:
+      type: string
+    review_attempts:
+      type: integer
+    review:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    evidence_gap:
+      type: string
+    last_evidence_check_at:
+      type: string
+  required:
+    - id
+    - claim
+    - probability
+    - due_at
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 真实证据不足时保留待核验并退避重试，不能把未核验算命中或悄悄丢掉失败样本。
+    inputs: "{judgment_id,reason:<missing evidence and how it may become available>}."
+    outputs: Prediction status=awaiting_evidence with evidence_gap, review_attempts and next_review_at using bounded backoff.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Only unresolved due judgments; deferral is neither a hit nor a miss and does not delete history.
+  binding:
+    type: native
+    name: judgment_defer

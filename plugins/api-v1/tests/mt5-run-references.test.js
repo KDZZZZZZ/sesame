@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -50,7 +51,7 @@ test('deployment responses distinguish the checked backtest record from the live
 });
 
 test('published tool descriptions and schemas match the report-reference tools', async t => {
-  const f = await fixture(t), definitions = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url))).capabilities;
+  const f = await fixture(t), definitions = readPackageDirectory(new URL('../../optional-api-v1/packages/mt5/', import.meta.url)).capabilities.capabilities;
   for (const capability of f.tools) { const entry = definitions.find(item => item.binding.name === capability.name); assert.ok(entry); assert.ok(entry.inputSchema); assert.equal(typeof capability.execute, 'function'); }
 });
 

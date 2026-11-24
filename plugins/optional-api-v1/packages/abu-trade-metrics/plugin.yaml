@@ -1,0 +1,122 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/abu-trade-metrics
+title: 交易结果诊断
+description: 对已提供权益与闭合交易计算绩效，对订单与成交审计时序、限价、数量和成本。两项可独立使用的计算基线，保留固定证据；不运行回测或重建券商账单。
+version: 2.1.1
+license: GPL-3.0-only
+engines:
+  sesame: ">=0.2.3"
+author:
+  name: Sesame contributors; ABU reference by bbfamily / 阿布
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Trade results diagnostics"
+      zh: "交易结果诊断"
+    summary:
+      en: "Calculate equity performance and independently audit supplied order/fill/replay timing, cost and constraints; both operations preserve fixed input and output artifacts."
+      zh: "计算权益绩效，并独立审计已提供订单/成交/回放的时序、成本与约束；两个能力分别留存固定输入和结果工件。"
+    dependencies:
+      en: "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order."
+      zh: "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
+  default_state: discoverable
+  agent_scope: all
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - LICENSE
+    - PROVENANCE.md
+    - README.md
+    - examples/input.json
+    - scripts/baseline.mjs
+    - scripts/runtime.mjs
+    - references/method.md
+    - AUDIT-PROVENANCE.md
+    - examples/audit-input.json
+    - scripts/audit.mjs
+    - references/audit.md
+  provides: {}
+  contributions:
+    capabilities:
+      - tool/abu_trade_metrics_analyze
+      - tool/abu_trade_results_audit
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: examples/input.json
+        description: 交易结果诊断 — examples/input.json
+        kind: reference
+      - id: knowledge-1
+        path: instructions.md
+        description: abu_trade_metrics_analyze 的局部目标、解释边界和跨方法交接。
+        kind: prompt
+      - id: knowledge-2
+        path: PROVENANCE.md
+        description: 交易结果诊断 — PROVENANCE.md
+        kind: reference
+      - id: knowledge-3
+        path: README.md
+        description: 交易结果诊断 — README.md
+        kind: reference
+      - id: knowledge-4
+        path: references/method.md
+        description: abu_trade_metrics_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。
+        kind: reference
+      - id: knowledge-5
+        path: skills/abu-trade-metrics/SKILL.md
+        description: 数值方法：从固定权益曲线和已平仓交易计算回撤、收益风险与交易归因，保留成本口径。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。
+        kind: skill
+      - id: audit-input
+        path: examples/audit-input.json
+        kind: reference
+        description: 逐笔订单/成交审计合成算例；无需权益曲线。
+      - id: audit-method
+        path: references/audit.md
+        kind: reference
+        description: abu_trade_results_audit规则、原有数值口径及原生引擎边界。
+      - id: audit-provenance
+        path: AUDIT-PROVENANCE.md
+        kind: reference
+        description: 迁入审计方法的原始ABU来源、固定提交与GPL-3.0-only许可。
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false

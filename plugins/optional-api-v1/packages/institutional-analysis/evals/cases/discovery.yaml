@@ -1,0 +1,19 @@
+id: institutional-analysis-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/institutional-analysis/skills/institutional-analysis/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/institutional-analysis
+  - step: 1
+    pointer: /tools
+    equals: []
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 制度与经济历史研究"

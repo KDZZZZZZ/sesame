@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-indicators:instructions#preamble": "fead0da91e95905cdb5ee380acc77c5e659dc23d83396137dbad87f9c616aaf1",
+    "sesame/abu-indicators:plugin.description": "b660145a131d527667127254e0fcfe0336066b2432db8c394e3a9edb1846fe6b",
+    "sesame/abu-indicators:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-indicators:resource/PROVENANCE.md": "be84a2da2da4d26b6f0d87f48cf3414f5d03bfd193cc29ed41c335a8c95205a2",
+    "sesame/abu-indicators:resource/README.md": "14826d88c27f2e148a15306a3193dabfd74ea50629d4dc58aa235bbe6378cda1",
+    "sesame/abu-indicators:resource/examples/input.json": "eddf4a378a0a8dba7fcf14729a2bbd741c00af71cbf0029a3f5e7e9a404ff9a0",
+    "sesame/abu-indicators:resource/references/method.md": "c845602074b1f1db7420ea4f813432a2e8e79b051aba24b4750e1119b807bb64",
+    "sesame/abu-indicators:resource/scripts/baseline.mjs": "6d3623d4e3d7e439681fd1e91e85a36adba4bb5c2f4255f23c7c13cb0562e5b0",
+    "sesame/abu-indicators:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-indicators:skill/abu-indicators.body": "8c7dcdf773a3396e2cb4ed88778e9629eb448aeaa011001585df25af4f3cc600",
+    "sesame/abu-indicators:skill/abu-indicators.description": "756ed17ca7f3dc3640270e9247ecfedc68e254c51572d2f9c4d6d1e0a55c7d4c",
+    "sesame/abu-indicators:tool/abu_indicators_analyze.description": "a4a1aa7d5c73d6dd31c56ae7c802a568f136c871616a2323b3d970f11ee1de7a",
+    "sesame/abu-indicators:tool/abu_indicators_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-indicators:tool/abu_indicators_analyze.input": "44a45b3b4a70f3cc89e62e0ec23a8520f1e9a5c74cbf7be385702edef506b06d",
+    "sesame/abu-indicators:tool/abu_indicators_analyze.output": "150fb5c4d952bc5cad806335537c27176d0065a3cd9dc844e046180fb496b635"
+  },
+  "digest": "5e594e88584f70590c5520ee44d0280c2b9b88e42ed4984d33f9c27b5876a64b"
+}

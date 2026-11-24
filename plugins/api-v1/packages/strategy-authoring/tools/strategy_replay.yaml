@@ -1,0 +1,77 @@
+name: strategy_replay
+title: strategy_replay
+description: Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.
+inputSchema:
+  type: object
+  required:
+    - source
+    - fixture_path
+  properties:
+    source:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: strategy.source
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    fixture_path:
+      type: string
+      description: Workspace JSON with runId, parameters, initialState and ordered events
+      minLength: 1
+      maxLength: 20000
+    output_path:
+      type: string
+      description: Optional workspace path for the complete evaluation result
+      minLength: 1
+      maxLength: 20000
+    operation_id:
+      type: string
+      description: If provided, preserve this replay as a generic resource artifact
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:resource
+    - publish:artifact
+    - workspace.write
+  usage:
+    purpose: Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.
+    inputs: source 为固定 SVL；fixture_path 为有序事件 JSON，格式与该源匹配；output_path 可落盘，operation_id 可发布输入/结果证据。参考 examples/close-threshold.replay.json。
+    outputs: 求值 status、状态/意图/轨迹及 validationScope=fixed-input-svl-evaluation、nativeEngineExecuted=false；请求发布时另含 evidence。
+    prerequisites:
+      - workspace 可读写，源已发布。
+    limitations:
+      - 固定事件求值不做撮合、费用或券商执行；遇动态类型错误修事件或策略，不用编译成功替代本次结果。
+  binding:
+    type: native
+    name: strategy_replay

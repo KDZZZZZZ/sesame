@@ -1,0 +1,16 @@
+goal: 将研究初稿统一做图文编辑：按问题组织全文，用自然中文重新解释已有研究，逐段审读并编排图表，以受控组件呈现报告或回答，保持事实与判断边界。
+acceptance:
+  discovery:
+    case: reports-discovery
+    tools:
+      - components_describe
+      - components_list
+      - components_show
+      - components_validate
+      - report_check
+      - report_export_check
+      - report_prepare
+      - report_read
+      - report_style_save
+      - report_styles
+    resource: skills/report-delivery/SKILL.md

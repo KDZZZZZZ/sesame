@@ -1,0 +1,17 @@
+goal: 发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。
+acceptance:
+  discovery:
+    case: plugin-manager-discovery
+    tools:
+      - plugin_catalog
+      - plugin_create
+      - plugin_discover
+      - plugin_inspect
+      - plugin_install
+      - plugin_install_catalog
+      - plugin_load
+      - plugin_read
+      - plugin_set_state
+      - plugin_uninstall
+      - plugin_update
+    resource: skills/develop-plugins/SKILL.md

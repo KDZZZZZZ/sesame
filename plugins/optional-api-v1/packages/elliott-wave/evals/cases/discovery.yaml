@@ -1,0 +1,19 @@
+id: elliott-wave-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/elliott-wave/skills/elliott-wave/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/elliott-wave
+  - step: 1
+    pointer: /tools
+    equals: []
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Elliott 波浪候选"

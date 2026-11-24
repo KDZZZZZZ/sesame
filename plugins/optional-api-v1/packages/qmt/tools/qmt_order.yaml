@@ -1,0 +1,153 @@
+name: qmt_order
+title: qmt_order
+description: "Only after an explicit user instruction: submit a limit buy or sell for integer STOCK shares on the exact configured account/revision. Broker permission, T+1 available shares, lot rules, price limits and session rules govern acceptance; submitted does not mean filled. No automatic retry after an unknown outcome. Reuse operation_id for the exact same intent, inspect orders/fills first on failure."
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - user_authorized
+    - account_id
+    - connection_revision
+    - symbol
+    - side
+    - shares
+    - price
+  properties:
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,100}$
+    user_authorized:
+      type: boolean
+      const: true
+    account_id:
+      type: string
+      description: Exact authorized account ID
+      minLength: 1
+      maxLength: 20000
+    connection_revision:
+      type: string
+      description: Exact configured connection revision
+      minLength: 1
+      maxLength: 20000
+    symbol:
+      type: string
+      pattern: ^\d{6}\.(SH|SZ|BJ)$
+    side:
+      anyOf:
+        - type: string
+          const: buy
+        - type: string
+          const: sell
+    shares:
+      type: string
+      pattern: ^[1-9]\d*$
+    price:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+    execution_guard:
+      type: object
+      required:
+        - observed_at
+        - expires_at
+        - max_quote_age_ms
+        - max_quote_to_send_ms
+        - price_limit
+      properties:
+        observed_at:
+          type: integer
+          minimum: 1
+        expires_at:
+          type: integer
+          minimum: 1
+        max_quote_age_ms:
+          type: integer
+          minimum: 1
+          maximum: 5000
+        max_quote_to_send_ms:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        price_limit:
+          type: string
+          pattern: ^(0|[1-9]\d*)(\.\d+)?$
+        expected_positions:
+          type: array
+          items:
+            type: object
+            required:
+              - account_id
+              - stock_code
+              - volume
+              - can_use_volume
+            properties:
+              account_id:
+                type: string
+                description: Exact native account ID
+                minLength: 1
+                maxLength: 20000
+              stock_code:
+                type: string
+                pattern: ^\d{6}\.(SH|SZ|BJ)$
+              volume:
+                type: string
+                pattern: ^(0|[1-9]\d*)$
+              can_use_volume:
+                type: string
+                pattern: ^(0|[1-9]\d*)$
+            additionalProperties: false
+          maxItems: 20000
+          description: Exact full symbol position expectation; native worker rechecks holdings and no working orders before quote and before send
+      additionalProperties: false
+      description: "Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled."
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - external-trading
+    - plugin.state.write
+  usage:
+    purpose: 在明确授权账户上提交一次有限价的股票意图。
+    inputs: '{operation_id:<稳定1–100字符ID>,user_authorized:true,account_id:<配置实际账号>,connection_revision:<配置version字符串>,symbol:"000001.SZ",side:"buy"|"sell",shares:"100",price:"10.20",execution_guard?}；股份为正整数字符串、price为正限价；guard含 observed_at/expires_at/max_quote_age_ms/max_quote_to_send_ms/price_limit，可附原生 expected_positions。示例数值仅解释形状，实际来自用户意图和真实观察。'
+    outputs: "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。"
+    prerequisites:
+      - 主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。
+    limitations:
+      - 会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。
+  binding:
+    type: native
+    name: qmt_order
+  configurationRequirements:
+    - field: python_path
+      reason: Native QMT calls use the saved existing Windows Python executable.
+    - field: account_id
+      reason: Account reads and commands target the explicitly configured STOCK account.
+    - field: userdata_directory
+      reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+    - field: market_port
+      reason: A new order validates the instrument and quote through this port; an existing operation returns its retained receipt without reconnecting.
+      optional: true
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

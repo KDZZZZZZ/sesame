@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -17,8 +18,8 @@ const contracts = {
 
 test('ICT and Investment Research retain layout-pilot identities and reviewed API 2 declarations', async () => {
   for (const [name, expected] of Object.entries(contracts)) {
-    const { version, title, description, ...manifest } = JSON.parse(await read(name, 'plugin.json'));
-    const declaration = JSON.parse(await read(name, 'capabilities.json'));
+    const { version, title, description, ...manifest } = readPackageDirectory(new URL(name+'/',root)).manifest;
+    const declaration = readPackageDirectory(new URL(name+'/',root)).capabilities;
     assert.equal(hash(JSON.stringify(manifest)), expected.manifest, `${name}: identity, engine, entry or resource paths changed`);
     assert.equal(hash(JSON.stringify(declaration)), expected.declaration, `${name}: capabilities, schemas, knowledge or host contributions changed`);
     for (const entry of declaration.knowledge) await read(name, entry.path);
@@ -26,7 +27,7 @@ test('ICT and Investment Research retain layout-pilot identities and reviewed AP
 });
 
 test('optional research workflows retain the existing entry points, default inputs and fixed result shape', async () => {
-  const { capabilities } = JSON.parse(await read('investment-research', 'capabilities.json'));
+  const { capabilities } = readPackageDirectory(new URL('investment-research'+'/',root)).capabilities;
   assert.deepEqual(capabilities.map(item => item.id), ['investment_research_analyze', 'investment_research_report', 'investment_research_ask']);
   const [analyze, report, ask] = capabilities;
   assert.deepEqual(analyze.inputSchema.required, ['research', 'model']);

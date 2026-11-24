@@ -1,0 +1,32 @@
+id: binance-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/binance/skills/binance-spot/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/binance
+  - step: 1
+    pointer: /tools/0/name
+    equals: binance_account
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: binance-spot
+      description: 使用币安现货与 Spot Testnet 的公开行情、账户余额和订单工具。
+      ---
+
+      1. 读 `binance_catalog

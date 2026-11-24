@@ -1,0 +1,34 @@
+name: manual_trade_inspect
+title: manual_trade_inspect
+description: Inspect supported direct execution channels and enforced latency policy. Does not connect, configure, install, or trade.
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - backend.read
+  usage:
+    purpose: Inspect supported direct execution channels and enforced latency policy. Does not connect, configure, install, or trade.
+    inputs: "{}."
+    outputs: "{policy,compositionAvailable,backends,unavailable,note}; policy reports measured/enforced time bounds and supported native actions."
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Listing a channel does not establish its connection, a successful broker order or profitability.
+  binding:
+    type: native
+    name: manual_trade_inspect

@@ -1,0 +1,60 @@
+name: edit
+title: edit
+description: 精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。
+inputSchema:
+  type: object
+  required:
+    - path
+    - edits
+  properties:
+    path:
+      type: string
+      description: 工作区路径
+      minLength: 1
+      maxLength: 20000
+    edits:
+      type: array
+      items:
+        type: object
+        required:
+          - oldText
+          - newText
+        properties:
+          oldText:
+            type: string
+            minLength: 1
+            maxLength: 1048576
+          newText:
+            type: string
+            maxLength: 1048576
+        additionalProperties: false
+      minItems: 1
+      maxItems: 128
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。
+    inputs: path 为工作区文件；edits=[{oldText,newText}]，每个 oldText 必须在原文件唯一且各段互不重叠。
+    outputs: 写入路径、字节数、完整 sha256 与 replacements 计数；保留 BOM/原换行。
+    prerequisites:
+      - 已知道原文件的精确待改文字。
+    limitations:
+      - 找不到或不唯一时读取相关片段扩大匹配范围；全部替换一次提交，失败不部分修改。
+  binding:
+    type: native
+    name: edit

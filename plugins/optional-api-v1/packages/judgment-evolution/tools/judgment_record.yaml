@@ -1,0 +1,233 @@
+name: judgment_record
+title: judgment_record
+description: 在发表每个未来可验证判断之前登记：明确条件成立的概率、期限、对象与固定证据口径。来源、窗口、原概率不可事后修改；历史判断不能回填成前瞻样本。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - claim
+    - topic
+    - regime
+    - rationale
+    - probability
+    - due_at
+    - verification
+  properties:
+    command_id:
+      type: string
+      description: 本次操作唯一 ID；相同 ID 与参数重试不重复创建
+      minLength: 1
+      maxLength: 128
+    claim:
+      type: string
+      description: 准确的判断原句
+      minLength: 1
+      maxLength: 2000
+    topic:
+      type: string
+      description: 稳定的研究主题
+      minLength: 1
+      maxLength: 120
+    regime:
+      type: string
+      description: 适用环境，例如趋势/震荡/工程验证
+      minLength: 1
+      maxLength: 120
+    rationale:
+      type: string
+      description: 当时已知的依据摘要与失效条件
+      minLength: 1
+      maxLength: 4000
+    probability:
+      type: number
+      description: verification 条件成立的概率，不是语言上的自信分
+      minimum: 0
+      maximum: 1
+    baseline_probability:
+      type: number
+      description: 事前基准概率；省略时为明确标注的 0.5 基准
+      minimum: 0
+      maximum: 1
+    due_at:
+      type: string
+      description: 验证截止时间，ISO 8601，必须包含时区
+      minLength: 1
+      maxLength: 2000
+    verification:
+      type: object
+      required:
+        - provider
+        - metric
+        - observed_at_field
+        - op
+        - target
+      properties:
+        provider:
+          type: string
+          description: 固定证据来源 URL 或提供者 ID
+          minLength: 1
+          maxLength: 2000
+        metric:
+          type: string
+          description: 证据数据中的指标字段，可用点路径
+          minLength: 1
+          maxLength: 160
+        observed_at_field:
+          type: string
+          description: 数据中真实观察时间字段，必须含时区
+          minLength: 1
+          maxLength: 160
+        op:
+          anyOf:
+            - type: string
+              const: eq
+            - type: string
+              const: gt
+            - type: string
+              const: gte
+            - type: string
+              const: lt
+            - type: string
+              const: lte
+            - type: string
+              const: between
+        target:
+          anyOf:
+            - type: string
+              maxLength: 2000
+            - type: number
+            - type: boolean
+        upper:
+          type: number
+        window_start:
+          type: string
+          description: 观察窗口开始时间；省略则仅接受截止时刻的观察值
+          minLength: 1
+          maxLength: 2000
+        selector:
+          type: object
+          patternProperties:
+            ^.*$:
+              anyOf:
+                - type: string
+                  maxLength: 2000
+                - type: number
+                - type: boolean
+          maxProperties: 12
+          description: 固定对象匹配，例如 symbol、venue、指标口径
+      additionalProperties: false
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        required:
+          - rule_id
+          - probability
+        properties:
+          rule_id:
+            type: string
+            description: 候选或有效准则 ID
+            minLength: 1
+            maxLength: 2000
+          probability:
+            type: number
+            description: 使用该准则得到的事前影子概率
+            minimum: 0
+            maximum: 1
+        additionalProperties: false
+      maxItems: 10
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    claim:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    rationale:
+      type: string
+    probability:
+      type: number
+    baseline_probability:
+      type: number
+    due_at:
+      type: string
+    created_at:
+      type: string
+    conversation_id:
+      type: string
+    source_message_id:
+      type:
+        - string
+        - "null"
+    verification:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        properties: {}
+        required: []
+        additionalProperties: true
+    status:
+      enum:
+        - pending
+        - awaiting_evidence
+        - resolved
+    event_key:
+      type: string
+    next_review_at:
+      type: string
+    review_attempts:
+      type: integer
+    review:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    evidence_gap:
+      type: string
+    last_evidence_check_at:
+      type: string
+  required:
+    - id
+    - claim
+    - probability
+    - due_at
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 在发表每个未来可验证判断之前登记：明确条件成立的概率、期限、对象与固定证据口径。来源、窗口、原概率不可事后修改；历史判断不能回填成前瞻样本。
+    inputs: '{command_id,claim,topic,regime,rationale,probability,due_at,verification:{provider,metric,observed_at_field,op,target,upper?,window_start?,selector?},baseline_probability?,rule_predictions?}. Probability is 0..1; dates include a timezone. Example criterion: metric="close", observed_at_field="time", op="gt", target=100, selector={symbol:"XAUUSD"}. Use a source/metric/window that an information capability actually supplies. Method findings may support rationale but cannot serve as the later observed outcome.'
+    outputs: Immutable prediction {id,status:"pending",created_at,due_at,verification,probability,baseline_probability,rule_predictions,...}; same command_id + same input returns the same record.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Only future outcomes can be registered. Read rules for applicable non-retired rules and include their shadow probabilities; do not select only favorable rules.
+  binding:
+    type: native
+    name: judgment_record

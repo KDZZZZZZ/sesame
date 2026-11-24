@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Real host data/resource/capability ports with explicit in-process plugin modules.
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
@@ -17,8 +18,8 @@ export async function nativeHost(t) {
   runtime.plugins = { entries: new Map(), state: () => 'mounted', activeTools: () => [], hook: async () => [], own: (_id, dispose) => owned.push(dispose),
     entry(id) { return this.entries.get(id); }, summary: () => ({ loaded: true, state: 'mounted' }) };
   const attach = (name, factory, select = () => true) => {
-    const root = new URL(`../packages/${name}/`, import.meta.url), packageInfo = JSON.parse(readFileSync(new URL('plugin.json', root)));
-    const manifest = JSON.parse(readFileSync(new URL('capabilities.json', root)));
+    const root = new URL(`../packages/${name}/`, import.meta.url), packageInfo = readPackageDirectory(new URL('.', root)).manifest;
+    const manifest = readPackageDirectory(new URL('.', root)).capabilities;
     manifest.capabilities = manifest.capabilities.filter(select); manifest.hooks = [];
     const entry = { ...packageInfo, digest: `sha256:${'a'.repeat(64)}`, capabilityManifest: manifest, module: Promise.resolve({ createCapabilities: factory }), runtime_status: 'ready' };
     runtime.plugins.entries.set(entry.id, entry); return createHostContextV2(runtime, entry, 'conv_main');

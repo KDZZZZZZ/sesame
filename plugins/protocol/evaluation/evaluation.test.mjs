@@ -1,0 +1,55 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, mkdirSync, readFileSync, writeFileSync, cpSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { packageSnapshot, replay } from './replay.mjs';
+import { perform } from './index.mjs';
+import { sandboxCall } from './sandbox.mjs';
+import { writeYaml, parseYaml } from '../directory.mjs';
+const optional=fileURLToPath(new URL('../../optional-api-v1/packages/',import.meta.url));
+const tests=['abu-breakout','plugin-optimizer'];
+for(const name of tests) test(name+' detects a seeded description defect against an independently frozen case',async t=>{
+  const root=mkdtempSync(join(tmpdir(),'sesame-eval-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  const env={draftRoot:join(root,'drafts'),recordRoot:join(root,'records')};
+  mkdirSync(env.draftRoot);
+  const from=join(env.draftRoot,'a'),to=join(env.draftRoot,'b');
+  cpSync(join(optional,name),from,{recursive:true});
+  const first=packageSnapshot(from).tools[0];
+  const testCase={id:'check-instructions',environment:{mode:'replay'},steps:[{operation:'tools/list'}],expect:[{step:0,pointer:'/tools/0/description',equals:first.description}]};
+  writeFileSync(join(from,'evals/cases/description.yaml'),writeYaml(testCase));cpSync(from,to,{recursive:true});
+  const path='tools/'+first.name+'.yaml', doc=parseYaml(readFileSync(join(from,path)));doc.description='Missing method guidance.';
+  await perform('surface.set',{draft:'a',path,text:writeYaml(doc)},env);
+  const report=await perform('findings.add',{source:'program',evidence:'fixture://seeded/description',note:'First tool omitted method guidance'},env);
+  await perform('findings.triage',{id:report.id,category:'element',object:name+':tool/'+first.name+'.description',reason:'The discovered tool description differs from the frozen wording.'},env);
+  const register=path=>perform('case.new',{draft:'a',path,finding:report.id},env);
+  const target=await register('evals/cases/description.yaml'),regression=await register('evals/cases/discovery.yaml');
+  const change=await perform('change.new',{finding:report.id,baseline:'a',candidate:'b',cases:[target.id,regression.id],repeats:2},env);
+  const measured=await perform('change.verify',{id:change.id},env);
+  assert.equal(measured.verified,true);assert.equal(measured.pairs.length,4);
+  assert.equal(measured.pairs[0].baseline.passed,0);assert.equal(measured.pairs[0].candidate.passed,1);
+  assert.deepEqual(measured.pairs[2].order,['candidate','baseline']);
+  await assert.rejects(perform('change.adopt',{id:change.id,human:true},env),/Human decision/);
+  // Test-only terminal substitute exercises the state machine without making an adoption in the user's workspace.
+  const operator={...env,human:true,confirm:async digest=>digest===measured.candidate};
+  assert.equal((await perform('change.adopt',{id:change.id},operator)).status,'adopted');
+  operator.confirm=async digest=>digest===measured.baseline;
+  assert.equal((await perform('change.rollback',{id:change.id},operator)).status,'rolled_back');
+  assert.throws(()=>replay(packageSnapshot(from),[],{operation:'tools/call',params:{name:first.name,arguments:{}}}),/recorded call/);
+});
+test('sandbox runs a native package as a low-privilege user without the parent namespace', {skip:process.platform!=='linux' && !(process.platform==='win32' && process.env.SESAME_SANDBOX_DISTRO)},t=>{
+  const root=mkdtempSync(join(tmpdir(),'sesame-isolation-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+  const marker=join(root,'control-marker');writeFileSync(marker,'fixture');
+  const draft=join(root,'pkg');cpSync(join(optional,'abu-breakout'),draft,{recursive:true});
+  const cap=packageSnapshot(draft).tools[0].name;
+  writeFileSync(join(draft,'index.js'),"import fs from 'node:fs';import os from 'node:os';export function createCapabilities(){return [{name:"+JSON.stringify(cap)+",execute(){return {uid:process.getuid(),marker:fs.existsSync("+JSON.stringify(marker)+"),interfaces:Object.keys(os.networkInterfaces()),secret:process.env.SESAME_FIXTURE_SECRET??null}}}]}");
+  const result=sandboxCall(packageSnapshot(draft),{name:cap,arguments:{}}).structuredContent;
+  assert.equal(result.uid,65534);assert.equal(result.marker,false);assert.equal(result.secret,null);assert.ok(result.interfaces.every(name=>name==='lo'));
+});
+test('sandbox invokes the packaged Python stdio catalog', {skip:process.platform!=='linux' && !(process.platform==='win32' && process.env.SESAME_SANDBOX_DISTRO)},()=>{
+  const pkg=packageSnapshot(join(optional,'quantskills-catalog'));
+  const ref=pkg.manifest.tests[0],cap=pkg.capabilities.capabilities.find(c=>c.binding.name===ref.tool);
+  const call=sandboxCall(pkg,{name:cap.id,arguments:ref.arguments});
+  assert.equal(call.isError,false);assert.equal(call.structuredContent.total_items,ref.expected.total_items);
+});

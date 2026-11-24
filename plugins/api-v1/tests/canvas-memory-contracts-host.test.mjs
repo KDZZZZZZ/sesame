@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, cp } from 'node:fs/promises';
@@ -28,7 +29,7 @@ async function fixture(t) {
     await main.plugins.install({ path: target });
     await main.plugins.setEnabled('sesame/' + name, true, { scope: 'session' });
     assert.equal(runtime.plugins.entry('sesame/' + name).runtime_status, 'ready');
-    declarations[name] = await json(join(target, 'capabilities.json'));
+    declarations[name] = readPackageDirectory(join(target)).capabilities;
   }
   const definitions = runtime.plugins.definitions({ conversationId: 'conv_main' });
   for (const [name, declared] of Object.entries(declarations)) groups[name] = definitions.filter(tool => declared.capabilities.some(cap => cap.id === tool.name && cap.consumers.includes('agent')));
@@ -74,7 +75,7 @@ integration('indicator tool schema and actual host agree on integer and decimal 
 
 integration('packaged indicator example is a complete publish call with top-level files', async t => {
   const f = await fixture(t), input = await json(join(packages, 'canvas-control/resources/indicator-publish.json'));
-  const manifest = await json(join(packages, 'canvas-control/plugin.json'));
+  const manifest = readPackageDirectory(join(packages, 'canvas-control/')).manifest;
   assert.ok(manifest.resources.includes('resources/indicator-publish.json'));
   assert.ok(input.files[input.definition.implementation.entry]);
   assert.equal(f.Check(f.tool('indicator_publish').parameters, input), true);
@@ -259,12 +260,12 @@ integration('delegation uses the host Agent Run input and optional explicit repo
   assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'research' } }), false);
 });
 
-integration('the knowledge-only guide loads without aliases and host Run tools survive disabling it', async t => {
+integration('navigation functions load beside the guide and host Run tools survive disabling it', async t => {
   const f = await fixture(t), registry = f.runtime.plugins, entry = registry.entry('sesame/orchestration');
-  assert.equal(f.declarations.orchestration.capabilities.length, 0);
-  assert.deepEqual(entry.tool_names, []);
-  assert.equal(Boolean(entry.entryPath), false);
-  assert.deepEqual(f.groups.orchestration, []);
+  assert.deepEqual(f.declarations.orchestration.capabilities.map(item => item.id), ['workflow_status', 'workflow_plan', 'workflow_step']);
+  assert.deepEqual([...entry.tool_names].sort(), ['workflow_plan', 'workflow_status', 'workflow_step']);
+  assert.equal(Boolean(entry.entryPath), true);
+  assert.deepEqual(f.groups.orchestration.map(tool => tool.name).sort(), ['workflow_plan', 'workflow_status', 'workflow_step']);
   for (const name of ['agent_list', 'agent_delegate', 'agent_inspect', 'agent_stop']) assert.equal(f.tool(name), undefined);
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));

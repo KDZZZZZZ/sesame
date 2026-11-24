@@ -1,0 +1,159 @@
+name: judgment_list
+title: judgment_list
+description: 列出已登记判断与到期状态，返回已发布的 criteria ArtifactRef；台账保留在主 Agent 的持久工作区。
+inputSchema:
+  type: object
+  properties:
+    status:
+      anyOf:
+        - type: string
+          const: pending
+        - type: string
+          const: awaiting_evidence
+        - type: string
+          const: resolved
+    topic:
+      type: string
+      description: 研究主题
+      minLength: 1
+      maxLength: 2000
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+    offset:
+      type: integer
+      minimum: 0
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          version:
+            type: integer
+          claim:
+            type: string
+          topic:
+            type: string
+          regime:
+            type: string
+          rationale:
+            type: string
+          probability:
+            type: number
+          baseline_probability:
+            type: number
+          due_at:
+            type: string
+          created_at:
+            type: string
+          conversation_id:
+            type: string
+          source_message_id:
+            type:
+              - string
+              - "null"
+          verification:
+            type: object
+            properties: {}
+            required: []
+            additionalProperties: true
+          rule_predictions:
+            type: array
+            items:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: true
+          status:
+            enum:
+              - pending
+              - awaiting_evidence
+              - resolved
+          event_key:
+            type: string
+          next_review_at:
+            type: string
+          review_attempts:
+            type: integer
+          review:
+            type: object
+            properties: {}
+            required: []
+            additionalProperties: true
+          evidence_gap:
+            type: string
+          last_evidence_check_at:
+            type: string
+        required:
+          - id
+          - claim
+          - probability
+          - due_at
+          - status
+        additionalProperties: false
+    total:
+      type: integer
+    next_offset:
+      type:
+        - integer
+        - "null"
+    criteria:
+      type: object
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+  required:
+    - items
+    - total
+    - next_offset
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+    - Publish immutable judgment criteria
+  usage:
+    purpose: 列出已登记判断与到期状态，返回已发布的 criteria ArtifactRef；台账保留在主 Agent 的持久工作区。
+    inputs: '{status?:"pending"|"awaiting_evidence"|"resolved",topic?,offset?:0,limit?}.'
+    outputs: "{items,total,next_offset,criteria}; each item retains prospective criteria and current review state."
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Pagination total is a ledger count, not a hit rate; unresolved judgments remain in the sample.
+  binding:
+    type: native
+    name: judgment_list

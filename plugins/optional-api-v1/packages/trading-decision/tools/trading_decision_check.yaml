@@ -1,0 +1,61 @@
+name: trading_decision_check
+title: trading_decision_check
+description: Save the current registered pre-decision reviewer’s immutable allow/block result. This records evidence only and cannot submit orders or change target quantities.
+inputSchema:
+  type: object
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+    verdict:
+      enum:
+        - allow
+        - block
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 4000
+  required:
+    - run_id
+    - verdict
+    - reason
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    verdict:
+      enum:
+        - allow
+        - block
+    reason:
+      type: string
+  required:
+    - verdict
+    - reason
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:review-checkpoint
+  binding:
+    type: native
+    name: trading_decision_check
+  usage:
+    purpose: Freeze the current pre-decision review outcome.
+    inputs: '{run_id,verdict:"allow"|"block",reason}; role identity comes only from the trusted registered Agent.'
+    outputs: The immutable verdict and reason; identical retries return the same check.
+    prerequisites:
+      - A running reviewer listed in the frozen workflow, before manager saves a decision.
+    limitations:
+      - No main-conversation impersonation, decision changes or order authority. Any block withholds this run’s execution; a different review requires a new run.

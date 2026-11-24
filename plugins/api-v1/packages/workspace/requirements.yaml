@@ -1,0 +1,19 @@
+goal: 插件本地文件业务与宿主管理的进程Run；路径保护、原子写入、冲突检查和精确编辑。
+acceptance:
+  discovery:
+    case: workspace-discovery
+    tools:
+      - bash
+      - edit
+      - host_files_import
+      - host_files_list
+      - host_files_mkdir
+      - host_files_move
+      - host_files_read
+      - host_files_remove
+      - host_files_run
+      - host_files_search
+      - host_files_write
+      - read
+      - write
+    resource: skills/prepare-environment/SKILL.md

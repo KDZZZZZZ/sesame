@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -8,15 +9,24 @@ const json = async path => JSON.parse(await readFile(new URL(path, root), 'utf8'
 
 test('product help and collaboration have independent default knowledge owners', async () => {
   const skills = new Set();
-  for (const [name, skill] of [['orchestration', 'coordinate-research'], ['user-guide', 'sesame-user-guide']]) {
-    const manifest = await json(`${name}/plugin.json`);
-    const declarations = await json(`${name}/capabilities.json`);
-    assert.equal(manifest.id, `sesame/${name}`);
-    assert.equal(manifest.default_state, 'mounted');
-    assert.equal(manifest.entry, undefined);
-    assert.deepEqual(declarations.capabilities, []);
-    assert.deepEqual(declarations.knowledge.filter(item => item.kind === 'prompt').map(item => item.path), ['prompt.md']);
-    assert.deepEqual(declarations.knowledge.filter(item => item.kind === 'skill').map(item => item.path), [`skills/${skill}/SKILL.md`]);
+  const guide = readPackageDirectory(new URL('user-guide/',root)).manifest;
+  const guideDeclarations = readPackageDirectory(new URL('user-guide/',root)).capabilities;
+  assert.equal(guide.id, 'sesame/user-guide');
+  assert.equal(guide.default_state, 'mounted');
+  assert.equal(guide.entry, undefined);
+  assert.deepEqual(guideDeclarations.capabilities, []);
+  assert.deepEqual(guideDeclarations.knowledge.filter(item => item.kind === 'prompt').map(item => item.path), ['instructions.md']);
+  assert.deepEqual(guideDeclarations.knowledge.filter(item => item.kind === 'skill').map(item => item.path), ['skills/sesame-user-guide/SKILL.md']);
+  const orchestration = readPackageDirectory(new URL('orchestration/',root)).manifest;
+  const navigation = readPackageDirectory(new URL('orchestration/',root)).capabilities;
+  assert.equal(orchestration.id, 'sesame/orchestration');
+  assert.equal(orchestration.default_state, 'mounted');
+  assert.equal(orchestration.entry, 'index.js');
+  assert.deepEqual(navigation.capabilities.map(item => item.id), ['workflow_status', 'workflow_plan', 'workflow_step']);
+  assert.deepEqual(navigation.hooks, []);
+  assert.deepEqual(navigation.knowledge.filter(item => item.kind === 'prompt').map(item => item.path), ['instructions.md']);
+  assert.deepEqual(navigation.knowledge.filter(item => item.kind === 'skill').map(item => item.path), ['skills/coordinate-research/SKILL.md']);
+  for (const [name, declarations, skill] of [['user-guide', guideDeclarations, 'sesame-user-guide'], ['orchestration', navigation, 'coordinate-research']]) {
     for (const resource of declarations.knowledge) {
       const body = await readFile(new URL(`${name}/${resource.path}`, root), 'utf8');
       assert.ok(body.trim(), `${name}/${resource.path} must be readable`);

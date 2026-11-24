@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -5,7 +6,7 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 
 const root = new URL('../packages/data-access/', import.meta.url);
 test('data guidance examples use the current public capability input contracts', async () => {
-  const declarations = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8'));
+  const declarations = readPackageDirectory(new URL('.', root)).capabilities;
   const cases = [
     ['references/source-queries.md', '查询一页：data_query', 'data_query'],
     ['references/source-queries.md', '固定数据：data_snapshot', 'data_snapshot'],

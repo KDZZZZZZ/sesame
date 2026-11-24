@@ -93,7 +93,10 @@ async function archiveInputs(service,doc,prefix,signal) {
     const r=supplement.index?.[key];assert(r,'Incomplete supplemental index','SOURCE_UNSEALED');const root=resolve(service.host.context.storageRoot,'kurumi-data-v1'),p=resolve(root,r.path);assert(p.startsWith(root+sep),'Supplement path escape','UNSAFE_PATH');
     const bytes=await ordinary(p);assert(bytes.length===r.bytes&&sha256(bytes)===r.digest,'Supplement bytes changed','SOURCE_CHANGED');await put(`supplements/${r.path}`,bytes);
   }
-  for(const name of ['plugin.json','package.json','capabilities.json','service.js','engine.js','native-engine.js','native-engine.py','experiment-profiles.js','experiment-lifecycle.js','experience-plan.js','recording-selection.js','recording.js','committed-playback.js','main-chat-workflow.js','method-workflow.js','data-windows.json','native-dependencies.json','providers.js','markers.js','replay-presentation.js','weekly-reports.js','analysis-plan.js','skills/kurumi-replay/SKILL.md','PORTABLE-EXPERIENCE.md'])await put(`code/${name}`,await ordinary(new URL(name,import.meta.url)));
+  for(const name of ['plugin.yaml','package.json','surface.lock.json','service.js','engine.js','native-engine.js','native-engine.py','experiment-profiles.js','experiment-lifecycle.js','experience-plan.js','recording-selection.js','recording.js','committed-playback.js','main-chat-workflow.js','method-workflow.js','data-windows.json','native-dependencies.json','providers.js','markers.js','replay-presentation.js','weekly-reports.js','analysis-plan.js','skills/kurumi-replay/SKILL.md','PORTABLE-EXPERIENCE.md'])await put(`code/${name}`,await ordinary(new URL(name,import.meta.url)));
+  for (const name of (await fs.readdir(new URL('tools/',import.meta.url))).filter(name=>name.endsWith('.yaml')).sort()) {
+    await put('code/tools/'+name,await ordinary(new URL('tools/'+name,import.meta.url)));
+  }
   files.push(...await roleSeals(doc,service.recorder));return files;
 }
 export function archiveTerminal(service,args,signal){return deduplicate(service,`seal:${args.command_id}`,args,()=>archiveTerminalOnce(service,args,signal));}

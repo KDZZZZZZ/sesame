@@ -1,0 +1,42 @@
+id: reports-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/reports/skills/report-delivery/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/reports
+  - step: 1
+    pointer: /tools/0/name
+    equals: components_describe
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 12
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+      required:
+        - ids
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: report-delivery
+      description: 发布、修订、检查和按需导出一个已组成的报告。
+      ---
+
+      1. 用户指定位置时实际发布报告到该位置；只登记数据或在回复贴引用

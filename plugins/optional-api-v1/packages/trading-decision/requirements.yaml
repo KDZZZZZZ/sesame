@@ -1,0 +1,18 @@
+goal: 消费固定研究成果、当前账户与用户风险规则，冻结目标仓位并取得真实执行回执；支持明确授权的周期或事件调度。
+acceptance:
+  discovery:
+    case: trading-decision-discovery
+    tools:
+      - trading_decision_activity
+      - trading_decision_apply
+      - trading_decision_check
+      - trading_decision_context
+      - trading_decision_decide
+      - trading_decision_event
+      - trading_decision_models
+      - trading_decision_plan
+      - trading_decision_report
+      - trading_decision_review
+      - trading_decision_run
+      - trading_decision_runs
+    resource: skills/trading-decision/SKILL.md

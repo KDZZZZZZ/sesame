@@ -9,7 +9,7 @@ Agent/host输入`{url}`，HTTP/HTTPS，可含内网地址和端口，URL不得�
 
 ref是不可变data产物，包含source.txt原始字节与rows.json。manifest.content.raw给出原文entry与编码；JSON对象规范为单行，对象数组/CSV为多行，HTML/XML等为[{url,text}]。原文不受行式JSON包裹影响。直接调用对应解析能力的`source_ref`输入即可读取全文，不需模型复制/分块或本地执行代码。
 
-解析结果超过24KiB时，对应解析器返回`output_truncated:true,result_ref,result_entries`及完整字符/条数；完整结构在`result_entries.structured`，HTML正文另在`result_entries.text`。按需用`host_resources_read({ref:result_ref,part:"content",entry:result_entries.text??result_entries.structured,offset:0,length:8192,encoding:"utf8"})`读取，继续使用`nextOffset`。解析预览不是全文；原始来源ref和派生结果ref用途不同。
+解析结果超过24KiB时，对应解析器返回`output_truncated:true,result_ref,result_entries,result_bytes`及完整字符/条数；完整结构在`result_entries.structured`，HTML正文另在`result_entries.text`。读取完整结构或正文时，先查`manifest`或`result_bytes`：JSON结构优先用`host_resources_read({ref:result_ref,part:"rows",fields:[...]})`；纯文本/HTML全文按大页读取`host_resources_read({ref:result_ref,part:"content",entry:result_entries.text??result_entries.structured,offset:0,length:49152,encoding:"utf8"})`，互不依赖的分段按`nextOffset`或字节范围在同一轮并行读取，禁止按8KiB逐轮串行试探。解析预览不是全文；原始来源ref和派生结果ref用途不同。
 
 provenance保留kind=observed、source_kind=external、最终provider URL、as_of、原始字节data_hash、content_type、encoding。HTTP charset优先，其次XML/HTML编码声明，默认UTF-8。
 

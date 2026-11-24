@@ -1,0 +1,128 @@
+name: research_methods
+title: research_methods
+description: 按用户问题查询金融调查方法，返回候选、适用问题、摘要与路径；不执行研究或判定充分性。
+inputSchema:
+  type: object
+  properties:
+    query:
+      type: string
+      maxLength: 1000
+      description: 用户问题或关键关系；不传则查看方法目录
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 50
+      description: 最多返回数，默认8；查看全部方法可用50
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - items
+    - total
+    - hasMore
+    - guidance
+    - resources
+  properties:
+    items:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - kind
+          - title
+          - summary
+          - path
+        properties:
+          id:
+            type: string
+          kind:
+            enum:
+              - method
+              - reference
+          title:
+            type: string
+          summary:
+            type: string
+          path:
+            type: string
+          questions:
+            type: array
+            items:
+              type: string
+          related:
+            type: array
+            items:
+              type: string
+          references:
+            type: array
+            items:
+              type: string
+        additionalProperties: false
+    total:
+      type: integer
+      minimum: 0
+    hasMore:
+      type: boolean
+    guidance:
+      type: string
+    resources:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - kind
+          - title
+          - summary
+          - path
+        properties:
+          id:
+            type: string
+          kind:
+            enum:
+              - method
+              - reference
+          title:
+            type: string
+          summary:
+            type: string
+          path:
+            type: string
+          questions:
+            type: array
+            items:
+              type: string
+          related:
+            type: array
+            items:
+              type: string
+          references:
+            type: array
+            items:
+              type: string
+        additionalProperties: false
+  additionalProperties: false
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 先发现与本次用户问题相关的调查与回答结构，再按需读全文。
+    inputs: "{query?,limit?}；query可用中文、英文关键词或准确方法ID。"
+    outputs: items含id/title/summary/questions/path及相关资料ID；resources是共用指南。
+    prerequisites: []
+    limitations:
+      - 候选是词项匹配结果，不是任务分类或研究结论；未命中可换关键关系或查看全目录。
+  binding:
+    type: native
+    name: research_methods

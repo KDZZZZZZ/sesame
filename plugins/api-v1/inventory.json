@@ -95,7 +95,7 @@
   "packages": [
     {
       "id": "sesame/abu-breakout",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -151,7 +151,7 @@
     },
     {
       "id": "sesame/abu-exit-rules",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -207,7 +207,7 @@
     },
     {
       "id": "sesame/abu-indicators",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -263,7 +263,7 @@
     },
     {
       "id": "sesame/abu-ml-features",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -319,7 +319,7 @@
     },
     {
       "id": "sesame/abu-model-lab",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -375,7 +375,7 @@
     },
     {
       "id": "sesame/abu-moving-average",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -431,7 +431,7 @@
     },
     {
       "id": "sesame/abu-parameter-search",
-      "version": "2.0.4",
+      "version": "2.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -487,7 +487,7 @@
     },
     {
       "id": "sesame/abu-position-sizing",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -543,7 +543,7 @@
     },
     {
       "id": "sesame/abu-price-structure",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -599,7 +599,7 @@
     },
     {
       "id": "sesame/abu-seasonality",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -655,7 +655,7 @@
     },
     {
       "id": "sesame/abu-similarity",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -711,7 +711,7 @@
     },
     {
       "id": "sesame/abu-stock-screening",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -767,7 +767,7 @@
     },
     {
       "id": "sesame/abu-trade-judges",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -823,7 +823,7 @@
     },
     {
       "id": "sesame/abu-trade-metrics",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -889,7 +889,7 @@
     },
     {
       "id": "sesame/abu-trend",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -945,7 +945,7 @@
     },
     {
       "id": "sesame/abu-trend-pullback",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1001,7 +1001,7 @@
     },
     {
       "id": "sesame/abu-volatility",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1057,7 +1057,7 @@
     },
     {
       "id": "sesame/akshare",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.2",
+      "version": "3.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1386,7 +1386,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1504,7 +1504,7 @@
     },
     {
       "id": "sesame/behavioral-finance",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1548,7 +1548,7 @@
     },
     {
       "id": "sesame/binance",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1895,7 +1895,7 @@
     },
     {
       "id": "sesame/canvas-control",
-      "version": "4.0.0",
+      "version": "4.0.2",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -2024,7 +2024,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "2.0.9",
+      "version": "2.0.10",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2172,7 +2172,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "3.1.5",
+      "version": "3.1.6",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -2297,7 +2297,7 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "3.0.5",
+      "version": "3.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -2429,7 +2429,7 @@
     },
     {
       "id": "sesame/deep-reasoning",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2473,7 +2473,7 @@
     },
     {
       "id": "sesame/dow-theory",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2517,7 +2517,7 @@
     },
     {
       "id": "sesame/elliott-wave",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2561,7 +2561,7 @@
     },
     {
       "id": "sesame/financial-research",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2683,7 +2683,7 @@
     },
     {
       "id": "sesame/historical-evidence",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2763,7 +2763,7 @@
     },
     {
       "id": "sesame/ict",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2807,7 +2807,7 @@
     },
     {
       "id": "sesame/institutional-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2851,7 +2851,7 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "4.0.1",
+      "version": "4.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2957,7 +2957,7 @@
     },
     {
       "id": "sesame/judgment-evolution",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3186,7 +3186,7 @@
     },
     {
       "id": "sesame/kurumi-replay",
-      "version": "0.1.3-dev.3.9",
+      "version": "0.1.3-dev.3.10",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3741,7 +3741,7 @@
     },
     {
       "id": "sesame/market-data-parser",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -3811,7 +3811,7 @@
     },
     {
       "id": "sesame/memory",
-      "version": "3.1.2",
+      "version": "3.2.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -3970,6 +3970,14 @@
           "execution": "immediate"
         },
         {
+          "id": "memory_release_task",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
           "id": "memory_dispose",
           "kind": "function",
           "consumers": [
@@ -3993,7 +4001,8 @@
               "manage": "memory_manage",
               "stats": "memory_stats",
               "configure": "memory_configure",
-              "trading_context": "memory_trading_context"
+              "trading_context": "memory_trading_context",
+              "releaseTask": "memory_release_task"
             }
           }
         ],
@@ -4032,7 +4041,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "2.2.4",
+      "version": "2.2.6",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4862,7 +4871,7 @@
     },
     {
       "id": "sesame/narrative-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4906,11 +4915,11 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "3.3.0",
+      "version": "5.0.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.4"
+        "sesame": ">=0.3.2 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4920,26 +4929,57 @@
       "category": "workspace",
       "functionalCategory": "platform",
       "implementationKinds": [
-        "knowledge"
+        "function"
       ],
       "title": {
         "en": "Agent and workflow coordination",
         "zh": "Agent 与工作流编排"
       },
       "summary": {
-        "en": "Organize research stages, workflows and agents, pass evidence and capabilities, and verify deliverables through host-owned Runs.",
-        "zh": "组织研究阶段、工作流和子 Agent，传递证据与能力，并通过宿主 Run 核验成果。"
+        "en": "Record a main-agent workflow plan, show which steps are ready, and leave Agent execution and Run control to the host.",
+        "zh": "为主 Agent 记录流程计划并指出就绪步骤；步骤执行和 Run 控制仍由宿主负责。"
       },
       "dependencies": {
-        "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
-        "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
+        "en": "Navigation state stays in the host. Starting an Agent or Run still uses the host.",
+        "zh": "计划状态保存在宿主中。启动 Agent 或 Run 仍使用宿主。"
       },
       "permissions": {
-        "scopes": [],
+        "scopes": [
+          "workflows.navigate"
+        ],
         "calls": []
       },
-      "tools": [],
-      "capabilities": [],
+      "tools": [
+        "workflow_status",
+        "workflow_plan",
+        "workflow_step"
+      ],
+      "capabilities": [
+        {
+          "id": "workflow_status",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "workflow_plan",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "workflow_step",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        }
+      ],
       "hostContributions": {
         "sources": [],
         "views": [],
@@ -4950,7 +4990,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.7",
+      "version": "3.1.9",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5122,8 +5162,255 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager"
     },
     {
+      "id": "sesame/plugin-optimizer",
+      "version": "1.0.1",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.3.0-dev.1 <0.4.0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "workspace",
+      "functionalCategory": "platform",
+      "implementationKinds": [
+        "function"
+      ],
+      "title": {
+        "en": "Plugin optimizer",
+        "zh": "插件优化器"
+      },
+      "summary": {
+        "en": "Evaluate draft plugin surfaces against fixed cases and review changes.",
+        "zh": "用固定案例验证插件草稿，记录归因和变更。"
+      },
+      "dependencies": {
+        "en": "Local drafts and session-authorized evidence.",
+        "zh": "本地草稿和当前会话授权的证据。"
+      },
+      "permissions": {
+        "scopes": [],
+        "calls": [
+          "host.traces.query",
+          "host.findings.query"
+        ]
+      },
+      "tools": [
+        "optimizer_init",
+        "optimizer_surface_ls",
+        "optimizer_surface_show",
+        "optimizer_surface_diff",
+        "optimizer_surface_lock",
+        "optimizer_surface_add",
+        "optimizer_surface_set",
+        "optimizer_surface_rm",
+        "optimizer_workflow_check",
+        "optimizer_workflow_graph",
+        "optimizer_trace_ls",
+        "optimizer_trace_show",
+        "optimizer_trace_export",
+        "optimizer_findings_inbox",
+        "optimizer_findings_ls",
+        "optimizer_findings_add",
+        "optimizer_findings_triage",
+        "optimizer_case_new",
+        "optimizer_case_run",
+        "optimizer_eval_run",
+        "optimizer_change_new",
+        "optimizer_change_verify"
+      ],
+      "capabilities": [
+        {
+          "id": "optimizer_init",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_ls",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_show",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_diff",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_lock",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_add",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_set",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_surface_rm",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_workflow_check",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_workflow_graph",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_trace_ls",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_trace_show",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_trace_export",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_findings_inbox",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_findings_ls",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_findings_add",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_findings_triage",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_case_new",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_case_run",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_eval_run",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_change_new",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "optimizer_change_verify",
+          "kind": "function",
+          "consumers": [
+            "agent"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/optional-api-v1/packages/plugin-optimizer"
+    },
+    {
       "id": "sesame/portfolio-execution",
-      "version": "2.1.0",
+      "version": "2.1.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5357,7 +5644,7 @@
     },
     {
       "id": "sesame/price-action",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5401,7 +5688,7 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "2.1.0",
+      "version": "2.1.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5818,7 +6105,7 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "4.2.0",
+      "version": "4.2.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5915,7 +6202,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.8",
+      "version": "8.0.10",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6090,7 +6377,7 @@
     },
     {
       "id": "sesame/research",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6156,7 +6443,7 @@
     },
     {
       "id": "sesame/rss-collect",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6216,7 +6503,7 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6377,7 +6664,7 @@
     },
     {
       "id": "sesame/strategy-development",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6519,7 +6806,7 @@
     },
     {
       "id": "sesame/trading-decision",
-      "version": "3.4.0",
+      "version": "3.4.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6744,7 +7031,7 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.5",
+      "version": "1.0.8",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6924,7 +7211,7 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6968,7 +7255,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "2.0.6",
+      "version": "2.0.7",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7075,7 +7362,7 @@
     },
     {
       "id": "sesame/web-extract",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7135,7 +7422,7 @@
     },
     {
       "id": "sesame/web-sources",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -7217,7 +7504,7 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -7398,7 +7685,7 @@
     },
     {
       "id": "sesame/wyckoff",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

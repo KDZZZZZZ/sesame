@@ -1,0 +1,171 @@
+name: trading_decision_review
+title: trading_decision_review
+description: Attach a reflection to a previous same-account decision using registered external evidence observed after that decision. Reviews preserve source rows and hashes; targets and quotes are not fills, and returns are never invented.
+inputSchema:
+  type: object
+  required:
+    - current_run_id
+    - run_id
+    - evidence
+    - reflection
+  properties:
+    current_run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Current task trading run ID
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Previous decision run ID
+    evidence:
+      type: array
+      items:
+        type: object
+        required:
+          - datasetId
+          - observedAtField
+        properties:
+          datasetId:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Registered external dataset ID
+          rowIndex:
+            type: integer
+            minimum: 0
+          kind:
+            anyOf:
+              - type: string
+                const: observation
+              - type: string
+                const: market
+              - type: string
+                const: execution
+          observedAtField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Actual source-row timestamp field
+          symbolField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row symbolField
+          accountIdField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row accountIdField
+          executionIdField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row executionIdField
+          quantityField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row quantityField
+          priceField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row priceField
+          runIdField:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Source-row runIdField
+          source:
+            type: object
+            properties:
+              providerId:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+              binding:
+                type: object
+            required:
+              - providerId
+              - revision
+            additionalProperties: false
+          query:
+            type: object
+          artifact:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                const: data
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+        additionalProperties: false
+        dependentRequired:
+          source:
+            - query
+          query:
+            - source
+        allOf:
+          - not:
+              required:
+                - artifact
+                - source
+          - not:
+              required:
+                - artifact
+                - query
+      minItems: 1
+      maxItems: 16
+    reflection:
+      type: string
+      minLength: 1
+      maxLength: 6000
+      description: Evidence-grounded review and lesson; distinguish unconfirmed execution
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:datasets
+    - write:review-memory
+  binding:
+    type: native
+    name: trading_decision_review
+  usage:
+    purpose: Attach a reflection to a previous same-account decision using registered external evidence observed after that decision. Reviews preserve source rows and hashes; targets and quotes are not fills, and returns are never invented.
+    inputs: "{current_run_id,run_id:<earlier decision>,evidence:[{datasetId,observedAtField,rowIndex?,kind?,symbolField?,accountIdField?,executionIdField?,quantityField?,priceField?,runIdField?,source?,query?,artifact?}],reflection}; observedAtField names the actual later timestamp column. Use producer-returned source/query together or an exact data ArtifactRef."
+    outputs: Saved review with frozen source rows/hashes attached to the prior same-account decision.
+    prerequisites:
+      - An authorized task in current_run_id; prior run belongs to the same account and has a decision.
+    limitations:
+      - Targets, old quotes and synthetic data do not establish realized returns; missing future evidence remains unresolved.

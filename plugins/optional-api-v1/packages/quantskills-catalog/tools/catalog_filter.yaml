@@ -1,0 +1,137 @@
+name: catalog_filter
+title: catalog_filter
+description: Filter catalog by category, workflow stage, asset type, or verification level
+inputSchema:
+  type: object
+  properties:
+    category:
+      type: string
+      description: Category name (e.g. '02 因子研发工具箱')
+      maxLength: 2000
+    stage:
+      type: string
+      description: Workflow stage (e.g. 'data-ingestion')
+      maxLength: 2000
+    asset_type:
+      type: string
+      description: "Asset type: skill, agent, template, infrastructure"
+      maxLength: 2000
+    verification_level:
+      type: string
+      description: "Verification level: published_endpoint, pending_review, unknown"
+      maxLength: 2000
+    limit:
+      type: integer
+      default: 50
+      maximum: 1000
+      minimum: 1
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    results:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          repo_url:
+            type: string
+          category:
+            type: string
+          subcategory:
+            type: string
+          stage:
+            type: string
+          asset_type:
+            type: string
+          verification_level:
+            type: string
+        additionalProperties: true
+    count:
+      type: number
+    filters:
+      type: object
+      properties:
+        category:
+          type: string
+        limit:
+          type: number
+      additionalProperties: true
+    version:
+      type: string
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+  invalid_input:
+    message: Invalid catalog arguments.
+    recovery: Correct the indicated arguments and retry.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  binding:
+    type: mcp
+    server: analysis
+    name: catalog_filter
+  usage:
+    purpose: Filter catalog by category, workflow stage, asset type, or verification level
+    inputs: Use the catalog query fields; omitted optional filters mean no restriction.
+    outputs: Structured JSON fields follow outputSchema; original source and version are preserved.
+    prerequisites:
+      - Python 3 available to the host MCP transport.
+    limitations:
+      - Results describe supplied content or the bundled snapshot, not live network observations.
+    examples:
+      - input:
+          category: 02 因子研发工具箱
+          limit: 5
+        output:
+          results:
+            - name: skill-factor-idea-generation
+              repo_url: https://github.com/quantskills/skill-factor-idea-generation
+              category: 02 因子研发工具箱
+              subcategory: 因子创意（2）
+              stage: factor-generation
+              asset_type: skill
+              verification_level: pending_review
+            - name: skill-factormad-debate-factor-mining
+              repo_url: https://github.com/quantskills/skill-factormad-debate-factor-mining
+              category: 02 因子研发工具箱
+              subcategory: 因子创意（2）
+              stage: factor-generation
+              asset_type: skill
+              verification_level: pending_review
+            - name: skill-a1-lhb-tracking
+              repo_url: https://github.com/quantskills/skill-a1-lhb-tracking
+              category: 02 因子研发工具箱
+              subcategory: 因子生成（26）
+              stage: factor-generation
+              asset_type: skill
+              verification_level: pending_review
+            - name: skill-alpha-a06-hotmoney-reversal
+              repo_url: https://github.com/quantskills/skill-alpha-a06-hotmoney-reversal
+              category: 02 因子研发工具箱
+              subcategory: 因子生成（26）
+              stage: factor-generation
+              asset_type: skill
+              verification_level: pending_review
+            - name: skill-alpha-a3-streak-leader-relay
+              repo_url: https://github.com/quantskills/skill-alpha-a3-streak-leader-relay
+              category: 02 因子研发工具箱
+              subcategory: 因子生成（26）
+              stage: evaluation
+              asset_type: skill
+              verification_level: pending_review
+          count: 5
+          filters:
+            category: 02 因子研发工具箱
+            limit: 5
+          version: 4.2.1

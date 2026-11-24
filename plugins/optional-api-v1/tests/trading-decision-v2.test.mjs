@@ -1,3 +1,5 @@
+import {createProtocolFiles} from '../../protocol/package.mjs';
+import {dirname} from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, cp, writeFile, rm } from 'node:fs/promises';
@@ -28,8 +30,9 @@ async function fixture(t) {
   host = createHostContextV2(runtime, entry, 'conv_main');
   const state = await import(pathToFileURL(join(entry.root, 'state.js')));
   const instance = state.instance(host);
+  const main=createHostContextV2(runtime,runtime.capabilities.hostEntry,'conv_main');
   const call = async (name, input) => {
-    const result = await runtime.capabilities.invoke(`sesame/trading-decision#${name}`, input, {}, { pluginId: 'host', sessionId: 'conv_main', kind: 'main' });
+    const result = await main.capabilities.invoke(`sesame/trading-decision#${name}`, input, {mode:'inline'});
     assert.equal(result.type, 'result'); return result.value;
   };
   return { root, runtime, store, host, instance, call, entry };
@@ -67,9 +70,12 @@ test('real host preflight retains a report workspace but dispatches no Agent whe
   const path = join(f.runtime.workspaces.root('conv_main'), 'execution'); await mkdir(path, { recursive: true });
   const capability = name => ({ id: name, kind: 'function', consumers: ['agent', 'host'], description: 'Read a fixed test account', inputSchema: { type: 'object' }, outputSchema: { type: 'object' }, execution: 'immediate', effects: [], binding: { type: 'native', name }, usage: { purpose: 'Fixture', inputs: 'JSON', outputs: 'JSON', prerequisites: [], limitations: ['No broker exists.'] } });
   const manifest = { schemaVersion: 1, apiVersion: '2', configSchema: { type: 'object' }, capabilities: [capability('fixture_context'), capability('fixture_apply')], sources: [], views: [], services: [], hooks: [], knowledge: [], stateCollections: [], artifactSchemas: [] };
-  await writeFile(join(path, 'plugin.json'), JSON.stringify({ id: 'fixture/execution', apiVersion: '2', version: '1.0.0', title: 'Fixture execution', description: 'Fixture execution', default_state: 'discoverable', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], skills: [] }));
-  await writeFile(join(path, 'capabilities.json'), JSON.stringify(manifest));
-  await writeFile(join(path, 'index.js'), "export function createCapabilities() { return [{name:'fixture_context', execute:()=>({})},{name:'fixture_apply',execute:()=>{throw new Error('No trading is permitted in this fixture')}}]; }");
+  const metadata = { id: 'fixture/execution', apiVersion: '2', version: '1.0.0', title: 'Fixture execution', description: 'Fixture execution', default_state: 'discoverable', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], skills: [] };
+    const protocolFiles = createProtocolFiles(metadata,manifest);
+    for (const [file,bytes] of Object.entries(protocolFiles)) {
+      const target=join(path,file); await mkdir(dirname(target),{recursive:true}); await writeFile(target,bytes);
+    }
+    await writeFile(join(path, 'index.js'), "export function createCapabilities() { return [{name:'fixture_context', execute:()=>({})},{name:'fixture_apply',execute:()=>{throw new Error('No trading is permitted in this fixture')}}]; }");
   const tested = await f.runtime.plugins.manager.test('conv_main', { path }); await f.runtime.plugins.manager.install('conv_main', { path, digest: tested.digest });
   const execution = f.runtime.plugins.entry('fixture/execution');
   const plan = { ...completed.plan, enabled: true, model: { provider: 'unconfigured-fixture', id: 'model', configurationDigest: 'sha256:fixture' }, agentModels: {}, symbols: [], instructions: '', eventCooldownMs: 5000,
@@ -83,15 +89,23 @@ test('real host preflight retains a report workspace but dispatches no Agent whe
   assert.equal(runs.filter(item => item.capabilityId === 'sesame/trading-decision#trading_decision_workflow_execute').length, 1);
   assert.equal(runs.filter(item => item.kind === 'agent').length, 0, 'Dependency admission happens before Agent dispatch');
   const workflow = runs.find(item => item.kind === 'workflow');
-  assert.equal(workflow.status, 'interrupted'); assert.equal(typeof workflow.executionSessionId, 'string'); assert.notEqual(workflow.executionSessionId, 'conv_main');
-  assert.ok(f.runtime.reportLibrary.boundTarget(workflow.executionSessionId), 'The interrupted Run keeps its visible report destination');
+  // A prerequisite rejection occurs before any executor starts. The host
+  // retains the failed receipt and report workspace. The plugin separately
+  // holds the account workflow for operator review.
+  assert.equal(workflow.status, 'unknown', JSON.stringify(workflow.error));
+  assert.equal(workflow.error.code, 'DEPENDENCY_UNAVAILABLE');
+  assert.match(workflow.error.message, /model unavailable/i);
+  assert.deepEqual(workflow.interrupts, []);
+  assert.equal(typeof workflow.executionSessionId, 'string');
+  assert.notEqual(workflow.executionSessionId, 'conv_main');
+  assert.ok(f.runtime.reportLibrary.boundTarget(workflow.executionSessionId), 'The Run keeps its visible report destination');
   assert.equal(persisted.report, undefined); assert.equal(persisted.completedAt, undefined);
-  assert.match(workflow.interrupts[0].reason, /model unavailable/i);
   const view = await f.call('trading_decision_activity', { run_id: run.id });
   assert.equal(view.opened, true); assert.equal(view.runId, workflow.id);
   await assert.rejects(f.call('trading_decision_report', { run_id: run.id }), { code: 'REPORT_UNAVAILABLE' });
   const blocked = await f.runtime.runs.wait(workflow.id, { until: 'settled', timeoutMs: 100 });
-  assert.equal(blocked.reason, 'interrupted');
+  assert.equal(blocked.reason, 'settled');
+  assert.equal(blocked.run.status, 'unknown');
   await f.call('trading_decision_run', { plan_id: 'plan', request_id: 'once' });
   assert.equal(f.runtime.runs.list().length, runs.length);
   const scheduled = f.instance.runtime.trigger('plan', { kind: 'interval', id: 'scheduled-after-fixture' });

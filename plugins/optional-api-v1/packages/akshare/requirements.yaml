@@ -1,0 +1,12 @@
+goal: 可选只读AKShare：A股品种搜索、历史日线、报价及真实日线60秒轮询订阅；复用已有依赖，不提供交易所tick流或交易。
+acceptance:
+  discovery:
+    case: akshare-discovery
+    tools:
+      - akshare_catalog
+      - akshare_discover
+      - akshare_prepare
+      - akshare_query
+      - akshare_quote
+      - akshare_status
+    resource: skills/akshare-research/SKILL.md

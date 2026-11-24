@@ -1,0 +1,82 @@
+name: qmt_configure
+title: qmt_configure
+description: Save exact existing QMT connection paths and the authorized mainland STOCK account. Uses revision and operation ID; does not launch, log in to or change the broker terminal. Obtain the actual localhost market port from the existing MiniQMT settings.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - expected_version
+    - changes
+  properties:
+    operation_id:
+      type: string
+      description: Idempotency key
+      minLength: 1
+      maxLength: 20000
+    expected_version:
+      type: integer
+      minimum: 1
+    changes:
+      type: object
+      properties:
+        python_path:
+          anyOf:
+            - type: string
+              minLength: 1
+            - type: "null"
+        userdata_directory:
+          anyOf:
+            - type: string
+              minLength: 1
+            - type: "null"
+        account_id:
+          anyOf:
+            - type: string
+              minLength: 1
+            - type: "null"
+        broker:
+          anyOf:
+            - type: string
+              minLength: 1
+            - type: "null"
+        market_port:
+          anyOf:
+            - type: integer
+              minimum: 1
+              maximum: 65535
+            - type: "null"
+        sector:
+          type: string
+          description: Existing native stock catalog sector; default 沪深京A股
+          minLength: 1
+          maxLength: 20000
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+  usage:
+    purpose: 保存明确的本机QMT连接配置。
+    inputs: '{operation_id,expected_version,changes}；version来自 qmt_environment.inspect.configuration.version；changes 支持 python_path、userdata_directory、account_id、broker、market_port、sector。例 {operation_id:"configure-qmt-1",expected_version:1,changes:{market_port:58610}}，端口必须为已知真实配置。'
+    outputs: 保存后的 {id:"local",version,connection_id,python_path,userdata_directory,account_id,broker,market_port,sector}；version递增，同一operation_id与输入不会重复修改。
+    prerequisites:
+      - 路径必须已存在；账户/端口来自已有配置或用户提供的券商信息。
+    limitations:
+      - 只保存配置，不验证SDK/账户连通；STALE_REVISION时读取现version再决定修改。配置不构成交易授权。
+  binding:
+    type: native
+    name: qmt_configure

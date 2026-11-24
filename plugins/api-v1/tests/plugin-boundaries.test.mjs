@@ -1,13 +1,62 @@
+import {createProtocolFiles,readProtocolPackage} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkBoundaries, compareBoundary, applyConfigurationExtensions, boundaryReport, captureBoundaryCandidate, createBoundaryReview, applyApprovedBoundaryReview, applyApprovedRetirements } from '../scripts/verify-plugin-boundaries.mjs';
+import { readBoundary, checkBoundaries, compareBoundary, applyConfigurationExtensions, boundaryReport, captureBoundaryCandidate, createBoundaryReview, applyApprovedBoundaryReview, applyApprovedRetirements } from '../scripts/verify-plugin-boundaries.mjs';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname,join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
-test('current scoped contracts keep every declared interface and pre-refactor path', () => {
-  assert.deepEqual(checkBoundaries(), { packages: 22, declarations: 44, capabilities: 256 });
+function fixturePackage(directory,metadata,capabilities,assets={}) {
+  const files=createProtocolFiles({title:'Fixture',description:'Test contract',...metadata},{...capabilities,capabilities:capabilities.capabilities.map(cap=>({consumers:['host'],...cap}))},assets);
+  for(const [name,bytes] of Object.entries(files)){mkdirSync(dirname(join(directory,name)),{recursive:true});writeFileSync(join(directory,name),bytes);}
+  const parsed=readProtocolPackage(files);
+  return {manifest:parsed.manifest,declaration:parsed.capabilities,paths:Object.keys(files)};
+}
+
+test('historical capability and path removals require their exact approved evidence', () => {
+  const actual = createBoundaryReview();
+  const reviewed = JSON.parse(readFileSync(new URL('./fixtures/plugin-boundaries-reviewed-changes.json', import.meta.url)));
+  assert.equal(actual.baselineDigest, reviewed.baselineDigest);
+  assert.equal(actual.extensionsDigest, reviewed.extensionsDigest);
+  const removed = entry => entry.component.startsWith('removed path:') || (
+    entry.component.startsWith('capability:') && entry.deltas.some(delta => delta.path === '/' && !delta.afterPresent)
+  );
+  const currentRemovals = actual.entries.filter(removed), approvedRemovals = reviewed.entries.filter(removed);
+  const failures = currentRemovals.map(entry => `${entry.pluginId}: ${entry.component}`);
+  assert.deepEqual(applyApprovedBoundaryReview(failures, actual, { ...reviewed, entries: approvedRemovals }), []);
+});
+
+test('the current package surfaces match their shipped inventory, grants and call contracts', () => {
+  const root = fileURLToPath(new URL('../../../', import.meta.url));
+  const inventory = JSON.parse(readFileSync(join(root, 'plugins/api-v1/inventory.json')));
+  for (const item of inventory.packages) {
+    const { manifest, declaration } = readBoundary(root, item.sourcePath);
+    assert.equal(manifest.id, item.id);
+    assert.equal(manifest.version, item.version);
+    assert.equal(manifest.license, item.license);
+    assert.deepEqual(manifest.permissions ?? { scopes: [], calls: [] }, item.permissions);
+    assert.deepEqual(declaration.capabilities.map(({ id, kind, consumers, execution }) => ({ id, kind, consumers, execution })), item.capabilities);
+    for (const kind of ['services', 'sources', 'views', 'hooks']) {
+      const projected = declaration[kind].map(row => Object.fromEntries(Object.entries(row).filter(([field]) => ['id', 'contract', 'operations'].includes(field))));
+      assert.deepEqual(projected, item.hostContributions[kind]);
+    }
+  }
+});
+
+test('JSON-era path equivalence still reports a lost prompt on a current YAML package', t => {
+  const root = mkdtempSync(join(tmpdir(), 'sesame-boundary-prompt-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const sourcePath = 'example', pkg = join(root, sourcePath), oldPaths = ['plugin.json', 'capabilities.json', 'prompt.md'];
+  const header = { id: 'example/guide', version: '1.0.0' }, declaration = { capabilities: [] };
+  fixturePackage(pkg, header, declaration, { 'instructions.md': '# Guide' });
+  const original = readBoundary(root, sourcePath, oldPaths);
+  assert.ok(oldPaths.every(path => original.paths.includes(path)));
+  assert.deepEqual(original.manifest.prompts, ['prompt.md']);
+  rmSync(join(pkg, 'instructions.md'));
+  fixturePackage(pkg, header, declaration);
+  assert.ok(compareBoundary(original, readBoundary(root, sourcePath, oldPaths)).includes('removed path:prompt.md'));
 });
 
 test('approved retirement preserves the frozen baseline and requires absent entries plus intact declared replacement resources', t => {
@@ -17,21 +66,18 @@ test('approved retirement preserves the frozen baseline and requires absent entr
   const manifest = { id: 'fixture/old-guide', version: '1.0.0' }, declaration = { capabilities: [] };
   const baseline = { schemaVersion: 1, packages: [{ sourcePath, manifest, declaration, paths: ['plugin.json', 'capabilities.json'] }] };
   mkdirSync(join(root, sourcePath), { recursive: true });
-  writeFileSync(join(root, sourcePath, 'plugin.json'), JSON.stringify(manifest));
-  writeFileSync(join(root, sourcePath, 'capabilities.json'), JSON.stringify(declaration));
+  Object.assign(baseline.packages[0],fixturePackage(join(root,sourcePath),manifest,declaration));
   const before = structuredClone(baseline), baselineDigest = createBoundaryReview(root, baseline, { plugins: [] }).baselineDigest;
   mkdirSync(join(root, replacementSourcePath, 'references'), { recursive: true });
-  writeFileSync(join(root, replacementSourcePath, 'plugin.json'), JSON.stringify({ id: 'fixture/strategy', version: '2.0.0' }));
-  writeFileSync(join(root, replacementSourcePath, 'capabilities.json'), JSON.stringify({ capabilities: [], knowledge: [{ path: 'references/method.md' }] }));
   const resource = join(root, replacementSourcePath, 'references/method.md'), content = 'Retained original research guidance';
-  writeFileSync(resource, content);
+  fixturePackage(join(root,replacementSourcePath),{id:'fixture/strategy',version:'2.0.0'},{capabilities:[],knowledge:[{path:'references/method.md'}]},{'references/method.md':content});
   const retirement = { schemaVersion: 1, status: 'approved', baselineDigest, entries: [{ pluginId: manifest.id, sourcePath,
     reason: 'User explicitly removed the independent guide after its resources were integrated into Strategy.',
     replacementPluginId: 'fixture/strategy', replacementSourcePath,
     retainedResources: [{ path: 'references/method.md', sha256: `sha256:${createHash('sha256').update(content).digest('hex')}` }] }] };
   assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /still present/);
   rmSync(join(root, sourcePath), { recursive: true });
-  assert.throws(() => boundaryReport(root, baseline, { plugins: [] }), { code: 'ENOENT' });
+  assert.throws(() => boundaryReport(root, baseline, { plugins: [] }), /plugin.yaml|ENOENT/);
   assert.deepEqual(applyApprovedRetirements(root, baseline, retirement).packages, []);
   assert.deepEqual(checkBoundaries(root, baseline, { plugins: [] }, undefined, retirement), { packages: 0, declarations: 0, capabilities: 0 });
   assert.deepEqual(baseline, before, 'Retirement never rewrites historical evidence');
@@ -44,7 +90,7 @@ test('approved retirement preserves the frozen baseline and requires absent entr
   assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /distribution profile/);
   writeFileSync(join(root, 'plugins/optional-api-v1/bundle-profile.json'), JSON.stringify({ packages: [] }));
   writeFileSync(resource, 'Changed or missing evidence');
-  assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /resource changed/);
+  assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /resource changed|Surface lock mismatch/);
 });
 
 test('configuration rollout keeps the frozen baseline and rejects replacement or agent-facing extensions', () => {
@@ -90,9 +136,8 @@ test('fixture scope reproduces without local plans and capture cannot overwrite 
   const sourcePath = 'plugins/api-v1/packages/example', directory = join(root, sourcePath);
   mkdirSync(directory, { recursive: true });
   const manifest = { id: 'fixture/example', version: '1.1.0' }, declaration = { capabilities: [] };
-  writeFileSync(join(directory, 'plugin.json'), JSON.stringify(manifest));
-  writeFileSync(join(directory, 'capabilities.json'), JSON.stringify(declaration));
-  const baseline = { schemaVersion: 1, packages: [{ sourcePath, manifest: { ...manifest, version: '1.0.0' }, declaration, paths: ['plugin.json', 'capabilities.json'] }] };
+  const source=fixturePackage(directory,manifest,declaration);
+  const baseline={schemaVersion:1,packages:[{sourcePath,...source,manifest:{...source.manifest,version:'1.0.0'}}]};
   const report = boundaryReport(root, baseline, { plugins: [] });
   assert.deepEqual(report.versions, [{ pluginId: 'fixture/example', before: '1.0.0', after: '1.1.0' }]);
   assert.deepEqual(report.failures, []);
@@ -105,8 +150,8 @@ test('fixture scope reproduces without local plans and capture cannot overwrite 
   assert.throws(() => captureBoundaryCandidate(), /immutable/);
   assert.throws(() => captureBoundaryCandidate(join(root, 'bad.json'), root, { packages: [{ ...baseline.packages[0], sourcePath: '../outside' }] }), /Invalid baseline source path/);
   assert.equal(baseline.packages[0].manifest.version, '1.0.0');
-  writeFileSync(join(directory, 'plugin.json'), JSON.stringify({ ...manifest, permissions: { scopes: ['plugins.manage'], calls: [] } }));
-  writeFileSync(join(directory, 'capabilities.json'), JSON.stringify({ capabilities: [{ id: 'added', inputSchema: { type: 'object' } }] }));
+  const revisedDeclaration={capabilities:[{id:'added',inputSchema:{type:'object'}}]};
+  fixturePackage(directory,{...manifest,permissions:{scopes:['plugins.manage'],calls:[]}},revisedDeclaration);
   const review = createBoundaryReview(root, baseline, { plugins: [] }), failures = boundaryReport(root, baseline, { plugins: [] }).failures;
   assert.equal(review.status, 'pending-review');
   assert.ok(review.entries.every(entry => entry.decision === 'pending'));
@@ -125,7 +170,7 @@ test('fixture scope reproduces without local plans and capture cannot overwrite 
     value => { value.entries[0].decision = 'pending'; },
     value => { value.entries.push(value.entries[0]); },
   ]) { const changed = structuredClone(approved); mutate(changed); assert.throws(() => applyApprovedBoundaryReview(failures, review, changed), /approved|review/); }
-  writeFileSync(join(directory, 'plugin.json'), JSON.stringify({ ...manifest, permissions: { scopes: ['process.execute'], calls: [] } }));
+  fixturePackage(directory,{...manifest,permissions:{scopes:['process.execute'],calls:[]}},revisedDeclaration);
   assert.throws(() => checkBoundaries(root, baseline, { plugins: [] }, approved), /Stale/);
 });
 
@@ -159,9 +204,9 @@ test('schema property names cannot disguise validation changes as documentation'
   after.outputSchema.properties.title.description = 'After';
   changed.configSchema.properties.title.pattern = '^[A-Z]+$';
   changed.configSchema.properties.title.description = 'After';
-  writeFileSync(join(directory, 'plugin.json'), JSON.stringify(manifest));
-  writeFileSync(join(directory, 'capabilities.json'), JSON.stringify(changed));
-  const baseline = { schemaVersion: 1, packages: [{ sourcePath, manifest, declaration, paths: ['plugin.json', 'capabilities.json'] }] };
+  const source=fixturePackage(directory,manifest,declaration);
+  const baseline={schemaVersion:1,packages:[{sourcePath,...source}]};
+  fixturePackage(directory,manifest,changed);
   const review = createBoundaryReview(root, baseline, { plugins: [] });
   const deltas = new Map(review.entries.find(entry => entry.component === 'capability:read').deltas.map(delta => [delta.path, delta.impact]));
   assert.equal(deltas.get('/inputSchema/properties/title/pattern'), 'input-contract-review');

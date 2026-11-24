@@ -1,0 +1,87 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/market-data-parser
+title: 公开汇率解析
+description: 信息解析能力：解析已有exchangerate-api JSON或TCMB XML汇率，保留base/单位/买卖方向与筛选范围；不获取行情、不作交易判断。
+version: 3.0.3
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame
+entry: index.js
+x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Market document parser"
+      zh: "行情文档解析"
+    summary:
+      en: "Normalize supplied JSON or XML documents without pretending to be a live feed."
+      zh: "规范化提供的 JSON 或 XML 文档，不冒充实时行情源。"
+    dependencies:
+      en: "Existing Python 3 invoked by the native host.process.exec capability; standard-library JSON/XML parsing. Source evidence must establish units and freshness."
+      zh: "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析 JSON/XML；单位与新鲜度由来源证据说明。"
+  default_state: discoverable
+  agent_scope: all
+  execution: native
+  prompts: []
+  skills:
+    - skills
+  resources: []
+  permissions:
+    scopes:
+      - process.execute
+    calls:
+      - host.process.exec
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false
+    capabilities:
+      - tool/parse_fx_json
+      - tool/parse_fx_xml
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: skills/market-data-parser/PROVENANCE.md
+        description: 公开汇率解析 — skills/market-data-parser/PROVENANCE.md
+        kind: reference
+      - id: knowledge-1
+        path: skills/market-data-parser/SKILL.md
+        description: 公开汇率解析 — skills/market-data-parser/SKILL.md
+        kind: skill
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true

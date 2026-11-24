@@ -1,0 +1,184 @@
+name: canvas_inspect
+title: canvas_inspect
+description: 读取当前画布、公开 market_sources 与最近 30 秒渲染回执。rendering[].charts[] 提供目标图表的 status/error/warning?/bar_count?/feed_status?；回执 version 必须匹配当前 version，reported 仅表示收到回执。
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+      description: 当前画布版本，供 expected_version 与渲染回执匹配。
+    charts:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          symbol:
+            type: string
+            description: 显示标签；数据身份由 binding 决定。
+          binding:
+            type:
+              - object
+              - "null"
+            description: "{source:{providerId,revision,binding?},instrument:{sourceId,instrumentId},spec}；null 表示未绑定。"
+          locked:
+            type: boolean
+          script_ids:
+            type: array
+            items:
+              type: string
+        required:
+          - id
+        additionalProperties: true
+    layout:
+      type: object
+    workspace:
+      type: object
+    scripts:
+      type: array
+      items:
+        type: object
+      description: 当前图表挂载的固定指标成果及实例参数。 绘图实例另含drawing（稳定id、revision、binding、active、spec）和可执行source；同一代码随用户编辑实时保存。
+    render_status:
+      type: string
+      enum:
+        - reported
+        - pending
+      description: reported 仅表示至少一个近期客户端回执的 version 等于当前 version，不保证所有图表成功。
+    rendering:
+      type: array
+      description: 最近 30 秒客户端回执；空数组或只有旧版本表示尚无当前显示证据。
+      items:
+        type: object
+        properties:
+          client_id:
+            type: string
+          version:
+            type: integer
+            description: 客户端回执所对应的画布版本。
+          at:
+            type: number
+            description: 宿主收到此回执的 Unix 毫秒时间，不是行情观察时间。
+          viewport:
+            type: object
+            description: 图表区的 width/height/x/y/zoom。
+          charts:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: 与顶层 charts[].id 对应。
+                status:
+                  type: string
+                  enum:
+                    - rendered
+                    - loading
+                    - offline
+                    - error
+                    - hidden
+                error:
+                  type: string
+                  description: 实际失败文本，优先保留底层数据订阅错误；若包含错误码则一并保留。
+                bar_count:
+                  type: integer
+                  minimum: 0
+                  description: 当前图表可绘制的 K 线数量；不可见或尚在初始化时可省略。
+                feed_status:
+                  type: string
+                  description: 数据通道状态，如 live/connecting/stale/paused；与渲染状态独立，可省略。
+                warning:
+                  type: string
+                  description: 不阻止渲染的数据限制，例如来源未证明历史区间完整；不等于断线、读取失败或所有行无效。
+              required:
+                - id
+                - status
+              additionalProperties: true
+        required:
+          - client_id
+          - version
+          - at
+          - charts
+        additionalProperties: true
+    market_sources:
+      type: array
+      description: 静态行情来源声明；列出来源不建立连接或订阅。
+      items:
+        type: object
+        properties:
+          ref:
+            type: object
+            properties:
+              providerId:
+                type: string
+                description: 完整 pluginId#sourceId。
+              revision:
+                type: string
+                description: 来源当前声明修订。
+            required:
+              - providerId
+              - revision
+            additionalProperties: true
+          contract:
+            type: string
+          description:
+            type: string
+          operations:
+            type: object
+            description: 公开操作名到能力名的映射，如 searchInstruments/describeInstrument/queryBars/subscribeBars。
+            additionalProperties:
+              type: string
+          configSchema:
+            type: object
+            description: SourceRef.binding 可使用的公开配置字段。
+          available:
+            type: boolean
+            description: 插件当前可用，不证明连接成功或行情实时。
+        required:
+          - ref
+          - contract
+          - operations
+          - configSchema
+          - available
+        additionalProperties: true
+  required:
+    - version
+    - charts
+    - scripts
+    - render_status
+    - rendering
+    - market_sources
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 读取画布、明确声明的行情来源及逐图显示/订阅证据，不建立连接或修改图表。
+    inputs: 空对象 {}；同时读取画布和静态行情来源，不连接新数据源。
+    outputs: 返回 {version,charts,layout,workspace,scripts,market_sources,render_status,rendering,...}。rendering[] 含 client_id/version/at/viewport/charts；每图为 {id,status,error?,warning?,bar_count?,feed_status?}。market_sources 项含 ref/contract/operations/configSchema/available。
+    prerequisites: []
+    limitations:
+      - render_status=reported 只表示有当前版本回执；按 rendering[].version 匹配当前 version，并核对目标图表 status 与 bar_count。
+      - 回执保留 30 秒；缺少当前回执表示尚不可确认。feed_status 独立于渲染状态，历史查询成功不证明实时订阅。明确的来源协议错误应依据 error 定位，重复绑定相同身份不会修复协议。
+      - warning 表示非阻断的数据限制，例如历史覆盖未经证明；bar_count>0 且 rendered 可以同时有 warning，不应误判为断流。
+  binding:
+    type: native
+    name: canvas_inspect

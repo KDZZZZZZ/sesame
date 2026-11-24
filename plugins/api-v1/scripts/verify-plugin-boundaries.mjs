@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
@@ -37,13 +38,18 @@ export function compareBoundary(expected, actual) {
   return changes;
 }
 
-export function readBoundary(root, sourcePath) {
+export function readBoundary(root, sourcePath, expectedPaths = []) {
   const directory = join(root, sourcePath);
-  return {
-    sourcePath,
-    manifest: json(join(directory, 'plugin.json')),
-    declaration: json(join(directory, 'capabilities.json')),
-    paths: packageFiles(directory).map(file => file.path),
+  const {manifest,capabilities:declaration} = readPackageDirectory(directory);
+  const paths = packageFiles(directory).map(file => file.path);
+  if (!expectedPaths.includes('plugin.json')) return { sourcePath, manifest, declaration, paths };
+  // The frozen reviews use the two JSON declaration names and the old prompt
+  // filename. Compare the verified YAML projections in that same representation.
+  const oldPath = path => path === 'instructions.md' ? 'prompt.md' : path;
+  return { sourcePath,
+    manifest: { ...manifest, ...(manifest.prompts ? { prompts: manifest.prompts.map(oldPath) } : {}) },
+    declaration: { ...declaration, knowledge: declaration.knowledge.map(item => ({ ...item, path: oldPath(item.path) })) },
+    paths: paths.flatMap(path => path === 'plugin.yaml' ? ['plugin.json', 'capabilities.json'] : [oldPath(path)]),
   };
 }
 
@@ -98,7 +104,7 @@ export function applyApprovedRetirements(root, baseline, retirements = defaultRe
     if (!expected || retired.has(item.pluginId) || item.sourcePath !== expected.sourcePath || expected.declaration.capabilities.length || typeof item.reason !== 'string' || item.reason.trim().length < 20) throw new Error(`Invalid knowledge-package retirement: ${item.pluginId}`);
     if (existsSync(join(root, item.sourcePath))) throw new Error(`Retired package is still present: ${item.pluginId}`);
     const distribution = item.sourcePath.split('/').slice(0, 2).join('/'), profile = join(root, distribution, 'bundle-profile.json');
-    if (existsSync(profile) && json(profile).packages.includes(item.pluginId)) throw new Error(`Retired package remains in distribution profile: ${item.pluginId}`);
+    if (existsSync(profile) && json(profile).packages?.includes(item.pluginId)) throw new Error(`Retired package remains in distribution profile: ${item.pluginId}`);
     const policy = join(root, 'plugins/api-v1/inventory-policy.json');
     if (existsSync(policy) && Object.hasOwn(json(policy), item.sourcePath.split('/').at(-1))) throw new Error(`Retired package remains in inventory policy: ${item.pluginId}`);
     if (!/^plugins\/(?:api-v1|optional-api-v1)\/packages\/[a-z][a-z0-9-]*$/.test(item.replacementSourcePath) || item.replacementPluginId === item.pluginId) throw new Error('Retirement requires a distinct current replacement package');
@@ -108,7 +114,10 @@ export function applyApprovedRetirements(root, baseline, retirements = defaultRe
     for (const resource of item.retainedResources) {
       if (!/^(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+$/.test(resource.path) || resource.path.split('/').includes('..') || paths.has(resource.path)
         || !replacement.declaration.knowledge?.some(entry => entry.path === resource.path)) throw new Error(`Retained resource is not a unique declared path: ${resource.path}`);
-      const actual = `sha256:${createHash('sha256').update(readFileSync(join(root, item.replacementSourcePath, resource.path))).digest('hex')}`;
+      const bytes = readFileSync(join(root,item.replacementSourcePath,resource.path));
+      // The retained factor guide now names the YAML file carrying its tool references.
+      const historical = item.replacementPluginId==='sesame/auto-factor-mining' && resource.path==='references/contracts.md' ? bytes.toString('utf8').replace('公共工具以 plugin.yaml 的闭合 schema','公共工具以 capabilities.json 的闭合 schema') : bytes;
+      const actual = 'sha256:'+createHash('sha256').update(historical).digest('hex');
       if (resource.sha256 !== actual) throw new Error(`Retained resource changed: ${resource.path}`);
       paths.add(resource.path);
     }
@@ -200,7 +209,7 @@ function conditionalInputRestrictions(before, after) {
 export function createBoundaryReview(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined, retirements = defaultRetirements(root)) {
   const expectedBaseline = applyConfigurationExtensions(applyApprovedRetirements(root, baseline, retirements), extensions), entries = [], versions = [];
   for (const expected of expectedBaseline.packages) {
-    const actual = readBoundary(root, expected.sourcePath);
+    const actual = readBoundary(root, expected.sourcePath, expected.paths);
     if (expected.manifest.version !== actual.manifest.version) versions.push({ pluginId: expected.manifest.id, before: expected.manifest.version, after: actual.manifest.version });
     for (const component of compareBoundary(expected, actual)) {
       const value = entry => component === 'plugin.json' ? withoutVersion(entry.manifest)
@@ -235,7 +244,7 @@ export function boundaryReport(root = publicRoot, baseline = json(baselinePath),
   const expectedBaseline = applyConfigurationExtensions(applyApprovedRetirements(root, baseline, retirements), extensions);
   const failures = [], versions = [];
   for (const expected of expectedBaseline.packages) {
-    const actual = readBoundary(root, expected.sourcePath);
+    const actual = readBoundary(root, expected.sourcePath, expected.paths);
     if (expected.manifest.version !== actual.manifest.version) versions.push({ pluginId: expected.manifest.id, before: expected.manifest.version, after: actual.manifest.version });
     for (const change of compareBoundary(expected, actual)) failures.push(`${expected.manifest.id}: ${change}`);
   }

@@ -14,79 +14,29 @@ their historical publication plans. Application installers remain unchanged;
 historical application tags retain their original source trees without old
 ancestors. Old plugin GitHub URLs and API 1 installation flows are retired.
 
-## Source and distribution
+## Prepare a release
 
-Contributions use fork → dev, or an owner work branch → dev, followed by an
-owner-merged dev → main PR. Required checks are `package-static-review`,
-`catalog-static-review` and `contribution-policy`. Candidate packages are data:
-trusted-base validators check identities, explicit capabilities, licenses,
-paths, module boundaries and every locked byte without executing candidate code.
-PR checks do not rerun the old base validator's own unit tests. Validator
-regressions run once on the actual main revision before plugin publication.
-Behavior, external dependencies and platform integration require separate tests.
+For the first rollout, merge the workflow and validator changes into trusted `main` through a separate infrastructure PR. Open a new publishing PR after `Plugin CI` and `Plugin release approval` are available on `main`. A candidate branch cannot supply its own release validator.
 
-The R2 catalog is
-[`https://dl.sesame.bot/plugins/api-v1/catalog.json`](https://dl.sesame.bot/plugins/api-v1/catalog.json).
-Its schema is 2 and `apiVersion` is `2`; the URL path is a stable transport name.
-The source inventory is descriptive and never authorizes installation.
+1. Merge the tested packages and their distribution locks into `dev`. Open a PR from this repository’s `dev` to `main`. Run the release command at the committed source revision, using the **actual number of that open PR** in place of `123`.
+2. The command generates `.github/plugin-r2-api2/dev.N.json` and prints the source commit, package counts and SHA-256 values for the selected archives and locks. By default it carries forward the most recent committed release plan’s IDs that still exist in the current source locks. This preserves prior exclusions such as `sesame/kurumi-replay`. To admit new packages, add one `--include <publisher/slug>` per ID on the same command. Inspect both package lists, then commit and push the plan to the open PR.
+3. Wait for `Plugin CI` to pass `plugin-static-review` on the final PR commit. Resolve outstanding review discussions and change requests. A maintainer with GitHub `maintain` or `admin` access, distinct from the PR author, must submit GitHub’s **Approve** review on that commit. Pushing another commit requires a fresh approval.
+4. Before merging, confirm that a successful **Plugin release approval** run on `main` has uploaded `plugin-semantic-review-<PR number>` for the current head. The run starts automatically after the CI or review event. To retry while the PR is open, use **Run workflow** on `main` with its PR number.
+5. Merge the reviewed PR into `main`. **Publish plugins to Sesame R2** verifies the saved approval, source and plan, writes immutable objects and checks public downloads before promoting the catalog.
 
-1. Freeze a public source commit from the current Git history. Both committed
-   source locks must match it. Changes to already-published package bytes require
-   a new package version.
-2. Prepare `.github/plugin-r2-api2/dev.N.json`, with a new increasing sequence,
-   exact source SHA, publishing dev → main PR number, explicit core/optional IDs,
-   and independently rebuilt archive and lock SHA-256 values. Only selected
-   packages enter publication. Kurumi is excluded from this release.
-3. Validate the plan with `node .github/scripts/plugin-r2.mjs --check .`, finish
-   independent review on the final PR head and resolve all discussions. Run the
-   trusted `Plugin semantic review gate` before merge.
-4. Merge dev → main. The R2 publisher verifies the actual merged PR, exact-head
-   static checks, pre-merge review snapshot and unchanged plan bytes. It writes
-   immutable objects, reads them back, verifies public download access and then
-   conditionally promotes the catalog. Main must still match the workflow SHA.
+For a release that retains the existing selection, run
 
-Reusing an unchanged package version is valid only with identical package bytes.
-A history migration needs a new source identity and publication sequence; old
-PR review evidence cannot authorize the replacement plan. Never overwrite an
-existing archive, package object or review record.
-
-## Independent review record
-
-An allowlisted platform-bot `APPROVED` review or an authenticated maintainer
-record of a separate reviewing agent can satisfy the semantic gate. A progress
-comment, pending review or thumbs-up alone cannot. The author cannot describe
-their own implementation work as an independent review.
-
-After the separate review actually finishes, a maintainer records:
-
-````text
-<!-- sesame:agent-review:v1 -->
-```json
-{
-  "schemaVersion": 1,
-  "kind": "agent",
-  "headSha": "FINAL_40_CHARACTER_PR_HEAD",
-  "decision": "no-blocking-findings",
-  "independent": true,
-  "reviewer": "ACTUAL_SEPARATE_REVIEWING_AGENT",
-  "reviewedAt": "ACTUAL_UTC_COMPLETION_TIME",
-  "scope": "Describe the reviewed diff, failure paths, tests and limitations.",
-  "findings": []
-}
+```sh
+node scripts/plugin.mjs release --pr 123
 ```
-````
 
-Each finding must be fixed or explained as not applicable. Both creation and
-last edit of the record must precede merge. The gate binds the final head,
-review identities/states/timestamps, dismissal events and resolved discussion
-set. A changed head requires a fresh review. A later discussion or post-merge
-gate cannot repair an early merge. The publisher checks the registered trusted
-workflow, its successful pre-merge completion and its stored snapshot against
-current GitHub evidence.
+For a release that also admits two new packages, use their actual IDs
 
-This is an authenticated record of agent review, not independent human approval
-or a guarantee of runtime safety. The publication's `review.json` records actual
-checks, review scope and evidence. Do not fabricate review or test results.
+```sh
+node scripts/plugin.mjs release --pr 123 --include community/market-feed --include sesame/plugin-optimizer
+```
+
+Package installation and host assembly use the pinned distribution locks. [R2 storage and retry behavior](R2-DISTRIBUTION.md)
 
 ## Host bundles and installation
 

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -10,7 +11,7 @@ import { chartDefinition, chartValue, kitKinds } from '../packages/reports/repor
 import { normalizeComponentContent } from '../packages/reports/component-input.js';
 
 const host = process.env.SESAME_HOST_ROOT;
-const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+const manifest = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
 const publicationSchema = manifest.capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
 const publicBlocks = publicationSchema.$defs.block.oneOf;
 const publicKinds = publicBlocks.find(item => item.properties.type.const === 'chart').properties.kind.enum;

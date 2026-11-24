@@ -1,0 +1,82 @@
+name: ultra_wait
+title: ultra_wait
+description: 保存真实下一次唤醒：已注册 Run、新来源事件、明确时间点；缺少必要用户信息则显式等待输入，不忙轮询。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    kind:
+      enum:
+        - runs
+        - time
+        - event
+        - input
+    until:
+      type: string
+      minLength: 1
+      maxLength: 100
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 4000
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 256
+        binding:
+          type: object
+          additionalProperties: true
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+    operation:
+      type: string
+      minLength: 1
+      maxLength: 128
+    input:
+      type: object
+      additionalProperties: true
+  required:
+    - kind
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - start:workflow
+  usage:
+    purpose: 保存真实下一次唤醒：已注册 Run、新来源事件、明确时间点；缺少必要用户信息则显式等待输入，不忙轮询。
+    inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_wait

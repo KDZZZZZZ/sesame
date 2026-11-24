@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/dow-theory:instructions#preamble": "64cd6380ecfd857dd19163912c86cfe9ae01cb0a0122478f71799fb2c4740495",
+    "sesame/dow-theory:plugin.description": "953166ddfb16c196295beb6468268aa843b3efff59e8eb776ffd58bc029516a3",
+    "sesame/dow-theory:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/dow-theory:resource/PROVENANCE.md": "897d211ea70c8703a0679534ee805d7a533db9a1aa11eface3f4b1b97baa9eb4",
+    "sesame/dow-theory:resource/README.md": "35a3ff1bfa3258360ddfe848474dba925c46f031b7749fd99c85366c13a1b7f6",
+    "sesame/dow-theory:resource/examples/case.json": "15b6012192a7925b6e5ea6d2d77357d38f5c8b69b529d1e3e34b17b9edea829b",
+    "sesame/dow-theory:resource/examples/expected.md": "2bfb7b724a07ed9452bce4c9d81962c4c3d1b6a3d096d0ab8ce74c8de3753cb0",
+    "sesame/dow-theory:resource/references/method.md": "b05618dbfad54076b49829825e6d33bbccbd615b76fab981bc2756e1780388bd",
+    "sesame/dow-theory:resource/references/validation.md": "d4dbd236c4e01a074b148d9f85e912a803d12166ef67c3fdea81ee648e064f97",
+    "sesame/dow-theory:skill/dow-theory.body": "ea180593e17ed35cf738811a456bb60dcb30c1ed9c92a01f183cbab1ec3c654d",
+    "sesame/dow-theory:skill/dow-theory.description": "71a0dd826532dca52d284ccd8baf352352131b80f7b3a7aeb8fc40d7c2e6fe40"
+  },
+  "digest": "fb54de73d1bd0e9e697ef2c1d05dd125b4d7a6057d977c0cd5bb34c28535d197"
+}

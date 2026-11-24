@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Errors } from '@sesame/plugin-sdk/schema/value';
@@ -11,7 +12,7 @@ import { readWorkspaceBytes } from './report-prepare.js';
 import { normalizeComponentContent, readComponentResource as readResource, readComponentJson as readJson, isSafeComponentEntry as safeEntry } from './component-input.js';
 import { publishAnswerComponent, renderAnswerComponent } from './component-publication.js';
 
-const manifest = JSON.parse(readFileSync(new URL('./capabilities.json', import.meta.url), 'utf8'));
+const {capabilities:manifest} = readPackageDirectory(new URL('.',import.meta.url));
 const schema = id => manifest.capabilities.find(item => item.id === id).inputSchema;
 const rendererSchema = schema('report_render');
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);

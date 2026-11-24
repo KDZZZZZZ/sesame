@@ -1,0 +1,101 @@
+id: financial-research-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/financial-research/PROVENANCE.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/financial-research
+  - step: 1
+    pointer: /tools/0/name
+    equals: financial_research_configure
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        fmp_key_env:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+        fred_key_env:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+        sec_user_agent_env:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+        reddit_token_env:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+        reddit_user_agent_env:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+        credentials:
+          type: object
+          properties:
+            fmp_api_key:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 8192
+                  pattern: ^[^\r\n\u0000]+$
+                  writeOnly: true
+                - type: "null"
+              description: User-provided value to save privately; null removes the saved value.
+            fred_api_key:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 8192
+                  pattern: ^[^\r\n\u0000]+$
+                  writeOnly: true
+                - type: "null"
+              description: User-provided value to save privately; null removes the saved value.
+            sec_user_agent:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 8192
+                  pattern: ^[^\r\n\u0000]+$
+                  writeOnly: true
+                - type: "null"
+              description: User-provided value to save privately; null removes the saved value.
+            reddit_access_token:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 8192
+                  pattern: ^[^\r\n\u0000]+$
+                  writeOnly: true
+                - type: "null"
+              description: User-provided value to save privately; null removes the saved value.
+            reddit_user_agent:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 8192
+                  pattern: ^[^\r\n\u0000]+$
+                  writeOnly: true
+                - type: "null"
+              description: User-provided value to save privately; null removes the saved value.
+          additionalProperties: false
+          minProperties: 1
+        command_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Optional stable command identity for unified configuration; omitted callers keep the existing behavior.
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Provenance"

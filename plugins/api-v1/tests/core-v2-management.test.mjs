@@ -1,3 +1,4 @@
+import {readProtocolPackage, readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -19,7 +20,7 @@ test('portable native and knowledge templates declare complete API 2 shapes and 
   const root = await mkdtemp(join(tmpdir(), 'sesame-v2-scaffold-')); t.after(() => rm(root, { recursive: true, force: true }));
   for (const template of ['native', 'skill']) {
     const recipe = scaffold({ name: 'test-example', publisher: 'fixture', description: 'A fixture', template });
-    const manifest = JSON.parse(recipe.files['plugin.json']), declarations = JSON.parse(recipe.files['capabilities.json']);
+    const manifest = readProtocolPackage(recipe.files).manifest, declarations = readProtocolPackage(recipe.files).capabilities;
     assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined); assert.equal(recipe.files['tools.json'], undefined);
     for (const key of ['capabilities', 'sources', 'views', 'services', 'hooks', 'knowledge', 'stateCollections', 'artifactSchemas']) assert.ok(Array.isArray(declarations[key]), key);
     assert.equal(declarations.capabilities.length, template === 'native' ? 1 : 0);
@@ -36,7 +37,7 @@ test('portable native and knowledge templates declare complete API 2 shapes and 
 test('migrated declarations exactly match the production native factory identities', async () => {
   for (const name of ['plugin-manager', 'workspace']) {
     const root = new URL(`../packages/${name}/`, import.meta.url);
-    const descriptor = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8'));
+    const descriptor = readPackageDirectory(new URL('.', root)).capabilities;
     const implementation = await import(new URL('index.js', root).href);
     const host = { context: { filePolicy: { protectedRoots: [], readRoots: [], writeRoots: [] } } };
     assert.deepEqual(implementation.createCapabilities(host).map(item => item.name).sort(), descriptor.capabilities.map(item => item.binding.name).sort());

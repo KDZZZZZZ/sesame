@@ -1,0 +1,135 @@
+id: mt5-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/mt5/skills/connection/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/mt5
+  - step: 1
+    pointer: /tools/0/name
+    equals: mt5_backtest
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          anyOf:
+            - type: string
+              const: start
+            - type: string
+              const: get
+            - type: string
+              const: list
+            - type: string
+              const: wait
+            - type: string
+              const: stop
+        build_id:
+          type: string
+          description: 编译成功的构建 ID
+          minLength: 1
+          maxLength: 20000
+        backtest_id:
+          type: string
+          description: 回测任务 ID
+          minLength: 1
+          maxLength: 20000
+        project_id:
+          type: string
+          description: list 可按工程过滤
+          minLength: 1
+          maxLength: 20000
+        command_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+          description: start 必填的稳定任务请求 ID；重试同一请求不会重复启动 Tester
+        config:
+          type: object
+          required:
+            - symbol
+            - period
+            - from_date
+            - to_date
+            - deposit
+            - currency
+            - leverage
+            - model
+            - parameters
+          properties:
+            symbol:
+              type: string
+              description: 券商精确品种名
+              minLength: 1
+              maxLength: 20000
+            period:
+              type: string
+              description: M1/H1 等原生周期
+              minLength: 1
+              maxLength: 20000
+            from_date:
+              type: string
+              description: YYYY-MM-DD，券商服务器日期
+              minLength: 1
+              maxLength: 20000
+            to_date:
+              type: string
+              description: YYYY-MM-DD，排除终止日
+              minLength: 1
+              maxLength: 20000
+            deposit:
+              type: number
+              exclusiveMinimum: 0
+            currency:
+              type: string
+              description: USD 等货币
+              minLength: 1
+              maxLength: 20000
+            leverage:
+              type: integer
+              minimum: 1
+              maximum: 1000
+            model:
+              anyOf:
+                - type: number
+                  const: 0
+                - type: number
+                  const: 1
+                - type: number
+                  const: 2
+                - type: number
+                  const: 4
+            parameters:
+              type: object
+              properties: {}
+              additionalProperties:
+                anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+          additionalProperties: false
+        parameter_space:
+          type: object
+          properties: {}
+          additionalProperties:
+            type: array
+            items:
+              anyOf:
+                - type: string
+                - type: number
+                - type: boolean
+            minItems: 1
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "## 终端交易权限"

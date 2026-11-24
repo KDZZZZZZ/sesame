@@ -13,13 +13,13 @@ description: 新增或维护 Sesame API 2 插件：确定职责、实现能力�
 
 plugin_create 可生成 knowledge、function、adapter、workflow、service 草稿，兼容原有 native 与 skill 参数。native 只有 echo 示例，function 只有固定数字求和示例；adapter、workflow、service 的业务入口在实现前抛出 NOT_IMPLEMENTED。纯知识包 capabilities 为空，knowledge 仅声明供 Agent 读取的知识正文，不是包文件清单。每份知识正文最多 128 KiB（UTF-8 字节）；完整测试数据、审计日志和实现文件可随包保存，无需加入 knowledge/resources。原生工厂 createCapabilities(host) 同步返回与 binding.name 一一对应的 {name,execute(input,signal,executionContext)}，返回普通 JSON。MCP 声明 type:mcp 的 server/name，安装比对真实工具清单。
 
-官方源码在 inventory-policy.json 中按任务职责指定 functionalCategory：business 业务流程、analysis 专业能力、search 搜索与来源、integration 资源接入、presentation 交互呈现、platform 平台管理。宏观研究指南和可执行工作流同属 business；具体知识与局部计算同属 analysis。implementationKinds 独立记录实现形态，不用接口或模板推导主分类。搜索、网页取证、金融信息来源和对应内容解析归 search；RSS/HTML 解析仍只消费已有内容，不能因此视作联网来源。保留旧 category 和 core/optional 发行布局。
+源码在 plugin.yaml 的 x-sesame.catalog 中按任务职责指定 functionalCategory：business 业务流程、analysis 专业能力、search 搜索与来源、integration 资源接入、presentation 交互呈现、platform 平台管理。宏观研究指南和可执行工作流同属 business；具体知识与局部计算同属 analysis。implementationKinds 独立记录实现形态，不用接口或模板推导主分类。搜索、网页取证、金融信息来源和对应内容解析归 search；RSS/HTML 解析仍只消费已有内容，不能因此视作联网来源。保留旧 category 和 core/optional 发行布局。
 
 ## 3. 声明配置与知识
 
-配置与密钥使用统一入口；声明可管理字段后，以 configurationRequirements 绑定真正依赖该字段的能力，按需用 when 限定输入分支。不要给整个插件或无配置依赖的操作附加无关密钥要求。跨能力调用还需在 plugin.json.permissions 声明对应调用；配置字段、根权限、成员 allowedCalls 各司其职，互不替代。具体声明见 references/authoring.md。
+配置与密钥使用统一入口；声明可管理字段后，以 configurationRequirements 绑定真正依赖该字段的能力，按需用 when 限定输入分支。不要给整个插件或无配置依赖的操作附加无关密钥要求。跨能力调用还需在 plugin.yaml.permissions 声明对应调用；配置字段、根权限、成员 allowedCalls 各司其职，互不替代。具体声明见 references/authoring.md。
 
-prompt.md 保留职责与原则，SKILL.md 写适用场景和操作方法，长参数表与示例放已声明 reference。默认挂载或会话加载会注入 prompt 和技能入口正文，reference 按需读取；不要复制同一份长说明到三个位置。
+instructions.md 保留职责与原则，SKILL.md 写适用场景和操作方法，长参数表与示例放已声明 reference。默认挂载或会话加载会注入指引和技能名称、说明，激活后读取正文，reference 按需读取；不要复制同一份长说明到三个位置。
 
 ## 4. 测试、安装与验收
 

@@ -1,0 +1,51 @@
+name: plugin_set_state
+title: plugin_set_state
+description: 设置插件在工作区或当前会话中的启用状态。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    enabled:
+      type: boolean
+    scope:
+      enum:
+        - workspace
+        - session
+    expectedVersion:
+      type: integer
+      minimum: 1
+  required:
+    - pluginId
+    - enabled
+    - scope
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.policy
+  usage:
+    purpose: 设置插件在工作区或当前会话中的启用状态。
+    inputs: pluginId/enabled/scope；session 管理当前会话 loadout，workspace 的 true/false 对应 mounted/disabled。expectedVersion 为工作区策略版本，不是安装 digest。
+    outputs: 相应范围的真实启用策略/状态回执；可引发注册或资源释放。
+    prerequisites:
+      - 工作区策略变更需要主 Agent。
+    limitations:
+      - 当前布尔工具不能设置 discoverable，完整三态由客户端设置提供。
+  binding:
+    type: native
+    name: plugin_set_state

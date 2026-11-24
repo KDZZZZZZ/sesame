@@ -1,0 +1,101 @@
+name: canvas_binding
+title: canvas_binding
+description: 从声明的行情 SourceRef 描述精确品种，固定可复用的连接修订、周期、价格与时段口径，生成 canvas_apply 的 source 绑定。
+inputSchema:
+  type: object
+  required:
+    - source
+    - instrument
+    - timeframe
+  properties:
+    instrument:
+      type: object
+      required:
+        - sourceId
+        - instrumentId
+      properties:
+        sourceId:
+          type: string
+          description: market_instruments 搜索返回的来源 ID
+          minLength: 1
+          maxLength: 20000
+        instrumentId:
+          type: string
+          description: 来源内品种 ID
+          minLength: 1
+          maxLength: 20000
+      additionalProperties: false
+    timeframe:
+      type: string
+      description: 品种声明的标准周期，如 1h/15m；不要传 MT5 H1/M15
+      minLength: 1
+      maxLength: 20000
+    price_basis:
+      anyOf:
+        - type: string
+          const: bid
+        - type: string
+          const: ask
+        - type: string
+          const: mid
+        - type: string
+          const: last
+    adjustment:
+      anyOf:
+        - type: string
+          const: none
+        - type: string
+          const: forward
+        - type: string
+          const: backward
+    session:
+      type: string
+      description: 提供方的交易时段 ID；有多个或未声明时需明确指定
+      minLength: 1
+      maxLength: 20000
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: data_sources 返回的完整来源ID
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确声明版本
+        binding:
+          type: object
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 从声明的行情 SourceRef 描述精确品种，固定可复用的连接修订、周期、价格与时段口径，生成 canvas_apply 的 source 绑定。
+    inputs: source 来自 canvas_inspect.market_sources/data_providers；instrument 用 market_instruments 返回的 ref；timeframe 用 instrument.features.timeframes。price_basis/adjustment/session 只有唯一支持值时可省略。
+    outputs: 返回 {binding:{source,instrument,spec},chart:{symbol,binding,volume:true},instrument,metadata,validation,operations}。实际连接若存在则固定到 binding.source.binding.connection。validation={scope:'source_description',marketDataRead:false,rendered:false}，未读取 K 线或证明渲染。
+    prerequisites:
+      - 来源插件可用，且提供 describeInstrument 和 K 线查询/订阅。
+    limitations:
+      - 不会修改画布或读取 K 线。STALE_REVISION 或画布 SOURCE_CHANGED 应重新发现同 providerId 的当前 revision，保留原 source.binding、instrument、spec，核验后 CAS 更新原图表；不迁移冻结 DataRef 或绘图。CONNECTION_CHANGED 核对原连接，不能静默换账户；未固定连接不证明历史账户一致。多选口径按目标明确选择，不反复试值。
+  binding:
+    type: native
+    name: canvas_binding

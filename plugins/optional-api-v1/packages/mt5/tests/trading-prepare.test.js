@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -8,8 +9,8 @@ import { tradingPrepare } from '../backend/trading-prepare.js';
 import { officialTool } from '../backend/plugin-tools.js';
 import { PYTHON_TOOLS } from '../backend/python-tools.js';
 import { createCapabilities as configurationCapabilities } from '../tools/configuration.js';
-import manifest from '../capabilities.json' with { type: 'json' };
-import plugin from '../plugin.json' with { type: 'json' };
+const manifest = readPackageDirectory(new URL('../',import.meta.url)).capabilities;
+const plugin = readPackageDirectory(new URL('../',import.meta.url)).manifest;
 import { Value } from '@sesame/plugin-sdk/schema/value';
 
 const input = (extra = {}) => ({ symbol: 'EURUSD', command_id: 'fast-prepare-fixture-01', user_authorized: true, ...extra });

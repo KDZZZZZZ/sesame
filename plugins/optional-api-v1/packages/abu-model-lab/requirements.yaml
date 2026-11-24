@@ -1,0 +1,7 @@
+goal: 按时间分离训练与评估的透明预测实验。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-model-lab-discovery
+    tools:
+      - abu_model_lab_analyze
+    resource: skills/abu-model-lab/SKILL.md

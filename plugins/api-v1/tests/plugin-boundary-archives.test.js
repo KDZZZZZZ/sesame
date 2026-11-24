@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -31,7 +32,7 @@ for (const item of active.packages.filter(item => !selected || selected.includes
     assert.deepEqual(JSON.parse(readFileSync(join(unpacked, 'official-plugins.lock.json'), 'utf8')), lock);
     const installed = join(unpacked, name);
     assert.equal(treeDigest(packageFiles(installed)), treeDigest(lock.packages[0].files));
-    const manifest = JSON.parse(readFileSync(join(installed, 'plugin.json'), 'utf8'));
+    const manifest = readPackageDirectory(join(installed)).manifest;
     if (manifest.entry) {
       const module = await import(pathToFileURL(join(installed, manifest.entry)));
       assert.equal(typeof module.createCapabilities, 'function');

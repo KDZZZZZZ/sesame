@@ -1,0 +1,49 @@
+name: configuration_integration_check
+title: configuration_integration_check
+description: 检查指定插件的配置字段是否存在；仅检查配置，不验证远程服务权限。
+inputSchema:
+  type: object
+  properties:
+    plugin_id:
+      type: string
+      minLength: 1
+      maxLength: 256
+    fields:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 128
+      minItems: 1
+      maxItems: 64
+      uniqueItems: true
+  additionalProperties: false
+  required:
+    - plugin_id
+    - fields
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 检查指定插件的配置字段是否存在；仅检查配置，不验证远程服务权限。
+    inputs: 必须提供 plugin_id 和非空 fields 数组；字段 ID 来自该插件的统一配置目录，不能省略字段筛选。
+    outputs: available 表示所选字段是否均已配置，requirements 给出各字段的实际状态；不返回秘密，也不证明远端认证。
+    prerequisites:
+      - 主 Agent 会话。
+    limitations:
+      - 配置存在不代表远端可用。设置写入必须即时执行。
+  binding:
+    type: native
+    name: configuration_integration_check

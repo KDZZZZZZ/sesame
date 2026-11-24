@@ -1,0 +1,7 @@
+goal: ATR止损止盈、峰值回撤和持有期退出观察。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-exit-rules-discovery
+    tools:
+      - abu_exit_rules_analyze
+    resource: skills/abu-exit-rules/SKILL.md

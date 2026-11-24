@@ -1,0 +1,138 @@
+id: abu-trade-judges-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-trade-judges/skills/abu-trade-judges/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-trade-judges
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_trade_judges_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            parameters:
+              type: object
+              properties:
+                k:
+                  type: integer
+                  default: 3
+                  minimum: 1
+                  maximum: 100
+                  description: 最多近邻数
+                distance_floor:
+                  type: number
+                  default: 1e-9
+                  minimum: 5e-324
+                  maximum: 1
+                  description: 距离权重分母下限
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            feature_names:
+              type: array
+              items:
+                type: string
+              maxItems: 100
+              minItems: 1
+              uniqueItems: true
+            query:
+              type: object
+              properties:
+                time:
+                  type: string
+                  description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                available_at:
+                  type: string
+                  description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                features:
+                  type: object
+                  additionalProperties: true
+                  description: Each selected feature_names key must contain a finite number. Unselected metadata is allowed; names are not restricted to the example.
+              additionalProperties: true
+              required:
+                - time
+                - available_at
+                - features
+            completed_trades:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  feature_snapshot_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  decision_time:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  outcome_available_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  features:
+                    type: object
+                    additionalProperties: true
+                    description: Each selected feature_names key must contain a finite number. Unselected metadata is allowed; names are not restricted to the example.
+                  outcome:
+                    type: object
+                    properties:
+                      return:
+                        type: number
+                    additionalProperties: true
+                additionalProperties: true
+                required:
+                  - feature_snapshot_at
+                  - decision_time
+                  - outcome_available_at
+                  - features
+                  - outcome
+              maxItems: 10000
+              minItems: 1
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - feature_names
+            - query
+            - completed_trades
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 历史交易裁判基线"

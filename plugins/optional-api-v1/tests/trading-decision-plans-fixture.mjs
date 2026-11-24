@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { workflowReports } from './workflow-report-fixture.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -13,7 +14,7 @@ const { Store } = await import(new URL('modules/agent/store.js', hostRoot));
 const { RunService } = await import(new URL('modules/agent/run-service.js', hostRoot));
 const { createRunsPort } = await import(new URL('modules/plugins/host-v2/runs.js', hostRoot));
 const { PluginAuthority } = await import(new URL('modules/plugins/plugin-authority.js', hostRoot));
-const manifest = JSON.parse(await readFile(new URL('../packages/trading-decision/capabilities.json', import.meta.url)));
+const manifest = readPackageDirectory(new URL('../packages/trading-decision/', import.meta.url)).capabilities;
 export const baseModel = { provider: 'fixture', id: 'primary', configurationDigest: 'sha256:primary-v1' };
 export const alternateModel = { provider: 'fixture', id: 'alternate', configurationDigest: 'sha256:alternate-v1' };
 export const unchanged = { unchanged: true, targets: [], rationale: 'Available evidence does not justify changing any position.', pause_strategies: [], evidence_dataset_ids: [] };

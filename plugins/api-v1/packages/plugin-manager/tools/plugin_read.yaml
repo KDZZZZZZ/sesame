@@ -1,0 +1,59 @@
+name: plugin_read
+title: plugin_read
+description: 读取已安装插件声明的 manifest 或知识资源。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    part:
+      enum:
+        - manifest
+        - resource
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 公开资源相对路径；续读时原样使用上次 next.path
+  required:
+    - pluginId
+    - part
+  additionalProperties: false
+  anyOf:
+    - properties:
+        part:
+          const: manifest
+    - properties:
+        part:
+          const: resource
+      required:
+        - path
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取已安装插件声明的 manifest 或知识资源。
+    inputs: pluginId 为已安装 ID；part=manifest 返回静态声明；首次 part=resource 读取时 path 使用公开资源清单或已声明技能链接中的真实路径，例如 prompt.md 或 skills/.../SKILL.md；续读时将上次返回的 next 对象原样传入。
+    outputs: manifest 返回 {id,version,revision,capabilities,sources,knowledge,...}；resource 按宿主 24k JSON 正文预算分段返回 {pluginId,path,content,revision,offset,total_chars,complete,next?}。未读完时 next 为可直接传给 plugin_read 的 {pluginId,part:'resource',path}，path 是宿主生成、绑定修订的 opaque continuation。
+    prerequisites: []
+    limitations:
+      - 不用于扒宿主或插件私有实现；资源不在公开清单时使用已有声明，确有能力缺口再开发。
+      - 不解析或构造 next.path，不添加 offset、length 或 revision 输入字段。插件更新使旧续读标记失效时，从原始公开路径重新读取。
+      - 显式读取已声明的 SKILL.md 后，宿主记录该 Skill 并按会话保留状态恢复；不会自动读取全部 References，也不授予额外工具。
+  binding:
+    type: native
+    name: plugin_read

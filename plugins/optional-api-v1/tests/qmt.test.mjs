@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, mkdir, rm, readFile } from 'node:fs/promises';
@@ -26,8 +27,8 @@ const tick = { time: '1700000000000', lastPrice: '10.125', bidPrice: ['10.12'], 
 
 test('QMT manifest/tools agree and declare only implemented capabilities and explicit main tools', async t => {
   const { host } = await fixture(t);
-  const tools = createCapabilities(host), manifest = JSON.parse(await readFile(new URL('../packages/qmt/plugin.json', import.meta.url)));
-  const declared = JSON.parse(await readFile(new URL(`../packages/qmt/${manifest.capability_manifest}`, import.meta.url))).capabilities;
+  const tools = createCapabilities(host), manifest = readPackageDirectory(new URL('../packages/qmt/', import.meta.url)).manifest;
+  const declared = readPackageDirectory(new URL('../packages/qmt/',import.meta.url)).capabilities.capabilities;
   assert.equal(manifest.apiVersion, '2');
   assert.deepEqual(tools.map(tool => tool.name).sort(), declared.map(tool => tool.id).sort());
   assert.ok(manifest.main_tool_names.every(name => declared.some(item => item.id === name && item.consumers.includes('agent'))));

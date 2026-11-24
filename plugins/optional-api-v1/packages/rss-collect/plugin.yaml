@@ -1,0 +1,86 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/rss-collect
+title: RSS / Atom 解析
+description: 信息解析能力：从已有完整RSS/Atom XML提取有限条目与原始日期；不获取文章全文、不判断新闻影响，供方法与工作流复用原证据。
+version: 3.0.3
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame
+entry: index.js
+x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "search"
+    implementationKinds: ["function"]
+    title:
+      en: "RSS / Atom"
+      zh: "RSS / Atom"
+    summary:
+      en: "Parse supplied feeds into structured, source-labelled entries."
+      zh: "将提供的订阅源解析成带来源的结构化条目。"
+    dependencies:
+      en: "Existing Python 3 invoked by the native host.process.exec capability; standard-library RSS/Atom parsing. Retrieve feeds separately."
+      zh: "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析 RSS/Atom；获取订阅源由调用方另行选择。"
+  default_state: discoverable
+  agent_scope: all
+  execution: native
+  prompts: []
+  skills:
+    - skills
+  resources: []
+  permissions:
+    scopes:
+      - process.execute
+    calls:
+      - host.process.exec
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false
+    capabilities:
+      - tool/parse_feed
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: skills/rss-collect/PROVENANCE.md
+        description: RSS / Atom 解析 — skills/rss-collect/PROVENANCE.md
+        kind: reference
+      - id: knowledge-1
+        path: skills/rss-collect/SKILL.md
+        description: RSS / Atom 解析 — skills/rss-collect/SKILL.md
+        kind: skill
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true

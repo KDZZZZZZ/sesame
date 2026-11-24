@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-parameter-search:instructions#preamble": "58770f0ec41b44b46b8d091fdd2d444287ca56b4d969e781bcf7b1272a486ad4",
+    "sesame/abu-parameter-search:plugin.description": "a6b82ddf1641bdbe49ad20cebc6999fbbc919dd3e39efd86153dfaa765834617",
+    "sesame/abu-parameter-search:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-parameter-search:resource/PROVENANCE.md": "d8b1d9053fe24ca541e66dac7781da6d6f6126cd2b48bd62dedfe73d94d10b07",
+    "sesame/abu-parameter-search:resource/README.md": "354bb0e66b9f752315b998d215265ddf1bab5349db8d64f988dfef7432ae1d86",
+    "sesame/abu-parameter-search:resource/examples/development.json": "6daca4e9ec5a13958ba368ec5409c1f86f3ef798641e0767f8ce95af15194521",
+    "sesame/abu-parameter-search:resource/examples/input.json": "8e7887cfc0624e139063a017b340e010d663a4f70430ea341ec4e6314b4a34f9",
+    "sesame/abu-parameter-search:resource/references/method.md": "76d653ec9bb46c22479f7210743b13567c0ce0eb089e54b04fb1c810b7a41ed5",
+    "sesame/abu-parameter-search:resource/scripts/baseline.mjs": "e47aa4faa51f78f159863b8ee2b2c8d65bbb0961f68b1346eff70613f27aa783",
+    "sesame/abu-parameter-search:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-parameter-search:skill/abu-parameter-search.body": "41f39fd3baaef9c2b65ab75e4d02a16c910fa49243bd0bf753d39c5a29775774",
+    "sesame/abu-parameter-search:skill/abu-parameter-search.description": "c4c7049c0e0c1bbdb095f64faad078556c7a42b529f86d42f51c93897ba9b6f2",
+    "sesame/abu-parameter-search:tool/abu_parameter_search_analyze.description": "7acd2431619b8e81708453db2de26430bbeb5045f61e116b35f867835e933428",
+    "sesame/abu-parameter-search:tool/abu_parameter_search_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-parameter-search:tool/abu_parameter_search_analyze.input": "25e00f7e93e674b73db4dce2b939257312b0cf86a30e6d7e29516e1664b60f29",
+    "sesame/abu-parameter-search:tool/abu_parameter_search_analyze.output": "44eb377f70175dc0f1d50333bb0980e01fb0c3d725cde365681c535664ee5f64"
+  },
+  "digest": "e4e690fecfd622d2ef7e2b9452b2a44c7e7be959da749c9075e6044db4216211"
+}

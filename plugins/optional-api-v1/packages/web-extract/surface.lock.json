@@ -1,0 +1,15 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/web-extract:plugin.description": "e223cfe2e7f67103adfb4830be9767f249412649340a2480fc5ffcf28dac1b70",
+    "sesame/web-extract:resource/skills/web-extract/PROVENANCE.md": "4b1dd9f237b19ad0f25288a67c7856c001ac5d2632b7c6e7ec9a1ff452494b8f",
+    "sesame/web-extract:skill/web-extract.body": "c2ef3cfd008929db3b98c6a8cc8df2131e62dfc82d1bc50f3a602fd944c9dcee",
+    "sesame/web-extract:skill/web-extract.description": "b8740baf97f0013668f105a2a9d10885d25b6e06608b96a9cd68a947dc19c427",
+    "sesame/web-extract:skill/web-extract.file/PROVENANCE.md": "4b1dd9f237b19ad0f25288a67c7856c001ac5d2632b7c6e7ec9a1ff452494b8f",
+    "sesame/web-extract:tool/extract_webpage.description": "a8606657c8bb67668ae1f8aa2140ea86b9130ac4a14949f9b17cdf35dfe0775f",
+    "sesame/web-extract:tool/extract_webpage.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/web-extract:tool/extract_webpage.input": "cabdaf6016a2a4e1f4cefdd7eee5cc287e129a11787cf7071bcf5deaa85b4dc1",
+    "sesame/web-extract:tool/extract_webpage.output": "b7e8d87fbabf29dfad07e87d3be3ec6b56d3f91a4f242b28d1b517e52812b149"
+  },
+  "digest": "f67838593e1030049663ef27f26176b14ada5987602a242509601e53af48b9e5"
+}

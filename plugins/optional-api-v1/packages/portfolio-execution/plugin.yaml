@@ -1,0 +1,143 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/portfolio-execution
+title: 目标仓位执行
+description: 独立执行能力：绑定既有账户，为工作流提供快照与目标仓位执行，保留原生校验、风险停止挂载、幂等回执和直接下单工具。
+version: 2.1.3
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "strategy"
+    functionalCategory: "business"
+    implementationKinds: ["service"]
+    title:
+      en: "Portfolio execution"
+      zh: "组合执行"
+    summary:
+      en: "Bind an existing account, observe executable quotes, apply authorized targets and reconcile durable single-submit receipts."
+      zh: "绑定已有账户，观察可执行报价，应用获授权目标并核验持久化单次提交回执。"
+    dependencies:
+      en: "An already configured supported trading adapter; native account and position checks remain authoritative."
+      zh: "需要已配置且受支持的交易适配器，原生账户与持仓核验决定是否可执行。"
+  default_state: discoverable
+  main_tool_names:
+    - portfolio_execution_configure
+    - portfolio_execution_status
+    - manual_trade_inspect
+    - manual_trade_observe
+    - manual_trade_prepare
+    - manual_trade_execute
+    - manual_trade_status
+    - manual_trade_cancel
+  prompts:
+    - instructions.md
+  skills: []
+  resources:
+    - README.md
+  permissions:
+    scopes: []
+    calls:
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: identity
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: snapshot
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: prepare
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: submit
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: recover
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: command
+      - pluginId: sesame/mt5
+        serviceId: execution
+        operation: cancel
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: identity
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: snapshot
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: prepare
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: submit
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: recover
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: command
+      - pluginId: sesame/qmt
+        serviceId: execution
+        operation: cancel
+      - sesame/mt5#mt5_trading_pause
+  contributions:
+    configSchema:
+      type: object
+      additionalProperties: false
+    capabilities:
+      - tool/portfolio_execution_configure
+      - tool/portfolio_execution_context
+      - tool/portfolio_execution_status
+      - tool/portfolio_execution_apply
+      - tool/manual_trade_inspect
+      - tool/manual_trade_observe
+      - tool/manual_trade_prepare
+      - tool/manual_trade_execute
+      - tool/manual_trade_status
+      - tool/manual_trade_cancel
+      - id: dispose
+        kind: function
+        description: Close the private durable receipt database after all execution settles.
+        consumers:
+          - host
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+        execution: immediate
+        effects: []
+        usage:
+          purpose: Close the private durable receipt database after all execution settles.
+          inputs: Host lifecycle disposal payload.
+          outputs: Private receipt storage closure acknowledgement.
+          prerequisites:
+            - Host lifecycle only after active work settles.
+          limitations:
+            - Does not issue broker cancellation or delete retained receipts.
+        binding:
+          type: native
+          name: dispose
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: instructions
+        path: instructions.md
+        description: Execution workflow and receipt recovery instructions.
+        kind: prompt
+    hooks:
+      - id: dispose
+        contract: sesame.lifecycle/1
+        event: lifecycle.dispose
+        consumer: host
+        configSchema:
+          type: object
+          additionalProperties: false
+        operations:
+          handle: dispose
+    stateCollections: []
+    artifactSchemas: []

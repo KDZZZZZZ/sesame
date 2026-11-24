@@ -1,0 +1,274 @@
+name: mt5_trade
+title: mt5_trade
+description: 调用 trading 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。
+inputSchema:
+  type: object
+  required:
+    - server
+    - tool
+    - arguments
+    - command_id
+  properties:
+    server:
+      anyOf:
+        - type: string
+          const: terminal
+        - type: string
+          const: metaeditor
+        - type: string
+          const: marketdata
+        - type: string
+          const: python
+        - type: string
+          const: launcher
+    tool:
+      type: string
+      description: 目录返回的精确方法名
+      minLength: 1
+      maxLength: 20000
+    arguments:
+      type: object
+      properties: {}
+      additionalProperties: true
+    command_id:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]{16,128}$
+      description: 唯一稳定 ID，推荐 UUID；同一动作重试必须沿用
+    save_as:
+      type: string
+      description: 完整结果的工作区 JSON 文件路径
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - native-call
+    - plugin.state.write
+    - filesystem-on-save_as
+    - external-trading
+    - external-strategy-operation
+    - native-connection
+    - native-process-start
+  usage:
+    purpose: 调用目录已声明的trading原生交易方法，并保留原生回执。
+    inputs: '{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool="mt5_trade" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:"native-operation-unique-01"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。'
+    outputs: "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。"
+    prerequisites:
+      - 仅处理 trading原生交易；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。
+    limitations:
+      - 同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。
+      - 会发生真实订单/EA等副作用，须对应用户交易指令；配置/编译请求不等于交易授权。
+  binding:
+    type: native
+    name: mt5_trade
+  configurationRequirements:
+    - field: terminal_token
+      reason: 调用所选 terminal MCP 服务。
+      when:
+        type: object
+        properties:
+          server:
+            const: terminal
+        required:
+          - server
+    - field: metaeditor_token
+      reason: 调用所选 metaeditor MCP 服务。
+      when:
+        type: object
+        properties:
+          server:
+            const: metaeditor
+        required:
+          - server
+    - field: marketdata_token
+      reason: 调用所选 marketdata MCP 服务。
+      when:
+        type: object
+        properties:
+          server:
+            const: marketdata
+        required:
+          - server
+    - field: terminal_url
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: terminal
+        required:
+          - server
+    - field: terminal_enabled
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: terminal
+        required:
+          - server
+    - field: metaeditor_url
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: metaeditor
+        required:
+          - server
+    - field: metaeditor_enabled
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: metaeditor
+        required:
+          - server
+    - field: marketdata_url
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: marketdata
+        required:
+          - server
+    - field: marketdata_enabled
+      reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: marketdata
+        required:
+          - server
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            enum:
+              - python
+              - launcher
+        required:
+          - server
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            enum:
+              - python
+              - launcher
+        required:
+          - server
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            enum:
+              - python
+              - launcher
+        required:
+          - server
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            enum:
+              - python
+              - launcher
+        required:
+          - server
+    - field: python
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: python
+        required:
+          - server
+    - field: allow_trading
+      reason: 原生交易及程序启动权限由已有策略按具体工具检查。
+      optional: true
+    - field: account_login
+      reason: Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: python
+          tool:
+            enum:
+              - initialize
+              - login
+        required:
+          - server
+          - tool
+    - field: account_server
+      reason: Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: python
+          tool:
+            enum:
+              - initialize
+              - login
+        required:
+          - server
+          - tool
+    - field: account_password
+      reason: Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。
+      optional: true
+      when:
+        type: object
+        properties:
+          server:
+            const: python
+          tool:
+            enum:
+              - initialize
+              - login
+        required:
+          - server
+          - tool

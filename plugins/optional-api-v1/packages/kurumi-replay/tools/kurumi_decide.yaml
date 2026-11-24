@@ -1,0 +1,85 @@
+name: kurumi_decide
+title: kurumi_decide
+description: 角色专用：本步一次目标仓位（基础货币整数，1000倍数；负空、正多、0平仓）或明确hold。提交后下一根真实bid/ask开盘执行，不保证止损成交价。
+inputSchema:
+  type: object
+  properties:
+    run_id:
+      type: string
+      description: observe返回runId
+      minLength: 1
+      maxLength: 128
+    step_id:
+      type: string
+      description: observe返回stepId
+      minLength: 1
+      maxLength: 128
+    expected_version:
+      type: integer
+      minimum: 1
+    target:
+      type: string
+      pattern: ^(0|-?[1-9][0-9]{0,7})$
+      description: 带符号基础货币整数，1000倍数，最大绝对值10000000
+    stop:
+      anyOf:
+        - type: string
+          pattern: ^[0-9]+(\.[0-9]+)?$
+        - type: "null"
+    reason:
+      type: string
+      description: 只基于当前证据的交易理由
+      minLength: 1
+      maxLength: 1500
+    utterance:
+      type: string
+      description: 简短原创角色短句
+      minLength: 1
+      maxLength: 200
+  required:
+    - run_id
+    - step_id
+    - expected_version
+    - target
+    - stop
+    - reason
+    - utterance
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 角色专用：本步一次目标仓位（基础货币整数，1000倍数；负空、正多、0平仓）或明确hold。提交后下一根真实bid/ask开盘执行，不保证止损成交价。
+    inputs: "{run_id,step_id,expected_version,target,stop,reason,utterance}; use exact stepId/expectedVersion from observe. target is signed integer base-currency quantity, multiple1000, maxabs10000000; zero means flat, unchanged target means hold. stop is an exact positive decimal price string or null."
+    outputs: Actual native decision/commit receipt for this step/block, including paused/failed evidence when matching could not commit; retained IDs support main-side reconciliation.
+    prerequisites:
+      - The matching active role task with a current observed step.
+    limitations:
+      - A prose answer is not a decision. Same step/input is idempotent; a claimed target is not an observed fill. Role never fabricates missing prices or acts through spectator tools.
+  binding:
+    type: native
+    name: kurumi_decide
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

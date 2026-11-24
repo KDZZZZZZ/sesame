@@ -1,3 +1,4 @@
+import {readPackageDirectory} from './protocol/directory.mjs';
 import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -39,7 +40,7 @@ function validateFiles(entry) {
     check(file && safe(file.path) && hex(file.sha256, 64) && Number.isSafeInteger(file.bytes) && file.bytes >= 0 && file.bytes <= 2 * 1024 * 1024, 'Invalid package file');
     const folded = file.path.normalize('NFD').toLowerCase(); check(!paths.has(folded), 'Package paths collide'); paths.add(folded); total += file.bytes;
   }
-  check(total <= 16 * 1024 * 1024 && paths.has('plugin.json') && paths.has('license'), 'Package bytes or required identity/license files are invalid');
+  check(total <= 16 * 1024 * 1024 && paths.has('plugin.yaml') && paths.has('license'), 'Package bytes or required identity/license files are invalid');
   check(normalize(entry.package.treeDigest) === treeDigest(files), 'Catalog tree digest does not match its file index');
   return files;
 }
@@ -69,12 +70,18 @@ function validateR2Release(release, releases) {
   releases.set(release.tag, release);
 }
 
+const packageId = value => typeof value === 'string' && /^[a-z0-9][a-z0-9.-]*\/[a-z][a-z0-9-]*$/.test(value);
+
+// Match the package version accepted by the distribution lock.
+const packageVersion = value => typeof value === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
+
 function validateEntry(entry, releases, schemaVersion) {
   check(entry && typeof entry === 'object', 'Invalid catalog entry');
-  check(/^sesame\/[a-z][a-z0-9-]*$/.test(entry.id), 'Catalog identity must be unique');
-  check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '2' && ['sesame-native', 'sesame-mcp'].includes(entry.format), 'Invalid catalog version, format or status');
+  check(packageId(entry.id), 'Catalog identity must be unique');
+  check(packageVersion(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '2' && ['sesame-native', 'sesame-mcp'].includes(entry.format), 'Invalid catalog version, format or status');
   const slug = entry.id.split('/')[1], release = releases.get(entry.release);
   check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
+  check(release.sourceRoot === 'plugins/optional-api-v1' || entry.id.startsWith('sesame/'), 'Core catalog entries require a Sesame publisher');
   if (schemaVersion === 1) {
     if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines?.sesame, 'Package compatibility differs from its released profile');
     check(entry.package?.baseUrl === undefined, 'Legacy package entries must not declare R2 package URLs');
@@ -84,7 +91,8 @@ function validateEntry(entry, releases, schemaVersion) {
   }
   check(entry.review?.automated === 'package-static-review' && entry.review.human === 'not-recorded' && entry.review.record?.url === release.review.url && entry.review.record?.sha256 === release.review.sha256, 'Catalog must link its review record without claiming human approval');
   validateFiles(entry);
-  check(entry.capabilityManifest === 'capabilities.json' && entry.package.files.some(file => file.path === entry.capabilityManifest), 'Catalog must index its pinned capability declaration');
+  check(entry.protocolVersion === '2026-07-28' && /^sha256:[a-f0-9]{64}$/.test(entry.surfaceDigest), 'Catalog must pin the protocol and surface digest');
+  check(entry.capabilityManifest === 'plugin.yaml' && entry.package.files.some(file => file.path === entry.capabilityManifest), 'Catalog must index its pinned capability declaration');
   check(Array.isArray(entry.capabilities) && entry.capabilities.length <= 1024, 'Catalog requires explicit capability metadata');
   const ids = new Set();
   for (const capability of entry.capabilities) {
@@ -142,7 +150,7 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
   check(host.context.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
   const action = args.action ?? 'install';
   check(['install', 'update'].includes(action), 'Choose install or explicit update');
-  check(/^sesame\/[a-z][a-z0-9-]*$/.test(args.plugin_id) && /^sha256:[a-f0-9]{64}$/.test(args.catalog_digest) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id), 'Invalid catalog operation identity');
+  check(packageId(args.plugin_id) && /^sha256:[a-f0-9]{64}$/.test(args.catalog_digest) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id), 'Invalid catalog operation identity');
   check(action === 'update' ? /^sha256:[a-f0-9]{64}$/.test(args.expected_digest) : args.expected_digest === undefined, 'Explicit update requires expected_digest; install must omit it', 'CATALOG_UPDATE_REQUIRED');
   const fingerprint = hash(JSON.stringify([host.context.sessionId ?? null, args.plugin_id, args.catalog_digest, action, args.expected_digest ?? null]));
   const result = await operation(host, `catalog:${args.command_id}`, fingerprint, async () => {
@@ -176,9 +184,9 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
     const failed = downloaded.find(item => item.status === 'rejected');
     if (failed) { await rm(directory, { recursive: true, force: true }); throw failed.reason; }
     try {
-      const manifest = JSON.parse(await readFile(join(directory, 'plugin.json'), 'utf8'));
-      check(manifest.id === entry.id && manifest.version === entry.version && manifest.apiVersion === '2' && manifest.capability_manifest === entry.capabilityManifest, 'Downloaded identity differs from the catalog', 'PACKAGE_INTEGRITY');
-      const declaration = JSON.parse(await readFile(join(directory, entry.capabilityManifest), 'utf8'));
+      const {manifest,capabilities: declaration,surface} = readPackageDirectory(directory);
+      check(entry.surfaceDigest === 'sha256:'+surface.digest, 'Downloaded surface differs from the catalog', 'PACKAGE_INTEGRITY');
+      check(manifest.id === entry.id && manifest.version === entry.version && manifest.apiVersion === '2', 'Downloaded identity differs from the catalog', 'PACKAGE_INTEGRITY');
       check(declaration.schemaVersion === 1 && declaration.apiVersion === '2' && Array.isArray(declaration.capabilities)
         && JSON.stringify(capabilitySummaries(declaration.capabilities)) === JSON.stringify(capabilitySummaries(entry.capabilities)), 'Downloaded capability metadata differs from the catalog', 'PACKAGE_INTEGRITY');
     } catch (error) { await rm(directory, { recursive: true, force: true }); throw error; }

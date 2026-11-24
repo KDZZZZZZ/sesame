@@ -1,0 +1,67 @@
+name: portfolio_execution_context
+title: portfolio_execution_context
+description: Read the bound account identity/capability contract, or its full account snapshot including strategy positions, retained history and mounted strategies. Delegated reads require the frozen execution binding.
+inputSchema:
+  type: object
+  required:
+    - binding_id
+    - action
+  properties:
+    binding_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Immutable binding from portfolio_execution_configure
+    action:
+      anyOf:
+        - type: string
+          const: identity
+        - type: string
+          const: snapshot
+    history_days:
+      type: integer
+      minimum: 1
+      maximum: 90
+    frozen_context:
+      description: The exact taskContext returned when binding the saved plan. Only its native workflow controller may supply this for an account snapshot.
+      type: object
+      required: [bindingId, backend, account]
+      properties:
+        bindingId: { type: string, minLength: 1, maxLength: 100 }
+        backend: { enum: [mt5, qmt] }
+        account:
+          type: object
+          required: [accountId, revision]
+          properties:
+            accountId: { type: string, minLength: 1 }
+            revision: { type: string, minLength: 1 }
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - backend.read
+  usage:
+    purpose: Provide exact-account identity or observed facts to methods/workflows. Preserve capture time, native units and history coverage; reading does not authorize execution or choose a strategy.
+    inputs: 'Use binding_id, action (identity or snapshot), and optional history_days (1..90). The native plan controller supplies the saved frozen_context for its whole-account snapshot.'
+    outputs: identity => {account,tools,readTools,taskContext,accountProvider,fillSources,quantityRules}; snapshot => versioned native execution adapter projection and original account/history arrays, with explicit unavailable historical coverage. Frozen tools include the selected native execution service read/write operations.
+    prerequisites:
+      - Use the main conversation that owns the binding, its native trading decision controller reading a snapshot, or a delegated task carrying that exact frozen binding.
+    limitations:
+      - Snapshot is observation, not permission to trade. ACCOUNT_CHANGED requires a new binding; native mt5_trading_context identity alone is not this composition contract.
+      - A confirmed missing MT5 Python IPC connection returns MT5_PYTHON_UNAVAILABLE with details.retryable=false, requiredTransport=python, nativeCode/nativeMessage, commandId and recovery. Reconnect the configured Python terminal and verify the same account before a newly authorized workflow run; repeating a failed snapshot cannot connect it. Other failures keep their native reason without being classified as nonretryable.
+  binding:
+    type: native
+    name: portfolio_execution_context

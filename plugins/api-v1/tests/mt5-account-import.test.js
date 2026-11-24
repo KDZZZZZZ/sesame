@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -129,7 +130,7 @@ test('conflicting multipart credentials fail before persistence and tool metadat
   const f = await setup(t), config = password => JSON.stringify({ mt5Account: { login: '700123', server: 'Fixture-Demo', password } });
   assert.throws(() => f.prepare('msg_conflict', [config('first-private'), config('second-private')]), error => error.code === 'mt5_account_import_invalid' && !/first-private|second-private/.test(error.message));
   assert.deepEqual(f.imports.pending(), []); assert.deepEqual(f.store.list('message'), []);
-  const capabilities = createCapabilities(f.host, f.mt5, f.imports), declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url)));
+  const capabilities = createCapabilities(f.host, f.mt5, f.imports), declared = readPackageDirectory(new URL('../../optional-api-v1/packages/mt5/', import.meta.url)).capabilities;
   const schemas = capabilities.map(capability => {
     const entry = declared.capabilities.find(item => item.binding.name === capability.name); assert.ok(entry);
     assert.equal(typeof capability.execute, 'function'); return entry.inputSchema;

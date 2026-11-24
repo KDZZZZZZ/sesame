@@ -29,7 +29,7 @@ description: 记住个人交易风格、风险红线和策略认知；实盘前�
 
 `memory_trading_context({limit:10})` 返回 `risk_rules` 完整正文及来源、`style`/`strategy_knowledge` 摘要、`totals`、`risk_state`、`complete`、`unread_risk_rule_ids`、`pending_risk_candidates`。风险跨 scope 返回且不受 limit 影响；另两类各返回 limit 条。`missing` 是没有正式规则；`needs_review` 包括冲突、待复核、未确认或正文预算不足；`documented` 只是已登记，不是授权或风险计算通过。
 
-整份交易上下文按 32000 UTF8 字节与1800行控制预算。`complete:false` 的规则按 `unread_risk_rule_ids` 调 `memory_read({id,offset:0,length:4000})`，后续 offset 使用返回的 next_offset，直到其为 null；逐段核对 version 一致，变化时重读。若 `next_risk_offset` 非 null，则再调 `memory_trading_context({risk_offset:next_risk_offset})` 取得剩余规则元数据；规则按稳定 ID 排列，分页期间发生变更须重新核对。不要将任意单页当完整政策。其他摘要正文也用 `memory_read`；需要更多观点时按对应 category 用 `memory_search`。所有来源和条件随记忆返回，读取不刷新采用日期。宿主如返回 `_tool_output_truncated`，该结果只是预览，必须分段重读；分页 `content_complete` 表示单次响应是否含整个正文，完整性须结合 next_offset 和各段 version 核对。
+整份交易上下文按 32000 UTF8 字节与1800行控制预算。`complete:false` 的规则按 `unread_risk_rule_ids` 优先直接调 `memory_read({id})`（省略 `offset`/`length` 一次返回完整正文）并在**同轮并行读齐**；仅在正文超长或宿主返回 `_tool_output_truncated` 时改用 `memory_read({id,offset:0,length:4000})`，后续 offset 使用返回的 next_offset，直到其为 null；逐段核对 version 一致，变化时重读。若 `next_risk_offset` 非 null，则再调 `memory_trading_context({risk_offset:next_risk_offset})` 取得剩余规则元数据；规则按稳定 ID 排列，分页期间发生变更须重新核对。不要将任意单页当完整政策。其他摘要正文也用 `memory_read`；需要更多观点时按对应 category 用 `memory_search`。所有来源和条件随记忆返回，读取不刷新采用日期。宿主如返回 `_tool_output_truncated`，该结果只是预览，必须分段重读；分页 `content_complete` 表示单次响应是否含整个正文，完整性须结合 next_offset 和各段 version 核对。
 
 正式风险规则的最小保存形状如下。示例 ID、正文和阈值必须替换为实际内容；`confirmation_source` 与 sources 中的同一真实用户消息可重复引用，无需创造第二份证据。
 

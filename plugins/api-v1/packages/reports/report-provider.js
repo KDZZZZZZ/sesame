@@ -1,9 +1,10 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { readFileSync } from 'node:fs';
 import { renderStructuredReport } from './report-content.js';
 import { readBytes, readWorkspace } from './artifact-io.js';
 import { COMPONENT_PROTOCOL } from './component-catalog.js';
 
-const { id, version } = JSON.parse(readFileSync(new URL('./plugin.json', import.meta.url), 'utf8'));
+const { id, version } = readPackageDirectory(new URL('.',import.meta.url)).manifest;
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const refKey = ref => JSON.stringify(['id', 'revision', 'digest', 'kind', 'schemaVersion'].map(key => ref?.[key]));

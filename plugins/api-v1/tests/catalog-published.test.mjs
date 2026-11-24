@@ -94,7 +94,7 @@ test('authentication does not relax release identity and asset digest verificati
 });
 
 test('current source CI needs no token or deleted GitHub plugin releases and retains fetch regressions', () => {
-  const workflow = readFileSync(new URL('../../../.github/workflows/plugin-api-v1.yml', import.meta.url), 'utf8');
+  const workflow = readFileSync(new URL('../../../.github/workflows/plugin-ci.yml', import.meta.url), 'utf8');
   assert.equal((workflow.match(/GITHUB_TOKEN:/g) ?? []).length, 0);
   assert.match(workflow, /permissions:\s+contents: read\s+jobs:/);
   assert.doesNotMatch(workflow, /validate-api1-catalog|--published/);

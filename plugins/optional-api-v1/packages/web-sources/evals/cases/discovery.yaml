@@ -1,0 +1,32 @@
+id: web-sources-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/web-sources/INTERFACES.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/web-sources
+  - step: 1
+    pointer: /tools/0/name
+    equals: sources_fetch
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: HTTP/HTTPS URL，不得包含凭据
+          minLength: 1
+          maxLength: 20000
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# web-sources公开能力契约"

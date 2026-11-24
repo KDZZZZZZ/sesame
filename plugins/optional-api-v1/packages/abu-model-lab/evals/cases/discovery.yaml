@@ -1,0 +1,132 @@
+id: abu-model-lab-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-model-lab/skills/abu-model-lab/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-model-lab
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_model_lab_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            parameters:
+              type: object
+              properties:
+                task:
+                  type: string
+                  default: regression
+                  enum:
+                    - regression
+                    - logistic
+                  description: 预测任务
+                learning_rate:
+                  type: number
+                  default: 0.05
+                  minimum: 0.000001
+                  maximum: 1
+                  description: 梯度步长
+                iterations:
+                  type: integer
+                  default: 500
+                  minimum: 1
+                  maximum: 10000
+                  description: 训练迭代次数，受计算预算约束
+                l2:
+                  type: number
+                  default: 0.01
+                  minimum: 0
+                  maximum: 1000
+                  description: 不含截距的 L2 正则
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            feature_names:
+              type: array
+              items:
+                type: string
+              maxItems: 50
+              minItems: 1
+              uniqueItems: true
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  time:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  available_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  label_available_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  split:
+                    enum:
+                      - train
+                      - eval
+                  features:
+                    type: object
+                    additionalProperties: true
+                    description: Each selected feature_names key must contain a finite number. Unselected metadata is allowed; names are not restricted to the example.
+                  label:
+                    type: number
+                additionalProperties: true
+                required:
+                  - time
+                  - available_at
+                  - label_available_at
+                  - split
+                  - features
+                  - label
+              maxItems: 20000
+              minItems: 3
+              description: feature_names 为 1..50 个唯一名称；rows 含 time、available_at、label_available_at、split:"train"|"eval"、features:{各名称:有限数值}、label，可选唯一 id。至少 2 条 train 和 1 条 eval，time 不重复。当前契约要求 available_at == time <= label_available_at <= as_of；所有训练 time 和训练 label_available_at 必须早于第一条 eval.time。logistic 的 label 只能为 0/1。train 条数*(特征数+1)*iterations <= 5000000。
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - feature_names
+            - rows
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 轻量模型基线"

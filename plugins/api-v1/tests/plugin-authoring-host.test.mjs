@@ -1,3 +1,4 @@
+import {readPackageDirectory,readSurfaceFiles,buildSurfaceLock} from '../../protocol/directory.mjs';
 /** Real loader/install/tool checks with temporary application state, never the user's app. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,6 +46,7 @@ test('internal and external authoring install, load, execute and reopen on the m
       }
     });
     const args = { command_id: 'native-authoring-create-0001', name: 'internal-note', publisher: 'fixture', description: 'Offline authoring fixture', template: 'native', min_host: '0.2.2' };
+    const lockDraft = async directory => writeFile(join(directory,'surface.lock.json'),JSON.stringify(buildSurfaceLock(readSurfaceFiles(directory)),null,2)+'\n');
     let internal;
     await t.test('internal native creation is idempotent and preserves edits', async () => {
       const drafts = await Promise.all([call('plugin_create', args), call('plugin_create', args)]);
@@ -53,6 +55,8 @@ test('internal and external authoring install, load, execute and reopen on the m
       await writeFile(join(internal.path, 'README.md'), '# Author-edited draft\n');
       assert.deepEqual(await call('plugin_create', args), internal);
       assert.equal(await readFile(join(internal.path, 'README.md'), 'utf8'), '# Author-edited draft\n');
+      await assert.rejects(runtime.plugins.manager.test('conv_main',{path:internal.path}),/Surface lock mismatch/);
+      await lockDraft(internal.path);
       await assert.rejects(call('plugin_create', { ...args, description: 'Changed request' }), { code: 'IDEMPOTENCY_CONFLICT' });
     });
     const installed = [];
@@ -61,7 +65,7 @@ test('internal and external authoring install, load, execute and reopen on the m
       const result = outcome.plugin;
       assert.equal(result.runtime_status, 'ready', JSON.stringify(outcome));
       await call('plugin_load', { pluginId: result.id });
-      const declared = JSON.parse(await readFile(join(path, 'capabilities.json'), 'utf8'));
+      const declared = readPackageDirectory(join(path)).capabilities;
       const names = declared.capabilities.map(item => item.id);
       for (const name of names) assert.deepEqual(await call(name, { text: 'Installed through the real host' }), { text: 'Installed through the real host' });
       installed.push({ id: result.id, tools: names });
@@ -79,6 +83,7 @@ test('internal and external authoring install, load, execute and reopen on the m
     await t.test('changed files cannot be installed with a stale test digest', async () => {
       const checked = await runtime.plugins.manager.execute('conv_main', 'test', { path: internal.path });
       await writeFile(join(internal.path, 'README.md'), '# Changed after test\n');
+      await lockDraft(internal.path);
       await assert.rejects(call('plugin_install', { operationId: 'stale-authoring-install-0001', path: internal.path, digest: checked.digest }), { code: 'SOURCE_CHANGED' });
     });
     await t.test('installed plugins and native creation receipts survive application restart', async () => {

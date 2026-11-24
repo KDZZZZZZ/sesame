@@ -1,0 +1,45 @@
+name: host_files_remove
+title: host_files_remove
+description: 删除一个宿主普通文件或空目录；不会递归删除目录树，可用完整文件哈希检查目标。
+inputSchema:
+  type: object
+  required:
+    - path
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+    expected_sha256:
+      type: string
+      pattern: ^(sha256:)?[a-f0-9]{64}$
+      description: 预期完整文件 SHA-256；不要使用分页片段的哈希代替完整文件哈希。
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 删除一个宿主普通文件或空目录；不会递归删除目录树，可用完整文件哈希检查目标。
+    inputs: path 为普通文件或空目录；文件可附 expected_sha256 核对完整内容。
+    outputs: '{path,removed:true,execution:"host"}。'
+    prerequisites:
+      - 用户任务已明确指定删除目标。
+    limitations:
+      - 不递归删目录树；非空目录或变化的文件会失败，重新确认实际目标范围。
+  binding:
+    type: native
+    name: host_files_remove

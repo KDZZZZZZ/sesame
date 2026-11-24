@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -22,7 +23,7 @@ async function validateTool(path, source = bytes(path)) {
 }
 
 test('the skill exposes a declared self-contained language reference and every supported operator', () => {
-  const manifest = json('plugin.json'), reference = bytes(languagePath).toString(), skill = bytes('skills/strategy-authoring/SKILL.md').toString();
+  const manifest = readPackageDirectory(root).manifest, reference = bytes(languagePath).toString(), skill = bytes('skills/strategy-authoring/SKILL.md').toString();
   assert.ok(manifest.resources.includes(languagePath));
   assert.match(skill, /plugin_read/);
   assert.ok(skill.includes(`pluginId:"${manifest.id}"`));
@@ -34,7 +35,7 @@ test('the skill exposes a declared self-contained language reference and every s
   }
   // Versioned additions have their own tables after the original time notes.
   for (const id of Object.keys(svl.OPERATORS)) assert.ok(reference.includes('`' + id + '`'), `Documented operator: ${id}`);
-  assert.deepEqual(json('capabilities.json').capabilities.map(item => item.binding.name).sort(), createCapabilities({}).map(item => item.name).sort());
+  assert.deepEqual(readPackageDirectory(root).capabilities.capabilities.map(item => item.binding.name).sort(), createCapabilities({}).map(item => item.name).sort());
 });
 
 test('the stateful reference validates through the public tool and executes its stated four outcomes', async () => {
@@ -58,7 +59,7 @@ test('the commented source validates through the public tool and preserves the o
   assert.equal(checked.graph.nodes.find(node=>node.id==='above').label,'收盘价高于阈值');
   assert.deepEqual(result.events.map(event=>[event.state,event.intents]),plain.events.map(event=>[event.state,event.intents]));
   assert.notEqual(result.sourceDigest,plain.sourceDigest);
-  assert.ok(json('plugin.json').resources.includes('examples/close-threshold-commented.svl.json'));
+  assert.ok(readPackageDirectory(root).manifest.resources.includes('examples/close-threshold-commented.svl.json'));
 });
 
 test('the 1.1 function example preserves threshold decisions and exposes its body and call trace', async () => {

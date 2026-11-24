@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -35,7 +36,7 @@ test('report_export_check targets only a fixed ref on the dedicated host preflig
     assert.deepEqual(input, { surface: 'report-export', ref }); assert.equal(options.signal, signal); return answer;
   } } }).find(tool => tool.name === 'report_export_check');
   assert.deepEqual(await tool.execute({ ref }, signal), answer);
-  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   for (const id of ['report_render', 'report_export_check']) {
     const declaration = manifest.capabilities.find(value => value.id === id);
     assert.equal(declaration.binding.name, id); assert.equal(declaration.inputSchema.additionalProperties, false);

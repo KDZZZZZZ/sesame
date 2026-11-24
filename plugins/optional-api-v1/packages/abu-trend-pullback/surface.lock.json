@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-trend-pullback:instructions#preamble": "b4df3eed3b1d7f7d46a8d340c3c92a39a3ec8f7f0ef34848559e05e83d1cca9e",
+    "sesame/abu-trend-pullback:plugin.description": "e57a5e966a040107e71397079699ffaea7a283e0742414ab24a55a5ecc919668",
+    "sesame/abu-trend-pullback:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-trend-pullback:resource/PROVENANCE.md": "0fc6ac7204fd844697d4ac258a9f040c889702d448a175d505ebcb6eed1cbf96",
+    "sesame/abu-trend-pullback:resource/README.md": "93d0e5153b45054cb5096801e8efad734f82d52a05ee37f236a01c961dd533d5",
+    "sesame/abu-trend-pullback:resource/examples/input.json": "ce670b2ccba6caf9b5229f2c5e323e699975888337cb75c804167d4ab421f2f3",
+    "sesame/abu-trend-pullback:resource/references/method.md": "03c091583ae466794b90598a82ad22ab346092b68f65a3156187b1166aadca6f",
+    "sesame/abu-trend-pullback:resource/scripts/baseline.mjs": "1a8c35f60cea88157125afdba4ad370b96ee76ee9300c8b67d076ab68408ffce",
+    "sesame/abu-trend-pullback:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-trend-pullback:skill/abu-trend-pullback.body": "7d4bcb97d91fd4190ea726a302dbf2775de048356d01ef5e57ea6330fe02d7e2",
+    "sesame/abu-trend-pullback:skill/abu-trend-pullback.description": "90f57e2c453cd46e67d8542c2da2ca92bb45332dcf130d9aa21296da97e2da06",
+    "sesame/abu-trend-pullback:tool/abu_trend_pullback_analyze.description": "84d98e72f701e65da638e516a6ca2d68d62b506d3778e760142720d1db595fb1",
+    "sesame/abu-trend-pullback:tool/abu_trend_pullback_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-trend-pullback:tool/abu_trend_pullback_analyze.input": "ecb675979ea38f5d64c764d2a708e33b5f997135c2f9f6c312843555599a1683",
+    "sesame/abu-trend-pullback:tool/abu_trend_pullback_analyze.output": "391567af40eb34d43d2c1488e431f74578e8e822ede9111e3943875fb6c51f50"
+  },
+  "digest": "a4bce440c8bccd5fb832b50282431d7e27370a5ccc1dca01d92be44411ce66c8"
+}

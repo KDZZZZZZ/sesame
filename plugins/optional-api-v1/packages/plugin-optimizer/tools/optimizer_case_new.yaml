@@ -1,0 +1,45 @@
+name: optimizer_case_new
+title: optimizer_case_new
+description: 把已有案例和回执冻结为独立评测输入
+inputSchema:
+  type: object
+  properties:
+    finding:
+      type: string
+      minLength: 1
+    draft:
+      type: string
+      minLength: 1
+    path:
+      type: string
+      minLength: 1
+  required:
+    - finding
+    - draft
+    - path
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: 把已有案例和回执冻结为独立评测输入
+    inputs: finding, draft, path
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_case_new

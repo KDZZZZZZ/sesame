@@ -1,0 +1,59 @@
+name: plugin_update
+title: plugin_update
+description: 以已知安装版本为前提，检查并更新一个 API 2 包。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 实际包目录
+    digest:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+    expectedRevision:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+    operationId:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 稳定操作 ID，重试保持不变
+  required:
+    - pluginId
+    - path
+    - expectedRevision
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.update
+  usage:
+    purpose: 以已知安装版本为前提，检查并更新一个 API 2 包。
+    inputs: pluginId 指向已安装包；path 为新包；expectedRevision 使用 plugin_inspect 的现有 digest，digest 可固定新包摘要；operationId 固定请求。
+    outputs: 检查和更新后的 plugin 及真实状态；已有配置按宿主更新语义保留。
+    prerequisites:
+      - 主 Agent；包 ID 一致且新包验证通过。
+    limitations:
+      - 修订冲突先读当前版本；失败保留诊断并检查当前状态，不把安装成功与外部业务验收混为一谈。
+  binding:
+    type: native
+    name: plugin_update

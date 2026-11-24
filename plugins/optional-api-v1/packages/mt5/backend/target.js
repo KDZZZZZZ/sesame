@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { readArtifact, readBytes, publishArtifact as publish } from './resource-io.js';
 import { records, pluginIdentity } from './records.js';
 import { promises as fs } from 'node:fs';
@@ -19,15 +20,17 @@ const limitations = [
   'Run ownership, pending intents, partial fills and restart reconciliation require native instrumentation. Manual or external trades have unknown strategy correlation.',
   'Native Tester evidence requires the packaged Product telemetry/result SDK. A compile receipt alone proves no backtest or live behavior.',
 ];
-const resources = ['capabilities.json', 'target/README.md', 'target/translation-file.md', 'target/conformance.md', 'target/sdk-integration.md', 'target/examples/Strategy.mq5', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Conformance.mqh', 'backend/sdk/FrozenInputs.mqh', 'target/examples/FrozenTimeline.mq5', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
+const guides = ['plugin.yaml', 'surface.lock.json', 'target/README.md', 'target/translation-file.md', 'target/conformance.md', 'target/sdk-integration.md', 'target/examples/Strategy.mq5', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Conformance.mqh', 'backend/sdk/FrozenInputs.mqh', 'target/examples/FrozenTimeline.mq5', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
 const root = fileURLToPath(new URL('../', import.meta.url));
 const unknown = reason => ({ status: 'unknown', reason });
 const value = value => ({ status: 'value', value });
 
 export async function targetProfile(host) {
+  const names = await fs.readdir(join(root,'tools'));
+  const resources = [...guides,...names.filter(name=>name.endsWith('.yaml')).sort().map(name=>'tools/'+name)];
   const files = {};
   for (const path of resources) files[path] = await fs.readFile(join(root, path));
-  const tools = JSON.parse(await fs.readFile(join(root, 'capabilities.json'), 'utf8')).capabilities.filter(tool => ['mt5_translation', 'mt5_translation_file', 'mt5_conformance', 'mt5_compile', 'mt5_backtest', 'mt5_deployment'].includes(tool.id)).map(tool => ({ pluginId: pluginIdentity(host).id, toolId: tool.id, schemaDigest: valueDigest(tool.inputSchema) }));
+  const tools = readPackageDirectory(root).capabilities.capabilities.filter(tool => ['mt5_translation', 'mt5_translation_file', 'mt5_conformance', 'mt5_compile', 'mt5_backtest', 'mt5_deployment'].includes(tool.id)).map(tool => ({ pluginId: pluginIdentity(host).id, toolId: tool.id, schemaDigest: valueDigest(tool.inputSchema) }));
   const content = { schemaVersion: '1.0.0', id: 'sesame.mt5.mql5', version: '1.1.0', modes: ['backtest', 'live'], language: { name: 'MQL5', versions: ['5'] }, platforms: ['win32', 'darwin', 'linux'],
     runtime: { engine: 'MetaTrader 5', versions: ['observed at execution'], entryDescription: 'Experts/Strategy.mq5, compiled by the frozen installed MetaEditor; the Agent supplies the SVL translation.', resources },
     svl: svlCapabilities(), execution: executionCapabilities(),

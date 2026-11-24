@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Real installation, Agent transport, Runs and artifact store. All sources/model replies are local fixtures.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -140,7 +141,7 @@ test('a 404 is delivered to the same Agent, which replaces the source while sibl
     const empty = await host.data.query({ source, input: { url: origin + '/empty.json' } });
     assert.equal(empty.metadata.status, 'available'); assert.deepEqual(empty.items, []); assert.ok(empty.metadata.provenance);
 
-    const manifest = JSON.parse(await readFile(join(packageRoot, 'capabilities.json'), 'utf8'));
+    const manifest = readPackageDirectory(join(packageRoot)).capabilities;
     const Ajv = createRequire(join(hostRoot, 'package.json'))('ajv');
     const ajv = new Ajv({ strict: false });
     const sourceSchema = ajv.compile(manifest.capabilities.find(cap => cap.id === 'sources_fetch').outputSchema);

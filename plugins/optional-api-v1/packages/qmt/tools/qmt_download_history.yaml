@@ -1,0 +1,67 @@
+name: qmt_download_history
+title: qmt_download_history
+description: Explicitly download a requested unadjusted daily stock range into the already configured MiniQMT data cache. This is a user-requested data preparation action, not an automatic startup download. Reuse local history first.
+inputSchema:
+  type: object
+  required:
+    - symbol
+    - start
+    - end
+  properties:
+    symbol:
+      type: string
+      pattern: ^\d{6}\.(SH|SZ|BJ)$
+    start:
+      type: string
+      pattern: ^\d{8}$
+    end:
+      type: string
+      pattern: ^\d{8}$
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+    - external-cache.write
+  usage:
+    purpose: 显式下载缺失的本地D1历史。
+    inputs: '{symbol:"000001.SZ",start:"20260101",end:"20261015"}；日期为有效有序YYYYMMDD，最长10年。'
+    outputs: "{ok:true,result:<原生下载回执>,sample:{from,to}}；随后历史读取的实际行与coverage才证明取得了哪些数据。"
+    prerequisites:
+      - 已配置可读 MiniQMT 行情连接；任务确需补充历史。
+    limitations:
+      - 写入MiniQMT本地行情缓存；普通market_read不会自动下载。下载回执不是全区间完整性证明。
+  binding:
+    type: native
+    name: qmt_download_history
+  configurationRequirements:
+    - field: python_path
+      reason: Native QMT calls use the saved existing Windows Python executable.
+    - field: market_port
+      reason: Native market reads use the explicitly configured MiniQMT localhost port.
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

@@ -293,6 +293,20 @@ test('restart retains partial execution receipts and interrupts unfinished runs 
   assert.equal(f.requests.length, 0); assert.equal(f.brokerCalls.filter(call => call.arguments.action === 'snapshot').length, 0);
 });
 
+test('restarting an already interrupted host workflow preserves its original diagnostic and receipts', async t => {
+  const f = await fixture(t), plan = await f.runtime.configure(f.main, f.input());
+  const frozen = { id: 'waiting-run', planId: plan.id, plan, status: 'interrupted', createdAt: f.time,
+    workflow: { id: 'host-workflow' }, error: { code: 'INVALID_INPUT', message: 'Account data was rejected', details: { field: 'account' } },
+    reportPending: false, tasks: [], reports: [], decision: unchanged, executionProgress: { orders: [{ operationId: 'original' }] } };
+  f.storage.put('runs', frozen);
+  const before = f.storage.get('runs', frozen.id);
+  await f.restart();
+  await f.restart();
+  assert.deepEqual(f.storage.get('runs', frozen.id), before);
+  assert.equal(f.requests.length, 0);
+  assert.equal(f.brokerCalls.filter(call => call.arguments.action === 'snapshot' || call.name === 'fixture_apply').length, 0);
+});
+
 test('a missing manager decision interrupts the workflow and releases resources without blocking shutdown', async t => {
   const f = await fixture(t); await f.runtime.configure(f.main, f.input());
   const run = f.runtime.trigger('plan-1', { kind: 'manual', id: 'terminal-failure' });
@@ -333,6 +347,26 @@ test('decision validation supports unchanged exposure and rejects inconsistent t
   assert.equal(validateDecision(plan, snapshot, unchanged).unchanged, true);
   assert.throws(() => validateDecision(plan, snapshot, { ...unchanged, targets: [{ symbol: '600000.SH', quantity: '100', unit: 'shares' }] }), { code: 'INVALID_DECISION' });
   assert.throws(() => validateDecision(plan, snapshot, { ...unchanged, unchanged: false, targets: [{ symbol: '600000.SH', quantity: '-1', unit: 'shares' }] }), { code: 'INVALID_DECISION' });
+});
+
+test('manager freezes exact attached prices only for supported nonzero targets', () => {
+  const plan = { execution: { quantityRules: { unit: 'lots', signed: true, integer: false, supportsAttachedStops: true } }, symbols: ['X'] };
+  const target = { symbol: 'X', unit: 'lots', quantity: '0.1', stop_loss: '0.9999', take_profit: '1.0265' };
+  const decide = value => validateDecision(plan, { positions: [] }, { ...unchanged, unchanged: false, targets: [value] });
+  const frozen = decide(target);
+  assert.deepEqual(frozen.targets, [target]);
+  assert.notEqual(frozen.targets[0], target);
+  for (const field of ['stop_loss', 'take_profit']) {
+    for (const price of [0, '0.00', '-0.1', '.5', '00.1', '1e4', '9'.repeat(41)]) {
+      assert.throws(() => decide({ ...target, [field]: price }), { code: 'INVALID_DECISION' });
+    }
+  }
+  for (const quantity of ['0', '-0.00']) assert.throws(() => decide({ ...target, quantity }), { code: 'INVALID_DECISION' });
+  plan.execution.quantityRules.supportsAttachedStops = false;
+  assert.throws(() => decide(target), { code: 'UNSUPPORTED_CAPABILITY' });
+  delete plan.execution.quantityRules.supportsAttachedStops;
+  assert.throws(() => decide(target), { code: 'UNSUPPORTED_CAPABILITY' });
+  assert.equal(decide({ symbol: 'X', unit: 'lots', quantity: '0' }).targets[0].quantity, '0');
 });
 
 test('execution dependency limits are validated before saving a plan', async t => {

@@ -1,0 +1,105 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/abu-moving-average
+title: 均线信号基线
+description: 双均线交叉观察与参数敏感性研究。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+version: 2.0.2
+license: GPL-3.0-only
+engines:
+  sesame: ">=0.2.3"
+author:
+  name: Sesame contributors; ABU reference by bbfamily / 阿布
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Moving-average research"
+      zh: "均线研究"
+    summary:
+      en: "Compare moving-average crossings and parameter sensitivity."
+      zh: "双均线交叉观察与参数敏感性研究。"
+    dependencies:
+      en: "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order."
+      zh: "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
+  default_state: discoverable
+  agent_scope: all
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - LICENSE
+    - PROVENANCE.md
+    - README.md
+    - examples/input.json
+    - scripts/baseline.mjs
+    - scripts/runtime.mjs
+    - references/method.md
+  provides: {}
+  contributions:
+    capabilities:
+      - tool/abu_moving_average_analyze
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: examples/input.json
+        description: 均线信号基线 — examples/input.json
+        kind: reference
+      - id: knowledge-1
+        path: instructions.md
+        description: abu_moving_average_analyze 的局部目标、解释边界和跨方法交接。
+        kind: prompt
+      - id: knowledge-2
+        path: PROVENANCE.md
+        description: 均线信号基线 — PROVENANCE.md
+        kind: reference
+      - id: knowledge-3
+        path: README.md
+        description: 均线信号基线 — README.md
+        kind: reference
+      - id: knowledge-4
+        path: references/method.md
+        description: abu_moving_average_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。
+        kind: reference
+      - id: knowledge-5
+        path: skills/abu-moving-average/SKILL.md
+        description: 数值方法：计算快慢简单均线及交叉方向，比较固定数据上的趋势信号。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。
+        kind: skill
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false

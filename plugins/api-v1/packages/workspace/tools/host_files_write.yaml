@@ -1,0 +1,56 @@
+name: host_files_write
+title: host_files_write
+description: 在宿主写入不超过 8 MiB 的普通文件；覆盖需显式 overwrite，可用完整文件哈希防止覆盖已变化的内容。
+inputSchema:
+  type: object
+  required:
+    - path
+    - content
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+    content:
+      type: string
+      maxLength: 12582912
+    encoding:
+      anyOf:
+        - type: string
+          const: utf8
+        - type: string
+          const: base64
+    overwrite:
+      type: boolean
+    expected_sha256:
+      type: string
+      pattern: ^(sha256:)?[a-f0-9]{64}$
+      description: 预期完整文件 SHA-256；不要使用分页片段的哈希代替完整文件哈希。
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 在宿主写入不超过 8 MiB 的普通文件；覆盖需显式 overwrite，可用完整文件哈希防止覆盖已变化的内容。
+    inputs: path 是宿主绝对文件，content/encoding(默认utf8)；覆盖显式 overwrite=true；expected_sha256 为完整原文件哈希，内容≤8MiB。
+    outputs: '{path,size,sha256,execution:"host"}；实际写入，父目录需已存在。'
+    prerequisites: []
+    limitations:
+      - existing/changed 冲突先读实际目标；不要以片段哈希或强制覆盖绕过竞争变化。
+  binding:
+    type: native
+    name: host_files_write

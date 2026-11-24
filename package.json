@@ -1,0 +1,14 @@
+{
+  "name": "sesame-plugin-contributions",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "plugin": "node scripts/plugin.mjs",
+    "plugin:new": "node scripts/plugin.mjs new",
+    "plugin:sync": "node scripts/plugin.mjs sync",
+    "plugin:check": "node scripts/plugin.mjs check",
+    "plugin:release": "node scripts/plugin.mjs release"
+  }
+}

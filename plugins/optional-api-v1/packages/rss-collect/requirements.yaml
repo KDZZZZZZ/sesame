@@ -1,0 +1,10 @@
+goal: 信息解析能力：从已有完整RSS/Atom XML提取有限条目与原始日期；不获取文章全文、不判断新闻影响，供方法与工作流复用原证据。
+acceptance:
+  discovery:
+    case: rss-collect-discovery
+    tools:
+      - parse_feed
+    resource: skills/rss-collect/SKILL.md
+  recordedCall:
+    tool: parse_feed
+    case: rss-collect-discovery

@@ -1,0 +1,136 @@
+id: backtrader-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/backtrader/skills/backtrader-fixed-research/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/backtrader
+  - step: 1
+    pointer: /tools/0/name
+    equals: backtrader_backtest
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - operation_id
+        - title
+        - data
+        - strategy_path
+        - class_name
+        - config
+      properties:
+        operation_id:
+          type: string
+          description: Immutable operation key
+          minLength: 1
+        title:
+          type: string
+          description: Result title
+          minLength: 1
+        data:
+          type: object
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          properties:
+            id:
+              type: string
+            revision:
+              type: string
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              type: string
+              const: data
+            schemaVersion:
+              type: string
+              const: 1.0.0
+          additionalProperties: false
+        strategy_path:
+          type: string
+          description: Authored workspace Python file
+          minLength: 1
+        class_name:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]*$
+        config:
+          type: object
+          required:
+            - capital
+            - commission
+            - slippage
+            - feed
+          properties:
+            capital:
+              type: string
+              pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+            commission:
+              type: string
+              pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+            slippage:
+              type: string
+              pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+            feed:
+              type: object
+              required:
+                - timeframe
+                - compression
+              properties:
+                timeframe:
+                  anyOf:
+                    - type: string
+                      const: minutes
+                    - type: string
+                      const: days
+                    - type: string
+                      const: weeks
+                    - type: string
+                      const: months
+                compression:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+              additionalProperties: false
+          additionalProperties: false
+        parameters:
+          type: object
+          patternProperties:
+            ^.*$: {}
+        columns:
+          type: object
+          properties:
+            datetime:
+              type: string
+            open:
+              type: string
+            high:
+              type: string
+            low:
+              type: string
+            close:
+              type: string
+            volume:
+              type: string
+          additionalProperties: false
+        timeout:
+          type: integer
+          minimum: 1
+          maximum: 600
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: backtrader-fixed-research
+      description: Run an authored Backtrader Strategy against frozen 

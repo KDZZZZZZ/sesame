@@ -1,0 +1,179 @@
+name: trading_decision_decide
+title: trading_decision_decide
+description: Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.
+inputSchema:
+  type: object
+  required:
+    - run_id
+    - decision
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Persisted trading decision run ID from this task input
+    decision:
+      type: object
+      required:
+        - unchanged
+        - rationale
+        - targets
+      properties:
+        unchanged:
+          type: boolean
+        rationale:
+          type: string
+          minLength: 1
+          maxLength: 8000
+          description: Evidence, disagreement, risk and invalidation rationale
+        targets:
+          type: array
+          items:
+            type: object
+            required:
+              - symbol
+              - quantity
+              - unit
+            properties:
+              symbol:
+                type: string
+                minLength: 1
+                maxLength: 100
+                description: Watched or currently held symbol
+              quantity:
+                type: string
+                pattern: ^-?(0|[1-9]\d*)(\.\d+)?$
+                maxLength: 40
+              stop_loss:
+                type: string
+                pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                maxLength: 40
+                description: Positive broker-attached stop_loss price for new or additional MT5 exposure
+              take_profit:
+                type: string
+                pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                maxLength: 40
+                description: Positive broker-attached take_profit price for new or additional MT5 exposure
+              unit:
+                type: string
+                minLength: 1
+                maxLength: 40
+                description: Exact unit from execution.quantityRules
+            additionalProperties: false
+          maxItems: 100
+        pause_strategies:
+          type: array
+          items:
+            type: object
+            required:
+              - deployment_id
+              - reason
+            properties:
+              deployment_id:
+                type: string
+                minLength: 1
+                maxLength: 200
+                description: Observed mounted strategy ID
+              reason:
+                type: string
+                minLength: 1
+                maxLength: 2000
+                description: Extreme risk of keeping the strategy mounted
+            additionalProperties: false
+          maxItems: 30
+        evidence_dataset_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+            description: Observed research dataset ID
+          maxItems: 30
+        evidence_sources:
+          type: array
+          items:
+            type: object
+            properties:
+              datasetId:
+                type: string
+                minLength: 1
+                maxLength: 200
+              source:
+                type: object
+                properties:
+                  providerId:
+                    type: string
+                    minLength: 1
+                  revision:
+                    type: string
+                    minLength: 1
+                  binding:
+                    type: object
+                required:
+                  - providerId
+                  - revision
+                additionalProperties: false
+              query:
+                type: object
+            required:
+              - datasetId
+              - source
+              - query
+            additionalProperties: false
+          maxItems: 30
+        evidence_artifacts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                const: data
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+          maxItems: 30
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:decision-checkpoint
+    - read:datasets
+  binding:
+    type: native
+    name: trading_decision_decide
+  usage:
+    purpose: Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.
+    inputs: "{run_id,decision:{unchanged,targets,pause_strategies,rationale,...evidence references}}; targets use exact symbol and quantity strings in the selected quantityRules unit. For MT5 targets adding exposure, include optional positive decimal stop_loss/take_profit when the binding declares supportsAttachedStops; omit both for a zero target and for QMT. unchanged:true requires targets:[]; explicit zero closes that symbol, omitted symbols are untouched. Rationale synthesizes method applicability, decisive evidence and counterevidence; correlated indicators or role votes are not independent confirmation."
+    outputs: The saved immutable decision attached to the business run, with frozen evidence. Identical retry retains it; a conflicting replacement is rejected. The saved decision automatically includes research_refs copied from the frozen plan; complete published research and its source tree stay in their immutable artifacts rather than being copied or truncated in this trade.
+    prerequisites:
+      - Current registered manager task or owning main conversation for this authorized trading run, with its account context read. The main Agent may use retained analysis to repair a missing structured decision before resuming the same workflow. Selected execution identity supplies units/signedness/integer rules.
+    limitations:
+      - Saving a target does not submit an order. A strategy pause and its position closure are separate outcomes.

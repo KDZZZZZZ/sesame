@@ -1,0 +1,34 @@
+name: configuration_integration_open
+title: configuration_integration_open
+description: 打开配置与密钥设置，查看配置项和依赖它的能力。
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - ui
+  usage:
+    purpose: 打开配置与密钥设置，查看配置项和依赖它的能力。
+    inputs: 使用空对象 {}，不接收插件或字段筛选。
+    outputs: 打开“配置与密钥”界面的结果；不保存配置或验证连接，不返回秘密。
+    prerequisites:
+      - 主 Agent 会话。
+    limitations:
+      - 配置存在不代表远端可用。设置写入必须即时执行。
+  binding:
+    type: native
+    name: configuration_integration_open

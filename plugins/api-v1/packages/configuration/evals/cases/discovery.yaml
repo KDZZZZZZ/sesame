@@ -1,0 +1,58 @@
+id: configuration-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/configuration/skills/configure-application/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/configuration
+  - step: 1
+    pointer: /tools/0/name
+    equals: configuration_integration_apply
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        plugin_id:
+          type: string
+          minLength: 1
+          maxLength: 256
+        command_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+        expected_version:
+          type: integer
+          minimum: 1
+        values:
+          type: object
+          writeOnly: true
+          minProperties: 1
+          maxProperties: 64
+          patternProperties:
+            ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$:
+              anyOf:
+                - type: string
+                  maxLength: 8192
+                - type: number
+                - type: boolean
+                - type: "null"
+          additionalProperties: false
+      additionalProperties: false
+      required:
+        - plugin_id
+        - command_id
+        - values
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: configure-application
+      description: Configure declared plugin fields and their consuming ca

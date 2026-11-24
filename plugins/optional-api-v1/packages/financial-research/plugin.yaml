@@ -1,0 +1,334 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/financial-research
+title: 金融研究工具
+description: 信息获取能力：取得并复用SEC/FMP/FRED/Reddit/CFTC来源证据，保留固定引用、来源、获取/可用时间及覆盖；单项解释与综合由方法和工作流负责。
+version: 2.1.2
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "data"
+    functionalCategory: "search"
+    implementationKinds: ["adapter"]
+    title:
+      en: "Financial evidence"
+      zh: "金融研究证据"
+    summary:
+      en: "Retain sourced financial, filing, news, macro and discussion evidence with acquisition and visibility times."
+      zh: "保存财报、公告、新闻、宏观和讨论等原始证据及获取时间、可见时间。"
+    dependencies:
+      en: "Selected sources may require network access, environment credentials or identifying user agents; research prices cannot be traded directly."
+      zh: "所选来源可能需要联网、环境凭据或身份明确的 user-agent；研究价格不可直接用于成交。"
+  default_state: discoverable
+  main_tool_names:
+    - financial_research_configure
+  prompts:
+    - instructions.md
+  resources:
+    - README.md
+    - PROVENANCE.md
+  permissions:
+    scopes:
+      - application.configure
+    calls:
+      - host.configuration.update
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/financial_research_status
+      - tool/financial_research_configure
+      - tool/financial_research_query
+      - tool/financial_research_read
+      - id: research_evidence_query
+        kind: function
+        consumers:
+          - host
+        description: Read already frozen financial research evidence; never fetches again.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: false
+            query:
+              type: object
+              properties:
+                dataset_id:
+                  type: string
+                  minLength: 1
+              required:
+                - dataset_id
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+            nextCursor:
+              type: string
+              minLength: 1
+            metadata:
+              type: object
+              properties:
+                id:
+                  type: string
+                producer_plugin_id:
+                  type: string
+                ref:
+                  type: object
+                provenance:
+                  type: object
+                input_ids:
+                  type: array
+                  items:
+                    type: string
+                inputs:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      datasetId:
+                        type: string
+                      query:
+                        type: object
+                    required:
+                      - datasetId
+                      - query
+                    additionalProperties: false
+              required:
+                - id
+                - producer_plugin_id
+                - ref
+                - provenance
+                - inputs
+              additionalProperties: true
+          required:
+            - items
+            - metadata
+          additionalProperties: false
+        execution: immediate
+        effects: []
+        usage:
+          purpose: 为宿主提供完整已保存金融研究数据及同源祖先。
+          inputs: 宿主 {query:{dataset_id:<query返回ID>},page:{limit:100,cursor?}}；limit1–1000，cursor是返回的十进制offset。例 {query:{dataset_id:"financial-research-<实际UUID>"},page:{limit:100}}。
+          outputs: "{items:<未截断固定行>,nextCursor?,metadata:{id,title,ref,provenance,producer_plugin_id,input_ids?,inputs:[{datasetId,query}],...}}。"
+          prerequisites:
+            - 宿主 data.query 对 sesame/financial-research#evidence 调用；Agent使用 financial_research_read 或 data_query({source,input:query}) 的精确来源。
+          limitations:
+            - 不重新抓取；分页结束不改变原始coverage/as_of限制。
+        binding:
+          type: native
+          name: research_evidence_query
+      - id: research_dispose
+        kind: function
+        consumers:
+          - host
+        description: Close private plugin storage and owned resources.
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            closed:
+              const: true
+          required:
+            - closed
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - plugin.session.close
+        usage:
+          purpose: 关闭插件自有资源。
+          inputs: 宿主生命周期输入 {}。
+          outputs: "{closed:true}。"
+          prerequisites:
+            - 仅宿主卸载/关闭时调用。
+          limitations:
+            - 释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。
+        binding:
+          type: native
+          name: research_dispose
+    sources:
+      - id: evidence
+        contract: sesame.rows/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          query: research_evidence_query
+    views: []
+    services: []
+    knowledge:
+      - id: documentation-0
+        path: instructions.md
+        description: "Documentation: prompt.md"
+        kind: prompt
+      - id: documentation-1
+        path: PROVENANCE.md
+        description: "Documentation: PROVENANCE.md"
+        kind: reference
+      - id: documentation-2
+        path: README.md
+        description: "Documentation: README.md"
+        kind: reference
+      - id: public-interface-contract
+        path: INTERFACES.md
+        consumers:
+          - agent
+          - host
+        description: "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries."
+        kind: reference
+    hooks:
+      - id: dispose
+        event: lifecycle.dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: research_dispose
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true
+    configuration:
+      title: 金融研究数据源
+      fields:
+        - id: fmp_api_key
+          title: FMP API Key
+          description: FMP 来源配置；沿用已有环境变量映射，保存后由请求验证远端权限。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]+$
+            writeOnly: true
+          binding:
+            type: capability
+            read: financial_research_status
+            update: financial_research_configure
+            configuredPath: /credentials/fmp_api_key
+            writePath: /credentials/fmp_api_key
+            clearValue: null
+        - id: fred_api_key
+          title: FRED API Key
+          description: FRED 来源配置；沿用已有环境变量映射，保存后由请求验证远端权限。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]+$
+            writeOnly: true
+          binding:
+            type: capability
+            read: financial_research_status
+            update: financial_research_configure
+            configuredPath: /credentials/fred_api_key
+            writePath: /credentials/fred_api_key
+            clearValue: null
+        - id: sec_user_agent
+          title: SEC User-Agent
+          description: SEC 来源配置；沿用已有环境变量映射，保存后由请求验证远端权限。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]+$
+            writeOnly: true
+          binding:
+            type: capability
+            read: financial_research_status
+            update: financial_research_configure
+            configuredPath: /credentials/sec_user_agent
+            writePath: /credentials/sec_user_agent
+            clearValue: null
+        - id: reddit_access_token
+          title: Reddit Access Token
+          description: REDDIT 来源配置；沿用已有环境变量映射，保存后由请求验证远端权限。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]+$
+            writeOnly: true
+          binding:
+            type: capability
+            read: financial_research_status
+            update: financial_research_configure
+            configuredPath: /credentials/reddit_access_token
+            writePath: /credentials/reddit_access_token
+            clearValue: null
+        - id: reddit_user_agent
+          title: Reddit User-Agent
+          description: REDDIT 来源配置；沿用已有环境变量映射，保存后由请求验证远端权限。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]+$
+            writeOnly: true
+          binding:
+            type: capability
+            read: financial_research_status
+            update: financial_research_configure
+            configuredPath: /credentials/reddit_user_agent
+            writePath: /credentials/reddit_user_agent
+            clearValue: null

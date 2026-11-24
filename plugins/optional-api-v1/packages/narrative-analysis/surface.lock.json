@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/narrative-analysis:instructions#preamble": "59a44d94ba01d77a0489799a5492e8ccebf6a6f9674b56f7cf72cc5aab82c808",
+    "sesame/narrative-analysis:plugin.description": "07ae11745414dbe7a7f966271d44fda331ef16b20d37716159653baeffa3e36b",
+    "sesame/narrative-analysis:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/narrative-analysis:resource/PROVENANCE.md": "67c1dd003b55d80baf41af87ae2677cdf4ac0f3019989885acf4a3bf97354a1f",
+    "sesame/narrative-analysis:resource/README.md": "4be0aea27ef362900a9b03c40394ccee5dfdb3f8ef3e831f7439b6ca33bfc944",
+    "sesame/narrative-analysis:resource/examples/case.json": "9fd7ed2d8210b1a36c8353fbf375ae397cef279de7e7ec184070f2b631e64944",
+    "sesame/narrative-analysis:resource/examples/expected.md": "39c18ed48ed4e86f67a5bab84a2b113eb023a7a22a8c3beadd1dd0e748b6ff26",
+    "sesame/narrative-analysis:resource/references/evidence.md": "f66b548788d849ffef164f72b3270110e6b5b36836a8f8495dfe352f172dd733",
+    "sesame/narrative-analysis:resource/references/method.md": "ba7f0d05ced7c5faf502d776e8f4423fe18a5df08a658db80105bcfe9f89639c",
+    "sesame/narrative-analysis:skill/narrative-analysis.body": "522e416d52e1dede70972d122a7c6a6c11765d99ee9df0b6609272b809b50e77",
+    "sesame/narrative-analysis:skill/narrative-analysis.description": "8980398cdc200c0b94be1344d432db510dd2924bfa031e6b5153408a9861a78e"
+  },
+  "digest": "41f842037a1cc75a9b841db43bf5680b1af138bedebc656b3dea3122626f429a"
+}

@@ -1,0 +1,97 @@
+id: market-data-parser-discovery
+environment:
+  mode: replay
+  fixtures: market-data-parser-recorded-call.json
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/market-data-parser/skills/market-data-parser/SKILL.md
+  - operation: tools/call
+    params:
+      name: parse_fx_json
+      arguments:
+        file_path: sample_fx.json
+        codes:
+          - EUR
+          - JPY
+          - GBP
+          - CNY
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/market-data-parser
+  - step: 1
+    pointer: /tools/0/name
+    equals: parse_fx_json
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        json_content:
+          type: string
+          description: Raw JSON string
+          minLength: 1
+        file_path:
+          type: string
+          description: Relative path to a bundled JSON file; cannot access conversation or host files
+          minLength: 1
+        codes:
+          type: array
+          items:
+            type: string
+          description: Optional currency code filter, e.g. ["EUR","JPY"]
+        source_ref:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+            revision:
+              type: string
+              minLength: 1
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: data
+            schemaVersion:
+              type: string
+              minLength: 1
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+          description: Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line.
+      additionalProperties: false
+      oneOf:
+        - required:
+            - json_content
+        - required:
+            - file_path
+        - required:
+            - source_ref
+  - step: 2
+    pointer: /contents/0/text
+    contains: "## 输入与组合"
+  - step: 3
+    pointer: /structuredContent
+    equals:
+      format: exchangerate-json
+      provider: https://www.exchangerate-api.com
+      base: USD
+      date: 2026-10-03
+      total_currencies: 166
+      returned_currencies: 4
+      rates:
+        EUR: 0.889
+        JPY: 157.82
+        GBP: 0.756
+        CNY: 6.71
+      source: sample_fx.json
+      version: 3.0.0

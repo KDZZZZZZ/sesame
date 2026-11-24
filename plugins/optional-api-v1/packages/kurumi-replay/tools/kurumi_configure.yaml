@@ -1,0 +1,67 @@
+name: kurumi_configure
+title: kurumi_configure
+description: 主Agent调整角色决策间隔：1或4个交易小时（新挑战默认4）；无任务在跑（含未核对角色任务/恢复/自动延续）时才可改，幂等与版本不丢。4h表示每4根可交易H1一次真实角色决定，末章不足4根提前结算；只改图表周期不算完成。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision
+    decision_interval_hours:
+      type: integer
+      enum:
+        - 1
+        - 4
+      description: 1=每根H1一次角色决定；4=每4根可交易H1一次角色决定
+  required:
+    - command_id
+    - expected_version
+    - decision_interval_hours
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent调整角色决策间隔：1或4个交易小时（新挑战默认4）；无任务在跑（含未核对角色任务/恢复/自动延续）时才可改，幂等与版本不丢。4h表示每4根可交易H1一次真实角色决定，末章不足4根提前结算；只改图表周期不算完成。
+    inputs: "{command_id,expected_version,decision_interval_hours:1|4}; 1 means one decision per tradable H1, 4 means up to four tradable H1 per decision."
+    outputs: Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Paused with no active/unreconciled role, recovery or unfinished continuation.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Changes role decision cadence, not chart timeframe. No history is advanced.
+  binding:
+    type: native
+    name: kurumi_configure
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

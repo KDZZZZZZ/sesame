@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -49,7 +50,7 @@ test('a customized calculation cannot mutate the recorded caller input', () => {
 for (const entry of abuCases) {
   const url = new URL(`packages/${entry.directory}/`, root);
   test(`${entry.id}#${entry.tool}: metadata, native tool, CLI, evidence and modification trace agree`, async () => {
-    const manifest = read(url, 'plugin.json'), declaration = read(url, 'capabilities.json'), definitions = declaration.capabilities;
+    const manifest = readPackageDirectory(url).manifest, declaration = readPackageDirectory(url).capabilities, definitions = declaration.capabilities;
     const { createCapabilities } = await import(new URL('index.js', url));
     const definition = definitions.find(capability => capability.binding.name === entry.tool);
     const data = read(url, entry.example), registry = new Map();
@@ -67,7 +68,7 @@ for (const entry of abuCases) {
     assert.equal(Value.Check(definition.inputSchema, { input: data }), true);
     assert.equal(Value.Check(definition.inputSchema, { input: data, code: 'evil()' }), false);
     for (const resource of manifest.resources) assert.ok(readFileSync(new URL(resource, url)).length, resource);
-    for (const resource of ['README.md', 'prompt.md', `skills/${entry.directory}/SKILL.md`]) {
+    for (const resource of ['README.md', 'instructions.md', `skills/${entry.directory}/SKILL.md`]) {
       const text = readFileSync(new URL(resource, url), 'utf8');
       assert.match(text, /基线/); assert.match(text, /改进|修改/);
       if (resource.endsWith('/SKILL.md')) {

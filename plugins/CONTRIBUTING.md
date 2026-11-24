@@ -1,56 +1,27 @@
-# Submit or update a plugin
+# 贡献一个 Sesame 插件
 
-All new contributions follow the root [fork → dev → main policy](../CONTRIBUTING.md).
-Only `@KDZZZZZZ` merges. New GitHub Releases here are reserved for the application;
-historical plugin archives remain available, and merging new source does not by
-itself publish a new installable plugin version.
+从最新的 `dev` 建立工作分支，在仓库根目录使用 Node.js 24。Windows 请使用 LF 检出，例如 `git -c core.autocrlf=false clone …`，文件校验按实际字节计算。
 
-For the current Plugin API 1 ecosystem, start with the [plugin development guide](api-v1/README.md) and [reviewed publication process](api-v1/PUBLISHING.md). It accepts the supported native, Skill and MCP formats; choose the format that matches the capabilities you need. Preserve author attribution, licenses and provenance for every format.
+## 1. 创建插件
 
-## Legacy catalog workflow
+```sh
+node scripts/plugin.mjs new my-publisher/volatility-notes --type knowledge
+```
 
-The steps below apply to the historical `plugins/catalog.json` catalog and its `plugins/packages/` sources. They do not restrict the formats supported by Plugin API 1.
+选择 `knowledge`（知识）、`function`（工具）、`adapter`（外部来源）或 `workflow`（工作流）。省略类型时创建知识包。新包在 `plugins/optional-api-v1/packages/<slug>/` 下。社区作者可以使用自己的发布者 ID。修改已有插件时，直接进入其目录。
 
-1. Publish source you have permission to distribute. Choose an unused
-   `publisher/name` ID, retain author copyright and include `LICENSE` and
-   `PROVENANCE.md`. Explain network requests, file access, external accounts,
-   limitations and how to exercise the plugin. Listing never transfers copyright.
-2. For the legacy catalog, provide a standard stdio MCP package: `plugin.json`,
-   `mcp.json`, static `tools.json`, an explicit Python or Node entrypoint and
-   skills where useful. Packages must be self-contained. No native host import,
-   executable install hook, embedded credential, symlink, archive or floating
-   dependency is accepted. The initial validator permits a single package-local
-   entrypoint and no environment values; new capability classes need a reviewed
-   validator and client change before submission.
-3. Add the files under `plugins/packages/<publisher>/<name>/` in a source commit.
-   Do not include private host modules merely because a plugin imports them.
-   Commit source before editing the catalog so `source.commit` can be immutable.
-4. Add metadata and the full file manifest to `catalog.json` in a second commit.
-   Every file includes its relative path, SHA-256 and byte length. Sort paths by
-   JavaScript string order. Tree digest is
-   `sha256(JSON.stringify(files.map(f => [f.path, 'sha256:' + f.sha256])))`.
-   Hash compact UTF-8 JSON; do not include whitespace or the catalog in the tree.
-5. Set minimum app version, user-facing requirements, actual tools, and
-   `review: {automated: "catalog-ci", human: "not-recorded"}`. Authors cannot
-   grant themselves a review or a safety badge. Keep an existing ID's ownership.
-6. Open a fork PR targeting `dev` with source and isolated-runtime test evidence. CI reads the
-   candidate as data and uses the validator from the trusted base branch. It
-   never runs the PR's plugins, scripts or tests. Maintainers inspect source,
-   provenance, permissions, metadata and test evidence before publication.
-7. The owner merges with **Create a merge commit**, preserving the source
-   commit referenced by the catalog. Do not squash or rebase away pinned source
-   commits. The website syncs the same merged catalog; it has no independent
-   editable plugin list.
+## 2. 开发并检查
 
-For a new release, increment the plugin version, commit source, then update its
-catalog record and hashes through a new PR. Never replace bytes under an
-existing version. A runtime or tool-schema change requires new test evidence.
-Previous Git commits remain the publication audit trail. Repository rules require
-the catalog/routing/static checks and restrict merges to the owner. CODEOWNERS
-identifies responsibility; it is not a substitute for those rules, and the owner
-is not required to approve their own PR.
+在 `plugin.yaml` 声明身份、版本、宿主范围和权限。`x-sesame.catalog` 中填写分类 `functionalCategory`、双语标题 `title.en/zh` 和摘要 `summary.en/zh`。工具放在 `tools/`，给 Agent 的说明放在 `instructions.md`，可复现的用例放在 `evals/cases/`。选择有权使用的许可证，保留第三方来源。已发布版本的内容有变化时提高版本号。
 
-Run `node .github/scripts/validate-catalog.mjs .` and
-`node --test .github/scripts/catalog.test.mjs` after committing the candidate.
-These commands validate metadata and bytes; runtime testing must happen in a
-separate unprivileged sandbox without secrets or host mounts.
+```sh
+node scripts/plugin.mjs check --fix
+```
+
+该命令同步各包接口锁、核心与可选发行锁、目录清单，然后运行检查。只检查用 `node scripts/plugin.mjs check`，只同步生成文件用 `node scripts/plugin.mjs sync`。涉及外部服务或业务流程时，在隔离环境中测试实际行为，并记录结果。
+
+## 3. 提交到 dev
+
+把插件目录和自动刷新的文件一起提交。向 `dev` 开 PR，写明插件 ID 和版本、用途、权限与外部依赖、测试结果。贡献者从 fork 提交，仓库维护者可从本仓工作分支提交。PR 校验从受信基线读取验证器，把候选包当作数据读取；运行时测试由作者或维护者在隔离环境执行。
+
+[API 2 包协议](protocol/README.md) · [宿主接口与模板](api-v1/docs/README.md) · [维护者发布流程](api-v1/PUBLISHING.md)

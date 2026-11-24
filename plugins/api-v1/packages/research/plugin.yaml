@@ -1,0 +1,291 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/research
+title: 金融研究方法
+description: 按金融问题发现调查方法、证据要求与回答结构；支持混合问题、定向复核及专业字段释义。
+version: 1.0.8
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["function"]
+    title:
+      en: "Research methods"
+      zh: "研究方法"
+    summary:
+      en: "Find financial investigation methods and question-specific answer structures; adapt them to new questions and review evidence."
+      zh: "发现金融调查方法与问题专属回答结构，适配新问题并复核研究证据。"
+    dependencies:
+      en: "Method lookup needs no credentials or external runtime. Research uses the existing agents and relevant source and calculation plugins."
+      zh: "查询方法无需密钥或额外运行环境；研究由现有 Agent 配合所需来源与计算插件执行。"
+  default_state: mounted
+  execution: native
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - methods/index.json
+    - references/methods/market-state.md
+    - references/methods/technical-structure.md
+    - references/methods/volatility-patterns.md
+    - references/methods/opportunity-and-calendar.md
+    - references/methods/business-quality.md
+    - references/methods/valuation.md
+    - references/methods/earnings-preview.md
+    - references/methods/earnings-review.md
+    - references/methods/event-explanation.md
+    - references/methods/macro-outlook.md
+    - references/methods/macro-transmission.md
+    - references/methods/comparison.md
+    - references/methods/portfolio-risk.md
+    - references/methods/performance-attribution.md
+    - references/methods/allocation-rebalance.md
+    - references/methods/options-structures.md
+    - references/methods/factor-evaluation.md
+    - references/methods/strategy-evaluation.md
+    - references/methods/strategy-diagnosis.md
+    - references/methods/forecast-review.md
+    - references/methods/concept-explanation.md
+    - references/fields/market-observations.json
+    - references/fields/technical-events.json
+    - references/fields/fundamental-quality.json
+    - references/fields/valuation.json
+    - references/fields/expectations-revisions.json
+    - references/fields/event-impact.json
+    - references/fields/news-attention.json
+    - references/fields/sentiment-positioning.json
+    - references/fields/volatility-pricing.json
+    - references/fields/option-payoffs.json
+    - references/fields/candidate-screening.json
+    - references/fields/portfolio-exposures.json
+    - references/fields/historical-evidence.json
+    - references/fields/outlook-synthesis.json
+    - references/fields/conditions-monitoring.json
+    - references/fields/forecast-record.json
+    - references/fields/event-calendar.json
+    - references/fields/strategy-results.json
+    - references/fields/allocation.json
+    - references/evidence-and-judgment.md
+    - references/adapt-and-compose.md
+    - references/review-and-recovery.md
+    - references/fields/context.md
+    - examples/adaptation.json
+  mcp_export:
+    - research_methods
+    - research_read
+  permissions:
+    scopes: []
+    calls: []
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/research_methods
+      - tool/research_read
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: prompt
+        path: instructions.md
+        description: 研究职责、选用时机与插件协作边界。
+        kind: prompt
+      - id: research-skill
+        path: skills/research/SKILL.md
+        description: 按任务发现方法、取证、复核和交付的短流程。
+        kind: skill
+      - id: method-index
+        path: methods/index.json
+        description: 方法与按需资料的同源索引。
+        kind: reference
+      - id: market-state
+        path: references/methods/market-state.md
+        description: 解释当前相对前期、同类资产有哪些变化，区分事实快照与预测。
+        kind: reference
+      - id: technical-structure
+        path: references/methods/technical-structure.md
+        description: 围绕观察期限、关键分界、触发、目标及相反路径组织技术判断。
+        kind: reference
+      - id: volatility-patterns
+        path: references/methods/volatility-patterns.md
+        description: 研究何时更活跃、不同持有期可能波动多大，以及期权波动定价差异。
+        kind: reference
+      - id: opportunity-and-calendar
+        path: references/methods/opportunity-and-calendar.md
+        description: 按用户条件区分候选，或只整理事件时点和已知预期。
+        kind: reference
+      - id: business-quality
+        path: references/methods/business-quality.md
+        description: 解释收入、利润和现金怎样产生，增长与竞争优势能否持续。
+        kind: reference
+      - id: valuation
+        path: references/methods/valuation.md
+        description: 比较当前价格要求的经营表现、可支持假设和价值敏感性。
+        kind: reference
+      - id: earnings-preview
+        path: references/methods/earnings-preview.md
+        description: 围绕事前预期、待揭晓经营变量和公布后的解读安排调查。
+        kind: reference
+      - id: earnings-review
+        path: references/methods/earnings-review.md
+        description: 解释实际相对事前预期的差异，以及经营判断具体发生的变化。
+        kind: reference
+      - id: event-explanation
+        path: references/methods/event-explanation.md
+        description: 用信息到达、预期差和竞争解释调查涨跌，而非新闻与价格简单配对。
+        kind: reference
+      - id: macro-outlook
+        path: references/methods/macro-outlook.md
+        description: 从基准假设连接增长、通胀、政策反应与地区差异。
+        kind: reference
+      - id: macro-transmission
+        path: references/methods/macro-transmission.md
+        description: 解释冲击通过何种渠道、时滞和相反力量影响目标资产。
+        kind: reference
+      - id: comparison
+        path: references/methods/comparison.md
+        description: 按用户目标选择共同口径，解释决定选择的差异和条件取舍。
+        kind: reference
+      - id: portfolio-risk
+        path: references/methods/portfolio-risk.md
+        description: 区分持仓权重、共同暴露、风险贡献和压力损失。
+        kind: reference
+      - id: performance-attribution
+        path: references/methods/performance-attribution.md
+        description: 解释已实现表现来自哪些资产、时段、配置和交易变化。
+        kind: reference
+      - id: allocation-rebalance
+        path: references/methods/allocation-rebalance.md
+        description: 围绕目标、约束、当前持仓和调整成本比较配置方案。
+        kind: reference
+      - id: options-structures
+        path: references/methods/options-structures.md
+        description: 比较合约成本、条件损益，以及时间、波动和到期因素的取舍。
+        kind: reference
+      - id: factor-evaluation
+        path: references/methods/factor-evaluation.md
+        description: 评价因子描述或预测什么、在哪些样本成立，以及是否提供增量信息。
+        kind: reference
+      - id: strategy-evaluation
+        path: references/methods/strategy-evaluation.md
+        description: 把真实策略规则、样本划分、成本和收益风险联系起来评价。
+        kind: reference
+      - id: strategy-diagnosis
+        path: references/methods/strategy-diagnosis.md
+        description: 定位表现变化的时间、贡献来源和竞争原因，再确定值得修改的部分。
+        kind: reference
+      - id: forecast-review
+        path: references/methods/forecast-review.md
+        description: 把当时可知的预测与实际结果比较，区分条件、数据和推断偏差。
+        kind: reference
+      - id: concept-explanation
+        path: references/methods/concept-explanation.md
+        description: 直接解释用户不理解的关系，用必要市场例子或复算回答。
+        kind: reference
+      - id: fields-market-observations
+        path: references/fields/market-observations.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-technical-events
+        path: references/fields/technical-events.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-fundamental-quality
+        path: references/fields/fundamental-quality.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-valuation
+        path: references/fields/valuation.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-expectations-revisions
+        path: references/fields/expectations-revisions.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-event-impact
+        path: references/fields/event-impact.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-news-attention
+        path: references/fields/news-attention.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-sentiment-positioning
+        path: references/fields/sentiment-positioning.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-volatility-pricing
+        path: references/fields/volatility-pricing.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-option-payoffs
+        path: references/fields/option-payoffs.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-candidate-screening
+        path: references/fields/candidate-screening.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-portfolio-exposures
+        path: references/fields/portfolio-exposures.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-historical-evidence
+        path: references/fields/historical-evidence.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-outlook-synthesis
+        path: references/fields/outlook-synthesis.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-conditions-monitoring
+        path: references/fields/conditions-monitoring.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-forecast-record
+        path: references/fields/forecast-record.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-event-calendar
+        path: references/fields/event-calendar.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-strategy-results
+        path: references/fields/strategy-results.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: fields-allocation
+        path: references/fields/allocation.json
+        description: 按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。
+        kind: reference
+      - id: evidence-and-judgment
+        path: references/evidence-and-judgment.md
+        description: 来源与内容性质、历史可知性、采样和概率含义。
+        kind: reference
+      - id: adapt-and-compose
+        path: references/adapt-and-compose.md
+        description: 为混合与未命中问题选择主回答线，并按用户范围裁剪。
+        kind: reference
+      - id: review-and-recovery
+        path: references/review-and-recovery.md
+        description: 按问题复核、失败处理、范围变更与真实报告交付。
+        kind: reference
+      - id: fields-context
+        path: references/fields/context.md
+        description: 精确对象、时间、原尺度和固定证据的共同含义。
+        kind: reference
+      - id: adaptation-examples
+        path: examples/adaptation.json
+        description: 同对象不同问题、混合问题、局部需求和仅改视觉的示例。
+        kind: reference
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []

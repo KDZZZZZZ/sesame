@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -21,7 +22,7 @@ test('generic dependencies preserve shared inputs and labels while rejecting bro
 });
 test('components and provider accept the same generic diagram schema', {skip:!host},async()=>{
   const {validateSchemas}=await import(pathToFileURL(join(host,'modules/shared/schema-service.js')).href);
-  const contract=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
+  const contract=readPackageDirectory(new URL('../packages/reports/', import.meta.url)).capabilities;
   const values={components_show:{operation_id:'diagram-fixture',title:'演示',target:'answer',provenance_kind:'demo',content},report_render:{metadata:{title:'演示',summary:'软件测试',locale:'zh-CN',provenanceKind:'demo',features:[]},data:[],related:[],references:[],input:{content,target:'answer'}}};
   for(const[id,value]of Object.entries(values))await validateSchemas([{schema:contract.capabilities.find(c=>c.id===id).inputSchema,value}]);
 });

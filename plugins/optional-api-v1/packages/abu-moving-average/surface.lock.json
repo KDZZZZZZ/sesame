@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-moving-average:instructions#preamble": "526564c57e5462cda8f684f4090de9e2911aa1c92931ef2c1e9ae6d154fa508a",
+    "sesame/abu-moving-average:plugin.description": "84a8196856561c4a1ac460cca2a000b2d94389c535e10d117db6d3d208415c90",
+    "sesame/abu-moving-average:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-moving-average:resource/PROVENANCE.md": "0fc6ac7204fd844697d4ac258a9f040c889702d448a175d505ebcb6eed1cbf96",
+    "sesame/abu-moving-average:resource/README.md": "85ac4553e6b35a3c3a748cf524a46222440ca109509e07d54a727ba87c77310e",
+    "sesame/abu-moving-average:resource/examples/input.json": "e67d60594549487988dc36d2f3e5d586595c1e80ba71fa4d87f635db275576c8",
+    "sesame/abu-moving-average:resource/references/method.md": "c9466ba261300c8762c369cf5cff81d9854b6e5931a9a6ca5d996282c6dc3d37",
+    "sesame/abu-moving-average:resource/scripts/baseline.mjs": "71b7216a3526605a3831d0b91e3efd81cc6d422875ec8235e2eb535b652b7cc2",
+    "sesame/abu-moving-average:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-moving-average:skill/abu-moving-average.body": "00faae72c3371c9164867bbd44b921105c9fad0480d4100232c3223cdc45577d",
+    "sesame/abu-moving-average:skill/abu-moving-average.description": "69c8c88dad734776aa4519def8600fccc028d886498a401259d3b9e595ee22ef",
+    "sesame/abu-moving-average:tool/abu_moving_average_analyze.description": "55e8521ff498c908a89583ff9d1db618472519a7bd7854d507f5e20a7b822f93",
+    "sesame/abu-moving-average:tool/abu_moving_average_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-moving-average:tool/abu_moving_average_analyze.input": "c2f2801816e664635c85d0a0226bf8a42485db179073a15f46bedc40db310cd1",
+    "sesame/abu-moving-average:tool/abu_moving_average_analyze.output": "a9562ccff34a7719489145b2d0e8928beca6307fe57fe023abc541c1ad12ac8b"
+  },
+  "digest": "0cbea32e0b6b664da47be441b0ec5a652445665e4633ccb3b7b7935d7a40abf8"
+}

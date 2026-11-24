@@ -1,0 +1,131 @@
+name: mt5_project
+title: mt5_project
+description: 管理独立 MQL5 工程。create({title}) 创建空骨架；checkout({project_id}) 返回当前会话 checkout；save 仅传 {action:"save",checkout_id}，从该 checkout 读取源码并校验，原样保存保持 revision。configure_risk 才使用 expected_version。源码诊断可修复；草稿不能回测。
+inputSchema:
+  type: object
+  oneOf:
+    - type: object
+      properties:
+        action:
+          type: string
+          const: list
+      required:
+        - action
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: create
+        title:
+          type: string
+          description: 新工程名称
+          minLength: 1
+          maxLength: 120
+      required:
+        - action
+        - title
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: checkout
+        project_id:
+          type: string
+          description: checkout / configure_risk 的工程 ID；save 不传此字段。
+          minLength: 1
+          maxLength: 20000
+      required:
+        - action
+        - project_id
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: save
+        checkout_id:
+          type: string
+          description: save 必填：当前会话 checkout 返回的 id。save 只传 action 和 checkout_id。
+          minLength: 1
+          maxLength: 20000
+      required:
+        - action
+        - checkout_id
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: configure_risk
+        project_id:
+          type: string
+          description: checkout / configure_risk 的工程 ID；save 不传此字段。
+          minLength: 1
+          maxLength: 20000
+        expected_version:
+          type: integer
+          minimum: 1
+          description: 仅 configure_risk：读取的工程 version；save 使用 checkout 已冻结的 revision，不传 expected_version。
+        test_risk_limits:
+          type: object
+          required:
+            - max_risk_per_trade_pct
+            - max_daily_loss_pct
+            - max_open_positions
+            - max_lots
+          properties:
+            max_risk_per_trade_pct:
+              type: number
+              exclusiveMinimum: 0
+            max_daily_loss_pct:
+              type: number
+              exclusiveMinimum: 0
+            max_open_positions:
+              type: integer
+              minimum: 1
+            max_lots:
+              type: string
+              maxLength: 24
+          additionalProperties: false
+          description: configure_risk 由主 Agent 按用户任务修改；仅影响随后创建的测试，既有构建和任务保留冻结参数
+      required:
+        - action
+        - project_id
+        - expected_version
+        - test_risk_limits
+      additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - workspace.write
+    - application-configuration
+  usage:
+    purpose: 创建、签出、保存或查看独立MQL5工程。
+    inputs: 分支互斥：{action:"list"}；{action:"create",title:"研究草稿"}；{action:"checkout",project_id}；{action:"save",checkout_id}；{action:"configure_risk",project_id,expected_version,test_risk_limits:{max_risk_per_trade_pct,max_daily_loss_pct,max_open_positions,max_lots}}。save不传project_id/expected_version。
+    outputs: list为工程数组；create/save/configure_risk 返回{id,version,title,revision,source_digest,...}；checkout:{id,project_id,conversation_id,revision,path,sdk_path,...}，id即checkout_id。原样save保持revision，内容改变生成新revision。
+    prerequisites:
+      - 本地工程操作不需终端；checkout是当前会话真实工作副本；configure_risk仅主会话。源码契约见声明的native-ea/visual-state-machines skills。
+    limitations:
+      - create只是可编辑草稿，不表示已实现/编译/回测。SDK/平台入口不能改；revision冲突需新checkout合并。
+  binding:
+    type: native
+    name: mt5_project

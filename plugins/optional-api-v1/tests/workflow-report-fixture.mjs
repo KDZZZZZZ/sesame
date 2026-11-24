@@ -10,9 +10,12 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': 
 function fixtureHTML(input) {
   assert.equal(input.target, 'report');
   assert.ok(input.content?.kind === 'document' && !Object.hasOwn(input, 'body_html') && !Object.hasOwn(input, 'html_path'), 'The fixture accepts only generic document content');
-  const block = value => value.type === 'markdown' ? renderMarkdown(value.text) : `<p>${escape(value.text)}</p>`;
+  const block = value => value.type === 'markdown' ? renderMarkdown(value.text) : value.type === 'details'
+    ? `<details><summary>${escape(value.title)}</summary>${value.blocks.map(block).join('')}</details>` : `<p>${escape(value.text)}</p>`;
+  assert.ok(input.lead?.trim() && input.highlights?.length >= 1 && input.highlights.length <= 6);
+  const highlights = input.highlights.map(item => `<dt>${escape(item.label)}</dt><dd>${escape(item.value)}</dd>`).join('');
   const body = input.content.sections.map(section => `<section><h2>${escape(section.title)}</h2>${section.blocks.map(block).join('')}</section>`).join('');
-  return `<!doctype html><html><head><title>${escape(input.title)}</title></head><body><main>${body}</main></body></html>`;
+  return `<!doctype html><html><head><title>${escape(input.title)}</title></head><body><main><p>${escape(input.lead)}</p><dl>${highlights}</dl>${body}</main></body></html>`;
 }
 
 const states = new WeakMap();

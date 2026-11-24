@@ -1,0 +1,171 @@
+name: mt5_conformance
+title: mt5_conformance
+description: prepare 固定SVL输入序列和数值公差，产生参考结果及可选MQL标识头；verify只读取真实成功Tester结果与原生逐输入/事件/函数trace，核对冻结代码、参数和参考重放。不能用编译成功、手填JSON或普通市场回测代替。仅证明所测fixture，不发送订单或启动终端。先读target/conformance.md。
+inputSchema:
+  type: object
+  required:
+    - action
+    - operation_id
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: prepare
+        - type: string
+          const: verify
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+      minLength: 16
+      maxLength: 128
+    source:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    fixture_path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    timeline_path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    header_path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    tolerances:
+      type: array
+      items:
+        type: object
+        required:
+          - path
+          - absolute
+          - relative
+        properties:
+          path:
+            type: string
+          absolute:
+            type: string
+          relative:
+            type: string
+        additionalProperties: false
+      maxItems: 256
+    fixture:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    translation:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    result:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - workspace.read
+    - resources.publish
+    - plugin.state.write
+  usage:
+    purpose: 准备或比较有界SVL与原生MT5执行证据。
+    inputs: prepare:{action:"prepare",operation_id,source:<固定SVL>,fixture_path:<工作区JSON>,timeline_path?,header_path?,tolerances?}；verify:{action:"verify",operation_id,fixture:<prepare返回Ref>,translation:<固定翻译>,result:<真实Tester结果Ref>}，两个分支字段互斥。
+    outputs: prepare:{fixture,fixtureDigest,referenceDigest,events,status,validationScope:"reference-only",nativeEngineExecuted:false,bridgeConfiguration?,timelineDigest?,header_path?}；verify:{validation,outcome,validationScope,nativeEngineExecuted:true,generalEquivalence:"not_proven",differences,covered,uncovered,limitations}。
+    prerequisites:
+      - 公开 target/conformance.md 说明夹具、时间线与容差；verify需要实际带埋点的Tester证据。
+    limitations:
+      - prepare不执行MT5；verify只证明已覆盖夹具范围，不是普遍等价；uncovered/差异必须保留，不调大容差掩盖不匹配。
+  binding:
+    type: native
+    name: mt5_conformance

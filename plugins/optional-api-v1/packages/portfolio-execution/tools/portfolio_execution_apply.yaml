@@ -1,0 +1,173 @@
+name: portfolio_execution_apply
+title: portfolio_execution_apply
+description: Apply one saved target portfolio through the bound execution adapter. Requires a live workflow tool calling for its matching executor task; direct model calls fail. Exact native units, all-origin close/reduction, guarded strategy stops and durable no-replay receipts are preserved.
+inputSchema:
+  type: object
+  required:
+    - binding_id
+    - run
+  properties:
+    binding_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Immutable binding from portfolio_execution_configure
+    run:
+      type: object
+      required:
+        - id
+        - decidedAt
+        - plan
+        - decision
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Saved workflow run ID
+        decidedAt:
+          type: integer
+          minimum: 1
+        plan:
+          type: object
+          required:
+            - id
+            - account
+            - ownerConversationId
+            - slippageBps
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 100
+              description: Frozen workflow plan ID
+            account:
+              type: object
+              properties: {}
+              additionalProperties: true
+            ownerConversationId:
+              type: string
+              minLength: 1
+              maxLength: 100
+              description: Frozen parent conversation
+            slippageBps:
+              type: integer
+              minimum: 0
+              maximum: 500
+          additionalProperties: false
+        decision:
+          type: object
+          required:
+            - unchanged
+            - targets
+            - pause_strategies
+          properties:
+            unchanged:
+              type: boolean
+            targets:
+              type: array
+              items:
+                type: object
+                required:
+                  - symbol
+                  - quantity
+                  - unit
+                properties:
+                  symbol:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                    description: Exact native symbol
+                  quantity:
+                    type: string
+                    pattern: ^-?(0|[1-9]\d*)(\.\d+)?$
+                    maxLength: 40
+                  stop_loss:
+                    type: string
+                    pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                    maxLength: 40
+                    description: Positive broker-attached stop_loss price for new or additional MT5 exposure
+                  take_profit:
+                    type: string
+                    pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                    maxLength: 40
+                    description: Positive broker-attached take_profit price for new or additional MT5 exposure
+                  unit:
+                    anyOf:
+                      - type: string
+                        const: lots
+                      - type: string
+                        const: shares
+                additionalProperties: false
+              maxItems: 100
+            pause_strategies:
+              type: array
+              items:
+                type: object
+                required:
+                  - deployment_id
+                  - reason
+                properties:
+                  deployment_id:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                    description: Observed deployment ID
+                  reason:
+                    type: string
+                    minLength: 10
+                    maxLength: 2000
+                additionalProperties: false
+              maxItems: 30
+            rationale:
+              type: string
+              maxLength: 8000
+            evidence_dataset_ids:
+              type: array
+              items:
+                type: string
+                maxLength: 200
+              maxItems: 30
+          additionalProperties: false
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - broker.write
+    - state.write
+  usage:
+    purpose: Apply one saved target portfolio through the bound execution adapter. Requires a live workflow tool calling for its matching executor task; direct model calls fail. Exact native units, all-origin close/reduction, guarded strategy stops and durable no-replay receipts are preserved.
+    inputs: "{binding_id,run:{id,decidedAt,plan:{id,account,ownerConversationId,slippageBps},decision:{unchanged,targets,pause_strategies,...}}}; all values come from the frozen workflow, not a model-composed authorization object."
+    outputs: Host Run whose output is the durable application receipt {status,orders,pauses,after,targetReached,...}; retain per-order operation IDs and actual native receipts.
+    prerequisites:
+      - Nested call from a live workflow tool for its matching registered executor task. Models use that workflow's apply capability (e.g. trading_decision_apply), not this adapter directly.
+    limitations:
+      - Capability visibility is not callable authority. Identical saved run reuses its receipt; changed intent conflicts; unknown/interrupted sends are never replayed.
+  binding:
+    type: native
+    name: portfolio_execution_apply
+  finalOutputSchema:
+    type: object

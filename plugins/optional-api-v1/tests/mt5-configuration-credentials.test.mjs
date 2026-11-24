@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -10,7 +11,7 @@ import { MT5Official } from '../packages/mt5/backend/official.js';
 import { records } from '../packages/mt5/backend/records.js';
 import { changesSchema } from '../packages/mt5/backend/configuration.js';
 
-const manifest = JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json', import.meta.url), 'utf8'));
+const manifest = readPackageDirectory(new URL('../packages/mt5/', import.meta.url)).capabilities;
 const definition = manifest.capabilities.find(item => item.id === 'mt5_update_configuration');
 const credentials = {
   terminal: '+terminal/fixture="token"', metaeditor: 'editor-fixture-token', marketdata: 'marketdata-fixture-token',

@@ -1,3 +1,4 @@
+import {readProtocolPackage,parseYaml,writeYaml} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm, mkdir, readdir, symlink } from 'node:fs/promises';
@@ -51,9 +52,9 @@ test('invalid identities, versions and CLI arguments cannot create drafts', asyn
     await assert.rejects(run(process.execPath, [cli, ...args], { cwd: root }), error => error.code === 1 && !error.stdout.trim());
   }
   assert.deepEqual(await readdir(root), []);
-  const long = JSON.parse(scaffold({ ...input, name: 'a'.repeat(64) }).files['capabilities.json']).capabilities[0].id;
+  const long = readProtocolPackage(scaffold({ ...input, name: 'a'.repeat(64) }).files).capabilities.capabilities[0].id;
   assert.ok(long.length <= 64, 'generated names fit common model tool-name limits');
-  assert.notEqual(JSON.parse(scaffold(input).files['capabilities.json']).capabilities[0].id, JSON.parse(scaffold({ ...input, publisher: 'other' }).files['capabilities.json']).capabilities[0].id);
+  assert.notEqual(readProtocolPackage(scaffold(input).files).capabilities.capabilities[0].id, readProtocolPackage(scaffold({ ...input, publisher: 'other' }).files).capabilities.capabilities[0].id);
 });
 
 test('invalid paths and canceled/failed writes leave no draft or escaped files', async t => {
@@ -73,7 +74,7 @@ test('functional templates keep portable entries, explicit knowledge, truthful e
   const root = await temporary(t);
   for (const template of templates) {
     const recipe = scaffold({ ...input, template });
-    const declaration = JSON.parse(recipe.files['capabilities.json']);
+    const declaration = readProtocolPackage(recipe.files).capabilities;
     for (const resource of declaration.knowledge) assert.equal(typeof recipe.files[resource.path], 'string', resource.path);
     const output = join(root, template);
     await writeDraft(output, recipe);
@@ -114,26 +115,29 @@ test('CLI exposes each functional template and documents the actual install oper
 test('legacy template aliases remain explicit without changing their original example contracts', () => {
   assert.equal(TEMPLATE_DETAILS.native.aliasFor, 'function');
   assert.equal(TEMPLATE_DETAILS.skill.aliasFor, 'knowledge');
-  assert.equal(JSON.parse(scaffold(input).files['plugin.json']).engines.sesame, '>=0.3.0-dev.1 <0.4.0');
-  assert.equal(JSON.parse(scaffold({ ...input, min_host: '1.0.0' }).files['plugin.json']).engines.sesame, '>=1.0.0', 'explicit author overrides retain their original minimum-only semantics');
+  assert.equal(readProtocolPackage(scaffold(input).files).manifest.engines.sesame, '>=0.3.0-dev.1 <0.4.0');
+  assert.equal(readProtocolPackage(scaffold({ ...input, min_host: '1.0.0' }).files).manifest.engines.sesame, '>=1.0.0', 'explicit author overrides retain their original minimum-only semantics');
   for (const template of templates) {
     const recipe = scaffold({ ...input, template });
-    assert.deepEqual(JSON.parse(recipe.files['plugin.json']).permissions, { scopes: [], calls: [] });
+    assert.deepEqual(readProtocolPackage(recipe.files).manifest.permissions, { scopes: [], calls: [] });
     assert.ok(recipe.files['README.md'].includes(TEMPLATE_DETAILS[template].note));
     assert.match(recipe.files['README.md'], /Declared local scopes are enabled by default/);
     assert.match(recipe.files['README.md'], /saved user permission choices persist across updates/);
     assert.match(recipe.files['README.md'], /External messages\.ingress scopes require separate local authorization/);
   }
-  assert.deepEqual(JSON.parse(scaffold(input).files['capabilities.json']).capabilities[0].inputSchema.required, ['text']);
-  assert.deepEqual(JSON.parse(scaffold({ ...input, template: 'function' }).files['capabilities.json']).capabilities[0].inputSchema.required, ['values']);
-  assert.deepEqual(JSON.parse(scaffold({ ...input, template: 'skill' }).files['capabilities.json']).capabilities, []);
+  assert.deepEqual(readProtocolPackage(scaffold(input).files).capabilities.capabilities[0].inputSchema.required, ['text']);
+  assert.deepEqual(readProtocolPackage(scaffold({ ...input, template: 'function' }).files).capabilities.capabilities[0].inputSchema.required, ['values']);
+  assert.deepEqual(readProtocolPackage(scaffold({ ...input, template: 'skill' }).files).capabilities.capabilities, []);
 });
 
 test('root package permission requests are validated, normalized and covered by the package digest', { skip: !process.env.SESAME_HOST_ROOT }, async () => {
   const { inspectPackage } = await import(pathToFileURL(join(process.env.SESAME_HOST_ROOT, 'modules/agent/plugin-system/package.js')));
-  const recipe = scaffold(input), manifest = JSON.parse(recipe.files['plugin.json']);
+  const recipe = scaffold(input), manifest = readProtocolPackage(recipe.files).manifest;
   const inspect = permissions => {
-    const files = { ...recipe.files, 'plugin.json': JSON.stringify({ ...manifest, permissions }) };
+    const source = parseYaml(recipe.files['plugin.yaml']);
+    if (permissions === undefined) delete source['x-sesame'].permissions;
+    else source['x-sesame'].permissions = permissions;
+    const files = {...recipe.files,'plugin.yaml':writeYaml(source)};
     return inspectPackage(Object.fromEntries(Object.entries(files).map(([path, text]) => [path, Buffer.from(text)])));
   };
   const absent = inspect(undefined);
@@ -171,7 +175,7 @@ test('all template declarations pass the real API 2 schema and binding validator
     assert.equal(packageEntry.id, recipe.id);
     assert.deepEqual(packageEntry.permissions, { scopes: [], calls: [] });
     assert.match(recipe.files['README.md'], new RegExp(`Implementation responsibility: ${TEMPLATE_DETAILS[template].implementation}`));
-    const declaration = JSON.parse(recipe.files['capabilities.json']);
+    const declaration = readProtocolPackage(recipe.files).capabilities;
     const checked = await validateCapabilityManifest(declaration, { pluginId: recipe.id, files: recipe.files });
     assert.equal(checked.valid, true, `${template}: ${JSON.stringify(checked.diagnostics)}`);
     const path = join(root, template);

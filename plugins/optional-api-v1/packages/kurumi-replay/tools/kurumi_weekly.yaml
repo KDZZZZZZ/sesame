@@ -1,0 +1,65 @@
+name: kurumi_weekly
+title: kurumi_weekly
+description: 独立周报队列status/enable/disable/drain。启用或drain须显式authorize_generation；创建实验和重启不请求模型；未知请求不自动重付费。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - enable
+        - disable
+        - drain
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+    expected_version:
+      type: integer
+      minimum: 0
+    authorize_generation:
+      type: boolean
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 独立周报队列status/enable/disable/drain。启用或drain须显式authorize_generation；创建实验和重启不请求模型；未知请求不自动重付费。
+    inputs: action=status; enable/disable/drain use command_id and current expected_version; enable/drain also require authorize_generation:true when generation is intended.
+    outputs: status => {jobs,generation}; controls/drain return retained generation/queue/publication state with exact input/report references and error if unresolved.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Existing experiment and explicit paid generation intent for enable/drain; configured model/budget.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Creating/restarting an experiment does not request reports. Unknown paid requests retain identity and do not auto-retry under new IDs.
+  binding:
+    type: native
+    name: kurumi_weekly
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

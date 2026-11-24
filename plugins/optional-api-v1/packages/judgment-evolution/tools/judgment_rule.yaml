@@ -1,0 +1,132 @@
+name: judgment_rule
+title: judgment_rule
+description: 从已复盘判断提出新的候选准则。候选内容不可改写；修订创建新 ID 并关联 parent_rule_id。只有新判断的事前影子预测达到样本、时间窗口和改善门槛后才会自动成为有效准则。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - title
+    - guideline
+    - topic
+    - regime
+    - limitations
+    - evidence_ids
+  properties:
+    command_id:
+      type: string
+      description: 本次操作唯一 ID；相同 ID 与参数重试不重复创建
+      minLength: 1
+      maxLength: 128
+    title:
+      type: string
+      description: 准则名称
+      minLength: 1
+      maxLength: 2000
+    guideline:
+      type: string
+      description: 明确、可执行的判断准则
+      minLength: 1
+      maxLength: 4000
+    topic:
+      type: string
+      description: 适用研究主题
+      minLength: 1
+      maxLength: 120
+    regime:
+      type: string
+      description: 适用环境；* 表示该主题的所有环境
+      minLength: 1
+      maxLength: 120
+    limitations:
+      type: string
+      description: 适用边界、失效条件和未知项
+      minLength: 1
+      maxLength: 2000
+    evidence_ids:
+      type: array
+      items:
+        type: string
+        description: 形成候选的已复盘判断 ID
+        minLength: 1
+        maxLength: 2000
+      minItems: 1
+      maxItems: 20
+    parent_rule_id:
+      type: string
+      description: 修订前的准则 ID
+      minLength: 1
+      maxLength: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    title:
+      type: string
+    guideline:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    limitations:
+      type: string
+    evidence_ids:
+      type: array
+      items:
+        type: string
+    parent_rule_id:
+      type:
+        - string
+        - "null"
+    created_at:
+      type: string
+    status:
+      enum:
+        - candidate
+        - active
+        - probation
+        - retired
+    evaluation:
+      type:
+        - object
+        - "null"
+    retired_at:
+      type: string
+    retirement_reason:
+      type: string
+  required:
+    - id
+    - title
+    - guideline
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 从已复盘判断提出新的候选准则。候选内容不可改写；修订创建新 ID 并关联 parent_rule_id。只有新判断的事前影子预测达到样本、时间窗口和改善门槛后才会自动成为有效准则。
+    inputs: '{command_id,title,guideline,topic,regime,limitations,evidence_ids:[resolved judgment IDs],parent_rule_id?}; regime="*" applies within the topic. 1..20 evidence IDs.'
+    outputs: Immutable rule {id,version,status:"candidate",evidence_ids,parent_rule_id,evaluation,...}; identical command retry returns it.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - A candidate is not validated. Only later prospective shadow predictions can promote it under the published evaluation policy.
+  binding:
+    type: native
+    name: judgment_rule

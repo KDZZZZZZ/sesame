@@ -1,0 +1,46 @@
+name: read
+title: read
+description: 读取工作区或公开绝对路径的真实文件；文本默认2000行/50KB，图片返回有界base64。知识资源使用plugin_read读取。
+inputSchema:
+  type: object
+  required:
+    - path
+  properties:
+    path:
+      type: string
+      description: 工作区文件路径或宿主返回的插件资源路径
+      minLength: 1
+      maxLength: 20000
+    offset:
+      type: integer
+      minimum: 1
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.read
+  usage:
+    purpose: 读取工作区或公开绝对路径的真实文件；文本默认2000行/50KB，图片返回有界base64。知识资源使用plugin_read读取。
+    inputs: path 相对当前工作区，也可为允许读取的绝对路径；offset 是1起始行号，limit 默认2000；每次文本最多50KB。
+    outputs: 文本为 {path,text,offset,lines,next_offset,digest}，digest 是完整文件哈希；PNG/JPEG/GIF/WebP 为 mediaType/encoding/base64 data。
+    prerequisites: []
+    limitations:
+      - 知识资源用 plugin_read(resource)。next_offset 非空才需要续读；超长单行用工作区代码按需读取，不重复同一页。
+  binding:
+    type: native
+    name: read

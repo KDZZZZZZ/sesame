@@ -1,0 +1,62 @@
+name: backtrader_environment
+title: backtrader_environment
+description: Inspect and select existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: inspect
+        - type: string
+          const: prepare
+    python_path:
+      type: string
+      description: Existing native Python executable
+      minLength: 1
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - plugin.state.write
+    - private-filesystem
+    - network-on-prepare
+  usage:
+    purpose: 核验并选择现有依赖；仅显式 prepare 可能安装私有依赖。
+    inputs: '{action:"inspect",python_path?} 检查给定/已选/私有/宿主/PATH Python；{action:"prepare",python_path?} 在无兼容环境时创建私有 venv。最小例 {action:"inspect"}。'
+    outputs: ready:true 返回 python、实际 Python/库版本、reused、origin、downloads/audit；inspect 成功会保存私有 selection，随即可用。ready:false 返回 required 和 failures[{python,code}]。
+    prerequisites:
+      - 本机64位 Python>=3.11；库固定 backtrader 1.9.78.123。已有路径可直接传 python_path，不必先扫描磁盘。
+    limitations:
+      - inspect 不下载；prepare 从官方 PyPI 安装到插件私有目录，不安装解释器、不改共享环境。失败根据缺失解释器、导入版本或具体网络错误选择现有路径/准备；重复同一失败不产生新证据。
+  binding:
+    type: native
+    name: backtrader_environment
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

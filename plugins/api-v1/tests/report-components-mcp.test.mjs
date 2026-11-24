@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Real MCP transport and publication; synthetic values, isolated workspace.
  * Opt in with SESAME_HOST_ROOT. No user workspace, account or model is called.
  */
@@ -42,7 +43,7 @@ test('component tools cross HTTP and stdio MCP into independent answer JSON and 
     models: [{ id: 'unused', name: 'Synthetic component fixture', reasoning: false, input: ['text'], contextWindow: 100000, maxTokens: 4000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }] });
   app = await startServer({ port: 0, dataDir: join(root, 'state'), runtimeOptions: { officialPluginsDirectory: bundle, piDir: join(root, 'pi'), modelRuntime: models, model: models.getModel('uncalled-components-fixture', 'unused') } });
   app.runtime.modelTransport.fetch = async () => { modelCalls++; throw Error('This transport test must not call a model'); };
-  const version = JSON.parse(await readFile(join(core, 'packages/reports/plugin.json'), 'utf8')).version;
+  const version = readPackageDirectory(join(core, 'packages/reports/')).manifest.version;
   assert.equal(app.runtime.plugins.entry('sesame/reports').version, version);
   assert.equal(app.runtime.plugins.entry('sesame/reports').runtime_status, 'ready');
   const host = createHostContextV2(app.runtime, app.runtime.capabilities.hostEntry, 'conv_main');

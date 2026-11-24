@@ -1,0 +1,125 @@
+name: ultra_dispatch
+title: ultra_dispatch
+description: 从主会话并行派发精确的研究/工作流能力；保存稳定分支键和实际 Run。超出当前并发容量的工作排队；使用空 branches 填充空余槽位。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    branches:
+      type: array
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            minLength: 1
+            maxLength: 96
+          title:
+            type: string
+            minLength: 1
+            maxLength: 120
+          capability:
+            type: string
+            minLength: 1
+            maxLength: 256
+          input:
+            type: object
+            additionalProperties: true
+          task:
+            type: object
+            properties:
+              title:
+                type: string
+                minLength: 1
+                maxLength: 120
+              output:
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        const: none
+                    required:
+                      - type
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        const: report
+                      space:
+                        enum:
+                          - research
+                          - strategy
+                      path:
+                        type: string
+                        minLength: 1
+                        maxLength: 512
+                    required:
+                      - type
+                      - space
+                      - path
+                    additionalProperties: false
+            required: []
+            additionalProperties: false
+          exclusive:
+            type: boolean
+          stop:
+            type: object
+            properties:
+              capability:
+                type: string
+                minLength: 1
+                maxLength: 256
+              input:
+                type: object
+                additionalProperties: true
+            required:
+              - capability
+              - input
+            additionalProperties: false
+        required:
+          - key
+          - title
+          - capability
+          - input
+        additionalProperties: false
+      maxItems: 64
+    summary:
+      type: string
+      maxLength: 4000
+  required:
+    - branches
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - declared-calls
+    - start:workflow
+  usage:
+    purpose: 从主会话并行派发精确的研究/工作流能力；保存稳定分支键和实际 Run。超出当前并发容量的工作排队；使用空 branches 填充空余槽位。
+    inputs: Each branch has stable key/title/capability/input and optional task report binding. Discover exact schemas first. Use existing workflows and publish actual reports. Never place credentials in inputs. No generic recursive Agent grants; assign exact business tools. A persistent scheduler/subscription needs its exact stop action.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_dispatch

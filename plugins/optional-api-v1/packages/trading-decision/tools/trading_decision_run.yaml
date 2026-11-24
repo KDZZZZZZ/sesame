@@ -1,0 +1,66 @@
+name: trading_decision_run
+title: trading_decision_run
+description: Queue one run of a saved enabled plan. Stable request_id deduplicates retries. Returns immediately; read trading_decision_runs for actual targets, role reports, execution receipts and daily-report path.
+inputSchema:
+  type: object
+  required:
+    - plan_id
+    - request_id
+  properties:
+    plan_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Saved trading plan ID
+    request_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Stable ID for this requested run
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    status:
+      type: string
+    executionMode:
+      enum: [decision_only, target_execution]
+    supportsAttachedStops:
+      type: boolean
+    executionDisposition:
+      type: [string, "null"]
+    targetCount:
+      type: [integer, "null"]
+      minimum: 0
+  required:
+    - id
+    - status
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:trading-checkpoints
+    - start:workflow
+  binding:
+    type: native
+    name: trading_decision_run
+  usage:
+    purpose: Queue one run of a saved enabled plan. Stable request_id deduplicates retries. Returns immediately; read trading_decision_runs for actual targets, role reports, execution receipts and daily-report path.
+    inputs: "{plan_id,request_id}; retain request_id for an identical retry."
+    outputs: Returns the business run ID, status and frozen executionMode. decision_only never starts the executor. target_execution permits applying a validated target if the review passes. Read trading_decision_runs for the decision, execution receipt and report. supportsAttachedStops reflects the frozen binding for this run.
+    prerequisites:
+      - An owned, enabled saved plan whose frozen execution, fixed research and model inputs remain available.
+    limitations:
+      - Starting a run can execute its target portfolio. An accepted/queued run is not a broker receipt.

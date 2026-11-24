@@ -1,0 +1,7 @@
+goal: 长趋势、短回撤和反弹的组合观察。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-trend-pullback-discovery
+    tools:
+      - abu_trend_pullback_analyze
+    resource: skills/abu-trend-pullback/SKILL.md

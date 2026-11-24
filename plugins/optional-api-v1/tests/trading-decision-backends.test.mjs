@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
@@ -210,7 +211,7 @@ test('QMT receipt recovery permits same-domain revision changes and rejects anot
 });
 test('trading capabilities are explicitly declared and remain available to workflow children', t => {
   for (const [name, actual] of [['mt5', mt5Capabilities(taskHost(t, 'mt5'), {})], ['qmt', qmtCapabilities(taskHost(t, 'qmt')).filter(item => item.name.startsWith('qmt_trading_'))]]) {
-    const root = new URL(`../packages/${name}/`, import.meta.url), manifest = JSON.parse(readFileSync(new URL('plugin.json', root))), declared = JSON.parse(readFileSync(new URL(manifest.capability_manifest, root)));
+    const root = new URL(`../packages/${name}/`, import.meta.url), manifest = readPackageDirectory(new URL('.', root)).manifest, declared = readPackageDirectory(root).capabilities;
     for (const binding of actual) { const item = declared.capabilities.find(item => item.id === binding.name); assert.ok(item?.consumers.includes('agent')); assert.ok(!manifest.main_tool_names.includes(binding.name)); assert.equal(typeof binding.execute, 'function'); }
   }
 });

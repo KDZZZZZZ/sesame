@@ -1,0 +1,135 @@
+name: trading_decision_runs
+title: trading_decision_runs
+description: Read saved trading runs including all shared team reports, target portfolios, mounted-strategy stop results, actual order receipts and report paths; cancel an active/queued run without undoing broker effects.
+inputSchema:
+  type: object
+  oneOf:
+    - type: object
+      properties:
+        action:
+          const: list
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Filter plan ID
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+      required:
+        - action
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: read
+        run_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Trading run ID
+      required:
+        - action
+        - run_id
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: cancel
+        run_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Trading run ID
+      required:
+        - action
+        - run_id
+      additionalProperties: false
+outputSchema:
+  anyOf:
+    - type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              status:
+                type: string
+              executionMode:
+                enum: [decision_only, target_execution]
+              supportsAttachedStops:
+                type: boolean
+              executionDisposition:
+                type: [string, "null"]
+              targetCount:
+                type: [integer, "null"]
+                minimum: 0
+            required:
+              - id
+              - status
+            additionalProperties: true
+        total:
+          type: integer
+          minimum: 0
+        nextOffset:
+          anyOf:
+            - type: integer
+              minimum: 0
+            - type: "null"
+      required:
+        - items
+        - total
+        - nextOffset
+      additionalProperties: false
+    - type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        executionMode:
+          enum: [decision_only, target_execution]
+        supportsAttachedStops:
+          type: boolean
+        executionDisposition:
+          type: [string, "null"]
+        targetCount:
+          type: [integer, "null"]
+          minimum: 0
+      required:
+        - id
+        - status
+      additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - cancel:workflow
+    - write:trading-checkpoints
+  binding:
+    type: native
+    name: trading_decision_runs
+  usage:
+    purpose: Read saved trading runs including all shared team reports, target portfolios, mounted-strategy stop results, actual order receipts and report paths; cancel an active/queued run without undoing broker effects.
+    inputs: action=list with plan_id?/offset?/limit?; read or cancel with run_id. Use the business run id returned by trading_decision_run, not the host workflow Run ID.
+    outputs: List and read expose the frozen executionMode, supportsAttachedStops and executionDisposition when recorded (decision_only or withheld_by_review). targetCount is null before a decision and zero for an empty target list. Use read for the actual decision, strategy pauses and execution receipts. workflow identifies the original host Run for interrupt inspection and resumption.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Cancellation stops work but cannot undo fills. Preserve operation IDs in execution receipts and query the selected execution implementation for uncertain outcomes.

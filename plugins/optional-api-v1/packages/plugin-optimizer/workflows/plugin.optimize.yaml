@@ -1,0 +1,27 @@
+workflow: plugin.optimize
+title: 验证插件改动
+goal: ComparedChange
+steps:
+  attribute:
+    title: 定位有证据的发现
+    uses:
+      - tool/optimizer_findings_triage
+    requires: []
+    produces:
+      - AttributedFinding
+  reproduce:
+    title: 固定可以复现的案例
+    uses:
+      - tool/optimizer_case_new
+    requires:
+      - AttributedFinding
+    produces:
+      - FrozenCase
+  compare:
+    title: 验证配对结果
+    uses:
+      - tool/optimizer_change_verify
+    requires:
+      - FrozenCase
+    produces:
+      - ComparedChange

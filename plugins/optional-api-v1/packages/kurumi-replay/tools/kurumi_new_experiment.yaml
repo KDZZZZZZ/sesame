@@ -1,0 +1,67 @@
+name: kurumi_new_experiment
+title: kurumi_new_experiment
+description: 只在终态旧实验完整封存后CAS创建独立300000JPY/目标20000000JPY/全部50x新Run；同ID返回同新Run，不调用模型，不称样本外。 Fresh truly empty private state may create directly with expected_version=0/omit previous_run_id; existing run still must seal terminal first.
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 0
+    previous_run_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+    profile_id:
+      type: string
+      enum:
+        - informed-replay-50x-v1
+  required:
+    - command_id
+    - expected_version
+    - profile_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 只在终态旧实验完整封存后CAS创建独立300000JPY/目标20000000JPY/全部50x新Run；同ID返回同新Run，不调用模型，不称样本外。 Fresh truly empty private state may create directly with expected_version=0/omit previous_run_id; existing run still must seal terminal first.
+    inputs: '{command_id,expected_version,previous_run_id?,profile_id:"informed-replay-50x-v1"}; genuinely empty install uses version0 without previous_run_id.'
+    outputs: '{created,runId,previousRunId,freshPortableInstall,revision,initialBalanceJPY:"300000",goalJPY:"20000000",initialArchive,modelRequested:false,independentCapital:true}.'
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Prepared sources/recorder; existing run must be terminal and completely sealed by archive_terminal.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Creates an independent paused simulation, not a refill/revival. Same historical data is informed replay, never independent out-of-sample evidence.
+  binding:
+    type: native
+    name: kurumi_new_experiment
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

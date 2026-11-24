@@ -1,37 +1,48 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
+import { readPackageDirectory } from '../../protocol/directory.mjs';
 import { posix } from 'node:path';
 
 const root = new URL('../packages/orchestration/', import.meta.url);
 const read = path => readFile(new URL(path, root), 'utf8');
 const json = async path => JSON.parse(await read(path));
 
-test('orchestration declares knowledge without duplicate callable or native entry points', async () => {
-  const manifest = await json('plugin.json'), declarations = await json('capabilities.json');
-  assert.equal(declarations.capabilities.length, 0, 'Agent execution and Run control belong to the host');
-  for (const key of ['sources', 'views', 'services', 'hooks', 'stateCollections', 'artifactSchemas']) assert.deepEqual(declarations[key], [], key);
-  assert.equal(manifest.entry, undefined);
-  assert.equal(manifest.execution, undefined);
+test('orchestration exposes only the three immediate navigation functions', async () => {
+  const {manifest,capabilities:declarations} = readPackageDirectory(root);
+  assert.deepEqual(declarations.capabilities.map(item => item.id).sort(), ['workflow_plan', 'workflow_status', 'workflow_step']);
+  for (const capability of declarations.capabilities) {
+    assert.equal(capability.kind, 'function');
+    assert.equal(capability.execution, 'immediate');
+    assert.ok(capability.effects.every(effect => ['state.read', 'state.write', 'read'].includes(effect)), capability.id);
+    assert.equal(capability.effects.includes('state.write'), ['workflow_plan', 'workflow_step'].includes(capability.id));
+  }
+  assert.deepEqual(declarations.capabilities.filter(item => item.consumers.includes('host')).map(item => item.id), []);
+  for (const key of ['sources', 'views', 'services', 'hooks', 'artifactSchemas']) assert.deepEqual(declarations[key], [], key);
+  assert.deepEqual(declarations.stateCollections.map(item => item.name), []);
+  assert.equal(manifest.entry, 'index.js');
+  assert.equal(manifest.execution, 'native');
+  assert.deepEqual(manifest.main_tool_names, ['workflow_status', 'workflow_plan', 'workflow_step']);
+  assert.deepEqual(manifest.permissions, { scopes: ['workflows.navigate'], calls: [] });
   assert.equal((await json('package.json')).version, manifest.version);
   const files = await readdir(root);
-  for (const path of ['index.js', 'tools.js', 'support.js']) assert.ok(!files.includes(path), `${path} is not part of a knowledge-only guide`);
+  assert.ok(files.includes('index.js'));
 });
 
 test('the separate product guide retains all seven linked reference chapters and declared prompt and skill', async () => {
   const guideRead = path => readFile(new URL(`../user-guide/${path}`, root), 'utf8');
-  const manifest = JSON.parse(await guideRead('plugin.json')), declarations = JSON.parse(await guideRead('capabilities.json'));
+  const {manifest,capabilities:declarations} = readPackageDirectory(new URL('../user-guide/',root));
   const route = 'skills/sesame-user-guide/SKILL.md', body = await guideRead(route);
   const links = [...body.matchAll(/\]\(([^)]+\.md)\)/g)].map(match => posix.normalize(posix.join(posix.dirname(route), match[1])));
   assert.equal(links.length, 7);
   assert.equal(new Set(links).size, 7);
   assert.deepEqual([...manifest.resources].sort(), [...links].sort());
-  assert.deepEqual(declarations.knowledge.map(item => item.path).sort(), ['prompt.md', route, ...links].sort());
+  assert.deepEqual(declarations.knowledge.map(item => item.path).sort(), ['instructions.md', route, ...links].sort());
   for (const path of links) assert.ok((await guideRead(path)).length > 100, path);
 });
 
 test('the published guidance uses the host names and preserves execution boundaries', async () => {
-  const declarations = await json('capabilities.json');
+  const {capabilities:declarations} = readPackageDirectory(root);
   const text = (await Promise.all(declarations.knowledge.map(item => read(item.path)))).join('\n');
   assert.equal(/\bagent_(?:list|delegate|inspect|stop)\b/.test(text), false, 'the guide must not advertise removed aliases');
   assert.match(text, /host\.agent\.run/);

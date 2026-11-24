@@ -2,7 +2,7 @@ import sys, json, os
 import xml.etree.ElementTree as ET
 
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-with open(os.path.join(PLUGIN_ROOT, "plugin.json"), encoding="utf-8") as manifest:
+with open(os.path.join(PLUGIN_ROOT, "package.json"), encoding="utf-8") as manifest:
     VERSION = json.load(manifest)["version"]
 
 def resolve_path(p):

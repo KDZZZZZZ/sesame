@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
@@ -29,7 +30,7 @@ function withoutManifest(result) { const { manifest: _manifest, ...rest } = resu
 
 test('short file tool publishes exact 800-line bytes through the shared target pipeline and returns compact refs', async t => {
   const f = await fixture(t), tools = createCapabilities(f.host, f.mt5), call = tools.find(tool => tool.name === 'mt5_translation_file');
-  const declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url)));
+  const declared = readPackageDirectory(new URL('../../optional-api-v1/packages/mt5/', import.meta.url)).capabilities;
   assert.deepEqual(Object.keys(declared.capabilities.find(item => item.binding.name === call.name).inputSchema.properties), ['operation_id', 'manifest_path']);
   const result = await call.execute(f.args), artifact = (await f.readArtifact(result.translation));
   const file = artifact.manifest.blobs.find(item => item.path === 'Experts/Strategy.mq5');
@@ -213,7 +214,7 @@ test('cancellation before intake leaves no snapshot; persisted-snapshot corrupti
 });
 
 test('manifest and static tool definitions expose the short entry without changing the inline schema', async t => {
-  const f = await fixture(t), root = new URL('../../optional-api-v1/packages/mt5/', import.meta.url), definition = JSON.parse(await readFile(new URL('plugin.json', root))), capabilities = JSON.parse(await readFile(new URL('capabilities.json', root))).capabilities;
+  const f = await fixture(t), root = new URL('../../optional-api-v1/packages/mt5/', import.meta.url), definition = readPackageDirectory(new URL('.', root)).manifest, capabilities = readPackageDirectory(new URL('.', root)).capabilities.capabilities;
   assert.equal(definition.version, JSON.parse(await readFile(new URL('package.json', root))).version); assert.ok(capabilities.some(item => item.binding.name === 'mt5_translation_file')); assert.ok(definition.resources.includes('target/translation-file.md'));
   for (const capability of createCapabilities(f.host, f.mt5)) { assert.equal(typeof capability.execute, 'function'); assert.ok(capabilities.some(item => item.binding.name === capability.name)); }
   assert.deepEqual(capabilities.find(item => item.binding.name === 'mt5_translation').inputSchema, JSON.parse(JSON.stringify(translationSchema)));

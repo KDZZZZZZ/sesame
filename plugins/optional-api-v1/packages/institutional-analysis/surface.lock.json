@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/institutional-analysis:instructions#preamble": "74839fb531d9d356133aa59fa45c97a3bb4148948e7f933f8c47e5aabea6020a",
+    "sesame/institutional-analysis:plugin.description": "e4979171c250cf72f33d4ae3ce22d7c74ca0057c0f1a0281c5a6c6a8b8fe5d57",
+    "sesame/institutional-analysis:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/institutional-analysis:resource/PROVENANCE.md": "1edc3b2ffce5f4fce5f0522d1641f6c778a327333271931cfe6e880d24078962",
+    "sesame/institutional-analysis:resource/README.md": "0b36074fba43589e8144e0013023c1c2ddb64d157beb1177ec04c12c9ddc0d6e",
+    "sesame/institutional-analysis:resource/examples/case.json": "ad0864aed53f589b1176d48f10f7c3c15f927f578b082a1cd51597862efdf3f6",
+    "sesame/institutional-analysis:resource/examples/expected.md": "266086b0f0a731436e9b8a89ed6d3e0dd3e72a2d1457ba5524bc1cc76b42661a",
+    "sesame/institutional-analysis:resource/references/evidence.md": "f66b548788d849ffef164f72b3270110e6b5b36836a8f8495dfe352f172dd733",
+    "sesame/institutional-analysis:resource/references/method.md": "bbb899ff75b1066ce2a72c91a369314d508320bea72000fdcc5b10b310095044",
+    "sesame/institutional-analysis:skill/institutional-analysis.body": "1d591794135168a3fa10f74d056f84039c62b8ff20f4fc8b44e28de87b1f7ae7",
+    "sesame/institutional-analysis:skill/institutional-analysis.description": "a80a0684c0661015078e2f4ef75b37263aebe982d77472ebf0ac2cf6f5e99cc5"
+  },
+  "digest": "348180efbcfea21089162c5a88966b1282b88ae87db1fed4063bd6ea33835e73"
+}

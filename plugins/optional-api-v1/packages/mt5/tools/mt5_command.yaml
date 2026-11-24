@@ -1,0 +1,43 @@
+name: mt5_command
+title: mt5_command
+description: 读取本会话已有调用的结果；不会重发终端操作。returned 只表示收到官方响应，仍需检查 isError、retcode、Tester 状态。
+inputSchema:
+  type: object
+  required:
+    - command_id
+  properties:
+    command_id:
+      type: string
+      description: 已有 command_id
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取已有原生命令记录。
+    inputs: '{command_id:<已有同会话命令键>}；例 {command_id:"read-version-unique-01"}。'
+    outputs: "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。"
+    prerequisites:
+      - 命令属于当前会话；不需要重发原生操作。
+    limitations:
+      - 只是保留结果，returned/unknown不能自动变成成交或完成。
+  binding:
+    type: native
+    name: mt5_command

@@ -1,0 +1,60 @@
+name: canvas_focus
+title: canvas_focus
+description: 先定位最左侧图表窗口，再定位其中的指定图表；最大化仅填满图表窗口，不覆盖 Agents 或研究窗口。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - expected_version
+    - chart_id
+  properties:
+    command_id:
+      type: string
+      description: 至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID
+      minLength: 16
+      maxLength: 100
+      pattern: ^[a-zA-Z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+      description: canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次
+    chart_id:
+      type: string
+      description: 图表 ID
+      minLength: 1
+      maxLength: 100
+    mode:
+      anyOf:
+        - type: string
+          const: center
+        - type: string
+          const: maximize
+        - type: string
+          const: restore
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - view.write
+  usage:
+    purpose: 先定位最左侧图表窗口，再定位其中的指定图表；最大化仅填满图表窗口，不覆盖 Agents 或研究窗口。
+    inputs: chart_id 来自 canvas_inspect.charts；expected_version 同当前画布；command_id 标识本次操作；mode 默认为 center，可按需 maximize。
+    outputs: 修改后的画布定位回执与版本；最大化只占图表区。
+    prerequisites: []
+    limitations:
+      - 目标不存在或版本变化时重读；不改变行情绑定、脚本与交易状态。
+  binding:
+    type: native
+    name: canvas_focus

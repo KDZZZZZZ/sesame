@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/ict:instructions#preamble": "be9a36a72450a6182d40a35d316d36220ef1ec510e10625c179810e4c7bf6824",
+    "sesame/ict:plugin.description": "7be9944e290b7a2e768f5485d9586ec17643882eaff0348ab23f72b43c607f3c",
+    "sesame/ict:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/ict:resource/PROVENANCE.md": "59dce218444ad61d8e7c5671296d73f2de00bcf998e2b2a3a4bac044b40863f8",
+    "sesame/ict:resource/README.md": "e7406a4d4af06b90bd890831b961779cd416102ef781980afec88ed208ef8d6f",
+    "sesame/ict:resource/examples/bars.json": "3b475c9d668a7afaac75778acecc70b621fb5e992f2a59560b194e064f2d541a",
+    "sesame/ict:resource/examples/expected.md": "bf56a29d37c3cf1d6a1c1b9387e0126c3c5b61ebed9494acad9bc6bfc10e4591",
+    "sesame/ict:resource/examples/source.json": "2feb68724c120551298977493f834cb32449fce1ba83f7d6dbda86fe5384ac18",
+    "sesame/ict:resource/references/execution.md": "37d5ddf71c999443c37d820d0efe99949613f151b33e17461c0c7214f804a400",
+    "sesame/ict:resource/references/method.md": "a276738dc4cd355db03e162946f359ba6a9b282c6165a553126d0f5b1baeacca",
+    "sesame/ict:resource/references/validation.md": "d4dbd236c4e01a074b148d9f85e912a803d12166ef67c3fdea81ee648e064f97",
+    "sesame/ict:resource/scripts/bar_input.py": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
+    "sesame/ict:resource/scripts/observe.py": "72eb93dcfaf4774614bf9cbde9714293a8a7afa84b0726d1795d8d8778f73e6d",
+    "sesame/ict:skill/ict.body": "b772d1a6f026795186444a610b9f792ebc8acfe8e045fce947bdf52048bf8e9a",
+    "sesame/ict:skill/ict.description": "3659864fd6e2cd34b02c1f735aa21b37770ed0f426fa478d78ec2f2412a67887"
+  },
+  "digest": "860cd41e4f9c6f096c040ad00e900928bee86d82f4d8e593608888e1062eebbb"
+}

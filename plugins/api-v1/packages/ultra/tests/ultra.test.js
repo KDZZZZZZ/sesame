@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -19,6 +20,79 @@ test('start persists a goal before starting a real planner; repeats keep the ori
   assert.equal(store.calls.filter(call => call.capability === 'host.agent.run').length, 1);
   assert.equal(store.calls.find(call => call.capability === 'host.agent.run').context.kind, 'subagent');
   assert.ok(store.checkpoints.get(task.cycle.id).planner);
+});
+
+test('replacing a research goal opens the trading lane, preserves accepted work and isolates its late result', async t => {
+  const f = fixture(); t.after(() => f.close());
+  const original = await start(f.host, { objective: 'Study factors', mode: 'research', max_parallel: 1 });
+  await until(() => f.store.runs.get(original.cycle.id)?.value.status === 'completed');
+  const accepted = await dispatch(f.host, { branches: [research('first'), research('later')] });
+  const input = { objective: 'Execute approved candidates', mode: 'trading', success_criteria: ['Validate execution'], replace: true };
+  const next = await start(f.host, input);
+  assert.notEqual(next.id, original.id);
+  assert.equal(next.mode, 'trading');
+  assert.equal((await start(f.host, input)).id, next.id);
+  const old = await status(f.host, { id: original.id });
+  assert.equal(old.status, 'closed');
+  assert.equal(old.branches.find(item => item.key === 'later').status, 'cancelled');
+  await assert.rejects(resume(f.host, { id: old.id }), { code: 'GOAL_REPLACED' });
+  const late = accepted.branches.find(item => item.key === 'first').run_refs[0];
+  f.complete(late.id, { text: 'OLD-ONLY' });
+  await until(() => f.store.runs.get(accepted.cycle.id).value.status === 'completed');
+  assert.match(f.store.runs.get(accepted.cycle.id).value.output.guidance, new RegExp(next.id));
+  assert.doesNotMatch(JSON.stringify(await status(f.host)), /OLD-ONLY/);
+  const trading = await dispatch(f.host, { branches: [research('candidate', { capability: 'sesame/trading#submit' })] });
+  assert.equal(trading.branches[0].status, 'running');
+});
+
+test('an outstanding execution keeps its exclusive lane across a goal switch and a worker restart', async t => {
+  const f = await started(t);
+  const old = await dispatch(f.host, { branches: [research('first', { capability: 'sesame/trading#submit' })] });
+  const next = await start(f.host, { objective: 'New trading goal', mode: 'trade', replace: true });
+  const restarted = fixture({ stored: f.store });
+  const waiting = await dispatch(restarted.host, { branches: [research('second', { capability: 'sesame/trading#submit' }), research('scan')] });
+  assert.equal(waiting.id, next.id);
+  assert.equal(waiting.branches.find(job => job.key === 'second').status, 'queued');
+  assert.equal(waiting.branches.find(job => job.key === 'scan').status, 'running');
+  assert.equal(f.store.calls.filter(call => call.capability === 'sesame/trading#submit').length, 1);
+  f.complete(old.branches[0].run_refs[0].id);
+  const admitted = await dispatch(restarted.host, { branches: [] });
+  assert.equal(admitted.branches.find(job => job.key === 'second').status, 'running');
+});
+
+test('context and summaries are bounded before persistence and planner handoff, including older saved goals', async t => {
+  const f = fixture(); t.after(() => f.close());
+  const full = '持仓证据'.repeat(5000);
+  const goal = await start(f.host, { objective: 'Review the frozen evidence', context: full });
+  await until(() => f.store.runs.get(goal.cycle.id)?.value.status === 'completed');
+  const planner = f.store.calls.find(item => item.capability === 'host.agent.run');
+  const stored = () => f.store.records.get('sessions:' + goal.id).value;
+  assert.equal(stored().context.length, 4000);
+  assert.equal(planner.input.input.context, stored().context);
+  assert.match(stored().context, /截断.*固定引用/);
+  const result = await dispatch(f.host, { summary: full, branches: [] });
+  assert.equal(result.summary.length, 4000);
+  stored().summary = full;
+  assert.equal((await status(f.host)).summary.length, 4000);
+});
+
+test('owner state patches serialize concurrent observers and retry five transient conflicts', async t => {
+  const f = await started(t), commit = f.host.state.commit;
+  let failures = 0;
+  f.host.state.commit = async changes => {
+    if (changes.some(change => change.key.collection === 'sessions') && failures < 5) {
+      failures++;
+      throw fail('VERSION_CONFLICT');
+    }
+    return commit(changes);
+  };
+  const saved = await wait(f.host, { kind: 'input', reason: 'User-supplied data is missing' });
+  assert.equal(failures, 5);
+  assert.equal(saved.status, 'waiting-input');
+  const work = await dispatch(f.host, { branches: [research('observe')] });
+  f.complete(work.branches[0].run_refs[0].id);
+  const snapshots = await Promise.all(Array.from({ length: 12 }, () => status(f.host)));
+  assert.ok(snapshots.every(item => item.branches[0].status === 'completed'));
 });
 
 test('independent branches launch concurrently in the main context and actual completion wakes a cycle', async t => {
@@ -63,6 +137,9 @@ test('agent tools are classified and generic nested invocation cannot hide execu
   const result = await dispatch(f.host, { branches: [research('executor', { capability: 'host.agent.run', input: request })] });
   assert.equal(result.branches[0].exclusive, true);
   await assert.rejects(dispatch(f.host, { branches: [research('bypass', { capability: 'host.agent.run', input: { ...request, allowedCalls: [{ pluginId: 'host', capabilityId: 'capabilities.invoke' }] } })] }), { code: 'UNBOUNDED_DELEGATION' });
+  const denied = research('compute', { capability: 'host.agent.run', input: { ...request, allowedCalls: [{ pluginId: 'host', capabilityId: 'process.exec' }] } });
+  await assert.rejects(dispatch(f.host, { branches: [denied] }), { code: 'CAPABILITY_UNAVAILABLE', message: /compute\.input\.allowedCalls\[0\].*host\.process\.exec.*main Agent/ });
+  assert.ok(!(await status(f.host, {})).branches.some(branch => branch.key === 'compute'));
 });
 
 test('independent factor search and compute track native function completion', async t => {
@@ -257,8 +334,8 @@ test('completion requires actual finished work and no unfinished branches', asyn
 });
 
 test('all tools expose object schemas and no identity/credential ingress is requested', async () => {
-  const capabilities = JSON.parse(await readFile(new URL('../capabilities.json', import.meta.url), 'utf8'));
-  const plugin = JSON.parse(await readFile(new URL('../plugin.json', import.meta.url), 'utf8'));
+  const capabilities = readPackageDirectory(new URL('../', import.meta.url)).capabilities;
+  const plugin = readPackageDirectory(new URL('../', import.meta.url)).manifest;
   const npm = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(npm.license, plugin.license); assert.equal(plugin.license, 'MIT');
   assert.match(await readFile(new URL('../LICENSE', import.meta.url), 'utf8'), /Copyright \(c\) 2026 Sesame contributors/);

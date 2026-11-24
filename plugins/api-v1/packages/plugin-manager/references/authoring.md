@@ -19,13 +19,13 @@
 
 只增加任务真正需要的接口：一次确定性计算无需 Agent；方法指南无需执行器；一个外部来源无需新工作流；展示成果无需交易或研究入口。确需跨责任组合时，各层保留原身份、成果、权限及状态归属。多个业务插件可以选择相同适配器，不能因此合并其业务账本。
 
-plugin.json 必须 apiVersion:"2"、execution:"native"（或包的实际 MCP 执行方式）、capability_manifest:"capabilities.json"。不再声明 tool_names、tool_definitions 或 createTools。
+plugin.yaml 声明 formatVersion: 1、protocolVersion: 2026-07-28、插件 ID、版本、标题及说明。x-sesame 声明执行方式、权限、依赖以外的宿主设置与 contributions。
 
-capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以及显式数组 capabilities、sources、views、services、knowledge、hooks、stateCollections、artifactSchemas。能力的 id、kind、consumers、description、inputSchema、outputSchema、execution、effects、usage、binding 都必填。usage 的 purpose、inputs、outputs 是字符串；prerequisites、limitations 是字符串数组，没有条目时填 []。可选 examples 是 {input,output,description?} 对象数组，只校验、不执行。可选 references 是 {title,url,version?} 对象数组，url 必须是完整 HTTP(S) 地址；包内文档用 knowledge 声明，不把本地路径字符串填进 usage.references。
+每个 Agent 工具独立存入 tools/<name>.yaml，包含 name、title、description、inputSchema、outputSchema、annotations、errors。x-sesame 中声明 consumers、kind、execution、effects、binding 和 usage。宿主内部能力及 sources、views、services、knowledge、hooks、stateCollections、artifactSchemas 放入 plugin.yaml 的 x-sesame.contributions。instructions.md 为插件指引，skills/<name>/SKILL.md 提供按需正文，workflows/*.yaml 声明工作流，requirements.yaml 和 evals/cases/ 记录验收要求与案例。surface.lock.json 从当前源码生成。
 
 ## 功能分类与文件组织
 
-官方源码保持 packages/<slug> 平铺。inventory-policy.json 的原 category 继续兼容旧目录；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。web-sources、rss-collect、web-extract、financial-research 归 search；RSS/HTML 解析器不因分类而获得搜索或抓取能力，分类也不将消息采集交给 Report。
+官方源码保持 packages/<slug> 平铺。在 plugin.yaml 的 x-sesame.catalog 填写双语 title、summary 和 functionalCategory；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。web-sources、rss-collect、web-extract、financial-research 归 search；RSS/HTML 解析器不因分类而获得搜索或抓取能力，分类也不将消息采集交给 Report。
 
 | functionalCategory | 主要职责 |
 | --- | --- |
@@ -38,7 +38,7 @@ capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以�
 
 implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。investment-research 是 business / workflow，工作流内可同时声明研究 knowledge；ict 是 analysis / knowledge，abu-trend、auto-factor-mining 是 analysis / function。auto-factor-mining 提供独立的准备、搜索、计算、评价与库操作，研究顺序由调用它的 Agent 或工作流决定。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
 
-供 Agent 阅读的长期内容分四层，只建实际用到的文件。`prompt.md` 说明何时使用、负责什么、必须遵守的原则，以及数据、判断、编排或呈现交给哪项能力。`skills/<任务>/SKILL.md` 写一类任务的最短路径：识别需求、复用已有输入、执行、必要分支和验收。方法、字段、接口、案例和故障细节放包根 `references/`，材料多了再按主题分子目录。可复用的角色职责才放 `references/roles/`。本次任务的目标、输入、范围、能力和交付写进已有 Agent 调用字段，不另建合同文件，也不按每个工具拆一篇 Skill。每份正文在 knowledge 里登记一次。
+供 Agent 阅读的长期内容分四层，只建实际用到的文件。`instructions.md` 说明何时使用、负责什么、必须遵守的原则，以及数据、判断、编排或呈现交给哪项能力。`skills/<任务>/SKILL.md` 写一类任务的最短路径：识别需求、复用已有输入、执行、必要分支和验收。方法、字段、接口、案例和故障细节放包根 `references/`，材料多了再按主题分子目录。可复用的角色职责才放 `references/roles/`。本次任务的目标、输入、范围、能力和交付写进已有 Agent 调用字段，不另建合同文件，也不按每个工具拆一篇 Skill。每份正文在 knowledge 里登记一次。
 
 脚手架的 native 和 skill 参数保持兼容。knowledge 生成方法与验证参考；function 生成 src/analyze.js 和可验证的求和示例；adapter、workflow、service 分别生成 src/source.js、src/runtime.js、src/service.js，业务未实现前明确抛出 NOT_IMPLEMENTED。workflow 声明 kind:workflow、execution:run，不预先宣称可恢复。按实际需要再拆 market/account/trading、members/composition/artifacts 或 state 模块，不补空层次。
 
@@ -93,13 +93,13 @@ configSchema 保持既有插件配置契约。顶层可选 configuration 声明�
 
 | 声明 | 用途 |
 | --- | --- |
-| plugin.json.dependencies | 必需的已安装包及版本范围，例如 `[{"name":"sesame/workspace","version":">=3.0.0"}]`。 |
-| plugin.json.permissions | 插件可使用的宿主端口操作与跨能力调用范围。脚手架默认 scopes/calls 为空，需要实际调用时再声明。 |
+| plugin.yaml.dependencies | 必需的已安装包及版本范围，例如 `[{"name":"sesame/workspace","version":">=3.0.0"}]`。 |
+| plugin.yaml.permissions | 插件可使用的宿主端口操作与跨能力调用范围。脚手架默认 scopes/calls 为空，需要实际调用时再声明。 |
 | capability.requires | 能力就绪依赖，结构为 `{id,capability,input?,reason,optional?}`；带 input 的探测须为即时只读 JSON 能力，模板只引用 input# 路径。 |
 | configurationRequirements | 能力实际依赖的本包配置字段，按 when 分支和 optional 控制就绪检查。 |
 | Agent.allowedCalls / plugins | 分配成员可调用的能力和额外知识包；不扩大父任务、插件或用户授权。 |
 
-例如只需要读取固定数据的插件，可在 plugin.json 声明 `"permissions":{"scopes":[],"calls":["sesame/data-access#data_read"]}`，并声明所需包依赖。调用 ID 使用 host.name 或 publisher/name#name；也支持 `{pluginId,serviceId,operation}` 命名服务选择器，不使用通配符。按需要声明本地 scopes，保存的用户权限选择随更新保留；effects、配置字段和功能分类都不授予调用权限。动态组合能力需要单独的 capabilities.compose 范围，不要给每个静态小插件默认开启。端口权限不是操作系统沙箱，原生 JavaScript 仍以宿主进程权限运行。
+例如只需要读取固定数据的插件，可在 plugin.yaml 声明 `"permissions":{"scopes":[],"calls":["sesame/data-access#data_read"]}`，并声明所需包依赖。调用 ID 使用 host.name 或 publisher/name#name；也支持 `{pluginId,serviceId,operation}` 命名服务选择器，不使用通配符。按需要声明本地 scopes，保存的用户权限选择随更新保留；effects、配置字段和功能分类都不授予调用权限。动态组合能力需要单独的 capabilities.compose 范围，不要给每个静态小插件默认开启。端口权限不是操作系统沙箱，原生 JavaScript 仍以宿主进程权限运行。
 
 ## 能力与宿主贡献
 
@@ -111,7 +111,7 @@ stateCollections:{name,schemaVersion,schema,mode:"document"|"log",access:"privat
 
 knowledge 的每项显式写 {id,kind:"reference"|"prompt"|"skill",path,description}。prompt 和 skill 入口正文在默认装配或本会话明确加载后进入模型上下文；skill 指向有合法 frontmatter 的 SKILL.md。reference 保持按需读取，不因文件名而自动变成指令。知识路径必须属于包内，不能依赖 Agent 扫描未声明文件来补全用法。入口应简洁，长手册、样本和细节放 reference。
 
-knowledge、plugin.json 的 resources/prompts 以及 SKILL.md 中每份正文最多 128 KiB，按 UTF-8 字节计，不按字符计；这不是所有包文件的大小上限。完整测试数据、预期结果、审计日志和实现文件可以作为普通包文件保留，不必注册为知识资源。例如 tests/fixtures.json 超过此限制时，保留原文件及测试引用，移除其 knowledge/resources 声明，用小型参考文档说明样例和验证结果；不截断或拆坏测试数据。确需给 Agent 阅读的大篇幅手册可按主题拆成多个 reference。未声明的包文件仍参与包摘要与安装，仅不会作为 plugin_read 的知识正文暴露。
+knowledge、plugin.yaml 的 resources/prompts 以及 SKILL.md 中每份正文最多 128 KiB，按 UTF-8 字节计，不按字符计；这不是所有包文件的大小上限。完整测试数据、预期结果、审计日志和实现文件可以作为普通包文件保留，不必注册为知识资源。例如 tests/fixtures.json 超过此限制时，保留原文件及测试引用，移除其 knowledge/resources 声明，用小型参考文档说明样例和验证结果；不截断或拆坏测试数据。确需给 Agent 阅读的大篇幅手册可按主题拆成多个 reference。未声明的包文件仍参与包摘要与安装，仅不会作为 plugin_read 的知识正文暴露。
 
 按能力划分层次，不要求一个插件只有一种层次。信息获取与解析提供来源、时点、覆盖、字段及固定证据引用；方法消费已有证据，回答一个局部问题并给出假设、支持/反证和失效条件；工作流负责选择互补方法、补齐具体缺口和综合分歧。同源派生结果不是多份独立证据。交易执行消费明确决策和授权，不能由读取操作隐式升级。
 

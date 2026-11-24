@@ -1,0 +1,118 @@
+name: judgment_coverage
+title: judgment_coverage
+description: 完成整条回复的语义核对。先 judgment_audit_source 读完全文；关联已登记判断、逐句解释关键词线索中非未来判断/已错过事前登记/不可核验的项，并记录全文核对结论。不得伪造回溯预测。
+inputSchema:
+  type: object
+  required:
+    - message_id
+    - review_summary
+  properties:
+    message_id:
+      type: string
+      description: 复盘清单给出的消息 ID
+      minLength: 1
+      maxLength: 2000
+    judgment_ids:
+      type: array
+      items:
+        type: string
+        description: 新登记判断 ID
+        minLength: 1
+        maxLength: 2000
+      maxItems: 20
+    exclusions:
+      type: array
+      items:
+        type: object
+        required:
+          - statement
+          - reason
+        properties:
+          statement:
+            type: string
+            description: 原句
+            minLength: 1
+            maxLength: 2000
+          reason:
+            type: string
+            description: 不适用或漏登记原因
+            minLength: 1
+            maxLength: 2000
+        additionalProperties: false
+      maxItems: 20
+    review_summary:
+      type: string
+      description: 对完整原文的核对结论，包括关键词未命中的判断；无预测也须明确说明
+      minLength: 1
+      maxLength: 4000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    status:
+      const: reviewed
+    source_hash:
+      type: string
+    source_length:
+      type: integer
+    read_offset:
+      type: integer
+    statements:
+      type: array
+      items:
+        type: string
+    judgment_ids:
+      type: array
+      items:
+        type: string
+    exclusions:
+      type: array
+      items:
+        type: object
+        properties:
+          statement:
+            type: string
+          reason:
+            type: string
+        required:
+          - statement
+          - reason
+        additionalProperties: false
+    review_summary:
+      type: string
+    completed_at:
+      type: string
+  required:
+    - id
+    - status
+    - review_summary
+    - completed_at
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 完成整条回复的语义核对。先 judgment_audit_source 读完全文；关联已登记判断、逐句解释关键词线索中非未来判断/已错过事前登记/不可核验的项，并记录全文核对结论。不得伪造回溯预测。
+    inputs: "{message_id,judgment_ids?:[],exclusions?:[{statement,reason}],review_summary}; exclusions use exact hinted statements from review_queue, and review_summary covers the full text."
+    outputs: Coverage record status=reviewed with linked IDs, exclusions, summary and completed_at.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - audit_source must have reached next_offset=null. Historical unregistered claims are explained as missed prospective registration, never backfilled.
+  binding:
+    type: native
+    name: judgment_coverage

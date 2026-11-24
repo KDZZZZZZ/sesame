@@ -1,0 +1,400 @@
+name: factor_prepare
+title: factor_prepare
+description: Freeze source data into a reusable immutable Qlib snapshot; perform no search or evaluation.
+inputSchema:
+  type: object
+  properties:
+    requestId:
+      type: string
+      minLength: 1
+      maxLength: 128
+    budget:
+      $ref: "#/$defs/ResourceBudget"
+    source:
+      $ref: "#/$defs/Source"
+    layout:
+      $ref: "#/$defs/Layout"
+  required:
+    - requestId
+    - budget
+    - source
+    - layout
+  additionalProperties: false
+  $defs:
+    Layout:
+      type: object
+      properties:
+        universe:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+          minItems: 1
+          maxItems: 4096
+          uniqueItems: true
+        frequency:
+          type: string
+          minLength: 1
+          maxLength: 32
+          pattern: ^(?:[1-9]\d*(?:min|m|h|d)|day)$
+        timezone:
+          type: string
+          const: UTC
+        availableAt:
+          type: string
+          const: bar_close
+        development:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+            pattern: ^\d{4}-\d{2}-\d{2}T.*(?:Z|[+]00:00)$
+          minItems: 2
+          maxItems: 2
+        holdout:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+            pattern: ^\d{4}-\d{2}-\d{2}T.*(?:Z|[+]00:00)$
+          minItems: 2
+          maxItems: 2
+        target:
+          $ref: "#/$defs/Target"
+      required:
+        - universe
+        - frequency
+        - timezone
+        - availableAt
+        - development
+        - holdout
+        - target
+      additionalProperties: false
+    ResourceBudget:
+      type: object
+      properties:
+        maxSeconds:
+          type: integer
+          minimum: 1
+          maximum: 86400
+        maxInputBytes:
+          type: integer
+          minimum: 1024
+          maximum: 536870912
+        maxOutputBytes:
+          type: integer
+          minimum: 1024
+          maximum: 536870912
+      required:
+        - maxSeconds
+        - maxInputBytes
+        - maxOutputBytes
+      additionalProperties: false
+    Source:
+      oneOf:
+        - type: object
+          properties:
+            datasetId:
+              type: string
+              minLength: 1
+              maxLength: 256
+          required:
+            - datasetId
+          additionalProperties: false
+        - type: object
+          properties:
+            ref:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  const: data
+                schemaVersion:
+                  type: string
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+          required:
+            - ref
+          additionalProperties: false
+    Target:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - forward_return
+                - forward_volatility
+            field:
+              type: string
+              minLength: 1
+              maxLength: 64
+              pattern: ^[a-z][a-z0-9_]{0,63}$
+            horizonBars:
+              type: integer
+              minimum: 1
+              maximum: 10000
+          required:
+            - kind
+            - field
+            - horizonBars
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: provided
+            field:
+              type: string
+              minLength: 1
+              maxLength: 64
+              pattern: ^[a-z][a-z0-9_]{0,63}$
+            scale:
+              type: string
+              enum:
+                - continuous
+                - categorical
+            horizonBars:
+              type: integer
+              minimum: 1
+              maximum: 10000
+          required:
+            - kind
+            - field
+            - scale
+            - horizonBars
+          additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - execution
+    - plugin.state.write
+    - resources.publish
+  usage:
+    purpose: Freeze source data into a reusable immutable Qlib snapshot; perform no search or evaluation.
+    inputs: "{requestId,source,layout,budget:{maxSeconds,maxInputBytes,maxOutputBytes}}. Declare UTC development/holdout partitions and the prediction target."
+    outputs: "{snapshotRef,snapshotId,fields,layout,rows}. Read the completed native Run output before scheduling dependent work."
+    prerequisites: []
+    limitations:
+      - All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions.
+  binding:
+    type: native
+    name: factor_prepare
+  resumable: true
+  configurationRequirements:
+    - field: pythonPath
+      reason: Prepare or select the verified Qlib/DEAP/Optuna environment before numerical work.
+      optional: false
+  finalOutputSchema:
+    type: object
+    properties:
+      snapshotRef:
+        $ref: "#/$defs/Ref"
+      snapshotId:
+        type: string
+        minLength: 1
+        maxLength: 128
+      fields:
+        type: array
+        items:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-z][a-z0-9_]{0,63}$
+        minItems: 0
+        maxItems: 65536
+      layout:
+        $ref: "#/$defs/Layout"
+      rows:
+        type: object
+        properties:
+          development:
+            type: integer
+            minimum: 0
+            maximum: 100000000
+          holdout:
+            type: integer
+            minimum: 0
+            maximum: 100000000
+        required:
+          - development
+          - holdout
+        additionalProperties: false
+    required:
+      - snapshotRef
+      - snapshotId
+      - fields
+      - layout
+      - rows
+    additionalProperties: false
+    $defs:
+      Layout:
+        type: object
+        properties:
+          universe:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 128
+            minItems: 1
+            maxItems: 4096
+            uniqueItems: true
+          frequency:
+            type: string
+            minLength: 1
+            maxLength: 32
+            pattern: ^(?:[1-9]\d*(?:min|m|h|d)|day)$
+          timezone:
+            type: string
+            const: UTC
+          availableAt:
+            type: string
+            const: bar_close
+          development:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 40
+              pattern: ^\d{4}-\d{2}-\d{2}T.*(?:Z|[+]00:00)$
+            minItems: 2
+            maxItems: 2
+          holdout:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 40
+              pattern: ^\d{4}-\d{2}-\d{2}T.*(?:Z|[+]00:00)$
+            minItems: 2
+            maxItems: 2
+          target:
+            $ref: "#/$defs/Target"
+        required:
+          - universe
+          - frequency
+          - timezone
+          - availableAt
+          - development
+          - holdout
+          - target
+        additionalProperties: false
+      Ref:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 256
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 256
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            type: string
+            minLength: 1
+            maxLength: 256
+          schemaVersion:
+            type: string
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      Target:
+        oneOf:
+          - type: object
+            properties:
+              kind:
+                type: string
+                enum:
+                  - forward_return
+                  - forward_volatility
+              field:
+                type: string
+                minLength: 1
+                maxLength: 64
+                pattern: ^[a-z][a-z0-9_]{0,63}$
+              horizonBars:
+                type: integer
+                minimum: 1
+                maximum: 10000
+            required:
+              - kind
+              - field
+              - horizonBars
+            additionalProperties: false
+          - type: object
+            properties:
+              kind:
+                type: string
+                const: provided
+              field:
+                type: string
+                minLength: 1
+                maxLength: 64
+                pattern: ^[a-z][a-z0-9_]{0,63}$
+              scale:
+                type: string
+                enum:
+                  - continuous
+                  - categorical
+              horizonBars:
+                type: integer
+                minimum: 1
+                maximum: 10000
+            required:
+              - kind
+              - field
+              - scale
+              - horizonBars
+            additionalProperties: false

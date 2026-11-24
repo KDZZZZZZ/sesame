@@ -1,0 +1,63 @@
+name: kurumi_recording
+title: kurumi_recording
+description: 每安装持久化归档mirror选择；新玩家默认插件私有路径，旧档须显式pin并验证，不猜作者目录、不移动旧档。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - pin
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    mirror_root:
+      type: string
+      minLength: 1
+    acknowledge_existing:
+      type: boolean
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 每安装持久化归档mirror选择；新玩家默认插件私有路径，旧档须显式pin并验证，不猜作者目录、不移动旧档。
+    inputs: '{action:"status"} or {action:"pin",command_id,mirror_root?,acknowledge_existing?}; omitted mirror uses plugin-private default, explicit old archive needs acknowledgement.'
+    outputs: status => {selection,error,default}; pin => {pinned,selection,root,mirror,engineUnchanged:true}.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Pin only with no active role/recovery/preparation.
+    limitations:
+      - No guessed author directory, moving old archive or financial reset. Stable pin ID prevents conflicting repeated intent.
+  binding:
+    type: native
+    name: kurumi_recording
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

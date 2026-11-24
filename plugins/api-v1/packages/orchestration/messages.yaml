@@ -1,0 +1,124 @@
+attention.adhoc-workflows: 已安装的插件声明了工作流 {workflows}。目标与其中之一相符时，参考它重新开立（supersede），已写的待办可以照搬。
+attention.already-running: "{step} 已在进行中（Run：{runs}），本次上报没有新开一轮。等它结束后上报 done 或 failed。"
+attention.capability-missing: "{step} 声明的能力 {capability} 当前不可用（{plugin} 未安装或已禁用）。"
+attention.capability-unloaded: "{step} 用到 {plugin} 的能力，本会话尚未加载。"
+attention.default: ""
+attention.expired: "{artifact} 已更新，{stale} 随之失效，{steps} 需要重新执行。"
+attention.external: "{step} 需要外部输入 {inputs}（{mode}）。已具备的在 workflow_plan 的 revise 里用 have 声明。"
+attention.failed: "{step} 第 {attempt} 次执行失败：{note}。可重试或放弃。"
+attention.fallback-missing: "{step} 声明的回退工作流 {workflow} 当前不可用（没有已启用的插件提供它）。"
+attention.outcome: "{artifact} 为 {actual}，{step} 需要 {required}。"
+attention.plugin-unloaded: 工作流 {workflow} 属于 {plugin}，本会话尚未加载。先 plugin_read 读它的方法，再 plugin_load。
+attention.released: "{step} 完成时没有包含 {presets}，它们已回到预设参考。"
+attention.reused: 已按复用登记 {artifacts}；{steps} 不再需要执行。
+attention.run-error: "{step} 的 Run {run} 以 {status} 结束并带有错误。读取 run.error 后决定重试或上报 failed。"
+attention.run-unreported: "{step} 的 Run {run} 已结束（{status}），这条待办还没上报。"
+attention.skipped: "{step} 已放弃，{dependents} 因此无法执行。"
+attention.unarranged: 预设步骤 {presets} 的依赖已齐，还没有安排进待办。需要就用 workflow_plan 的 revise 加进待办；这次用不到可以不安排。
+attention.violation: "{step} 在 {missing} 齐备前{phase}，已照常记录。需要这些前置就先补上；不需要时在 note 里说明原因。"
+attention.waived: "{artifact} 为 {actual}，{step} 不再等待 {waived}。"
+attention.workflow-entry: "{plugin} 提供工作流入口 {capability}，可作为 {step} 的执行方式。"
+block.default: 目标所需产物还不能得到
+block.external: 缺少外部输入 {inputs}
+block.outcome: "{step} 需要 {artifact}:{required}，现为 {actual}"
+block.skipped: "{artifact} 的生产步骤 {step} 已放弃"
+block.todo: 待办 {steps} 的前置条件尚未满足。
+error.already_done.fix: 需要重做时先上报 started。
+error.already_done.message: "{step} 已完成（第 {attempt} 次）。"
+error.ambiguous_workflow.fix: 请使用完整名称。可选 {workflows}。
+error.ambiguous_workflow.message: 多个包声明了工作流 {workflow}。
+error.call_conflict.fix: 新的操作需要使用新的调用 ID。
+error.call_conflict.message: 此调用 ID 已用于另一项操作。
+error.close_incomplete.fix: 完成或放弃这些待办，或以 abandoned 关闭并说明原因。
+error.close_incomplete.message: 还有待办没有结束：{steps}。
+error.default.fix: 检查参数并读取 workflow_status。
+error.default.message: 无法执行导航操作。
+error.fallback_depth.fix: 在当前计划内解决，或关闭当前计划后重新规划。
+error.fallback_depth.message: 回退计划层数已达上限，或 {workflow} 已在回退链上。
+error.fallback_undeclared.fix: 这条待办里的预设步骤声明的回退：{declared}。没有声明时上报 failed 并说明原因。
+error.fallback_undeclared.message: "{step} 没有声明回退工作流 {workflow}。"
+error.gap_invalid.fix: 可选的缺口产物：{roots}。
+error.gap_invalid.message: "{gap} 不是 {workflow} 的外部输入。"
+error.invalid_definition.fix: 这是插件内容的问题，无法通过调整调用解决；不参考这个工作流，只写待办开立计划，并向用户说明该工作流定义有误。
+error.invalid_definition.message: "{plugin} 的工作流定义无法解析：第 {line} 行 {detail}。"
+error.invalid_outcome.fix: 可选值：{outcomes}。
+error.invalid_outcome.message: "{artifact} 的结果 {outcome} 不在声明的取值内。"
+error.invalid_plan.fix: 待办名不能重复；after 只能引用本计划里的待办，不能成环；被 after 引用的待办不能移除；一个计划最多 20 条待办。
+error.invalid_plan.message: 计划无效：{detail}。
+error.invalid_status.fix: 使用 started、done、failed 或 skipped。
+error.invalid_status.message: 未识别的步骤状态。
+error.no_active_plan.fix: 先 workflow_status 查看工作流目录，再用 workflow_plan 开立。
+error.no_active_plan.message: 当前会话没有活动计划。
+error.no_reference.fix: 只用 after 安排先后；需要预设流程时参考工作流重新开立（supersede）。
+error.no_reference.message: 这个计划没有参考工作流，不能使用 {field}。
+error.not_main_agent.fix: 完成被分配的任务并交回结果，由主 Agent 上报。
+error.not_main_agent.message: 流程导航只由主 Agent 使用。
+error.note_required.fix: 在 note 里写明原因。
+error.note_required.message: 上报 {status} 需要说明原因。
+error.open_requires_one.fix: 目标与已声明工作流相符时传 workflow 作参考，可以同时写待办；都不适用时只传 steps。
+error.open_requires_one.message: 开立计划需要 workflow 或 steps，至少一个。
+error.outcome_required.fix: 在 produced 里写成 "{artifact}:<结果>"，可选值：{outcomes}。
+error.outcome_required.message: "{artifact} 需要带结果上报。"
+error.plan_active.fix: "继续这个计划；确实要换目标时带 supersede: true 开立，旧计划记为放弃。"
+error.plan_active.message: 已有活动计划「{title}」（{plan}）。
+error.plugin_unavailable.fix: 启用或修复该插件后再开立，或改用其他方式完成任务。
+error.plugin_unavailable.message: 工作流 {workflow} 所属插件 {plugin} 已禁用或加载失败。
+error.preset_inactive.fix: 用户要求时先在 conditions 里打开 {condition}。
+error.preset_inactive.message: 预设步骤 {preset} 的条件 {condition} 没有打开。
+error.preset_taken.fix: 一个预设步骤只放进一条未结束的待办。先从那条待办里去掉它，或者把两条待办合并。
+error.preset_taken.message: 预设步骤 {preset} 已在待办 {step} 里。
+error.run_foreign.fix: 只上报本会话为这一步派发的 Run。
+error.run_foreign.message: Run {run} 不属于本会话。
+error.run_not_found.fix: 使用派发时返回的 run.id。
+error.run_not_found.message: 找不到 Run {run}。
+error.run_tag_conflict.fix: 使用当前步骤的 Run。
+error.run_tag_conflict.message: Run {run} 已绑定到其他步骤。
+error.run_unsettled.fix: 用 host_runs_wait 等它结束；处于中断的先处理阻碍并恢复，再上报。
+error.run_unsettled.message: Run {run} 还没有结束（{status}）。
+error.state_conflict.fix: 重新调用一次。
+error.state_conflict.message: 计划同时被另一次调用修改，本次未生效。
+error.step_skipped.fix: 需要这一步时用 workflow_plan 开立新计划。
+error.step_skipped.message: "{step} 已放弃，本计划不再执行它。"
+error.title_required.fix: 传入 1–120 字的 title。
+error.title_required.message: 开立计划需要标题。
+error.todo_locked.fix: 要再做一次就对它上报 started；要做别的事就另写一条待办。
+error.todo_locked.message: 待办 {step} 已开始或已完成，不能替换或移除。
+error.unknown_artifact.fix: 最接近的是 {suggestion}。可用的产物：{artifacts}。
+error.unknown_artifact.message: "{artifact} 不是 {scope} 的产物。"
+error.unknown_condition.fix: 可用的条件：{conditions}。
+error.unknown_condition.message: 工作流 {workflow} 没有条件 {condition}。
+error.unknown_preset.fix: 最接近的是 {suggestion}。可用的预设步骤：{presets}。
+error.unknown_preset.message: "{preset} 不是 {scope} 的预设步骤。"
+error.unknown_step.fix: 最接近的是 {suggestion}。本计划的待办：{steps}。
+error.unknown_step.message: 当前计划没有待办 {step}。
+error.unknown_workflow.fix: 可用的工作流：{workflows}。都不适用时不传 workflow，只写待办。
+error.unknown_workflow.message: 没有名为 {workflow} 的已声明工作流。
+next.abandoned: 计划已关闭（放弃）。
+next.arrange: 没有可以做的待办。预设步骤 {presets} 的依赖已齐：需要就用 workflow_plan 的 revise 加进待办；不需要时用 close 结束计划。
+next.blocked: 目标 {goal} 暂不可达。{reason}。检查可重做的待办 {rework}，或关闭计划。
+next.catalog: 目标与上列某个工作流相符时，开立时传 workflow 参考它；都不适用时只写待办。
+next.catalog-empty: 没有活动计划，也没有插件声明工作流。用 workflow_plan 的 steps 写待办开立计划。
+next.completed: 计划已完成。核对成果与报告后向用户汇报。
+next.default: 用 workflow_status 查看当前位置。
+next.deviated: 已记录 {reported} 开始。推荐先完成 {ready}。
+next.external: 缺少外部输入 {inputs}。已经具备的用 workflow_plan 的 revise 在 have 中声明；没有的先取得。
+next.failed: "{failed} 失败。重试（上报 started）或放弃（上报 skipped 并说明原因）。"
+next.fallback: 已为 {step} 开立回退计划，参考 {workflow}。参照 reference 写它的待办；它完成后回到原计划。
+next.opened: 计划已开立。现在可执行 {ready}。每完成一条待办用 workflow_step 上报。
+next.opened-empty: 计划已开立，参考 {workflow}，还没有待办。参照 reference 里的预设步骤用 workflow_plan 的 revise 写待办，一条待办可以包含几个预设步骤。
+next.ready-many: "{ready} 互不依赖，可并行执行，完成后分别上报。"
+next.ready-one: 现在可执行 {ready}。
+next.returned: 回退计划 {workflow} 已完成，回到「{title}」。重新执行 {step}。
+next.running: "{running} 仍在进行，等它结束后上报。"
+next.unreported: "{step} 的 Run {run} 已结束。读取它的输出后用 workflow_step 上报这条待办。"
+waiting.default: 等待前置步骤
+waiting.external: 需要外部输入 {inputs}
+waiting.failed: "{steps} 失败，重试后才能继续"
+waiting.fallback: 等待回退计划 {workflow}
+waiting.outcome: "{artifact} 为 {actual}，需要 {required}"
+waiting.outcome-from: "{steps} 产出的 {artifact} 的结果为 {actual}，这里需要 {required}"
+waiting.running: 等待 {steps}（进行中）
+waiting.skipped: "{steps} 已放弃"
+waiting.unarranged: 需要先安排预设步骤 {presets}
+waiting.wait: 等待 {steps}
+waiting.wait-unarranged: 等待 {steps}，并需要先安排预设步骤 {presets}

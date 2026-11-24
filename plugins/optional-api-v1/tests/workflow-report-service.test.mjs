@@ -69,6 +69,8 @@ test('native decision report sends content directly through the common publicati
   assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['components_show', 'report_check']);
   const publication = f.calls.find(call => call.id.endsWith('#components_show')).input;
   assert.equal(publication.target, 'report');
+  assert.equal(publication.lead, '本轮决定维持当前仓位。');
+  assert.deepEqual(publication.highlights, [{ label: '交易执行', value: '复核阻止本轮执行，未执行交易。' }]);
   assert.equal(publication.content.kind, 'document');
   assert.equal(Object.hasOwn(publication, 'html_path'), false);
   assert.equal(Object.hasOwn(publication, 'body_html'), false);
@@ -115,4 +117,32 @@ test('raw report evidence preserves inert HTML examples without authorizing exec
   const html = (await f.host.resources.read(report.ref, { part: 'content', entry: report.entry })).content;
   assert.doesNotMatch(html, /<iframe\b/); assert.match(html, /&lt;iframe/);
   assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
+});
+
+test('a retained decision-only snapshot archives through the installed provider and Electron inspector', {
+  skip: !process.env.SESAME_HOST_ROOT, timeout: 120000,
+}, async t => {
+  const { pathToFileURL } = await import('node:url');
+  const load = name => import(pathToFileURL(join(process.env.SESAME_HOST_ROOT, name)));
+  const { fixture: createHost } = await load('tests/fixture-provider.js');
+  const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
+  const app = await createHost({ optionalPlugins: ['trading-decision'], reportRenderer: 'electron' });
+  t.after(() => app.dispose());
+  const entry = app.runtime.plugins.entry('sesame/trading-decision');
+  const host = createHostContextV2(app.runtime, entry, 'conv_main');
+  const run = decisionRun();
+  run.executionDisposition = 'decision_only';
+  run.reports[0].text = '经理保留当前目标。\n\n' + '等待观察条件。'.repeat(600);
+  const retained = structuredClone(run);
+  run.reportSnapshot = retained;
+  const result = await writeDailyReport(host, run, { onPublication: published => { run.reportPublication = published; } });
+  assert.deepEqual(result.inspection.artifact, result.ref);
+  assert.equal(result.renderStatus, 'rendered');
+  const file = name => app.runtime.contractArtifacts.resource(result.ref, name).bytes.toString('utf8');
+  const { input } = JSON.parse(file('sesame-report-input.json'));
+  assert.equal(input.lead, '本轮决定维持当前仓位。');
+  assert.deepEqual(input.highlights, [{ label: '交易执行', value: '本轮仅交付决策，未执行交易。' }]);
+  assert.deepEqual(input.content.sections[0].blocks[0], { type: 'details', title: '查看完整经理总结', blocks: [{ type: 'markdown', text: retained.reports[0].text }] });
+  assert.deepEqual(JSON.parse(file('run.json')), retained);
+  assert.deepEqual((await writeDailyReport(host, run)).ref, result.ref);
 });

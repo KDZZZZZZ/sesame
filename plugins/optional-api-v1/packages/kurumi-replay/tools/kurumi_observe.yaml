@@ -1,0 +1,34 @@
+name: kurumi_observe
+title: kurumi_observe
+description: 角色专用：核对当前受宿主绑定的run/step已收盘H1和模拟账户，无未来窗口、网络或文件。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 角色专用：核对当前受宿主绑定的run/step已收盘H1和模拟账户，无未来窗口、网络或文件。
+    inputs: "{}; the host identifies the current registered player task."
+    outputs: "{runId,stepId,expectedVersion,chapter,symbol,asOf,account,position,balance,bars,recentDecisions,recentFills,rules}; only revealed evidence reaches the role."
+    prerequisites:
+      - Only the active registered role task before its decision; other subagents/main cannot impersonate it.
+    limitations:
+      - expectedVersion here is the engine decision version, not main-control revision. Role has only observe/decide, no file/network/package/history access.
+  binding:
+    type: native
+    name: kurumi_observe

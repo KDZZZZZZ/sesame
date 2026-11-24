@@ -9,3 +9,5 @@ __pycache__/
 .env.*
 !.env.example
 plugins/optional-api-v1/packages/kurumi-replay/.core-sqlite-roundtrip-*/
+plugins/protocol/.sesame-evaluation/
+plugins/protocol/plugin-drafts/

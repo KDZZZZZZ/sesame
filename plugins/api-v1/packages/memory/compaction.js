@@ -11,6 +11,7 @@ const sourceKey = source => source.type === 'user_message' ? `user:${source.id}`
 const contentOf = message => (message.content ?? []).filter(part => part.type === 'text').map(part => part.text).join('\n');
 const SYSTEM = readFileSync(new URL('./curation.md', import.meta.url), 'utf8');
 const CHUNK = 16000, MAX_BATCHES = 6;
+export const personalCategory = category => category.startsWith('user/') || ['trading/style', 'trading/risk-rules'].includes(category);
 
 // Defence in depth for unattended extraction. Sources remain in their original
 // store; neither redacted transcripts nor model responses are journaled here.
@@ -26,16 +27,30 @@ async function sourceText(services, source) {
   return redact(await services.evidence(source));
 }
 
-function enqueue(services, source, candidateId) {
-  const id = hash([services.context.conversationId, sourceKey(source)]), previous = services.journal.get('compaction_sources', id, true);
-  if (previous) return;
-  services.journal.put('compaction_sources', { id, conversationId: services.context.conversationId, source, candidateId: candidateId ?? null, offset: 0, status: 'pending', createdAt: Date.now() });
+function enqueue(services, source, candidateId, taskContext) {
+  const key = sourceKey(source), conversationId = services.context.conversationId;
+  const id = hash([conversationId, key]), previous = services.journal.get('compaction_sources', id, true);
+  if (previous?.status === 'done' || previous && !taskContext) return id;
+  const child = taskContext && services.journal.get('compaction_sources', hash([taskContext.conversationId, key]), true);
+  // A final artifact has the same immutable content in both sessions. Reuse the
+  // child's chunk checkpoint, including the operation identity on uncertain retries.
+  if (child && (child.status === 'done' || child.status === 'pending' && (!previous || child.offset >= previous.offset))) {
+    services.journal.put('compaction_sources', { ...child, id, conversationId, taskContext });
+  } else if (!previous || previous.status === 'unavailable') {
+    services.journal.put('compaction_sources', { id, conversationId, source, candidateId: candidateId ?? null, offset: 0,
+      status: 'pending', createdAt: Date.now(), ...(taskContext && { taskContext }) });
+  }
+  return id;
 }
 
 async function discoverSources(event, services, candidates) {
   for (const message of event.messages ?? []) if (message.source) enqueue(services, message.source);
   for (const candidate of candidates) for (const source of candidate.sources) enqueue(services, source, candidate.id);
   for (const item of await services.recentArtifacts()) enqueue(services, { type: 'artifact', ...item.ref });
+}
+
+export function stageTaskSources(services, sources, taskContext) {
+  return new Set(sources.map(source => enqueue(services, source, null, taskContext)));
 }
 
 function existingMemories(services, documents) {
@@ -48,7 +63,7 @@ function existingMemories(services, documents) {
   return [...selected.values()].slice(0, 40).map(item => services.memory.read(item.id));
 }
 
-function validatePlan(result, documents, memories, candidates, services) {
+function validatePlan(result, documents, memories, candidates, services, taskRelease) {
   assert(typeof result === 'string' && result.length <= 48000);
   // Fenced JSON is a harmless presentation choice, not an executable program.
   const plan = JSON.parse(result.trim().replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/, '$1'));
@@ -57,7 +72,7 @@ function validatePlan(result, documents, memories, candidates, services) {
   const targets = new Map(memories.map(memory => [memory.id, memory]));
   const tree = services.memory.tree().categories;
   const used = new Set();
-  return plan.entries.map(entry => {
+  const validate = entry => {
     fields(entry, ['targetId', 'candidateId', 'category', 'scope', 'title', 'summary', 'content', 'evidence', 'citations', 'tags']);
     text(entry.category, 320); text(entry.title, 160); text(entry.summary, 600); text(entry.content, 6000);
     for (const key of ['category', 'title', 'summary', 'content']) entry[key] = entry[key].trim();
@@ -89,6 +104,7 @@ function validatePlan(result, documents, memories, candidates, services) {
       assert(document && citation.quote.trim().length >= Math.min(8, document.text.trim().length) && document.text.includes(citation.quote), 'MEMORY_CITATION_INVALID');
       return document.source;
     });
+    if (personalCategory(entry.category) && !cited.some(source => source.type === 'user_message')) return null;
     if (entry.evidence === 'explicit') assert(cited.some(source => source.type === 'user_message'), 'MEMORY_CITATION_INVALID');
     if (entry.evidence === 'verified') assert(cited.some(source => source.type === 'artifact'), 'MEMORY_CITATION_INVALID');
     const candidate = entry.candidateId ? candidates.find(candidate => candidate.id === entry.candidateId) : null;
@@ -101,6 +117,15 @@ function validatePlan(result, documents, memories, candidates, services) {
     assert(!used.has(identity), 'MEMORY_PLAN_DUPLICATE'); used.add(identity);
     return { candidate, target, memory: { category: entry.category, scope: entry.scope, title: entry.title, summary: entry.summary, content: entry.content, evidence: entry.evidence, tags: entry.tags ?? [],
       sources: [...new Map(cited.map(source => [sourceKey(source), source])).values()] } };
+  };
+  return plan.entries.map(entry => {
+    if (!taskRelease) return validate(entry);
+    // Finish the other supported conclusions when a task's final proposal
+    // includes an invalid entry. An empty accepted set is a valid result.
+    try { return validate(entry); } catch (error) {
+      if (!String(error.code).startsWith('MEMORY_')) throw error;
+      return null;
+    }
   });
 }
 
@@ -149,10 +174,11 @@ async function applyEntry(services, { candidate, target, memory }, batchId) {
   return propose ? 'proposed' : target ? 'revised' : saved.deduplicated ? 'deduplicated' : 'saved';
 }
 
-export async function curate(event, services) {
+export async function curate(event, services, releaseIds) {
   const candidates = services.memory.candidates().items.filter(candidate => Date.parse(candidate.expires_at) > Date.now());
-  await discoverSources(event, services, candidates);
-  const pending = services.journal.list('compaction_sources').filter(source => source.conversationId === services.context.conversationId && source.status === 'pending').sort((a, b) => a.createdAt - b.createdAt);
+  if (!releaseIds) await discoverSources(event, services, candidates);
+  const pending = services.journal.list('compaction_sources').filter(source => source.conversationId === services.context.conversationId && source.status === 'pending'
+    && (!releaseIds || releaseIds.has(source.id))).sort((a, b) => a.createdAt - b.createdAt);
   const receipt = { id: hash([services.context.conversationId, event.checkpointId]), conversationId: services.context.conversationId, checkpointId: event.checkpointId, status: 'completed', counts: {}, processedChunks: 0, pendingSources: pending.length, updatedAt: Date.now() };
   const count = key => { receipt.counts[key] = (receipt.counts[key] ?? 0) + 1; };
   const contextWindow = event.modelLimits?.contextWindow ?? 32768;
@@ -165,6 +191,7 @@ export async function curate(event, services) {
   try {
     // Source references survive a model-less compaction for the next configured
     // session. This is an expected lifecycle state, not a failed model request.
+    if (!pending.length) return receipt;
     if (!event.model) { receipt.status = 'skipped'; receipt.code = 'MODEL_UNAVAILABLE'; return receipt; }
     for (const queued of pending) {
       event.signal.throwIfAborted();
@@ -174,18 +201,20 @@ export async function curate(event, services) {
       catch (error) {
         // Deleted or legacy evidence is not retried forever or reconstructed
         // from an assistant's account. Manual candidate review remains intact.
-        if (!['MEMORY_SOURCE_INVALID', 'NOT_FOUND', 'not_found', 'task_private', 'FORBIDDEN'].includes(error.code)) throw error;
+        if (!['MEMORY_SOURCE_INVALID', 'memory_source_invalid', 'NOT_FOUND', 'not_found', 'task_private', 'FORBIDDEN'].includes(error.code)) throw error;
         services.journal.put('compaction_sources', { ...queued, status: 'unavailable' }); count('unavailable'); continue;
       }
       const evidenceDigest = hash(evidence);
       let offset = queued.contentDigest === evidenceDigest ? queued.offset : 0;
       while (offset < evidence.length && receipt.processedChunks < MAX_BATCHES) {
         event.signal.throwIfAborted();
-        const end = Math.min(evidence.length, offset + chunkSize), key = hash([queued.id, evidenceDigest, offset]);
+        const context = queued.taskContext ?? services.context;
+        const originalId = queued.taskContext ? hash([context.conversationId, sourceKey(queued.source)]) : queued.id;
+        const end = Math.min(evidence.length, offset + chunkSize), key = hash([originalId, evidenceDigest, offset]);
         const documents = [{ key, source: queued.source, text: evidence.slice(offset, end), truncated: offset > 0 || end < evidence.length }];
         const memories = existingMemories(services, documents);
-        const batchId = hash([services.context.conversationId, key]);
-        const input = { executionContext: services.context, documents, memories: memories.map(({ id, version, category, scope, title, summary, content, evidence, pinned, status }) => ({ id, version, category, scope, title: redact(title), summary: redact(summary), content: redact(content.slice(0, 1500)), truncated: content.length > 1500, evidence, pinned, status })),
+        const batchId = hash([context.conversationId, key]);
+        const input = { executionContext: context, documents, memories: memories.map(({ id, version, category, scope, title, summary, content, evidence, pinned, status }) => ({ id, version, category, scope, title: redact(title), summary: redact(summary), content: redact(content.slice(0, 1500)), truncated: content.length > 1500, evidence, pinned, status })),
           candidates: candidates.filter(candidate => candidate.sources.some(source => sourceKey(source) === sourceKey(queued.source))).slice(0, 12).map(({ id, category, title, summary, evidence }) => ({ id, category, title: redact(title), summary: redact(summary), evidence })), categories: services.memory.tree().categories };
         while (Buffer.byteLength(JSON.stringify(input)) > inputBudget && input.memories.length) input.memories.pop();
         while (Buffer.byteLength(JSON.stringify(input)) > inputBudget && input.candidates.length) input.candidates.pop();
@@ -195,10 +224,11 @@ export async function curate(event, services) {
         const result = await services.complete({ model: event.model, systemPrompt: SYSTEM, input,
           maxTokens, reasoning: 'off', timeoutMs: 60000 }, event.signal);
         event.signal.throwIfAborted();
-        const entries = validatePlan(result.text, documents, visibleMemories, visibleCandidates, services);
+        const entries = validatePlan(result.text, documents, visibleMemories, visibleCandidates, { ...services, context }, Boolean(releaseIds || queued.taskContext));
         let uncertain = false;
         for (const entry of entries) {
           event.signal.throwIfAborted();
+          if (!entry) { count('excluded'); continue; }
           const outcome = await applyEntry(services, entry, batchId);
           count(outcome); uncertain ||= outcome === 'uncertain';
         }
@@ -214,7 +244,8 @@ export async function curate(event, services) {
     receipt.code = typeof error.code === 'string' && /^[A-Za-z_]{1,64}$/.test(error.code) ? error.code : 'MEMORY_CURATION_FAILED';
     throw error;
   } finally {
-    receipt.pendingSources = services.journal.list('compaction_sources').filter(source => source.conversationId === services.context.conversationId && source.status === 'pending').length;
+    receipt.pendingSources = services.journal.list('compaction_sources').filter(source => source.conversationId === services.context.conversationId && source.status === 'pending'
+      && (!releaseIds || releaseIds.has(source.id))).length;
     if (receipt.status === 'completed' && (receipt.pendingSources || receipt.counts.uncertain)) receipt.status = 'partial';
     services.journal.put('compaction_receipts', receipt);
     const old = services.journal.list('compaction_receipts').filter(item => item.conversationId === services.context.conversationId).sort((a, b) => b.updatedAt - a.updatedAt).slice(32);

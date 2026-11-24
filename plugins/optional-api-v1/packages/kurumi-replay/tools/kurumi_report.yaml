@@ -1,0 +1,53 @@
+name: kurumi_report
+title: kurumi_report
+description: 固定当前已揭示行情、三章连续资金、成交/成本/权益/回撤/角色决定与模型证据，发布只读阶段/最终交互报告并真实检查渲染。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      description: 固定本次报告版本的幂等ID
+      minLength: 1
+      maxLength: 128
+  required:
+    - operation_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 固定当前已揭示行情、三章连续资金、成交/成本/权益/回撤/角色决定与模型证据，发布只读阶段/最终交互报告并真实检查渲染。
+    inputs: "{operation_id:<stable publication ID>}."
+    outputs: "{ref:<report ArtifactRef>,data:<data ArtifactRef>,receipt,...}; report/data freeze the actually revealed history, decisions, fills, costs and model provenance."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Existing challenge/evidence.
+    limitations:
+      - Read actual manifest and rows.json via host.resources.read. A published artifact and a rendered client receipt prove different things; synthetic fixture data stays demo.
+  binding:
+    type: native
+    name: kurumi_report
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

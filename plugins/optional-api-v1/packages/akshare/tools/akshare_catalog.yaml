@@ -1,0 +1,33 @@
+name: akshare_catalog
+title: akshare_catalog
+description: Discover read-only whitelisted AKShare interfaces and their source/units. No arbitrary Python.
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 列出实际支持的只读 AKShare 接口、参数和数据来源。
+    inputs: "{}。"
+    outputs: "{interfaces:[{name,arguments,source,volumeUnit?}],streaming:false,subscriptions,provider,connections:[{id,revision}],documentation}；接口名/字符串参数可直接用于 akshare_query。"
+    prerequisites: []
+    limitations:
+      - 此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。
+      - 目录是实现白名单，不表示上游可访问；实时图表从 data-access/canvas 公开入口创建。
+  binding:
+    type: native
+    name: akshare_catalog

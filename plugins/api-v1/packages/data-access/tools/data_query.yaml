@@ -1,0 +1,71 @@
+name: data_query
+title: data_query
+description: 读取实际请求页；绑定与续页游标由宿主管理。
+inputSchema:
+  type: object
+  properties:
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: data_sources 返回的完整来源ID
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确声明版本
+        binding:
+          type: object
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+    operation:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 来源operation
+    input:
+      type: object
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 上一页宿主游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 1000
+  required:
+    - source
+    - input
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - data.query
+  usage:
+    purpose: 读取实际请求页；绑定与续页游标由宿主管理。
+    inputs: source 采用发现得到的完整 ref，可附 configSchema 支持的 binding；operation 选 operations 中的键，省略为 query；input 是该操作的业务输入。limit 默认 100、1–1000；延续用 nextCursor。
+    outputs: "{items,nextCursor?,metadata?,...} 是实际请求页，metadata 保留来源的观察、连接、覆盖等信息。"
+    prerequisites:
+      - 来源插件已可用；公开操作输入在其能力声明/资源中。
+    limitations:
+      - 游标 60 秒有效；续页保持 source、input、operation、limit 不变。过期重开查询；STALE_REVISION 重新发现来源；来源协议错误需修复来源，重复绑定无效。
+  binding:
+    type: native
+    name: data_query

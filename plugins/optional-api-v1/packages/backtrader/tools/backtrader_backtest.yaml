@@ -1,0 +1,160 @@
+name: backtrader_backtest
+title: backtrader_backtest
+description: Run real Cerebro on one fixed UTC/offset DataRef and authored backtrader.Strategy file. Managed host execution, stocklike cash simulation, never connects a broker; no SVL equivalence. Frozen operation never replays an interrupted run.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - title
+    - data
+    - strategy_path
+    - class_name
+    - config
+  properties:
+    operation_id:
+      type: string
+      description: Immutable operation key
+      minLength: 1
+    title:
+      type: string
+      description: Result title
+      minLength: 1
+    data:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: data
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    strategy_path:
+      type: string
+      description: Authored workspace Python file
+      minLength: 1
+    class_name:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]*$
+    config:
+      type: object
+      required:
+        - capital
+        - commission
+        - slippage
+        - feed
+      properties:
+        capital:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+        commission:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+        slippage:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+        feed:
+          type: object
+          required:
+            - timeframe
+            - compression
+          properties:
+            timeframe:
+              anyOf:
+                - type: string
+                  const: minutes
+                - type: string
+                  const: days
+                - type: string
+                  const: weeks
+                - type: string
+                  const: months
+            compression:
+              type: integer
+              minimum: 1
+              maximum: 100000
+          additionalProperties: false
+      additionalProperties: false
+    parameters:
+      type: object
+      patternProperties:
+        ^.*$: {}
+    columns:
+      type: object
+      properties:
+        datetime:
+          type: string
+        open:
+          type: string
+        high:
+          type: string
+        low:
+          type: string
+        close:
+          type: string
+        volume:
+          type: string
+      additionalProperties: false
+    timeout:
+      type: integer
+      minimum: 1
+      maximum: 600
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - private-filesystem
+    - resources.publish
+    - plugin.state.write
+  usage:
+    purpose: 消费已有固定数据、策略和参数执行一次原生计算，交付结果ref、输入血缘、统计和诊断；候选选择、比较与综合由工作流负责。
+    inputs: '{operation_id,title,data,strategy_path,class_name,config,parameters?,columns?,timeout?}。data 为 data_snapshot 等公开数据工具返回的固定 {id,revision,digest,kind:"data",schemaVersion:"1.0.0"}，内容为 json-rows；禁止猜引用/用可变datasetId代替。 strategy_path 是工作区真实单文件（≤512KiB），class_name 为已编写的backtrader.Strategy类名；输入2–100000行、≤16MiB，列默认datetime/open/high/low/close/volume，columns可改名，未知量不填0。config最小例 {capital:"100000",commission:"0.001",slippage:"0",feed:{timeframe:"days",compression:1}}；费率/滑点是比例，小时柱用minutes/60；时间必须明确UTC/offset或UTC SourceTime，严格递增。'
+    outputs: '{ref:<固定strategy.result>,status:"completed"|"failed",data:[{id:"equity"|"trades"|"orders",ref}],statistics,diagnostics,executionRunId,nativeSource,environment}；failed没有成功表；中断保留unknown/运行操作记录，不自动重放。'
+    prerequisites:
+      - backtrader_environment inspect/prepare ready:true；固定数据和工作区代码来自本任务。公开 skill 给出原生接口/单位，无须阅读安装源码。
+    limitations:
+      - 执行当前用户权限的真实Python，宿主可取消但不是OS沙箱；引擎本身只使用固定数据，不连接实盘broker。
+      - operation_id绑定代码、数据、参数和撮合配置；相同输入重试读原结果，改变输入须新研究意图。失败读diagnostics；未知不声称完成。
+      - demo来源保持demo；completed只表示引擎完成，不证明盈利、SVL等价或实盘有效。原生浮点不具decimal34等价。
+  binding:
+    type: native
+    name: backtrader_backtest
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

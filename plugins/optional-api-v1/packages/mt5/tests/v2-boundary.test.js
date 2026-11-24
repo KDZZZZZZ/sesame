@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
@@ -15,7 +16,7 @@ function fixture(t, kind = 'main') {
 
 test('MT5 factory is pure and all native bindings are explicitly declared', () => {
   const host = new Proxy({}, { get() { throw new Error('Factory touched host'); } });
-  const manifest = JSON.parse(readFileSync(new URL('../capabilities.json', import.meta.url)));
+  const manifest = readPackageDirectory(new URL('../', import.meta.url)).capabilities;
   assert.deepEqual(createCapabilities(host).map(row => row.name).sort(), manifest.capabilities.map(row => row.binding.name).sort());
   assert.ok(manifest.sources.some(row => row.contract === 'sesame.market/1'));
   assert.ok(manifest.hooks.some(row => row.event === 'lifecycle.beforeAgentTurn'));

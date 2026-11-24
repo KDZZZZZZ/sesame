@@ -1,0 +1,49 @@
+name: memory_read
+title: memory_read
+description: 读取正式记忆正文、来源、版本和生命周期。id 来自 memory_search、save 或 accept 的 memory.id，不能使用候选 ID。expired/conflict 不能作为已确认事实。
+inputSchema:
+  type: object
+  required:
+    - id
+  properties:
+    id:
+      type: string
+      description: 正式记忆 ID；accept 返回 memory.id，顶层 id 仍属候选
+      minLength: 1
+      maxLength: 20000
+    offset:
+      type: integer
+      minimum: 0
+      description: 可选正文字符偏移。长正文按next_offset续取；不是页号。
+    length:
+      type: integer
+      minimum: 1
+      maximum: 4000
+      description: 可选正文字符数；显式分页默认4000。省略offset与length时仍返回完整正文。
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:memory
+  resultRetention: summary
+  usage:
+    purpose: 读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。
+    inputs: 正式记忆 id 来自 memory_search.items、memory_manage action=save 或 action=accept 的 memory.id；accept 顶层 id 仍是候选，不可用于 memory_read。 可选 offset/length 分段读取长正文，length 为1..4000、默认4000。先用 offset:0；之后传回 next_offset。若宿主出现 _tool_output_truncated，这只是预览，须按此方式重读，不当完整规则。
+    outputs: 完整正文、sources、scope、version、status、review_due、reference_count 等真实记忆记录。 显式分页另含 next_offset（末段为null）、total_content_length、content_complete；content是该段正文，id/version/scope/sources仍保留。拼接时各段 version 必须相同，否则重读最新版本。
+    prerequisites: []
+    limitations:
+      - 读取不算采用；更新所需 expected_version 来自 version，不从时间或标题推测。
+  binding:
+    type: native
+    name: memory_read

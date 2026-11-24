@@ -1,0 +1,306 @@
+name: configuration_update
+title: configuration_update
+description: 按用户要求直接保存模型 API Key、兼容接口、插件环境凭据或应用偏好；无需导入、手工设置环境变量或打开设置窗口。target=environment 将 changes 的环境变量值私有持久保存并立即生效，null 删除；target=model 在当前回复结束后应用。回执不含秘密。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - target
+    - changes
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    target:
+      anyOf:
+        - type: string
+          const: model
+        - type: string
+          const: preferences
+        - type: string
+          const: environment
+    expected_version:
+      type: integer
+      minimum: 1
+    changes:
+      anyOf:
+        - type: object
+          required:
+            - provider
+            - model
+          properties:
+            provider:
+              type: string
+              minLength: 1
+              maxLength: 64
+            model:
+              type: string
+              minLength: 1
+              maxLength: 200
+            thinking:
+              anyOf:
+                - type: string
+                  const: off
+                - type: string
+                  const: minimal
+                - type: string
+                  const: low
+                - type: string
+                  const: medium
+                - type: string
+                  const: high
+                - type: string
+                  const: xhigh
+                - type: string
+                  const: max
+            api_key:
+              type: string
+              minLength: 1
+              maxLength: 8192
+              writeOnly: true
+              description: 用户提供的 API Key 原文，宿主私有保存；省略时复用已有认证。
+              pattern: ^[^\r\n\u0000]+$
+            base_url:
+              type: string
+              minLength: 1
+              maxLength: 2048
+              description: 仅自定义供应商：HTTPS 接口地址，本机服务可用 HTTP。
+            api:
+              anyOf:
+                - type: string
+                  const: openai-completions
+                - type: string
+                  const: openai-responses
+                - type: string
+                  const: anthropic-messages
+                - type: string
+                  const: google-generative-ai
+            context_window:
+              type: integer
+              minimum: 1024
+              maximum: 10000000
+              description: 上下文窗口 token 数；省略时保留已存窗口，尚未配置时默认 256000。仅在用户要求调整时提交。
+            reasoning:
+              type: boolean
+          additionalProperties: false
+          minProperties: 1
+        - type: object
+          properties:
+            locale:
+              anyOf:
+                - type: string
+                  const: zh-CN
+                - type: string
+                  const: en
+            account_view:
+              type: object
+              properties:
+                source:
+                  anyOf:
+                    - type: object
+                      required:
+                        - provider
+                      properties:
+                        provider:
+                          type: object
+                          required:
+                            - pluginId
+                            - providerId
+                          properties:
+                            pluginId:
+                              type: string
+                              minLength: 1
+                              maxLength: 512
+                              pattern: ^[^\u0000-\u001f\u007f]+$
+                            providerId:
+                              type: string
+                              minLength: 1
+                              maxLength: 512
+                              pattern: ^[^\u0000-\u001f\u007f]+$
+                          additionalProperties: false
+                        connection:
+                          type: object
+                          required:
+                            - id
+                            - revision
+                          properties:
+                            id:
+                              type: string
+                              minLength: 1
+                              maxLength: 512
+                              pattern: ^[^\u0000-\u001f\u007f]+$
+                            revision:
+                              type: string
+                              minLength: 1
+                              maxLength: 512
+                              pattern: ^[^\u0000-\u001f\u007f]+$
+                          additionalProperties: false
+                        accountId:
+                          type: string
+                          minLength: 1
+                          maxLength: 512
+                          pattern: ^[^\u0000-\u001f\u007f]+$
+                        accountConnectionId:
+                          type: string
+                          minLength: 1
+                          maxLength: 512
+                          pattern: ^[^\u0000-\u001f\u007f]+$
+                      additionalProperties: false
+                    - type: "null"
+                sources:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - provider
+                    properties:
+                      provider:
+                        type: object
+                        required:
+                          - pluginId
+                          - providerId
+                        properties:
+                          pluginId:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                          providerId:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                        additionalProperties: false
+                      connection:
+                        type: object
+                        required:
+                          - id
+                          - revision
+                        properties:
+                          id:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                          revision:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                        additionalProperties: false
+                      accountId:
+                        type: string
+                        minLength: 1
+                        maxLength: 512
+                        pattern: ^[^\u0000-\u001f\u007f]+$
+                      accountConnectionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 512
+                        pattern: ^[^\u0000-\u001f\u007f]+$
+                    additionalProperties: false
+                  maxItems: 32
+                selected:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - provider
+                      - accountId
+                    properties:
+                      provider:
+                        type: object
+                        required:
+                          - pluginId
+                          - providerId
+                        properties:
+                          pluginId:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                          providerId:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                        additionalProperties: false
+                      connection:
+                        type: object
+                        required:
+                          - id
+                          - revision
+                        properties:
+                          id:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                          revision:
+                            type: string
+                            minLength: 1
+                            maxLength: 512
+                            pattern: ^[^\u0000-\u001f\u007f]+$
+                        additionalProperties: false
+                      accountId:
+                        type: string
+                        minLength: 1
+                        maxLength: 512
+                        pattern: ^[^\u0000-\u001f\u007f]+$
+                      accountConnectionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 512
+                        pattern: ^[^\u0000-\u001f\u007f]+$
+                    additionalProperties: false
+                  maxItems: 32
+                  description: 当前勾选账户；沿用读取结果的 provider、精确 connection、accountId 与 accountConnectionId。空数组取消全部勾选。
+              additionalProperties: false
+              minProperties: 1
+          additionalProperties: false
+          minProperties: 1
+        - type: object
+          minProperties: 1
+          propertyNames:
+            pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+          additionalProperties:
+            anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 8192
+                pattern: ^[^\r\n\u0000]+$
+                writeOnly: true
+              - type: "null"
+          maxProperties: 128
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - application-configuration
+  usage:
+    purpose: 按用户要求直接保存模型 API Key、兼容接口、插件环境凭据或应用偏好；无需导入、手工设置环境变量或打开设置窗口。target=environment 将 changes 的环境变量值私有持久保存并立即生效，null 删除；target=model 在当前回复结束后应用。回执不含秘密。
+    inputs: target=environment：changes={FMP_API_KEY:<用户提供的值>,FRED_API_KEY:<用户提供的值>}，值为单行非空字符串或 null 删除，不传 expected_version。target=model：changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,reasoning?}，不传 expected_version；context_window 省略时保留已存窗口，尚未配置时默认 256000；自定义接口使用新的 provider ID，base_url 与 api 配套。target=preferences：changes 为偏好补丁，expected_version 来自 preferences.version。command_id 为本次修改的稳定 ID。
+    outputs: 脱敏变更回执 {id,target,status,changes,result?,error?}；environment/preferences 的 applied 表示已持久化生效，model 的 queued 表示将在当前回复结束后处理。秘密不会出现在回执中。
+    prerequisites:
+      - 主 Agent；使用用户提供的凭据或已保存认证，只有缺少必要信息时才询问用户。
+    limitations:
+      - 保存配置不证明远端认证、套餐或网络可用，使用对应能力的实际结果确认。
+      - version_conflict 时重读并以新 command_id 提交修订补丁；model 返回 queued 后不要本轮反复轮询或重复提交，下一轮可读取 recent_changes。
+      - 自定义模型使用已知接口协议；只有供应商本身要求 OAuth 交互时才需要登录界面。
+  binding:
+    type: native
+    name: configuration_update

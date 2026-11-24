@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -6,9 +7,13 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { createService, outcome } from '../packages/portfolio-execution/service.js';
-import { createAdapters, payload } from '../packages/portfolio-execution/adapters.js';
+import { createAdapters } from '../packages/portfolio-execution/adapters.js';
 import { createCapabilities } from '../packages/portfolio-execution/index.js';
 import { records, closeRecords } from '../packages/portfolio-execution/records.js';
+import { nativeAdapterFixture } from './portfolio-adapter-fixture.mjs';
+import { adapterResult } from '../packages/portfolio-execution/adapter-contract.js';
+import { executionReceipt as mt5Receipt } from '../packages/mt5/backend/execution-evidence.js';
+import { executionReceipt as qmtReceipt } from '../packages/qmt/execution-evidence.js';
 import { MT5Official } from '../packages/mt5/backend/official.js';
 import { PYTHON_TOOLS } from '../packages/mt5/backend/python-tools.js';
 
@@ -19,16 +24,16 @@ after(()=>{
   for(const host of fixtures){closeRecords(host);const root=resolve(host.context.storageRoot);assert.ok(root.startsWith(resolve(tmpdir(),'portfolio-manual-')));rmSync(root,{recursive:true,force:true});}
 });
 function backendHost(execute,{state='mounted'}={}){
-  return {context:{kind:'main',sessionId:'conv_backend'},plugins:{read:async()=>({state,version:'1.6.0',runtime_status:'ready'})},
-    capabilities:{invoke:async(id,input)=>({type:'result',value:await execute(id.split('#')[1],input)})}};
+  return nativeAdapterFixture({context:{kind:'main',sessionId:'conv_backend'},plugins:{read:async()=>({state,version:'2.2.5',runtime_status:'ready'})},
+    capabilities:{invoke:async(id,input)=>({type:'result',value:await execute(id.split('#')[1],input)})}});
 }
 function fixture() {
   let time=1800000000000,submissions=0,refreshes=0,cancels=0;
   const account={accountId:'fixture-account',server:'Fixture-Demo',revision:'1'};
   const host={context:{kind:'main',sessionId:'conv_fixture',storageRoot:mkdtempSync(join(tmpdir(),'portfolio-manual-'))},capabilities:{},plugins:{}};
   fixtures.push(host);
-  const adapter={snapshot:async(backend,symbol)=>({account:clone(account),symbol,spec:{},positions:[],quote:{sourceTimeMs:time,receivedAt:time,requestMs:1,bid:'100',ask:'101'},capturedAt:time,captureMs:5}),identity:async()=>clone(account),orderRequest:()=>({}),submit:async()=>{submissions++;return {status:'returned',result:{result:{retcode:10009,order:'1001'},execution_timing:{quote_to_send_ms:1,send_to_receipt_ms:2}}};},status:async()=>{refreshes++;return {command:{status:'unknown'},orders:[],deals:[]};},cancel:async()=>{cancels++;return {status:'returned',result:{result:{retcode:10009}}};}};
-  adapter.command=async()=>({status:'returned',result:{result:{retcode:10009}}});
+  const adapter={snapshot:async(backend,symbol)=>({account:clone(account),symbol,spec:{},positions:[],quote:{sourceTimeMs:time,receivedAt:time,requestMs:1,bid:'100',ask:'101'},capturedAt:time,captureMs:5}),identity:async()=>clone(account),orderRequest:()=>({}),submit:async()=>{submissions++;return mt5Receipt({status:'returned',result:{result:{retcode:10009,order:'1001'},execution_timing:{quote_to_send_ms:1,send_to_receipt_ms:2}}});},status:async()=>{refreshes++;return {command:{status:'unknown'},orders:[],deals:[]};},cancel:async()=>{cancels++;return mt5Receipt({status:'returned',result:{result:{retcode:10009}}});}};
+  adapter.command=async()=>mt5Receipt({status:'returned',result:{result:{retcode:10009}}});
   const create=()=>{closeRecords(host);return createService(host,{now:()=>time,adapters:adapter});};
   const observation=()=>service.observe({backend:'mt5',symbol:'FIXTURE'},undefined);
   const intent=id=>({operation_id:id,observation_id:null,user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'102'});
@@ -83,7 +88,7 @@ test('typed MT5 permission rejection before native dispatch stays rejected witho
   official.python={available:()=>true,call:async()=>{sends++;return {result:{retcode:10009,order:'700',deal:'701'}};}};
   f.adapter.submit=async(_observation,intent,signal)=>{
     if(deny){official.config.version=2;official.config.allow_trading=false;}
-    return official.call({command_id:intent.backendCommandId,server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_DEAL',symbol:'FIXTURE',volume:0.1,type:'ORDER_TYPE_BUY'}}},f.host.context.sessionId,signal);
+    return mt5Receipt(await official.call({command_id:intent.backendCommandId,server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_DEAL',symbol:'FIXTURE',volume:0.1,type:'ORDER_TYPE_BUY'}}},f.host.context.sessionId,signal));
   };
   const rejected=await f.service.execute(args);assert.equal(rejected.status,'rejected');assert.equal(rejected.error.code,'mt5_permission_denied');
   assert.equal(sends,0);assert.equal(official.storage.list('mt5_command').length,0);
@@ -104,12 +109,12 @@ test('unknown sends persist and block new IDs on same account even after config 
   const recovered=await f.service.status({operation_id:args.operation_id,refresh:true});assert.equal(recovered.status,'order_observed');assert.equal(recovered.account.revision,'1');assert.equal(recovered.checkedAccount.revision,'2');
 });
 test('native guard rejection is distinguished from timeout and return/retcode from a fill',()=>{
-  assert.equal(outcome('mt5',{status:'failed',result:{submission_attempted:false}}),'rejected');
-  assert.equal(outcome('mt5',{status:'returned',result:{result:{retcode:10012}}}),'outcome_unknown');
-  assert.equal(outcome('mt5',{status:'returned',result:{result:{retcode:10019}}}),'rejected');
-  assert.equal(outcome('mt5',{status:'returned',result:{result:{retcode:10008}}}),'submitted');
-  assert.equal(outcome('mt5',{status:'returned',result:{result:{retcode:10010}}}),'partially_filled');
-  assert.equal(outcome('qmt',{status:'submitted'}),'submitted');
+  assert.equal(outcome('mt5',mt5Receipt({status:'failed',result:{submission_attempted:false}})),'rejected');
+  assert.equal(outcome('mt5',mt5Receipt({status:'returned',result:{result:{retcode:10012}}})),'outcome_unknown');
+  assert.equal(outcome('mt5',mt5Receipt({status:'returned',result:{result:{retcode:10019}}})),'rejected');
+  assert.equal(outcome('mt5',mt5Receipt({status:'returned',result:{result:{retcode:10008}}})),'submitted');
+  assert.equal(outcome('mt5',mt5Receipt({status:'returned',result:{result:{retcode:10010}}})),'partially_filled');
+  assert.equal(outcome('qmt',qmtReceipt({status:'submitted'})),'submitted');
 });
 test('zero native IDs and non-trade history cannot resolve an unknown order or unlock replacement IDs',async()=>{
   const f=fixture(),args=await prepared(f),submit=f.adapter.submit;
@@ -261,31 +266,37 @@ test('migrated foreign unknown blocks new account orders until its owner obtains
   assert.equal(f.records.list('legacy_blocks').length,0);
 });
 test('adapter uses standard public ToolResult and refuses errors, truncation or implicit plugin activation',async()=>{
-  assert.deepEqual(payload({details:{ok:true},content:[]}),{ok:true});
-  assert.throws(()=>payload({isError:true,details:{ok:true}}),{code:'BACKEND_ERROR'});
-  assert.throws(()=>payload({content:[{type:'text',text:'{"_tool_output_truncated":true}'}]}),{code:'SOURCE_DATA_INVALID'});
+  assert.equal(adapterResult(mt5Receipt({ status: 'unknown' }), 'mt5').status, 'outcome_unknown');
+  assert.throws(() => adapterResult({ details: { ok: true }, content: [] }, 'mt5'), { code: 'SOURCE_DATA_INVALID' });
+  assert.throws(() => adapterResult(qmtReceipt({ status: 'submitted' }), 'mt5'), { code: 'SOURCE_DATA_INVALID' });
   const host=backendHost(()=>assert.fail('must not call inactive plugin'),{state:'disabled'});
   await assert.rejects(createAdapters(host).identity('mt5'),{code:'PREREQUISITE_REQUIRED'});
 });
 test('native intent construction rejects unsupported features and passes final-mile guard to correct trading route',async()=>{
-  const calls=[],host=backendHost(async(name,args)=>{calls.push({name,arguments:args});return {status:'returned'};});
-  const adapter=createAdapters(host),observation={backend:'mt5',symbol:'FIXTURE',account:{accountId:'42',server:'Fixture'},quote:{sourceTimeMs:1800000000000,clock:{status:'verified',ruleRevision:'fixture-clock-v1'}},expiresAt:1800000060000,spec:{volume_min:0.01,volume_max:10,volume_step:0.01,filling_mode:2,trade_exemode:2}};
-  const args={operation_id:'fixture',backendCommandId:'manual-fixture-command',action:'market',side:'buy',quantity:'0.1',price_limit:'100',remark:'fixture'};
+  const calls = [], host = backendHost(async (name, args) => {
+    if (name === 'mt5_settings') return { settings: { version: 1, account: { login: '42', server: 'Fixture' } } };
+    if (name === 'qmt_environment') return { configuration: { version: 1, account_id: '42', connection_id: 'fixture' } };
+    calls.push({ name, arguments: args }); return { status: 'returned' };
+  });
+  const adapter=createAdapters(host),observation={backend:'mt5',symbol:'FIXTURE',account:{accountId:'42',server:'Fixture',revision:'1'},quote:{sourceTimeMs:1800000000000,clock:{status:'verified',ruleRevision:'fixture-clock-v1'}},expiresAt:1800000060000,spec:{volume_min:0.01,volume_max:10,volume_step:0.01,filling_mode:2,trade_exemode:2}};
+  const args={operation_id:'fixture',backendCommandId:'manual-fixture-command',action:'market',side:'buy',quantity:'0.1',price_limit:'100',remark:'fixture',user_authorized:true};
   await adapter.submit(observation,args);
   assert.equal(calls[0].name,'mt5_trade');assert.equal(calls[0].arguments.tool,'order_send');assert.equal(calls[0].arguments.arguments.execution_guard.expires_at,observation.expiresAt);assert.equal(calls[0].arguments.arguments.request.type_filling,'ORDER_FILLING_IOC');
-  assert.throws(()=>adapter.orderRequest(observation,{...args,quantity:'0.015'}),{code:'INVALID_ARGUMENT'});
-  const qmt={...observation,backend:'qmt'};
-  assert.throws(()=>adapter.orderRequest(qmt,args),{code:'UNSUPPORTED_CAPABILITY'});
-  assert.throws(()=>adapter.orderRequest(qmt,{...args,action:'limit',limit_price:'99',quantity:'100',stop_loss:'80'}),{code:'UNSUPPORTED_CAPABILITY'});
+  await assert.rejects(adapter.submit(observation,{...args,quantity:'0.015'}),{code:'INVALID_ARGUMENT'});
+  const qmt={...observation,backend:'qmt',account:{accountId:'42',revision:'1',connectionId:'fixture'}};
+  await assert.rejects(adapter.submit(qmt,args),{code:'UNSUPPORTED_CAPABILITY'});
+  await assert.rejects(adapter.submit(qmt,{...args,action:'limit',limit_price:'99',quantity:'100',stop_loss:'80'}),{code:'UNSUPPORTED_CAPABILITY'});
+  assert.equal(calls.length,1);
+
 });
 test('manifest, executable schemas and documented scope agree',async()=>{
-  const tools=createCapabilities({}),root=new URL('../packages/portfolio-execution/',import.meta.url),manifest=JSON.parse(await readFile(new URL('plugin.json',root)));
-  const declared=JSON.parse(await readFile(new URL(manifest.capability_manifest,root)));
+  const tools=createCapabilities({}),root=new URL('../packages/portfolio-execution/',import.meta.url),manifest=readPackageDirectory(new URL('.', root)).manifest;
+  const declared=readPackageDirectory(root).capabilities;
   assert.equal(manifest.apiVersion,'2');assert.equal(manifest.capability_manifest,'capabilities.json');
-  assert.deepEqual(tools.map(x=>x.name).sort(),declared.capabilities.map(cap=>cap.binding.name).sort());assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('portfolio_execution_configure'));assert.ok(!manifest.main_tool_names.includes('portfolio_execution_apply'));assert.equal(manifest.engines.sesame,'>=0.2.4');
+  assert.deepEqual(tools.map(x=>x.name).sort(),declared.capabilities.map(cap=>cap.binding.name).sort());assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('portfolio_execution_configure'));assert.ok(!manifest.main_tool_names.includes('portfolio_execution_apply'));assert.equal(manifest.engines.sesame,'>=0.3.0-dev.1 <0.4.0');
   assert.deepEqual(declared.capabilities.find(cap=>cap.id==='dispose').consumers,['host']);
   const shape=declared.capabilities.find(cap=>cap.id==='manual_trade_execute').inputSchema;
   assert.equal(Value.Check(shape,{operation_id:'one',observation_id:'fixture',user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'100'}),true);
   assert.equal(Value.Check(shape,{operation_id:'one',observation_id:'fixture',user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'100',timeframe:'1m'}),false);
-  for(const backend of ['mt5','qmt']){const m=JSON.parse(await readFile(new URL(`../packages/${backend}/plugin.json`,import.meta.url)));assert.ok(m.resources.includes('TRADING.md'));const doc=await readFile(new URL(`../packages/${backend}/TRADING.md`,import.meta.url),'utf8');assert.match(doc,/execution_guard/);assert.match(doc,/unknown/);}
+  for(const backend of ['mt5','qmt']){const m=readPackageDirectory(new URL(`../packages/${backend}/`, import.meta.url)).manifest;assert.ok(m.resources.includes('TRADING.md'));const doc=await readFile(new URL(`../packages/${backend}/TRADING.md`,import.meta.url),'utf8');assert.match(doc,/execution_guard/);assert.match(doc,/unknown/);}
 });

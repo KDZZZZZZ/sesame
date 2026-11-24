@@ -1,0 +1,40 @@
+name: host_files_mkdir
+title: host_files_mkdir
+description: 在宿主递归创建所需目录，保留已存在目录。
+inputSchema:
+  type: object
+  required:
+    - path
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 在宿主递归创建所需目录，保留已存在目录。
+    inputs: path 为要创建的宿主绝对目录。
+    outputs: '{path,execution:"host"}；递归创建缺失目录，保留已有目录。'
+    prerequisites: []
+    limitations:
+      - 不修改文件权限或提升系统权限；路径受保护时选择任务可用位置。
+  binding:
+    type: native
+    name: host_files_mkdir

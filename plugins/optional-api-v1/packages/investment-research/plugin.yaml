@@ -1,0 +1,117 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/investment-research
+title: 投资研究 · Research
+description: 投资研究工作流：按问题选用 Research 方法与专业知识、取得证据、综合判断并交付统一视觉报告；复用原生 Run 与固定成果。
+version: 4.0.3
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.2 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "business"
+    implementationKinds: ["workflow"]
+    title:
+      en: "Research — investment research"
+      zh: "Research · 投资研究"
+    summary:
+      en: "Organize requirements, evidence acquisition, analysis and report delivery for an investment question; adapt result forms without fixing methods."
+      zh: "围绕投资问题与结果需求组织获取、分析和报告，可调整结果形式，不固定研究方法。"
+    dependencies:
+      en: "Configured model and selected research capabilities; no trading account or execution binding. Report output uses the reports plugin and the host Run."
+      zh: "需要已配置模型与明确选择的研究能力；不依赖交易账户或执行绑定。报告使用 reports 插件与宿主 Run。"
+  default_state: discoverable
+  agent_scope: all
+  permissions:
+    scopes:
+      - capabilities.compose
+    calls:
+      - host.agent.run
+      - host.runs.read
+      - host.runs.wait
+      - host.runs.interrupt
+      - host.resources.read
+      - host.reports.describe
+      - host.reports.publish
+  contributions:
+    capabilities:
+      - tool/investment_research_start
+      - tool/investment_research_analyze
+      - tool/investment_research_report
+      - tool/investment_research_ask
+      - tool/investment_research_event_outcomes
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: research-prompt
+        path: instructions.md
+        kind: prompt
+        description: Research, trade decisions and execution boundaries; precise workflow and report-only usage.
+      - id: research-guide
+        path: README.md
+        kind: reference
+        description: Inputs, configuration, fixed research packet, report regeneration and native Run recovery.
+      - id: research-report-workflow
+        path: WORKFLOW.md
+        kind: reference
+        description: Research步骤、多种报告场景、用户调整与Strategy边界。
+      - id: historical-evidence-guidance
+        kind: reference
+        path: HISTORY.md
+        description: 可选独立历史匹配与概率校准的固定DataRef交接、用户选择、条件使用和隔离评价边界。
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: research-run-record
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            type:
+              const: investment-research-run-record
+            path:
+              const: rows.json
+            sourceKind:
+              const: agent-run-output
+            provenance:
+              type: object
+          required:
+            - type
+            - path
+            - sourceKind
+            - provenance
+          additionalProperties: false
+      - id: research-data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              const: rows.json
+            rowCount:
+              const: 1
+            columns:
+              type: array
+              items:
+                type: string
+            provenance:
+              type: object
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: false
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false

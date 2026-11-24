@@ -1,0 +1,199 @@
+name: strategy_development_study
+title: strategy_development_study
+description: 在开发行情上检验一个设计假设。对突破机会分解跳空和下一根开盘后的延续，观察委托允许入场时还剩多少走势。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Stable operation key for this exact input. Choose a new key for a revision or a changed experiment.
+    project_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    development:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    columns:
+      type: object
+      properties:
+        datetime:
+          type: string
+          minLength: 1
+        open:
+          type: string
+          minLength: 1
+        high:
+          type: string
+          minLength: 1
+        low:
+          type: string
+          minLength: 1
+        close:
+          type: string
+          minLength: 1
+        volume:
+          type: string
+          minLength: 1
+      required: []
+      additionalProperties: false
+    study:
+      type: object
+      properties:
+        method:
+          const: breakout_continuation
+        lookback:
+          type: integer
+          minimum: 1
+          maximum: 500
+        horizon:
+          type: integer
+          minimum: 1
+          maximum: 500
+        side:
+          enum:
+            - long
+            - short
+            - both
+      required:
+        - method
+        - lookback
+        - horizon
+        - side
+      additionalProperties: false
+  required:
+    - operation_id
+    - project_ref
+    - development
+    - study
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - projectRef
+    - mandateRef
+    - stage
+  properties:
+    projectRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    mandateRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    stage:
+      type: string
+      minLength: 1
+      maxLength: 2000
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.write
+    - state.write
+  usage:
+    purpose: 在开发行情上检验一个设计假设。对突破机会分解跳空和下一根开盘后的延续，观察委托允许入场时还剩多少走势。
+    inputs: Choose a frozen single-instrument development OHLC table, lookback, holding horizon and direction. Can run immediately after plan.
+    outputs: Pinned study, counts, directional price changes before and after the next open, and an all-eligible-bars reference. These gross labels can motivate an executable strategy test.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_study

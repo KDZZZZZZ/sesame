@@ -1,3 +1,4 @@
+import {createProtocolFiles} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -13,8 +14,8 @@ function fixture(t, binding, servers = { [String(binding?.server)]: { command: '
   });
   const directory = join(source, 'packages/example'); mkdirSync(directory, { recursive: true });
   const save = (name, value) => writeFileSync(join(directory, name), JSON.stringify(value, null, 2) + '\n');
-  save('plugin.json', { id: 'sesame/example', apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: 'discoverable',
-    execution: binding?.type === 'mcp' ? 'mcp' : 'native', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], resources: [] });
+  const metadata = {title:'Fixture', description:'Read the fixture.', id: 'sesame/example', apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: 'discoverable',
+    execution: binding?.type === 'mcp' ? 'mcp' : 'native', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], resources: [] };
   save('package.json', { name: '@sesame/plugin-example', version: '1.0.0', type: 'module', license: 'MIT' });
   const capability = { id: 'fixture.read', kind: 'function', execution: 'immediate', description: 'Read the fixture.',
     inputSchema: { type: 'object' }, outputSchema: { type: 'object' }, consumers: ['agent', 'host'], effects: [], binding,
@@ -22,8 +23,11 @@ function fixture(t, binding, servers = { [String(binding?.server)]: { command: '
   if (binding?.type === 'agent') Object.assign(capability, { kind: 'agent', execution: 'run', instructions: 'Use the declared capabilities to answer the objective.',
     objective: 'Return the fixture value.', allowedCalls: [] });
   if (binding?.type === 'graph') Object.assign(capability, { kind: 'workflow', execution: 'run' });
-  save('capabilities.json', { schemaVersion: 1, apiVersion: '2', configSchema: {}, capabilities: [capability],
-    sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] });
+  const declaration = { schemaVersion: 1, apiVersion: '2', configSchema: {}, capabilities: [capability],
+    sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] };
+  for (const [name,bytes] of Object.entries(createProtocolFiles(metadata,declaration))) {
+    mkdirSync(dirname(join(directory,name)),{recursive:true}); writeFileSync(join(directory,name),bytes);
+  }
   // Even malformed server keys exist in this fixture, so the ID gate is tested
   // independently from the existing declared-server lookup.
   save('mcp.json', { mcpServers: servers });

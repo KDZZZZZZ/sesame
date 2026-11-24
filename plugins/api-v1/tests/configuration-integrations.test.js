@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -6,7 +7,7 @@ import { createCapabilities } from '../packages/configuration/index.js';
 test('configuration adds unified immediate wrappers while preserving legacy entry points', async () => {
   const calls = [], host = { capabilities: { invoke: async (...args) => { calls.push(args); return { type: 'result', value: { available: true } }; } }, views: { open: input => input } };
   const capabilities = createCapabilities(host);
-  const declared = JSON.parse(await readFile(new URL('../packages/configuration/capabilities.json', import.meta.url)));
+  const declared = readPackageDirectory(new URL('../packages/configuration/', import.meta.url)).capabilities;
   assert.deepEqual(capabilities.map(item => item.name), declared.capabilities.map(item => item.id));
   for (const suffix of ['catalog', 'check', 'apply']) {
     const id = `configuration_integration_${suffix}`, value = { plugin_id: 'fixture/source' };

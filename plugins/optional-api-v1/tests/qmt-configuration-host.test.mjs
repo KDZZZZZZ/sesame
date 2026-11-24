@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Real installed HostContext configuration path; no QMT SDK or broker calls. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +11,7 @@ const root = process.env.SESAME_HOST_ROOT, pluginId = 'sesame/qmt';
 const packageRoot = fileURLToPath(new URL('../packages/qmt', import.meta.url));
 
 test('QMT shared configuration preserves existing contracts except the explicitly typed history extension', async () => {
-  const manifest = JSON.parse(await readFile(join(packageRoot, 'capabilities.json'), 'utf8'));
+  const manifest = readPackageDirectory(join(packageRoot)).capabilities;
   const baseline = JSON.parse(await readFile(new URL('../../api-v1/tests/fixtures/plugin-boundaries-baseline.json', import.meta.url), 'utf8'));
   const original = baseline.packages.find(item => item.manifest.id === pluginId).declaration;
   const existing = manifest.capabilities.filter(item => original.capabilities.some(prior => prior.id === item.id));

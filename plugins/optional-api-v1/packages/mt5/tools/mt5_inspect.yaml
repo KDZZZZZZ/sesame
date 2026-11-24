@@ -1,0 +1,50 @@
+name: mt5_inspect
+title: mt5_inspect
+description: 查看本机能力、工程源码及生成逻辑摘要、冻结构建诊断。engine_node_id 可按源节点下钻到输入、调用目标和源码。checked 表示严格源码已校验；declared 只是旧工程手写声明；均不代表 Tester 已通过。
+inputSchema:
+  type: object
+  properties:
+    project_id:
+      type: string
+      description: 工程 ID
+      minLength: 1
+      maxLength: 20000
+    build_id:
+      type: string
+      description: 构建 ID
+      minLength: 1
+      maxLength: 20000
+    engine_node_id:
+      type: string
+      description: 严格工程中需要展开的节点 ID；必须同时给出 project_id 或 build_id
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取能力、工程实现状态或构建证据。
+    inputs: '{} 看本机能力；{project_id} 或 {build_id} 二选一；可附 engine_node_id 下钻实际节点。例 {project_id:"<create返回id>"}。'
+    outputs: 无ID:{installed,compile,tester,deploy,sdk_version,reason,dependencies}；project返回工程、files、implementation、builds、backtests、engine摘要；build返回固定构建及diagnostics；节点返回{revision,engine_digest,node,edges,source}。
+    prerequisites: []
+    limitations:
+      - compile可用不是编译完成；checked仅源码校验，declared只是旧声明；均不代表Tester/实盘成功。
+  binding:
+    type: native
+    name: mt5_inspect

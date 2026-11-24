@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/wyckoff:instructions#preamble": "43f55b5bcede0ce8c2d19bb048b0c4cdf19584078217dfd3d68eeeea29cdc7e4",
+    "sesame/wyckoff:plugin.description": "14b8c3552dc7f272458bb231fcc1bd78444d92c325ae8524722262e88d3f007e",
+    "sesame/wyckoff:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/wyckoff:resource/PROVENANCE.md": "7d7608b3975ca076f8b9012fefdec5abdb39a258e5072e88920419fd1614402f",
+    "sesame/wyckoff:resource/README.md": "636d72c51c3c7ef65104dedf048d6969ca3fe3d446cd52b8f1f3c1a4415e16ac",
+    "sesame/wyckoff:resource/examples/case.json": "4f295fcb2d0d260aecbad003c946b8104034e3dcf2d76e19f18c186cd387effd",
+    "sesame/wyckoff:resource/examples/expected.md": "2e226352cc80e8585fc33683d52aa2b34e4a5e1132716604e254d1bb196cef1e",
+    "sesame/wyckoff:resource/references/method.md": "d67ac992f9dcf4342184603295a0948885b9dc0c30d4e51303f8ca07441c66b0",
+    "sesame/wyckoff:resource/references/validation.md": "d4dbd236c4e01a074b148d9f85e912a803d12166ef67c3fdea81ee648e064f97",
+    "sesame/wyckoff:skill/wyckoff.body": "6ad029d787fd00e6b8946d0df5fd860f67309145d2573d4cc034b0a7a58b9ffe",
+    "sesame/wyckoff:skill/wyckoff.description": "315aca8663f15b26afbea3eb275181a3f6365dd0a6904702a41adb3bd9ced834"
+  },
+  "digest": "d81606080c4a3ebebce83407701e40d3b7e2728cdcf11321a563da81c1e172a7"
+}

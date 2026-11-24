@@ -1,0 +1,56 @@
+name: optimizer_change_new
+title: optimizer_change_new
+description: 关联发现并冻结候选包与评测案例
+inputSchema:
+  type: object
+  properties:
+    finding:
+      type: string
+      minLength: 1
+    baseline:
+      type: string
+      minLength: 1
+    candidate:
+      type: string
+      minLength: 1
+    cases:
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    repeats:
+      type: integer
+      minimum: 1
+      maximum: 20
+  required:
+    - finding
+    - baseline
+    - candidate
+    - cases
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: 关联发现并冻结候选包与评测案例
+    inputs: finding, baseline, candidate, cases, repeats
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_change_new

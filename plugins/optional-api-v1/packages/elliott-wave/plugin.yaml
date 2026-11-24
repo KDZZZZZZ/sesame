@@ -1,0 +1,82 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/elliott-wave
+title: Elliott 波浪候选
+description: 可组合的分析方法：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选；消费已有证据，返回主/替代候选表、标准推动结构的逐条规则结果、端点版本、失效价位及区分候选的新观察。
+version: 2.0.2
+license: MIT
+engines:
+  sesame: ">=0.2.3"
+author:
+  name: Sesame contributors
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Elliott Wave"
+      zh: "艾略特波浪"
+    summary:
+      en: "Compare explicit wave counts, alternatives and invalidation levels."
+      zh: "对照明确的浪形计数、备选解释与失效位置。"
+    dependencies:
+      en: "Requires sourced price evidence; wave labels remain interpretations. Independently selected method."
+      zh: "需有来源的价格证据；浪形标记是解释，可独立选择本方法。"
+  default_state: discoverable
+  agent_scope: all
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - LICENSE
+    - PROVENANCE.md
+    - README.md
+    - examples/case.json
+    - examples/expected.md
+    - references/method.md
+    - references/validation.md
+  provides: {}
+  contributions:
+    capabilities: []
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: examples/expected.md
+        description: Elliott 波浪候选的合成教学反例与预期局部结论，不是真实市场结果。
+        kind: reference
+      - id: knowledge-1
+        path: instructions.md
+        description: Elliott 波浪候选的方法边界与组合入口：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选；复用固定证据并向调用者交回局部结论。
+        kind: prompt
+      - id: knowledge-2
+        path: PROVENANCE.md
+        description: Elliott 波浪候选采用资料的出处、实际访问范围与许可，不是当前市场证据。
+        kind: reference
+      - id: knowledge-3
+        path: README.md
+        description: Elliott 波浪候选的输入、输出、方法边界和按需参考说明。
+        kind: reference
+      - id: knowledge-4
+        path: references/method.md
+        description: Elliott 波浪候选的操作定义、因果边界与反证；用于核对本次具体判据。
+        kind: reference
+      - id: knowledge-5
+        path: references/validation.md
+        description: Elliott 波浪候选从解释候选到可重复规则的验证前提、时间与样本外边界。
+        kind: reference
+      - id: knowledge-6
+        path: skills/elliott-wave/SKILL.md
+        description: 分析方法：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选。输入：已有固定行情和锚点引用、周期、价格基础、端点 high/low 或 close、确认时点、结构类别与级别；只有截图时缩小为示意候选。输出：主/替代候选表、标准推动结构的逐条规则结果、端点版本、失效价位及区分候选的新观察。
+        kind: skill
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false

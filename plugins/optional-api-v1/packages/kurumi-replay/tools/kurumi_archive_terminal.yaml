@@ -1,0 +1,63 @@
+name: kurumi_archive_terminal
+title: kurumi_archive_terminal
+description: 显式完整封存终态旧实验到双副本与不可变history；活跃/未知/未归档/待办阻塞，不重置旧账户。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 0
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+  required:
+    - command_id
+    - expected_version
+    - run_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 显式完整封存终态旧实验到双副本与不可变history；活跃/未知/未归档/待办阻塞，不重置旧账户。
+    inputs: "{command_id,expected_version,run_id:<current exact run>}."
+    outputs: "{sealed:true,runId,documentDigest,manifestDigest,manifestFile,historyCollection,oldDocumentUnchanged:true}; only after all source/role copies validate."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Terminal complete flat experiment with no active/unknown tasks, recoveries, hooks or unfinished weekly archives.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Failure leaves an explicit archive transaction; do not reset or hide the original run to bypass it.
+  binding:
+    type: native
+    name: kurumi_archive_terminal
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

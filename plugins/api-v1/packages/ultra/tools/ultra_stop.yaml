@@ -1,0 +1,47 @@
+name: ultra_stop
+title: ultra_stop
+description: 停止当前会话 Ultra，取消全部登记的真实 Run 及子树，并执行已登记的领域停止动作；已成交订单不会回滚。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 2000
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - execution
+    - declared-calls
+  usage:
+    purpose: 停止当前会话 Ultra，取消全部登记的真实 Run 及子树，并执行已登记的领域停止动作；已成交订单不会回滚。
+    inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_stop

@@ -1,5 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises';
-import { ID, FINAL, SETTLED, ACTIVE, hash, uniqueId, check, main, errorInfo, locked, read, put, patch, session,
+import { ID, FINAL, SETTLED, ACTIVE, hash, uniqueId, check, main, errorInfo, locked, read, patch, session, stateWrite, retryConflicts, stateChange, conciseText,
   branches, branchKey, saveSession, saveBranch, publicState, continuationState } from './state.js';
 import { continuationGuidance, plannerRequest } from './planning.js';
 
@@ -32,15 +32,18 @@ async function requireReopen(host, owner, fence) {
     'Ultra is closed. A new explicit user request, such as /ultra resume, is required to reopen it.');
 }
 
-async function closeOwner(host, owner) {
+async function closeOwner(host, owner, expectedId) {
   const authority = await read(host, 'authorities', owner);
-  for (let attempt = 0; attempt < 4; attempt++) {
+  // The durable control fence must preempt an in-flight admission, even while
+  // that admission is waiting for storage or a broker. CAS orders both commits.
+  return locked(host, owner, () => retryConflicts(async () => {
     const pointer = await read(host, 'owners', owner);
+    check(!expectedId || pointer?.value.id === expectedId, 'NOT_FOUND', 'Close controls the current Ultra goal in this conversation.');
     const value = { ...pointer?.value, closeGeneration: (pointer?.value.closeGeneration ?? 0) + 1,
       closeAuthority: authority?.value.counter ?? 0, closeRequestedAt: Date.now() };
-    try { return (await put(host, 'owners', owner, value, pointer?.version ?? 0)).value; }
-    catch (error) { if (!['VERSION_CONFLICT', 'CONFLICT'].includes(error.code) || attempt === 3) throw error; }
-  }
+    await host.state.commit([stateChange('owners', owner, value, pointer?.version ?? 0)]);
+    return value;
+  }), 'control');
 }
 
 export async function beforeTurn(host, input) {
@@ -49,7 +52,7 @@ export async function beforeTurn(host, input) {
   const owner = input.conversation?.id;
   if (!owner) return { parts: input.parts };
   if (input.metadata?.origin !== 'automation' && !input.source) {
-    await locked(host, owner, async () => {
+    await locked(host, owner, () => retryConflicts(async () => {
       const messageKey = hash([owner, input.messageId]);
       if (await read(host, 'human_inputs', messageKey)) return;
       const prior = await read(host, 'authorities', owner);
@@ -58,7 +61,7 @@ export async function beforeTurn(host, input) {
           value: { owner, messageId: input.messageId, counter: (prior?.value.counter ?? 0) + 1, ultraRequested: explicitUltraInput(input.parts) } },
         { op: 'put', key: { collection: 'human_inputs', key: messageKey }, expectedVersion: 0, value: { owner, messageId: input.messageId } },
       ]);
-    });
+    }), 'state');
   }
   return { parts: input.parts };
 }
@@ -106,10 +109,16 @@ async function continueAfterTurn(host, input, signal, drainQueue) {
     if (current && ACTIVE.has(current.status)) return publicState(state, jobs);
     if (state.recovery?.responseId === input.responseId) return publicState(state, jobs);
     const active = jobs.filter(job => ['starting', 'running'].includes(job.status));
-    const runnable = jobs.some(job => job.status === 'queued' && (!job.exclusive || !jobs.some(executionLaneOccupied)));
+    const queued = jobs.filter(job => job.status === 'queued');
+    const prior = queued.some(job => job.exclusive) ? await outstandingExecutionGoals(host, state) : [];
+    const runnable = queued.some(job => !job.exclusive || !prior.length && !jobs.some(executionLaneOccupied));
     if (drainQueue && runnable && active.length < state.maxParallel) return { drain: state.id };
     const refs = active.flatMap(job => job.refs ?? []);
     if (refs.length) return publicState(await launchCycle(host, state, { mode: 'runs', refs }, signal), jobs);
+    if (!runnable && prior.length) {
+      // The original Run retains its completion notice and reconciliation ID.
+      return publicState(await continueState(host, state.id, { status: 'waiting', wake: { mode: 'prior-execution', goals: prior } }), jobs);
+    }
     if (jobs.some(job => ['starting', 'interrupted', 'unknown'].includes(job.status))) {
       state = await continueState(host, state.id, { status: 'interrupted', error: { code: 'RECONCILE_REQUIRED', message: 'Resolve the retained branch outcome before starting new work; no accepted action was replayed.' } });
       return publicState(state, jobs);
@@ -138,9 +147,14 @@ function retainedResult(value) {
   return { summary: 'The source result exceeds the Ultra status preview; read the retained original Run output or published references.', preview: JSON.stringify(value).slice(0, 12000), truncated: true };
 }
 
-async function descriptor(host, id) {
+async function descriptor(host, id, field = 'capability') {
   const found = (await host.capabilities.list({ ids: [id] })).items.find(value => value.id === id);
-  check(found, 'CAPABILITY_UNAVAILABLE', `Discover and load the declared capability ${id} before dispatch.`);
+  if (!found) {
+    const recovery = id.startsWith('host.')
+      ? 'Choose a business capability visible to Ultra. If this host action is required, the main Agent can handle that step separately within its existing permissions.'
+      : 'Check the exact capability ID and its owning plugin selection before dispatching again.';
+    check(false, 'CAPABILITY_UNAVAILABLE', `${field}: ${id} is outside the current Ultra capability list. ${recovery} Retrying the same selection will fail.`);
+  }
   return found;
 }
 
@@ -149,18 +163,18 @@ function nestedCalls(input) {
 }
 
 async function classify(host, branch) {
-  const target = await descriptor(host, branch.capability), effects = [...(target.effects ?? [])];
+  const target = await descriptor(host, branch.capability, `Branch ${branch.key}.capability`), effects = [...(target.effects ?? [])];
   check(branch.capability !== `${ID}#ultra_cycle` && !branch.capability.startsWith(`${ID}#ultra_`), 'INVALID_BRANCH', 'Ultra controls are not research branches.');
   if (branch.capability === 'host.agent.run') {
     check(!nestedCalls(branch.input).some(id => ['host.capabilities.invoke', 'host.agent.run'].includes(id)), 'UNBOUNDED_DELEGATION', 'Delegate exact business tools. Nested generic invocation would hide the execution lane and concurrency from Ultra.');
-    for (const id of nestedCalls(branch.input)) {
-      const child = await descriptor(host, id);
+    for (const [index, id] of nestedCalls(branch.input).entries()) {
+      const child = await descriptor(host, id, `Branch ${branch.key}.input.allowedCalls[${index}]`);
       effects.push(...child.effects ?? []);
     }
   }
   const schedule = effects.some(effect => ['manage:scheduler', 'manage:subscriptions'].includes(effect));
   check(!schedule || branch.stop, 'STOP_ACTION_REQUIRED', 'A persistent schedule/subscription branch must include its exact domain stop capability and arguments.');
-  if (branch.stop) await descriptor(host, branch.stop.capability);
+  if (branch.stop) await descriptor(host, branch.stop.capability, `Branch ${branch.key}.stop.capability`);
   const trading = effects.some(effect => tradeEffects.has(effect));
   return { target, trading, persistent: schedule, exclusive: trading || effects.some(effect => opaqueEffects.has(effect)) || branch.exclusive === true };
 }
@@ -184,6 +198,12 @@ async function acceptedRefs(host, state, accepted) {
 
 async function observe(host, state) {
   let jobs = await branches(host, state.id);
+  if (state.replacedBy && jobs.some(job => job.status === 'queued')) {
+    for (const job of jobs.filter(job => job.status === 'queued'))
+      await patch(host, 'branches', branchKey(state.id, job.key), value => value.status === 'queued'
+        ? { ...value, status: 'cancelled', withdrawnReason: 'The user switched Ultra objectives before this branch started.', updatedAt: Date.now() } : value);
+    jobs = await branches(host, state.id);
+  }
   // An unknown outcome retains the original Run. Observe its reconciliation;
   // never replace it with another invocation or release its execution lane.
   await Promise.all(jobs.filter(job => job.refs?.length && !['completed', 'failed', 'cancelled'].includes(job.status)).map(async job => {
@@ -195,7 +215,10 @@ async function observe(host, state) {
     const change = { status: active ? 'running' : interrupted ? 'interrupted' : failure ? failure.status === 'canceled' ? 'cancelled' : failure.status : done ? 'completed' : job.status,
       ...(failure?.error ? { error: failure.error } : {}),
       ...(done ? { result: retainedResult(observed.map(run => ({ run: ref(run), output: run.output, ...(run.report?.ref ? { report_ref: run.report.ref } : {}) }))), completedAt: Date.now() } : {}) };
-    if (Object.entries(change).some(([key, value]) => JSON.stringify(job[key]) !== JSON.stringify(value))) await saveBranch(host, job, change);
+    if (Object.entries(change).some(([key, value]) => JSON.stringify(job[key]) !== JSON.stringify(value))) {
+      await patch(host, 'branches', branchKey(state.id, job.key), value => JSON.stringify(value) === JSON.stringify(job)
+        ? { ...value, ...change, updatedAt: Date.now() } : value);
+    }
   }));
   state = await session(host, state.id, state.owner); jobs = await branches(host, state.id);
   if (state.cycle?.id) {
@@ -255,24 +278,57 @@ export async function start(host, input, signal) {
       await requireReopen(host, owner, pointer?.value ?? previous);
       if (previous.continuation === 'draining') previous = await saveSession(host, previous.id, { continuation: 'active', controlGeneration, status: 'ready', error: null });
     }
-    if (previous && !FINAL.has(previous.status)) { const observed = await observe(host, previous); return { ...publicState(observed.state, observed.jobs), existing: true }; }
+    const mode = input.mode === 'trade' ? 'trading' : input.mode;
+    const previousMode = previous?.mode === 'trade' ? 'trading' : previous?.mode;
+    const replacing = input.replace === true && previous && expanding(previous)
+      && (previous.objective !== input.objective || mode !== undefined && previousMode !== mode
+        || input.success_criteria !== undefined && JSON.stringify(previous.successCriteria) !== JSON.stringify(input.success_criteria));
+    if (previous && !FINAL.has(previous.status) && !replacing) { const observed = await observe(host, previous); return { ...publicState(observed.state, observed.jobs), existing: true }; }
     if (previous?.status === 'stopped') {
       const authority = await read(host, 'authorities', owner);
       check((authority?.value.counter ?? 0) > (previous.stopAuthority ?? 0), 'NEW_USER_INPUT_REQUIRED', 'A stopped Ultra goal cannot restart from an old automatic completion notice. Wait for a new user instruction.');
     }
-    const id = uniqueId(), state = { id, owner, objective: input.objective, context: input.context ?? '', mode: input.mode ?? 'auto',
+    const id = uniqueId(), state = { id, owner, objective: input.objective, context: conciseText(input.context), mode: input.mode ?? 'auto',
       successCriteria: input.success_criteria ?? [], plugins: input.plugins ?? [], maxParallel: input.max_parallel ?? 8,
       status: 'planning', continuation: 'active', controlGeneration, createdAt: Date.now(), updatedAt: Date.now(), summary: '' };
-    await put(host, 'sessions', id, state);
-    try { await put(host, 'owners', owner, { ...pointer?.value, id }, pointer?.version ?? 0); }
-    catch (error) {
-      const current = await read(host, 'owners', owner);
-      if (!['VERSION_CONFLICT', 'CONFLICT'].includes(error.code) || (current?.value.closeGeneration ?? 0) <= controlGeneration) throw error;
-      const observed = await observe(host, await session(host, id, owner)); return resultState(observed.state, observed.jobs);
+    if (previous) {
+      const held = await outstandingExecutionGoals(host, previous, true);
+      if (held.length) state.priorExecutionGoals = held;
     }
+    const installed = await stateWrite(host, () => retryConflicts(async () => {
+      const current = await read(host, 'owners', owner);
+      if (current?.version !== pointer?.version) return false;
+      const changes = [stateChange('sessions', id, state), stateChange('owners', owner, { ...current?.value, id }, current?.version)];
+      if (replacing) {
+        const old = await read(host, 'sessions', previous.id);
+        if (!expanding(old.value)) return false;
+        changes.push(stateChange('sessions', previous.id, { ...old.value, status: 'closed', continuation: 'closed',
+          replacedBy: id, closedAt: Date.now(), updatedAt: Date.now(), wake: null }, old.version));
+      }
+      await host.state.commit(changes);
+      return true;
+    }));
+    if (!installed) {
+      const current = await read(host, 'owners', owner);
+      if (!current?.value.id) return { ...offState(), status: 'closed' };
+      const observed = await observe(host, await session(host, current.value.id, owner));
+      return resultState(observed.state, observed.jobs);
+    }
+    if (replacing) await observe(host, await session(host, previous.id, owner));
     try { return publicState(await launchCycle(host, state, { mode: 'plan' }, signal)); }
     catch (error) { await saveSession(host, id, { status: 'interrupted', error: errorInfo(error) }); throw error; }
   });
+}
+
+// Accepted work keeps its original identity across a goal switch. Only an
+// outstanding exclusive branch can reserve the new goal's execution lane.
+async function outstandingExecutionGoals(host, state, includeCurrent = false) {
+  const retained = [];
+  for (const id of [...(state.priorExecutionGoals ?? []), ...(includeCurrent ? [state.id] : [])]) {
+    const observed = await observe(host, await session(host, id, state.owner));
+    if (observed.jobs.some(executionLaneOccupied)) retained.push(id);
+  }
+  return retained;
 }
 
 export async function status(host, input = {}) {
@@ -295,7 +351,15 @@ async function admitBranch(host, state, input) {
   check(state.mode !== 'research' && state.mode !== 'monitor' || !trading, 'MODE_MISMATCH', 'This research/monitor goal has no trading execution lane; retain the user-authorized task scope.');
   const job = { ...structuredClone(input), session: state.id, fingerprint, revision: target.revision ?? null, exclusive, persistent,
     status: 'queued', createdAt: Date.now(), updatedAt: Date.now(), refs: [] };
-  const stored = (await put(host, 'branches', key, job)).value;
+  const stored = await stateWrite(host, () => retryConflicts(async () => {
+    const retained = await read(host, 'branches', key);
+    if (retained) {
+      check(retained.value.fingerprint === fingerprint, 'IDEMPOTENCY_CONFLICT', 'A branch key already identifies different frozen work.');
+      return retained.value;
+    }
+    await host.state.commit([stateChange('branches', key, job)]);
+    return job;
+  }));
   if (!expanding(await session(host, state.id, state.owner))) await saveBranch(host, job, { status: 'cancelled', withdrawnReason: 'Ultra closed before this branch started.' });
   return stored;
 }
@@ -337,7 +401,7 @@ export async function dispatch(host, input, signal) {
       check(state.status !== 'interrupted', 'RESUME_REQUIRED', 'Resolve the retained cycle interruption and resume; do not create a new cycle.');
       const running = observed.jobs.filter(job => ['starting', 'running'].includes(job.status));
       const slots = Math.max(0, state.maxParallel - running.length);
-      let exclusive = observed.jobs.some(executionLaneOccupied);
+      let exclusive = observed.jobs.some(executionLaneOccupied) || (await outstandingExecutionGoals(host, state)).length > 0;
       const admitted = [];
       for (const job of observed.jobs.filter(value => value.status === 'queued').sort((a, b) => a.createdAt - b.createdAt)) {
         if (admitted.length >= slots) break;
@@ -416,7 +480,7 @@ export async function cycle(host, input, signal, execution) {
       check(result.status === 'completed', 'PLANNER_UNAVAILABLE', result.error?.message ?? `Planner ${result.status}; inspect and resume its original Run.`);
       saved.result = retainedResult(result.output); await checkpoint();
       state = await session(host, state.id, state.owner);
-      if (state.status !== 'waiting-input') state = await continueState(host, state.id, { status: 'ready', summary: String(result.output?.text ?? '').slice(0, 20000), wake: null });
+      if (state.status !== 'waiting-input') state = await continueState(host, state.id, { status: 'ready', summary: conciseText(String(result.output?.text ?? '')), wake: null });
       return { ...resultState(state, await branches(host, state.id)), plan: saved.result };
     }
     if (input.mode === 'runs') {
@@ -463,6 +527,7 @@ export async function resume(host, input, signal) {
   return locked(host, owner, async () => {
     const pointer = await read(host, 'owners', owner), controlGeneration = pointer?.value.closeGeneration ?? 0;
     let state = await session(host, input.id, owner);
+    check(!state.replacedBy && pointer?.value.id === state.id, 'GOAL_REPLACED', 'Resume the current Ultra goal. Accepted work from the previous goal retains its original Run.');
     if (state.continuation === 'draining' || state.status === 'closed') {
       await requireReopen(host, owner, pointer?.value ?? state);
       state = await saveSession(host, state.id, { continuation: 'active', controlGeneration, status: 'ready', error: null });
@@ -497,7 +562,7 @@ export async function close(host, input = {}) {
     const current = await read(host, 'owners', owner);
     check(current?.value.id === input.id, 'NOT_FOUND', 'Close controls the current Ultra goal in this conversation.');
   }
-  const pointer = await closeOwner(host, owner);
+  const pointer = await closeOwner(host, owner, input.id);
   if (!input.id && !pointer.id) return offState();
   let state = await session(host, input.id ?? pointer.id, owner);
   if (FINAL.has(state.status) || state.status === 'stopping') return resultState(state, await branches(host, state.id));
@@ -564,7 +629,7 @@ export async function finish(host, input) {
       const current = (await host.runs.read(state.cycle)).run;
       if (ACTIVE.has(current.status)) await host.runs.cancel(state.cycle, { reason: 'Ultra goal was verified complete.' });
     }
-    const done = await saveSession(host, state.id, { status: 'completed', wake: null, completedAt: Date.now(), result: { summary: input.summary, evidence: input.evidence } });
+    const done = await saveSession(host, state.id, { status: 'completed', wake: null, completedAt: Date.now(), result: { summary: conciseText(input.summary), evidence: input.evidence } });
     return publicState(done, observed.jobs);
   });
 }

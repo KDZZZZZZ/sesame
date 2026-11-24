@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,7 +6,7 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 import { createCapabilities } from '../packages/configuration/index.js';
 
 test('model configuration exposes only the context window and leaves omitted settings unchanged', async () => {
-  const declared = JSON.parse(readFileSync(new URL('../packages/configuration/capabilities.json', import.meta.url)));
+  const declared = readPackageDirectory(new URL('../packages/configuration/', import.meta.url)).capabilities;
   const schema = declared.capabilities.find(capability => capability.id === 'configuration_update').inputSchema;
   const model = schema.properties.changes.anyOf.find(candidate => candidate.properties?.context_window);
   assert.equal(Object.hasOwn(model.properties, 'max_tokens'), false);
@@ -31,7 +32,7 @@ test('model configuration exposes only the context window and leaves omitted set
 });
 
 test('configuration instructions describe the 256k fallback without advertising removed output settings', () => {
-  for (const file of ['prompt.md', 'README.md', 'skills/configure-application/SKILL.md']) {
+  for (const file of ['instructions.md', 'README.md', 'skills/configure-application/SKILL.md']) {
     const text = readFileSync(new URL(`../packages/configuration/${file}`, import.meta.url), 'utf8');
     assert.doesNotMatch(text, /\bmax_tokens\b/, file);
     assert.match(text, /256000/, file);
@@ -40,7 +41,7 @@ test('configuration instructions describe the 256k fallback without advertising 
 });
 
 test('configuration tool metadata exposes bounded, credential-free account choices and preference versions', () => {
-  const declared = JSON.parse(readFileSync(new URL('../packages/configuration/capabilities.json', import.meta.url)));
+  const declared = readPackageDirectory(new URL('../packages/configuration/', import.meta.url)).capabilities;
   const schema = declared.capabilities.find(capability => capability.id === 'configuration_update').inputSchema;
   const source = { provider: { pluginId: 'sesame/example', providerId: 'account' }, connection: { id: 'configured', revision: 'exact-revision' }, accountId: 'a' };
   const args = { command_id: 'preferences-test-01', target: 'preferences', expected_version: 2, changes: { account_view: { source } } };

@@ -1,0 +1,211 @@
+name: mt5_trading_context
+title: mt5_trading_context
+description: Read exact configured account identity or a full-account native snapshot for the main Agent or an active workflow task with a frozen matching execution contract. Includes all origins and broker-retained history; never trades.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: identity
+        - type: string
+          const: snapshot
+    history_days:
+      type: integer
+      minimum: 1
+      maximum: 90
+  additionalProperties: false
+outputSchema:
+  oneOf:
+    - type: object
+      properties:
+        account:
+          type: object
+          properties:
+            accountId:
+              type: string
+              minLength: 1
+            server:
+              type: string
+              minLength: 1
+            revision:
+              type: string
+              minLength: 1
+          required:
+            - accountId
+            - server
+            - revision
+          additionalProperties: false
+      required:
+        - account
+      additionalProperties: false
+    - type: object
+      properties:
+        account:
+          type: object
+          properties:
+            accountId:
+              type: string
+              minLength: 1
+            server:
+              type: string
+              minLength: 1
+            revision:
+              type: string
+              minLength: 1
+          required:
+            - accountId
+            - server
+            - revision
+          additionalProperties: false
+        summary:
+          type: object
+          additionalProperties: true
+        positions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        orders:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        fills:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        historicalOrders:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        deployments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        historyCoverage:
+          type: object
+          properties:
+            requestedFrom:
+              type: integer
+            requestedTo:
+              type: integer
+            scope:
+              const: native_requested_range
+            complete:
+              const: false
+            limitations:
+              type: array
+              items:
+                type: string
+                minLength: 1
+          required:
+            - requestedFrom
+            - requestedTo
+            - scope
+            - complete
+            - limitations
+          additionalProperties: false
+        capturedAt:
+          type: integer
+      required:
+        - account
+        - summary
+        - positions
+        - orders
+        - fills
+        - historicalOrders
+        - deployments
+        - historyCoverage
+        - capturedAt
+      additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - network
+    - process
+    - plugin.state.write
+  usage:
+    purpose: 提供公开执行组合所需的配置账户身份与全账户原生Python风险快照；首次失败即停止追加查询。
+    inputs: '{action:"identity"} 或 {action:"snapshot",history_days:7}（默认7天，整数1–90）。identity只读当前配置，无账户查询。'
+    outputs: identity:{account:{accountId,server,revision}}；snapshot:{account,summary,positions,orders,fills,historicalOrders,deployments,historyCoverage:{requestedFrom,requestedTo,scope:"native_requested_range",complete:false,limitations},capturedAt}。summary和四个账户数组保留Python原生字段，时间范围是UTC毫秒；成功的空数组才表示本次未见记录。原生调用失败抛{code,message,details:{transport:"python",requiredTransport:"python",method,commandId,commandStatus?,nativeCode?,nativeMessage?,retryable?,recovery?}}；身份/连接/数据形状核验失败保留各自code和message。失败不返回部分或伪造空仓快照。
+    prerequisites:
+      - 主会话或宿主证明的匹配工作流上下文；账户和配置revision来自identity/mt5_settings，不猜账号。identity不要求原生通道在线；snapshot需要同一已配置账户的Python IPC和券商连接。
+      - mt5_settings说明已有配置；mt5_catalog({server:"python"})提供Python可用方法、参数及调用路由。mt5_connect核验的是Terminal MCP，不能作为Python已连接的证据。Python IPC属于worker进程，宿主或worker重启后首次使用需要显式initialize，普通读取和snapshot不会自动初始化或登录。主Agent可在既有授权覆盖连接恢复、原配置终端及同一账户、现有权限允许的范围内，通过mt5_trade显式initialize；初始化使用已保存账户配置，不更换账户、不放开用户关闭的交易开关、不绕过权限。成功后仍需核验实际账户和券商连接；失败或unknown保留原生回执，不循环尝试。login沿用独立的mt5_trade权限，不由snapshot自动执行。
+    limitations:
+      - snapshot先核验原生账户与连接，再读取全账户当前仓位、订单和请求范围内历史；每次读取核对配置revision，失败或取消立即停止，不按magic/comment隐藏全账户风险。Terminal MCP的字段和券商墙时不替代这里的Python/UTC契约。
+      - 确认原生last_error=[-10004,"No IPC connection"]时code=MT5_PYTHON_UNAVAILABLE，details保留nativeCode/nativeMessage、method和commandId，并给retryable:false。这里仅禁止环境未恢复时重复快照，不禁止既有授权及现有权限内的显式IPC恢复。原配置终端的Python IPC恢复并核验同一账户和券商连接后，原主任务可继续并重新取得快照；已终止的冻结工作流须按现有授权及执行契约创建新Run，不重放终态Run。recovery提示中的新工作流要求适用于后一种情况。重复快照或仅重连Terminal MCP不会恢复Python IPC。其他错误保留实际code/原生证据，不一概判为不可重试。
+      - historyCoverage.complete:false表示券商保留历史的请求范围不代表完整历史；失败不能当空仓，身份不符不能自动切换账号。
+  binding:
+    type: native
+    name: mt5_trading_context
+  configurationRequirements:
+    - field: account_login
+      reason: 使用已绑定的券商账户身份。
+    - field: account_server
+      reason: 使用已绑定的券商服务器身份。
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: snapshot
+        required:
+          - action
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: snapshot
+        required:
+          - action
+    - field: python
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: snapshot
+        required:
+          - action
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: snapshot
+        required:
+          - action
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: snapshot
+        required:
+          - action

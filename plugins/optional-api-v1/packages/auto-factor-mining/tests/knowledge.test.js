@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -6,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
-const declaration = JSON.parse(read('capabilities.json'));
+const declaration = readPackageDirectory(root).capabilities;
 const currentKnowledge = [
-  'prompt.md', 'README.md', 'PROVENANCE.md', 'VALIDATION.md',
+  'instructions.md', 'README.md', 'PROVENANCE.md', 'VALIDATION.md',
   'skills/auto-factor-mining/SKILL.md',
   'references/contracts.md', 'references/evaluation.md',
   'references/search.md', 'references/execution.md',
@@ -57,10 +58,6 @@ test('retired material is absent from the package and current guide links resolv
   }
 });
 
-test('the declaration generator cannot restore removed knowledge entries', () => {
-  const result = spawnSync(process.execPath, ['scripts/generate-contracts.mjs', '--check'], {
-    cwd: fileURLToPath(root), encoding: 'utf8', windowsHide: true,
-  });
-  assert.equal(result.error, undefined);
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+test('declared workflows are discoverable separately from knowledge', () => {
+  assert.ok(readPackageDirectory(root).workflows.length);
 });

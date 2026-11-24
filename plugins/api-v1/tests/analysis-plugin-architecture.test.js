@@ -1,3 +1,4 @@
+import {readPackageDirectory,parseYaml} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -140,8 +141,12 @@ test('the immutable analysis contract plus explicit additions cover current anal
 for (const item of currentContracts) {
   test(`${item.id}: preserves complete declarations and loads from its independently packaged archive`, async t => {
     const directory = join(root, item.sourcePath), name = item.id.split('/')[1];
-    const manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'), 'utf8'));
-    const declaration = JSON.parse(readFileSync(join(directory, 'capabilities.json'), 'utf8'));
+    const current=readPackageDirectory(directory);
+    // These historical approval digests name prompt.md. Translate only the explicit file rename.
+    const oldPath=path=>path==='instructions.md'?'prompt.md':path;
+    const manifest={...current.manifest,prompts:current.manifest.prompts.map(oldPath)};
+    if (!Object.hasOwn(parseYaml(readFileSync(join(directory,'plugin.yaml')))['x-sesame'],'prompts')) delete manifest.prompts;
+    const declaration={...current.capabilities,knowledge:current.capabilities.knowledge.map(row=>({...row,path:oldPath(row.path)}))};
     if (additions.packages.some(added => added.id === item.id)) {
       assertFrozenContract(item, 'manifest', manifest, additionExtensions, reviewedAdditions);
       assertFrozenContract(item, 'declaration', declaration, additionExtensions, reviewedAdditions);
@@ -152,7 +157,8 @@ for (const item of currentContracts) {
     assert.equal(policy[name].functionalCategory, reclassifiedParsers.get(item.id) ?? item.functionalCategory);
     assert.deepEqual(policy[name].implementationKinds, item.implementationKinds);
     for (const path of item.paths) {
-      const relocated = path.replace(/^skills\/[a-z0-9-]+\/references\//, 'references/');
+      const mapped = ({'plugin.json':'plugin.yaml','capabilities.json':'plugin.yaml','prompt.md':'instructions.md'})[path] ?? path;
+      const relocated = mapped.replace(/^skills\/[a-z0-9-]+\/references\//, 'references/');
       assert.ok(existsSync(join(directory, path)) || existsSync(join(directory, relocated)), `Original package path remains available: ${path}`);
     }
 

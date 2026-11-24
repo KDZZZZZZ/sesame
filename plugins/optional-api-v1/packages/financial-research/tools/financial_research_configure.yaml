@@ -1,0 +1,224 @@
+name: financial_research_configure
+title: financial_research_configure
+description: Save user-provided research API keys and user-agent identifiers directly from the main conversation. credentials accepts fmp_api_key, fred_api_key, sec_user_agent, reddit_access_token and reddit_user_agent; null removes a saved value. The host persists values privately and applies them immediately, without import, manual environment setup or restart. Optional *_env fields select environment-variable names. Returns configuration availability, never secret values; a saved key does not prove remote access or extend source coverage.
+inputSchema:
+  type: object
+  properties:
+    fmp_key_env:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+      description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+    fred_key_env:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+      description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+    sec_user_agent_env:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+      description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+    reddit_token_env:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+      description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+    reddit_user_agent_env:
+      type: string
+      pattern: ^[A-Za-z_][A-Za-z0-9_]{0,127}$
+      description: Optional environment-variable name; normally keep the default and pass the value in credentials.
+    credentials:
+      type: object
+      properties:
+        fmp_api_key:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 8192
+              pattern: ^[^\r\n\u0000]+$
+              writeOnly: true
+            - type: "null"
+          description: User-provided value to save privately; null removes the saved value.
+        fred_api_key:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 8192
+              pattern: ^[^\r\n\u0000]+$
+              writeOnly: true
+            - type: "null"
+          description: User-provided value to save privately; null removes the saved value.
+        sec_user_agent:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 8192
+              pattern: ^[^\r\n\u0000]+$
+              writeOnly: true
+            - type: "null"
+          description: User-provided value to save privately; null removes the saved value.
+        reddit_access_token:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 8192
+              pattern: ^[^\r\n\u0000]+$
+              writeOnly: true
+            - type: "null"
+          description: User-provided value to save privately; null removes the saved value.
+        reddit_user_agent:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 8192
+              pattern: ^[^\r\n\u0000]+$
+              writeOnly: true
+            - type: "null"
+          description: User-provided value to save privately; null removes the saved value.
+      additionalProperties: false
+      minProperties: 1
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+      description: Optional stable command identity for unified configuration; omitted callers keep the existing behavior.
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    plugin_id:
+      type: string
+      const: sesame/financial-research
+    configuration:
+      type: object
+      properties:
+        fmp_key_env:
+          type: string
+        fred_key_env:
+          type: string
+        sec_user_agent_env:
+          type: string
+        reddit_token_env:
+          type: string
+        reddit_user_agent_env:
+          type: string
+    credentials:
+      type: object
+      properties:
+        fmp_api_key:
+          type: boolean
+        fred_api_key:
+          type: boolean
+        sec_user_agent:
+          type: boolean
+        reddit_access_token:
+          type: boolean
+        reddit_user_agent:
+          type: boolean
+    sources:
+      type: array
+      items:
+        type: object
+        properties:
+          provider:
+            type: string
+          kinds:
+            type: array
+            items:
+              type: string
+          configured:
+            type: boolean
+          required_environment_names:
+            type: array
+            items:
+              type: string
+          last_checks:
+            type: array
+            items:
+              type: object
+              properties:
+                query:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    kind:
+                      type: string
+                    symbol:
+                      type: string
+                    series_id:
+                      type: string
+                    start:
+                      type: string
+                    end:
+                      type: string
+                    form:
+                      type: string
+                    quarter:
+                      type: string
+                checked_at:
+                  type: string
+                status:
+                  type: string
+                reason:
+                  type: string
+                row_count:
+                  type: number
+    recent_snapshots:
+      type: array
+      items:
+        type: object
+        properties:
+          dataset_id:
+            type: string
+          raw_dataset_id:
+            type: string
+          query:
+            type: object
+            properties:
+              provider:
+                type: string
+              kind:
+                type: string
+              symbol:
+                type: string
+              series_id:
+                type: string
+              start:
+                type: string
+              end:
+                type: string
+              form:
+                type: string
+              quarter:
+                type: string
+          retrieved_at:
+            type: string
+          row_count:
+            type: integer
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - application-configuration
+    - plugin.state.write
+  usage:
+    purpose: 直接保存用户提供的研究来源凭据或修改环境变量名映射，宿主私有持久保存并立即生效。
+    inputs: "{credentials:{fmp_api_key?,fred_api_key?,sec_user_agent?,reddit_access_token?,reddit_user_agent?},fmp_key_env?,fred_key_env?,sec_user_agent_env?,reddit_token_env?,reddit_user_agent_env?}。credentials 的值为用户提供的单行字符串，null 删除；*_env 可选，默认沿用现有变量名。同一次传映射和凭据时使用新映射。"
+    outputs: 与 financial_research_status 相同；只返回环境变量名称和 configured 状态，不返回凭据。
+    prerequisites:
+      - 主会话；用户提供该来源需要的凭据即可直接调用，无需导入或手工配置环境变量。
+    limitations:
+      - 保存后立即供下一次查询使用并跨重启保留；configured 不证明远端认证、套餐权限或网络成功。
+      - 只保存当前需要来源的配置；不索取无关来源的凭据，不申请或刷新 Reddit OAuth token。
+      - FMP 股票新闻和 FRED 宏观观测不覆盖 BLS 未来经济事件日历；补 Key 不会扩展接口覆盖。
+  binding:
+    type: native
+    name: financial_research_configure

@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -27,9 +28,32 @@ function validator() {
   };
 }
 
+integration('documented todo navigation calls validate against the same schemas advertised to the Agent', async () => {
+  const {capabilities} = readPackageDirectory(new URL('../packages/orchestration/', import.meta.url));
+  const schemas = new Map(capabilities.capabilities.map(cap => [cap.id, cap.inputSchema]));
+  const guide = await readFile(new URL('workflow-navigation.md', references), 'utf8');
+  const check = validator(), examples = [];
+  for (const block of guide.matchAll(/^```json\r?\n([\s\S]*?)^```/gm)) {
+    for (const [, tool, json] of block[1].matchAll(/^(workflow_\w+)\((\{[\s\S]*?\})\)\s*$/gm)) {
+      const input = JSON.parse(json);
+      check(schemas.get(tool), input);
+      examples.push(input);
+    }
+  }
+  assert.ok(examples.some(plan => plan.workflow && plan.steps?.some(todo => todo.presets?.length > 1)));
+  assert.ok(examples.some(report => report.status === 'done' && report.presets?.length === 1));
+  const plan = {action:'open', title:'Report', steps:[{step:'tell', title:'Report findings', description:'Summarize the evidence.'}]};
+  const valid = check(schemas.get('workflow_plan'), plan);
+  assert.equal(valid({...plan, workflow:'factor.development', steps:undefined}), true);
+  for (const description of [undefined, '', 'x'.repeat(201)]) {
+    assert.equal(valid({...plan, steps:[{...plan.steps[0], description}]}), false);
+  }
+  assert.equal(valid({...plan, steps:[{...plan.steps[0], title:'x'.repeat(41)}]}), false);
+});
+
 test('report and method grants in the examples resolve to current public plugin capabilities', async () => {
   const manifests = new Map(await Promise.all(['reports','research','data-access','workspace','plugin-manager'].map(async name => [
-    `sesame/${name}`, JSON.parse(await readFile(new URL(`../packages/${name}/capabilities.json`, import.meta.url), 'utf8')),
+    `sesame/${name}`, readPackageDirectory(new URL(`../packages/${name}/`, import.meta.url)).capabilities,
   ])));
   const stage = await example('agent-runs.md', '单阶段调用：host_agent_run');
   const coordinator = (await example('workflow-plans.md', '自定义协调者：host_capabilities_invoke')).input;
@@ -70,7 +94,7 @@ integration('documented Agent and custom coordination calls match the actual hos
 
 integration('documented workflow and factor calls satisfy declared schemas and semantic rules', async () => {
   const validate = validator();
-  const declaration = async name => JSON.parse(await readFile(new URL(`../../optional-api-v1/packages/${name}/capabilities.json`, import.meta.url), 'utf8'));
+  const declaration = async name => readPackageDirectory(new URL(`../../optional-api-v1/packages/${name}/`, import.meta.url)).capabilities;
   const capability = async (name, id) => (await declaration(name)).capabilities.find(item => item.id === id).inputSchema;
   const { researchPlan } = await import('../../optional-api-v1/packages/investment-research/src/workflow.js');
   const { validateComputeInput } = await import('../../optional-api-v1/packages/auto-factor-mining/contracts.js');

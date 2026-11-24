@@ -1,0 +1,12 @@
+goal: 保存有来源的长期记忆；区分个人交易风格、经确认的风险红线与策略认知，自动整理只提出风险候选，主 Agent 管理正式规则。
+acceptance:
+  discovery:
+    case: memory-discovery
+    tools:
+      - memory_manage
+      - memory_mark_used
+      - memory_propose
+      - memory_read
+      - memory_search
+      - memory_trading_context
+    resource: skills/manage-memory/SKILL.md

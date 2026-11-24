@@ -48,7 +48,7 @@
     {
       "pluginId": "sesame/investment-research",
       "before": "3.1.4",
-      "after": "4.0.0"
+      "after": "4.0.1"
     },
     {
       "pluginId": "sesame/judgment-evolution",
@@ -68,7 +68,7 @@
     {
       "pluginId": "sesame/orchestration",
       "before": "3.1.1",
-      "after": "3.3.0"
+      "after": "4.0.0"
     },
     {
       "pluginId": "sesame/plugin-manager",
@@ -93,7 +93,7 @@
     {
       "pluginId": "sesame/reports",
       "before": "3.0.0",
-      "after": "6.0.0"
+      "after": "8.0.8"
     },
     {
       "pluginId": "sesame/trading-decision",
@@ -122,16 +122,16 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "plugin.json",
       "beforeDigest": "sha256:c7aaa99b88dc9fefbfd78673a7163568d4e86bb42c9abbfce3ef4496d0e23f46",
-      "afterDigest": "sha256:58d3d3c3c82077d17880b228bdad93b15438c0e44d2359c68c0b45d2e1b53010",
+      "afterDigest": "sha256:794f4e348af1b8a2b58a3c5b542e04aae5d7387b717be1b8a44488d2d04bf55d",
       "decision": "approved",
-      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。 2026-11-20 在插件描述中写明产物依赖工作流 id，便于主 Agent 从可发现插件清单开立计划。不改变执行合同、权限或能力 schema。",
       "deltas": [
         {
           "path": "/description",
           "beforePresent": true,
           "afterPresent": true,
           "before": "以任意已选研究能力和独立评估工具编排因子研究；不绑定执行后端，每次工作结束统一产出一份总结。",
-          "after": "由 Agent 直接组织因子研究：分别调用数据冻结、DEAP/Optuna 搜索、Qlib 计算、纯因子评价及因子库。策略通过明确决策维护自己的因子池。",
+          "after": "由 Agent 直接组织因子研究：分别调用数据冻结、DEAP/Optuna 搜索、Qlib 计算、纯因子评价及因子库。策略通过明确决策维护自己的因子池。提供产物依赖工作流 factor.development。",
           "impact": "documentation"
         },
         {
@@ -7180,9 +7180,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:7d521410351de05abe0b1565e8e9d01f0d81660ee87af287940027e76ece7906",
-      "afterDigest": "sha256:b0efe8ba3b28f7acf09e345aa8c172b31916b756b720288354898bc4760901b0",
+      "afterDigest": "sha256:f0f6c1d8bd1429af3f0e75e813f61549893f1b213135a39cca033d6b4ce5158e",
       "decision": "approved",
-      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
+      "reason": "2026-11-20 将 references/workflow.yaml 登记为 knowledge id workflow，供流程导航发现产物依赖。只增加可读取的工作流说明，不改变该插件的执行合同、权限或能力 schema。",
       "deltas": [
         {
           "path": "/",
@@ -7298,6 +7298,12 @@
               "path": "references/external-factor-sources.md",
               "kind": "reference",
               "description": "External formula reference links, semantic checks and on-demand registration into the user factor library. Contains no bundled upstream formula catalog or code."
+            },
+            {
+              "id": "workflow",
+              "path": "references/workflow.yaml",
+              "kind": "reference",
+              "description": "产物依赖：前置齐全即可执行，不规定固定先后。评价协议在搜索前固定，并隔离最终留出数据。"
             }
           ],
           "impact": "resource-declaration-review"
@@ -8068,6 +8074,46 @@
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
       "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/auto-factor-mining",
+      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "component": "removed path:examples/demo-run.json",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/auto-factor-mining",
+      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "component": "removed path:examples/report.demo.html",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
       "deltas": [
         {
           "path": "/",
@@ -17247,17 +17293,60 @@
       "sourcePath": "plugins/api-v1/packages/orchestration",
       "component": "plugin.json",
       "beforeDigest": "sha256:8bb880264ef2ad5c825b1dfbdd3ca39db5d4fd4a706c640fbd00be44b920cc83",
-      "afterDigest": "sha256:daa8035326bd05ad32e565871fd9172ae4a3d990fbd6b89ec79e9b3f7d64d629",
+      "afterDigest": "sha256:0fab905c4a343b711877977356b0b92424836ec71acecd8a6bf0985e68d2df01",
       "decision": "approved",
-      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。 2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。 2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
       "deltas": [
         {
           "path": "/description",
           "beforePresent": true,
           "afterPresent": true,
           "before": "纯知识指南：介绍 Sesame 工作台与宿主统一 Agent/Run 接口，不注册运行工具。",
-          "after": "研究协作知识：选择工作流、组织阶段和子 Agent、传递证据与能力、管理同一 Run 并验收阶段成果；运行由宿主提供。",
+          "after": "为主 Agent 记录流程计划并指出就绪步骤，同时说明如何组织研究阶段、传递证据并用宿主 Run 验收成果。导航不执行步骤，也不增加权限。",
           "impact": "documentation"
+        },
+        {
+          "path": "/engines/sesame",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": ">=0.2.4",
+          "after": ">=0.3.0-dev.1 <0.4.0",
+          "impact": "host-compatibility-change"
+        },
+        {
+          "path": "/entry",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": "index.js",
+          "impact": "declaration-contract-review"
+        },
+        {
+          "path": "/execution",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": "native",
+          "impact": "declaration-contract-review"
+        },
+        {
+          "path": "/main_tool_names",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": [
+            "workflow_status",
+            "workflow_plan",
+            "workflow_step"
+          ],
+          "impact": "declaration-contract-review"
+        },
+        {
+          "path": "/permissions",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "scopes": [],
+            "calls": []
+          },
+          "impact": "authorization-restriction"
         },
         {
           "path": "/resources",
@@ -17274,7 +17363,8 @@
           ],
           "after": [
             "references/agent-runs.md",
-            "references/workflow-plans.md"
+            "references/workflow-plans.md",
+            "references/workflow-navigation.md"
           ],
           "impact": "declaration-contract-review"
         },
@@ -17292,11 +17382,423 @@
     {
       "pluginId": "sesame/orchestration",
       "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capability:workflow_status",
+      "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+      "afterDigest": "sha256:7312037b8a0d8c85aa4dc2793ff8dd042f206f4c2380be80d511a2d762b5761f",
+      "decision": "approved",
+      "reason": "2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "id": "workflow_status",
+            "kind": "function",
+            "consumers": [
+              "agent"
+            ],
+            "description": "查看流程导航的当前位置：有活动计划时返回就绪、进行中、等待的步骤和下一步提示；没有活动计划时返回已安装插件声明的工作流目录。只读，不改变计划。",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "full": {
+                  "type": "boolean",
+                  "description": "为 true 时另外返回已完成、已放弃的步骤和全部产物。"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "outputSchema": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "execution": "immediate",
+            "effects": [
+              "state.read",
+              "read"
+            ],
+            "usage": {
+              "purpose": "查看流程导航的当前位置：有活动计划时返回就绪、进行中、等待的步骤和下一步提示；没有活动计划时返回已安装插件声明的工作流目录。只读，不改变计划。",
+              "inputs": "不需要参数。full 为 true 时另外返回已完成、已放弃的步骤和全部产物。",
+              "outputs": "流程提示：plan（id、标题、工作流、目标、状态、进度）、ready（现在可执行的步骤，各含输入及引用、对应的真实能力、产物和可照抄的 task 标签）、running、waiting（缺什么、为什么）、attention、next。没有活动计划时 plan 为 null，catalog 列出可开立的工作流（id、目标、所属插件、是否已加载）和各插件的工作流型能力入口。",
+              "prerequisites": [
+                "仅主 Agent 可用。"
+              ],
+              "limitations": [
+                "被完成通知唤醒、上下文经过压缩或不确定做到哪一步时先调用它，不凭记忆推进。",
+                "attention 会指出带本计划标签、已经结束但还没上报的 Run；它不会替你上报，读取该 Run 的真实输出后用 workflow_step 上报。",
+                "目录只列已安装且未禁用的插件；所属插件未加载时先 plugin_read、plugin_load。"
+              ]
+            },
+            "binding": {
+              "type": "native",
+              "name": "workflow_status"
+            }
+          },
+          "impact": "additive-capability"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capability:workflow_plan",
+      "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+      "afterDigest": "sha256:028d5db36b09c8ad9727d5b3a59eb8855083e8d19d9139861de0ce185ee5ef6b",
+      "decision": "approved",
+      "reason": "2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "id": "workflow_plan",
+            "kind": "function",
+            "consumers": [
+              "agent"
+            ],
+            "description": "为当前实质任务开立、调整或关闭流程计划。按已声明的产物依赖工作流（或几步平铺的临时计划）记录目标、已有输入和条件，返回现在可以执行的步骤。只记录和提示，不执行步骤，不授予权限。",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "open",
+                    "revise",
+                    "close"
+                  ],
+                  "description": "open 开立；revise 补充已有输入、引用或改变条件；close 关闭。"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120,
+                  "description": "任务标题。open 必填。"
+                },
+                "workflow": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "description": "已声明工作流的 id，如 factor.development。与 steps 二选一。"
+                },
+                "steps": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 20,
+                  "description": "没有适用的已声明工作流时的临时计划。after 里的步骤完成后本步骤才就绪。与 workflow 二选一。",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]{0,47}$",
+                        "description": "步骤名：小写字母、数字、下划线。"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120,
+                        "description": "这一步要完成什么。"
+                      },
+                      "after": {
+                        "type": "array",
+                        "maxItems": 19,
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "必须先完成的步骤名。"
+                      }
+                    },
+                    "required": [
+                      "step",
+                      "title"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "have": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Za-z0-9]{0,63}(:[a-z][a-z0-9_]{0,31})?$"
+                  },
+                  "description": "已经具备的输入和核对后可复用的产物：\"Name\" 或 \"Name:outcome\"。"
+                },
+                "refs": {
+                  "type": "object",
+                  "maxProperties": 64,
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": "产物名 → 固定引用（Run id、成果引用、数据集 id、报告路径等）。只放定位信息，不放正文。"
+                },
+                "conditions": {
+                  "type": "object",
+                  "maxProperties": 16,
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "description": "条件步骤的开关，键是工作流里声明的条件名。"
+                },
+                "supersede": {
+                  "type": "boolean",
+                  "description": "已有活动计划时开立新计划必须为 true；旧计划记为放弃。"
+                },
+                "outcome": {
+                  "type": "string",
+                  "enum": [
+                    "completed",
+                    "abandoned"
+                  ],
+                  "description": "close 时的结局。目标产物未齐全时只能是 abandoned。"
+                },
+                "note": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500,
+                  "description": "说明。放弃计划时必填。"
+                }
+              },
+              "required": [
+                "action"
+              ],
+              "additionalProperties": false
+            },
+            "outputSchema": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "execution": "immediate",
+            "effects": [
+              "state.read",
+              "state.write",
+              "read"
+            ],
+            "usage": {
+              "purpose": "为当前实质任务开立、调整或关闭流程计划。按已声明的产物依赖工作流（或几步平铺的临时计划）记录目标、已有输入和条件，返回现在可以执行的步骤。只记录和提示，不执行步骤，不授予权限。",
+              "inputs": "action=open：title 必填；workflow 传已声明工作流的 id（先用 workflow_status 看目录），没有适用的工作流时改传 steps（[{step,title,after?}]，2–20 步）。have 列出已具备的输入和核对后可复用的产物，写法与工作流定义相同，如 \"ResearchRequest\"、\"SanityResult:pass\"；工作流的外部输入必须在此声明。refs 给出产物的固定引用，conditions 打开条件步骤，如 {\"user_requests_report\": true}。已有活动计划时须 supersede=true。action=revise：补充 have、refs 或改变 conditions，已完成的计划也可以这样重新打开。action=close：outcome 为 completed 或 abandoned，放弃时 note 必填。",
+              "outputs": "与 workflow_status 相同的流程提示，另有 accepted 表示本次调用是否生效。出错时 accepted 为 false，error 给出 code、message 和 fix，流程提示照常返回。",
+              "prerequisites": [
+                "仅主 Agent 可用。",
+                "多步骤、需要委派或目标与某个已声明工作流相符的任务才建立计划；日常问答和单步轻量请求不建。"
+              ],
+              "limitations": [
+                "一个主会话同时只有一个活动计划。",
+                "复用旧产物前先核对品种、周期、数据版本和评价证据是否仍然适用；have 中声明的内容由你负责属实。",
+                "目标产物齐全时计划自动完成，不需要再调用 close。",
+                "计划不增加工具、数据或交易权限，不代替真实的 Run 结果、评价证据和报告交付。"
+              ]
+            },
+            "binding": {
+              "type": "native",
+              "name": "workflow_plan"
+            }
+          },
+          "impact": "additive-capability"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capability:workflow_step",
+      "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+      "afterDigest": "sha256:0cbaab7cbaa575896a871816af9f0b30e0e188aa74e666948de3cd38c7d61a96",
+      "decision": "approved",
+      "reason": "2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。2026-11-21 起依赖只用于推荐：未就绪的开始和完成照常记录并标为偏离；进行中再次上报 started 不新开一轮。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "id": "workflow_step",
+            "kind": "function",
+            "consumers": [
+              "agent"
+            ],
+            "description": "上报流程计划中一个步骤的进展（开始、完成、失败或放弃），并立即取得新的流程提示。每完成一步就调用一次；后续该做什么以返回值为准。",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,47}$",
+                  "description": "当前计划里的步骤名。"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "started",
+                    "done",
+                    "failed",
+                    "skipped"
+                  ],
+                  "description": "started 开始（已完成的步骤表示重做）；done 完成；failed 这次没有得到产物，可重试；skipped 本计划不再执行。"
+                },
+                "produced": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Za-z0-9]{0,63}(:[a-z][a-z0-9_]{0,31})?$"
+                  },
+                  "description": "要带结果的产物：\"Name:outcome\"。必须是该步骤声明的产物。"
+                },
+                "refs": {
+                  "type": "object",
+                  "maxProperties": 32,
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": "产物名 → 固定引用。"
+                },
+                "runs": {
+                  "type": "array",
+                  "maxItems": 16,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 190
+                  },
+                  "description": "执行这一步的 Run id。"
+                },
+                "fallback": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "description": "与 failed 一起使用：该步骤声明的回退工作流 id。"
+                },
+                "gap": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Za-z0-9]{0,63}$",
+                  "description": "与 fallback 一起使用：交给回退工作流的缺口产物，必须是它的外部输入。"
+                },
+                "note": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500,
+                  "description": "说明。failed、skipped 必填。"
+                }
+              },
+              "required": [
+                "step",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            "outputSchema": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "execution": "immediate",
+            "effects": [
+              "state.read",
+              "state.write",
+              "read"
+            ],
+            "usage": {
+              "purpose": "上报流程计划中一个步骤的进展（开始、完成、失败或放弃），并立即取得新的流程提示。每完成一步就调用一次；后续该做什么以返回值为准。",
+              "inputs": "step 是当前计划里的步骤名，status 为 started、done、failed 或 skipped。done 默认该步骤声明的产物全部产出；produced 只需列出要带结果的产物，如 [\"SanityResult:fail\"]，声明了结果取值的产物必须带结果。refs 登记产物的固定引用，供后续步骤和短任务使用。runs 列出执行这一步的 Run id。failed、skipped 必须写 note。步骤声明了回退工作流而自身无法完成时，用 status=failed 加 fallback（回退工作流 id）和 gap（交给回退工作流的缺口产物）。",
+              "outputs": "新的流程提示（与 workflow_status 相同），另有 accepted。出错时 accepted 为 false，error 给出 code、message 和 fix，流程提示照常返回。",
+              "prerequisites": [
+                "仅主 Agent 可用，且已有活动计划。",
+                "上报的结果和引用必须来自实际的 Run 输出或成果，不能凭预期填写。"
+              ],
+              "limitations": [
+                "started 可以省略；委派 Run 之前先报 started，这一步会立刻显示为进行中，避免重复派发。对进行中的步骤再次上报 started 不会新开一轮，attention 会提示它已在进行。",
+                "依赖只用于推荐下一步，不拦截。对还没被推荐的步骤上报 started 或 done 会照常记录并标记为偏离，attention 列出缺什么；确有理由时在 note 里说明。",
+                "对已完成的步骤上报 started 即开启重做；其产物更新后，用过旧版本的下游产物自动失效。",
+                "runs 中的 Run 必须属于本会话且已经结束；仍在运行或处于中断的会被拒绝。",
+                "同一步骤同一时间只交给一个执行者。拆成多个短任务时全部带同一个 task 标签，汇总后上报一次 done。"
+              ]
+            },
+            "binding": {
+              "type": "native",
+              "name": "workflow_step"
+            }
+          },
+          "impact": "additive-capability"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capability:workflow_board",
+      "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+      "afterDigest": "sha256:217f2a8701af011b2145470fee9f11c8c1d762463765bf4e7cfa745d82e503eb",
+      "decision": "approved",
+      "reason": "2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "id": "workflow_board",
+            "kind": "function",
+            "consumers": [
+              "host"
+            ],
+            "description": "Read the complete step board of this conversation's active workflow plan for the native progress panel. Read-only; never changes the plan and is not offered to Agents.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            },
+            "outputSchema": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "execution": "immediate",
+            "effects": [
+              "state.read",
+              "read"
+            ],
+            "usage": {
+              "purpose": "Read the complete step board of this conversation's active workflow plan for the native progress panel. Read-only; never changes the plan and is not offered to Agents.",
+              "inputs": "No input. The plan is selected by the calling main conversation.",
+              "outputs": "{plan: null} when there is no active plan; otherwise {plan: {id, title, workflow, goal, status, progress, parent?, updatedAt, steps: [{step, state, iteration, layer, requires, produces, waiting, runs: [{id, status}], startedAt, endedAt}]}}. Structural identifiers and timestamps only; free-text notes are omitted.",
+              "prerequisites": [
+                "Host consumer in a main conversation."
+              ],
+              "limitations": [
+                "Presentation data only. It carries no model guidance and grants no authority."
+              ]
+            },
+            "binding": {
+              "type": "native",
+              "name": "workflow_board"
+            }
+          },
+          "impact": "additive-capability"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:27b93f04d1d4f1e76d79abc8e8c5b233855c29d26e50876f133eeec015692002",
-      "afterDigest": "sha256:5327326891afa863ef6d8e5a39ca115095e1a5f35a4614fa3061a55e2a7aecaf",
+      "afterDigest": "sha256:1f9ebf3b2409774b7b86f4ce6953525fa0e8cd187790f4bd8c242238c7dd3d3b",
       "decision": "approved",
-      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。 2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
       "deltas": [
         {
           "path": "/",
@@ -17382,9 +17884,112 @@
               "path": "references/workflow-plans.md",
               "description": "工作流计划与可调整阶段",
               "kind": "reference"
+            },
+            {
+              "id": "resource.5",
+              "path": "references/workflow-navigation.md",
+              "description": "流程导航的计划、就绪步骤和步骤标签",
+              "kind": "reference"
             }
           ],
           "impact": "resource-declaration-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capabilities.json/stateCollections",
+      "beforeDigest": "sha256:044fac51c36081662955b836ad0affe71fdda39a23ee72612bc650c662aefc4d",
+      "afterDigest": "sha256:79001fa2786c1a2bb8aca62336bc90f04743a0430916a6d611fe9f0260b2f763",
+      "decision": "approved",
+      "reason": "2026-11-20 用户明确要求 orch 提供运行时流程导航。导航只记录计划并计算就绪步骤，Agent 执行与 Run 控制仍属于宿主。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [],
+          "after": [
+            {
+              "name": "plans",
+              "schemaVersion": "1",
+              "mode": "document",
+              "access": "private",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "status": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "id",
+                  "status"
+                ],
+                "additionalProperties": true
+              }
+            },
+            {
+              "name": "plan_events",
+              "schemaVersion": "1",
+              "mode": "document",
+              "access": "private",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "planId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "callId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "planId",
+                  "callId"
+                ],
+                "additionalProperties": true
+              }
+            },
+            {
+              "name": "owners",
+              "schemaVersion": "1",
+              "mode": "document",
+              "access": "private",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "stack": {
+                    "type": "array",
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "sessionId"
+                ],
+                "additionalProperties": true
+              }
+            }
+          ],
+          "impact": "declaration-contract-review"
         }
       ],
       "findings": []
@@ -17788,7 +18393,7 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager",
       "component": "capability:plugin_read",
       "beforeDigest": "sha256:fbc2a8423f7ee98f9524a3fadbcf5c2f27b98114aa421048e20f51e7b9810285",
-      "afterDigest": "sha256:68269b8e23de1958b37389dbee2f64846372a071e0365753fa17a1c505235a54",
+      "afterDigest": "sha256:ad4da62c019c685954d12e6534e828b41a95a46e7df069c3bf6fa644cdf1a5f5",
       "decision": "approved",
       "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
       "deltas": [
@@ -17818,11 +18423,41 @@
           "impact": "input-contract-review"
         },
         {
+          "path": "/inputSchema/properties/path/description",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "资源相对路径",
+          "after": "公开资源相对路径；续读时原样使用上次 next.path",
+          "impact": "documentation"
+        },
+        {
           "path": "/usage/inputs",
           "beforePresent": true,
           "afterPresent": true,
           "before": "pluginId 为已安装 ID；part=manifest 返回静态声明；part=resource 时 path 必须在其 knowledge 中，例如 prompt.md 或 skills/.../SKILL.md。",
-          "after": "pluginId 为已安装 ID；part=manifest 返回静态声明；part=resource 时 path 必须是公开资源清单或技能链接中的真实路径，例如 prompt.md 或 skills/.../SKILL.md。",
+          "after": "pluginId 为已安装 ID；part=manifest 返回静态声明；首次 part=resource 读取时 path 使用公开资源清单或已声明技能链接中的真实路径，例如 prompt.md 或 skills/.../SKILL.md；续读时将上次返回的 next 对象原样传入。",
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "不用于扒宿主或插件私有实现；资源不在公开清单时使用已有声明，确有能力缺口再开发。"
+          ],
+          "after": [
+            "不用于扒宿主或插件私有实现；资源不在公开清单时使用已有声明，确有能力缺口再开发。",
+            "不解析或构造 next.path，不添加 offset、length 或 revision 输入字段。插件更新使旧续读标记失效时，从原始公开路径重新读取。",
+            "显式读取已声明的 SKILL.md 后，宿主记录该 Skill 并按会话保留状态恢复；不会自动读取全部 References，也不授予额外工具。"
+          ],
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/outputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "manifest 返回 {id,version,revision,capabilities,sources,knowledge,...}；resource 返回 {pluginId,path,content,revision}。",
+          "after": "manifest 返回 {id,version,revision,capabilities,sources,knowledge,...}；resource 按宿主 24k JSON 正文预算分段返回 {pluginId,path,content,revision,offset,total_chars,complete,next?}。未读完时 next 为可直接传给 plugin_read 的 {pluginId,part:'resource',path}，path 是宿主生成、绑定修订的 opaque continuation。",
           "impact": "documentation"
         }
       ],
@@ -22063,7 +22698,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "plugin.json",
       "beforeDigest": "sha256:7492d5dfbe21238816a2343cfefc1005204b9149688b8e66223a27b41496852f",
-      "afterDigest": "sha256:10576a22fe4df38894d680e06fd8ad89ae4b579818f85e65ddcb8156daf6064f",
+      "afterDigest": "sha256:f342114c917435c67d9c32c5317c983b8b007aee3dfddc04cd052bf1df554836",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -22089,7 +22724,7 @@
           "beforePresent": true,
           "afterPresent": true,
           "before": "统一风格的交互研究与策略报告，含 SVL 逻辑图、回测选优热力图、全部参数组与敏感性分析。",
-          "after": "将已有文字和固定数据组合为统一视觉的报告或回答组件；38 种图表、15 种内容块、局部筛选联动和现有宿主交付。研究方法独立。",
+          "after": "将研究初稿统一做图文编辑：按问题组织全文，用自然中文重新解释已有研究，逐段审读并编排图表，以受控组件呈现报告或回答，保持事实与判断边界。",
           "impact": "documentation"
         },
         {
@@ -22865,7 +23500,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:report_check",
       "beforeDigest": "sha256:75397765b0a6a786c2d51609f844fc44f358a5198f8c7228697384f2373b3180",
-      "afterDigest": "sha256:9086ad065a1352959f0b337ef734d40f5b2242e3e847196b0661804a59c8f29c",
+      "afterDigest": "sha256:8ad920e3da771b3dc40020894e8da753f22bd79e638221f4433dfffbf8635dba",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -22893,7 +23528,7 @@
             "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。"
           ],
           "after": [
-            "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。",
+            "rendered 才证明本次检查通过；失败根据具体诊断修正受控组件或数据，发布新 revision 再检查。无渲染器时明确未验证。",
             "rendered 不等于可导出；receipt.exportability 是源级建议，真实静态准备检查另用 report_export_check。"
           ],
           "impact": "documentation"
@@ -23390,7 +24025,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:report_prepare",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:5beeb7a43ce3dc4ec37c1808db937363db2b7b7a889e73c05fd1517371f030c9",
+      "afterDigest": "sha256:a8439ee77b74bba6ea5cee25e827977e4048680f8ca6360eccb7bee2dcd70bda",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -23439,7 +24074,7 @@
             ],
             "usage": {
               "purpose": "Prepare large structured reports without copying their complete content into another tool call.",
-              "inputs": "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and any original optional metadata or fixed references. locale belongs to this outer envelope.",
+              "inputs": "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and original optional metadata or fixed references. Full reports require input.lead, 1–6 input.highlights and nonempty input.content.sections. locale belongs to this outer envelope.",
               "outputs": "provider and publication. Pass publication unchanged to host_reports_publish. inputRef names an immutable application/json resource; no report exists until publication succeeds.",
               "prerequisites": [
                 "The selected provider is sesame/reports.",
@@ -23671,7 +24306,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:report_render",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:de79ae64a4c43880443d4b0ad37d20488a23d216ae4a65fddc4525e9c6ec3707",
+      "afterDigest": "sha256:4ad689bb038156801fbece10440a76848990edce85638216299fd65ca086e810",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -24298,6 +24933,76 @@
                       ],
                       "default": "report",
                       "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
+                    },
+                    "lead": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000,
+                      "pattern": "\\S",
+                      "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+                    },
+                    "highlights": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 6,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "maxLength": 20000,
+                            "minLength": 1,
+                            "pattern": "\\S"
+                          },
+                          "value": {
+                            "type": [
+                              "string",
+                              "number"
+                            ],
+                            "minLength": 1,
+                            "pattern": "\\S"
+                          },
+                          "tone": {
+                            "type": "string",
+                            "enum": [
+                              "auto",
+                              "positive",
+                              "negative",
+                              "neutral"
+                            ],
+                            "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                          }
+                        },
+                        "required": [
+                          "label",
+                          "value"
+                        ],
+                        "additionalProperties": false,
+                        "allOf": [
+                          {
+                            "if": {
+                              "type": "object",
+                              "properties": {
+                                "tone": {
+                                  "const": "auto"
+                                }
+                              },
+                              "required": [
+                                "tone"
+                              ]
+                            },
+                            "then": {
+                              "type": "object",
+                              "properties": {
+                                "value": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
                     }
                   },
                   "required": [
@@ -25225,7 +25930,45 @@
                         }
                       ]
                     }
-                  }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "not": {
+                          "properties": {
+                            "target": {
+                              "const": "answer"
+                            }
+                          },
+                          "required": [
+                            "target"
+                          ]
+                        }
+                      },
+                      "then": {
+                        "required": [
+                          "lead",
+                          "highlights"
+                        ],
+                        "properties": {
+                          "content": {
+                            "properties": {
+                              "sections": {
+                                "minItems": 1,
+                                "items": {
+                                  "properties": {
+                                    "blocks": {
+                                      "minItems": 1
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               },
               "required": [
@@ -25320,7 +26063,7 @@
             ],
             "usage": {
               "purpose": "Host-only presentation service for supplied results.",
-              "inputs": "metadata/data/related/references/input; plugin-defined input contains content and optional user style/source evidence/attachments.",
+              "inputs": "metadata/data/related/references/input. Reports require metadata.title, input.lead, 1–6 input.highlights and nonempty input.content.sections. target=answer is an independent component surface without a report skeleton. Optional input.style/assets preserve supplied styling and attachments; summary remains index metadata. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
               "outputs": "entry, files and presentation identity; host publishes the exact package.",
               "prerequisites": [
                 "Host selected this report provider."
@@ -25344,7 +26087,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:components_list",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:7efe62eba7e804c6a3e3787a0aba528cbe0f939287279465da44aa090161e1a7",
+      "afterDigest": "sha256:afa2f35f9f472a253705163f006a524edd3cc3b3872693a4e45c087b7a20c2ad",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -25359,7 +26102,7 @@
               "agent",
               "host"
             ],
-            "description": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+            "description": "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs.",
             "inputSchema": {
               "type": "object",
               "properties": {
@@ -25396,7 +26139,7 @@
               "read"
             ],
             "usage": {
-              "purpose": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+              "purpose": "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs.",
               "inputs": "Optional query/category, opaque cursor and limit (default 20, maximum 100).",
               "outputs": "Compact component IDs, categories and whenToUse guidance with a continuation cursor.",
               "prerequisites": [],
@@ -25419,7 +26162,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:components_describe",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:ce9a06ab27a760b6115ec41d7129d0f40f89270b06a6cf71ec1677608d91d225",
+      "afterDigest": "sha256:3289913c2f69a3004e5859d709fd0724e31920e791c1854c4b691a2d833e0f65",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -25434,7 +26177,7 @@
               "agent",
               "host"
             ],
-            "description": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+            "description": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.",
             "inputSchema": {
               "type": "object",
               "properties": {
@@ -25463,7 +26206,7 @@
               "read"
             ],
             "usage": {
-              "purpose": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+              "purpose": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.",
               "inputs": "IDs returned by components_list; choose only the components needed for the current content.",
               "outputs": "Selected component schemas and examples derived from the current renderer contract.",
               "prerequisites": [],
@@ -25486,7 +26229,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:components_validate",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:1b1e75c071b1c8843dc8ed4776647b7fa29ab5c9582d169893fbea20bd12a906",
+      "afterDigest": "sha256:502510a315e1b59c47166a42a95e19433d2f0900236274bc1159924a22ca5764",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -25501,7 +26244,7 @@
               "agent",
               "host"
             ],
-            "description": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
+            "description": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked. 完整报告必须提供标题、lead 开篇回答、1–6项 highlights 关键结果和非空正文章节；target=answer 的单独图表或内容块不需要报告骨架。",
             "inputSchema": {
               "type": "object",
               "properties": {
@@ -25509,11 +26252,12 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 1000,
-                  "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
+                  "description": "完整报告必填：非空报告标题；target=answer 的独立组件可省略。"
                 },
                 "summary": {
                   "type": "string",
-                  "maxLength": 20000
+                  "maxLength": 20000,
+                  "description": "仅用于目录索引的元数据，不展示为报告开篇结论；开篇回答写入 lead。"
                 },
                 "locale": {
                   "type": "string",
@@ -26030,7 +26774,7 @@
                 },
                 "content": {
                   "type": "object",
-                  "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+                  "description": "正文组件文档。完整报告至少一个非空 section，与顶层 title、lead、highlights 共同构成报告；仅有图表也可组成正文。组件的精确字段可按需 components_describe。",
                   "properties": {
                     "kind": {
                       "const": "document"
@@ -26077,6 +26821,76 @@
                   ],
                   "default": "report",
                   "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
+                },
+                "lead": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000,
+                  "pattern": "\\S",
+                  "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+                },
+                "highlights": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 6,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "maxLength": 20000,
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
+                      "value": {
+                        "type": [
+                          "string",
+                          "number"
+                        ],
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
+                      "tone": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "positive",
+                          "negative",
+                          "neutral"
+                        ],
+                        "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "value"
+                    ],
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "type": "object",
+                          "properties": {
+                            "tone": {
+                              "const": "auto"
+                            }
+                          },
+                          "required": [
+                            "tone"
+                          ]
+                        },
+                        "then": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
                 }
               },
               "required": [],
@@ -26158,6 +26972,114 @@
                       ]
                     }
                   }
+                },
+                {
+                  "if": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "properties": {
+                            "target": {
+                              "const": "answer"
+                            }
+                          },
+                          "required": [
+                            "target"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "input_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "title",
+                      "lead",
+                      "highlights"
+                    ],
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      }
+                    }
+                  }
+                }
+              ],
+              "examples": [
+                {
+                  "title": "合成比较示例",
+                  "lead": "B 的样本数量是 A 的两倍。",
+                  "provenance_kind": "demo",
+                  "content": {
+                    "kind": "document",
+                    "sections": [
+                      {
+                        "title": "样本数量",
+                        "blocks": [
+                          {
+                            "type": "chart",
+                            "kind": "bar",
+                            "rows": [
+                              {
+                                "item": "A",
+                                "value": 2
+                              },
+                              {
+                                "item": "B",
+                                "value": 4
+                              }
+                            ],
+                            "options": {
+                              "x": "item",
+                              "y": "value"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "highlights": [
+                    {
+                      "label": "A",
+                      "value": 2
+                    },
+                    {
+                      "label": "B",
+                      "value": 4
+                    },
+                    {
+                      "label": "Comparison",
+                      "value": "B is twice A"
+                    }
+                  ]
+                },
+                {
+                  "target": "answer",
+                  "provenance_kind": "demo",
+                  "component": {
+                    "type": "chart",
+                    "kind": "bar",
+                    "rows": [
+                      {
+                        "item": "A",
+                        "value": 2
+                      },
+                      {
+                        "item": "B",
+                        "value": 4
+                      }
+                    ],
+                    "options": {
+                      "x": "item",
+                      "y": "value"
+                    }
+                  }
                 }
               ]
             },
@@ -26170,7 +27092,7 @@
             ],
             "usage": {
               "purpose": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
-              "inputs": "Exactly one of component, components or content; layout stack/columns applies only to shorthand components. data defaults to []. Preserve original references/assets/style/title/summary/locale/provenance_kind/related. Omitted title is Component validation; omitted locale uses widest existing limits; omitted provenance_kind is derived.",
+              "inputs": "Exactly one of component, components or content; layout stack/columns applies only to shorthand components. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; target=answer needs no report skeleton. data defaults to []. Preserve original references/assets/style/summary/locale/provenance_kind/related; summary is index-only and cannot replace lead. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
               "outputs": "valid, status (valid/invalid/incomplete), diagnostics[{path,message}], protocol and explicit schema/renderer/fixedData/assets/browser coverage. A failed resource read is incomplete, never valid.",
               "prerequisites": [
                 "Fixed bindings and attachment references must be accessible and complete."
@@ -26196,7 +27118,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capability:components_show",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:a1e4dca4b03edc0ff5c386e54eb04563c54d1c21ee77cf9f18f6deb572efb621",
+      "afterDigest": "sha256:a9b4fae3eb345ba02e02e41b8f304112527562df0e244c99a4b03377d186b884",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -26211,7 +27133,7 @@
               "agent",
               "host"
             ],
-            "description": "Show a component or up to 12 related components in one call. Supply chart type/kind, rows or a fixed data_id, and necessary options; titles, columns and publication metadata are optional. The tool normalizes and validates, then publishes through the host-selected provider. Use target:answer for concise answers; report is the default. Discovery and separate validation are optional.",
+            "description": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to edit the draft's organization, prose and visual expression together, prioritizing the user's question and preserving its evidence and meaning, then publish once.",
             "inputSchema": {
               "type": "object",
               "properties": {
@@ -26219,11 +27141,12 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 1000,
-                  "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
+                  "description": "完整报告必填：非空报告标题；target=answer 的独立组件可省略。"
                 },
                 "summary": {
                   "type": "string",
-                  "maxLength": 20000
+                  "maxLength": 20000,
+                  "description": "仅用于目录索引的元数据，不展示为报告开篇结论；开篇回答写入 lead。"
                 },
                 "locale": {
                   "type": "string",
@@ -26740,7 +27663,7 @@
                 },
                 "content": {
                   "type": "object",
-                  "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+                  "description": "正文组件文档。完整报告至少一个非空 section，与顶层 title、lead、highlights 共同构成报告；仅有图表也可组成正文。组件的精确字段可按需 components_describe。",
                   "properties": {
                     "kind": {
                       "const": "document"
@@ -26884,6 +27807,76 @@
                     ]
                   },
                   "maxItems": 3
+                },
+                "lead": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000,
+                  "pattern": "\\S",
+                  "description": "完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。"
+                },
+                "highlights": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 6,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "maxLength": 20000,
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
+                      "value": {
+                        "type": [
+                          "string",
+                          "number"
+                        ],
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      },
+                      "tone": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "positive",
+                          "negative",
+                          "neutral"
+                        ],
+                        "description": "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "value"
+                    ],
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "type": "object",
+                          "properties": {
+                            "tone": {
+                              "const": "auto"
+                            }
+                          },
+                          "required": [
+                            "tone"
+                          ]
+                        },
+                        "then": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "description": "完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。"
                 }
               },
               "required": [],
@@ -27033,8 +28026,127 @@
                           "required": [
                             "target"
                           ]
+                        },
+                        {
+                          "required": [
+                            "lead"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "highlights"
+                          ]
                         }
                       ]
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "properties": {
+                            "target": {
+                              "const": "answer"
+                            }
+                          },
+                          "required": [
+                            "target"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "input_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "title",
+                      "lead",
+                      "highlights"
+                    ],
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S"
+                      }
+                    }
+                  }
+                }
+              ],
+              "examples": [
+                {
+                  "operation_id": "synthetic-report-example",
+                  "title": "合成比较示例",
+                  "lead": "B 的样本数量是 A 的两倍。",
+                  "provenance_kind": "demo",
+                  "content": {
+                    "kind": "document",
+                    "sections": [
+                      {
+                        "title": "样本数量",
+                        "blocks": [
+                          {
+                            "type": "chart",
+                            "kind": "bar",
+                            "rows": [
+                              {
+                                "item": "A",
+                                "value": 2
+                              },
+                              {
+                                "item": "B",
+                                "value": 4
+                              }
+                            ],
+                            "options": {
+                              "x": "item",
+                              "y": "value"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "highlights": [
+                    {
+                      "label": "A",
+                      "value": 2
+                    },
+                    {
+                      "label": "B",
+                      "value": 4
+                    },
+                    {
+                      "label": "Comparison",
+                      "value": "B is twice A"
+                    }
+                  ]
+                },
+                {
+                  "target": "answer",
+                  "provenance_kind": "demo",
+                  "component": {
+                    "type": "chart",
+                    "kind": "bar",
+                    "rows": [
+                      {
+                        "item": "A",
+                        "value": 2
+                      },
+                      {
+                        "item": "B",
+                        "value": 4
+                      }
+                    ],
+                    "options": {
+                      "x": "item",
+                      "y": "value"
                     }
                   }
                 }
@@ -27049,22 +28161,196 @@
               "artifact.write"
             ],
             "usage": {
-              "purpose": "Show one component, up to 12 components, or a complete document as a real report. Automatically runs the same static validation, then publishes through the host-selected provider; returns the fixed report reference. Discovery and a separate validation call are optional.",
-              "inputs": "operation_id, title and provenance_kind; exactly one of component, components, content or complete fixed input_ref. Shorthand inputs accept layout stack/columns. data defaults to []; optional summary defaults to empty. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed.",
-              "outputs": "Original host publication receipt plus protocol, actual renderer identity and componentRef containing the same fixed report ref and inputDigest when supplied by the host.",
+              "purpose": "Publish a report or answer components in one call. A report (default target) requires an explicit nonempty title, lead opening answer, 1–6 highlights key results, and body content; component/components forms wrap the body automatically. target:answer saves standalone component JSON for the reply without creating a report. Supply rows or fixed data_id and chart options; columns and component titles can be inferred. The tool normalizes and validates; reports publish through the host-selected provider, while answer components retain independent JSON and copied attachments. Discovery and separate validation are optional. Before submission, apply visual-compose to edit the draft's organization, prose and visual expression together, prioritizing the user's question and preserving its evidence and meaning, then publish once.",
+              "inputs": "Exactly one of component, components, content or complete fixed input_ref. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; shorthand components wrap the body automatically. target=answer needs no title, lead or highlights. input_ref owns content/lead/highlights/style/assets/target; its report title remains an outer argument. data defaults to []; summary is index-only. operation_id is optional when trusted invocation identity is available. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.",
+              "outputs": "A fixed ref and componentRef using sesame-components/1. Answer refs are independent resources containing component JSON and copied attachments; report refs retain the host publication receipt.",
               "prerequisites": [
-                "Content must use this catalog’s document layout; the host chooses the renderer."
+                "Content must use this catalog’s document layout."
               ],
               "limitations": [
-                "No provider override, free HTML/CSS/scripts, MCP Apps resource or answer display target.",
-                "Show automatically performs the same schema, fixed-row, server-renderer and attachment preflight; the host repeats its required publication checks. renderStatus still does not imply visual inspection.",
-                "Use the returned immutable report ref for inspection and later reuse."
+                "No provider override, free HTML/CSS/scripts or MCP Apps resource.",
+                "Show performs schema, fixed-row, server-renderer and attachment preflight; browser layout is not inspected.",
+                "Reuse the returned fixed ref. Answer components do not create reports or report files."
               ]
             },
             "binding": {
               "type": "native",
               "name": "components_show"
             }
+          },
+          "impact": "additive-capability"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/reports",
+      "sourcePath": "plugins/api-v1/packages/reports",
+      "component": "capability:components_render",
+      "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+      "afterDigest": "sha256:0c5396a7dcd6766c6984b7a1accaa99d308f4eff886320a469bba8fd26a62600",
+      "decision": "approved",
+      "reason": "记录已存在于当前源码、但上一份审查清单未覆盖的声明。本次只补齐审查摘要，不改变该声明的行为。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": {
+            "id": "components_render",
+            "kind": "function",
+            "consumers": [
+              "host"
+            ],
+            "description": "Render one fixed answer component JSON resource into a temporary visual package. Read-only; never publishes reports or imports workspace files.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "enum": [
+                        "resource",
+                        "report"
+                      ]
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "ref"
+              ],
+              "additionalProperties": false
+            },
+            "outputSchema": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                },
+                "files": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 254,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "minLength": 1
+                      },
+                      "mediaType": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 1
+                      },
+                      "content": {
+                        "type": "string",
+                        "maxLength": 44739244
+                      },
+                      "encoding": {
+                        "enum": [
+                          "utf8",
+                          "base64"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "mediaType",
+                      "content",
+                      "encoding"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "presentation": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    },
+                    "version": {
+                      "type": "string",
+                      "maxLength": 128,
+                      "minLength": 1
+                    },
+                    "metadata": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "locale": {
+                  "type": "string",
+                  "maxLength": 128
+                }
+              },
+              "required": [
+                "entry",
+                "files",
+                "presentation",
+                "title",
+                "locale"
+              ],
+              "additionalProperties": false
+            },
+            "execution": "immediate",
+            "effects": [
+              "read"
+            ],
+            "usage": {
+              "purpose": "Host-only view of fixed answer component JSON.",
+              "inputs": "Exact component resource ArtifactRef, or an existing answer-surface report reference for read-only recovery.",
+              "outputs": "title, locale, entry, files and presentation; temporary display only.",
+              "prerequisites": [
+                "A fixed component resource is available."
+              ],
+              "limitations": [
+                "Does not publish, invoke models or read current workspace files."
+              ]
+            },
+            "binding": {
+              "type": "native",
+              "name": "components_render"
+            },
+            "resultRetention": "summary"
           },
           "impact": "additive-capability"
         }
@@ -27110,7 +28396,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:655c426f06e28590106bfa9192637368384fd986890967cbc5e710f93e363d99",
-      "afterDigest": "sha256:38fb0dcc0c71061c6648b9ad62fd9110e1bcf6d06f73a6e51585726a943d340c",
+      "afterDigest": "sha256:d62e58c697d63714fd48bbc9a78462775e1ea0d0a6ff29cbeb425f950d17802a",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -27233,31 +28519,31 @@
               "id": "reports-entry",
               "kind": "prompt",
               "path": "prompt.md",
-              "description": "统一视觉的职责边界与直接调用入口。"
+              "description": "图文编辑职责、问题优先的报告结构与统一组件入口。"
             },
             {
               "id": "visual-compose",
               "kind": "skill",
               "path": "skills/visual-compose/SKILL.md",
-              "description": "用已有内容选择并组合受控视觉组件。"
+              "description": "初稿后的统一图文编辑：按问题组织全文，编排图文，用自然中文重新解释已有研究，再单独逐段审读。"
             },
             {
               "id": "report-delivery",
               "kind": "skill",
               "path": "skills/report-delivery/SKILL.md",
-              "description": "发布、修订、真实渲染检查与按需导出。"
+              "description": "检查报告结构与统一视觉，发布、修订及按需导出。"
             },
             {
               "id": "reference-composing",
               "kind": "reference",
               "path": "references/composing.md",
-              "description": "组件与通用文档组合"
+              "description": "用现有小标题、段落、列表、表格与图表表达信息关系，组织构图重点、参照和标注，合并冗余表达。"
             },
             {
               "id": "reference-text",
               "kind": "reference",
               "path": "references/text.md",
-              "description": "文字职责及展示位置"
+              "description": "将研究记录重写为读者能理解的中文解释：具体对象、动作、已有机制、时间与条件，含14组转换示例、文字位置及逐段审读方法。"
             },
             {
               "id": "reference-data-binding",
@@ -27441,7 +28727,7 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capabilities.json/artifactSchemas",
       "beforeDigest": "sha256:1aa46b96cebc38fd9e2af406977f08b715e9e8640468af5a35c770993f3db483",
-      "afterDigest": "sha256:9685f56a460d741ee6bb17078787c6f0c6c4903080c406e597f17a22110dfb85",
+      "afterDigest": "sha256:d348e86677d1489042843208e223b7361f0c2c5f89c643a6f5fe41ce8bc62d1d",
       "decision": "approved",
       "reason": "User-authorized pure-visual redesign: remove retired research/business templates and redundant publication/snapshot tools; retain document components, fixed evidence, host-owned publication/revisions, real render/export inspection and generic interactions. Research semantics are migrated to sesame/research, and old immutable report artifacts remain readable. Public plugin changes are intentional; no legacy alias is retained.",
       "deltas": [
@@ -27732,104 +29018,155 @@
           ],
           "after": [
             {
-              "id": "report-input",
+              "id": "report-input-or-component",
               "kind": "resource",
               "schemaVersion": "1.0.0",
               "schema": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "type": {
-                    "const": "report-input"
-                  },
-                  "path": {
-                    "const": "input.json"
-                  },
-                  "provider": {
+                "oneOf": [
+                  {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                      "pluginId": {
-                        "const": "sesame/reports"
+                      "type": {
+                        "const": "report-input"
                       },
-                      "serviceId": {
-                        "const": "report"
+                      "path": {
+                        "const": "input.json"
                       },
-                      "version": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 128
-                      },
-                      "revision": {
-                        "type": "string",
-                        "pattern": "^sha256:[a-f0-9]{64}$"
-                      }
-                    },
-                    "required": [
-                      "pluginId",
-                      "serviceId",
-                      "version",
-                      "revision"
-                    ]
-                  },
-                  "provenance": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "kind": {
-                        "enum": [
-                          "observed",
-                          "derived",
-                          "user_input",
-                          "demo"
+                      "provider": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "pluginId": {
+                            "const": "sesame/reports"
+                          },
+                          "serviceId": {
+                            "const": "report"
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "revision": {
+                            "type": "string",
+                            "pattern": "^sha256:[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "pluginId",
+                          "serviceId",
+                          "version",
+                          "revision"
                         ]
                       },
-                      "references": {
-                        "type": "array",
-                        "maxItems": 255,
-                        "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "revision",
-                            "digest",
-                            "kind",
-                            "schemaVersion"
-                          ],
-                          "properties": {
-                            "id": {
-                              "type": "string"
-                            },
-                            "revision": {
-                              "type": "string"
-                            },
-                            "digest": {
-                              "type": "string",
-                              "pattern": "^sha256:[a-f0-9]{64}$"
-                            },
-                            "kind": {
-                              "type": "string"
-                            },
-                            "schemaVersion": {
-                              "type": "string",
-                              "const": "1.0.0"
-                            }
+                      "provenance": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "observed",
+                              "derived",
+                              "user_input",
+                              "demo"
+                            ]
                           },
-                          "additionalProperties": false
-                        }
+                          "references": {
+                            "type": "array",
+                            "maxItems": 255,
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "revision",
+                                "digest",
+                                "kind",
+                                "schemaVersion"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "revision": {
+                                  "type": "string"
+                                },
+                                "digest": {
+                                  "type": "string",
+                                  "pattern": "^sha256:[a-f0-9]{64}$"
+                                },
+                                "kind": {
+                                  "type": "string"
+                                },
+                                "schemaVersion": {
+                                  "type": "string",
+                                  "const": "1.0.0"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "references"
+                        ]
                       }
                     },
                     "required": [
-                      "kind",
-                      "references"
+                      "type",
+                      "path",
+                      "provider",
+                      "provenance"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "type": {
+                        "const": "component-json"
+                      },
+                      "protocol": {
+                        "const": "sesame-components/1"
+                      },
+                      "path": {
+                        "const": "component.json"
+                      },
+                      "title": {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      "renderer": {
+                        "const": "sesame/reports#components_render"
+                      },
+                      "provenance": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "observed",
+                              "derived",
+                              "user_input",
+                              "demo"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "protocol",
+                      "path",
+                      "title",
+                      "renderer",
+                      "provenance"
                     ]
                   }
-                },
-                "required": [
-                  "type",
-                  "path",
-                  "provider",
-                  "provenance"
                 ]
               }
             }
@@ -28975,46 +30312,6 @@
             ]
           },
           "impact": "authorization-restriction"
-        }
-      ],
-      "findings": []
-    },
-    {
-      "pluginId": "sesame/auto-factor-mining",
-      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
-      "component": "removed path:examples/demo-run.json",
-      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
-      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
-      "decision": "approved",
-      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
-      "deltas": [
-        {
-          "path": "/",
-          "beforePresent": true,
-          "afterPresent": true,
-          "before": true,
-          "after": false,
-          "impact": "breaking-path-removal"
-        }
-      ],
-      "findings": []
-    },
-    {
-      "pluginId": "sesame/auto-factor-mining",
-      "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
-      "component": "removed path:examples/report.demo.html",
-      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
-      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
-      "decision": "approved",
-      "reason": "2026-11-17：用户明确要求删除因子插件全部18份旧v1资料及相关声明和引用。仅移除Historical知识条目与旧示例、参考CLI和文档，保留10份现行资料；9项运行能力、配置、状态集合与产物协议逐字段一致。生成器同步清理，资源不存在、现行链接和生成一致性回归通过；独立只读审查确认无误删。冻结基线与历史发布证据不变，不批准其他插件已有漂移。",
-      "deltas": [
-        {
-          "path": "/",
-          "beforePresent": true,
-          "afterPresent": true,
-          "before": true,
-          "after": false,
-          "impact": "breaking-path-removal"
         }
       ],
       "findings": []

@@ -1,4 +1,4 @@
-import { withMemory, activateMemory, disposeMemory, compactMemory } from './service.js';
+import { withMemory, activateMemory, disposeMemory, compactMemory, releaseTaskMemory } from './service.js';
 import { requireValue } from './support.js';
 
 async function memoryCall(host, memory, action, args, execute) {
@@ -65,7 +65,12 @@ export function createCapabilities(host) {
     { name: 'memory_stats', execute: () => withMemory(host, s => manage(s, { action: 'stats' })) },
     { name: 'memory_activate', execute: () => activateMemory(host) },
     { name: 'memory_before_compact', execute: (args, signal) => compactMemory(host, args, signal) },
-    { name: 'memory_before_run_release', execute: args => withMemory(host, (s, repository) => repository.finalizeTask(s.context.id, args.runId ?? args.workspaceRunId)) },
+    { name: 'memory_before_run_release', execute: args => {
+      if (args.workspaceRunId || !args.runId || !host.context.sessionId || host.context.kind === 'main') return { deleted_candidates: 0 };
+      return withMemory(host, (s, repository) => s.context.runId === args.runId
+        ? repository.finalizeTask(s.context.id, args.runId) : { deleted_candidates: 0 });
+    } },
+    { name: 'memory_release_task', execute: (args, signal) => releaseTaskMemory(host, args, signal) },
     { name: 'memory_dispose', execute: () => disposeMemory(host) },
   ];
 }

@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-price-structure:instructions#preamble": "74bc48778c2aa2833f1a68e9d9fb761bfe35d993b14c98259396f1f3284bde1c",
+    "sesame/abu-price-structure:plugin.description": "49abb6d7ae248a114661245a3865443bd48df332af57e8530a47100d17869d8c",
+    "sesame/abu-price-structure:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-price-structure:resource/PROVENANCE.md": "b473b63238e179dedf8a8da5a5b4abb4c6cb7688d6a5578874ed01b441cc8177",
+    "sesame/abu-price-structure:resource/README.md": "369c097f113aab27b0406c7599016e2aab4eb12347e7c2bfda5ff556ad0bda5e",
+    "sesame/abu-price-structure:resource/examples/input.json": "8329bb9400e0efde347c094b1b6c919926740ef5b08554a4a7ee436a1ae3f7c0",
+    "sesame/abu-price-structure:resource/references/method.md": "2081d0f12400216618f002d9cd51e42938911bfcbc0ef29863bab6b27597fc5e",
+    "sesame/abu-price-structure:resource/scripts/baseline.mjs": "c71698ed4b4a6bcfdad7aa70914d3f14b637c3c0076a522de81b1ba2051175da",
+    "sesame/abu-price-structure:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-price-structure:skill/abu-price-structure.body": "7ab1f791b19d5f5138efa32998701e2d5c83be7ddbf2dce7b87d725a3420cddc",
+    "sesame/abu-price-structure:skill/abu-price-structure.description": "2c68a363343136c436ed4d8eec3273c9acccdcc0ee1c5a60f6adf01240101605",
+    "sesame/abu-price-structure:tool/abu_price_structure_analyze.description": "d4775f8d9ea793788e2f1474e90d1c7a330ac41b2dbb904620d949d1c2d37ae8",
+    "sesame/abu-price-structure:tool/abu_price_structure_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-price-structure:tool/abu_price_structure_analyze.input": "9ab7e6e5bd95940cfd241f70d1134233199bdb90cc290a1549e80fca1254178f",
+    "sesame/abu-price-structure:tool/abu_price_structure_analyze.output": "0f8fcc2457220082e7173f046f7f1f0a64fa7551f7e7adde170a3ea8f410dcf6"
+  },
+  "digest": "f6b5a5169d8ee21313215038cc1977d5bc40e843ffda1766648eef7ec5727627"
+}

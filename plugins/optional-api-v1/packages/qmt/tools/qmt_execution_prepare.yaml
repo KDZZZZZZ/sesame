@@ -1,0 +1,295 @@
+name: qmt_execution_prepare
+title: qmt_execution_prepare
+description: Guarded native execution adapter prepare. Retains raw audit receipts; unknown outcomes never authorize resend.
+inputSchema:
+  type: object
+  properties:
+    symbol:
+      type: string
+      minLength: 1
+      maxLength: 100
+    account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          minLength: 1
+        connectionId:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+      required:
+        - accountId
+        - connectionId
+        - revision
+      additionalProperties: false
+    commandId:
+      type: string
+      minLength: 1
+    userAuthorized:
+      type: boolean
+      const: true
+  required:
+    - symbol
+    - account
+    - commandId
+    - userAuthorized
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    contract:
+      const: sesame.execution-adapter/1
+      type: string
+    backend:
+      const: qmt
+      type: string
+    account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          minLength: 1
+        connectionId:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+      required:
+        - accountId
+        - connectionId
+        - revision
+      additionalProperties: false
+    symbol:
+      type: string
+      minLength: 1
+    projection:
+      type: object
+      properties:
+        positions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              symbol:
+                type: string
+                minLength: 1
+              side:
+                enum:
+                  - buy
+                  - sell
+              quantity:
+                type: string
+                pattern: ^(0|[1-9]\d*)(\.\d+)?$
+              availableQuantity:
+                type: string
+                pattern: ^(0|[1-9]\d*)(\.\d+)?$
+            required:
+              - id
+              - symbol
+              - side
+              - quantity
+              - availableQuantity
+            additionalProperties: false
+        orders:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              symbol:
+                type: string
+                minLength: 1
+              working:
+                type: boolean
+            required:
+              - id
+              - symbol
+              - working
+            additionalProperties: false
+        priceStep:
+          type: string
+          pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      required:
+        - positions
+        - orders
+      additionalProperties: false
+    capturedAt:
+      type: integer
+    readStartedAt:
+      type: integer
+    captureMs:
+      type: integer
+    quote:
+      type: object
+      additionalProperties: true
+    spec:
+      type: object
+      additionalProperties: true
+    positions:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    orders:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    fills:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    historicalOrders:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    deployments:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    historyCoverage:
+      type: object
+      properties:
+        scope:
+          const: current_native_trading_day
+          type: string
+        complete:
+          const: false
+          type: boolean
+        requestedDays:
+          type: integer
+          minimum: 1
+          maximum: 90
+        orders:
+          type: object
+          properties:
+            status:
+              const: partial
+            scope:
+              const: current_native_trading_day
+          required:
+            - status
+            - scope
+          additionalProperties: false
+        fills:
+          type: object
+          properties:
+            status:
+              const: partial
+            scope:
+              const: current_native_trading_day
+          required:
+            - status
+            - scope
+          additionalProperties: false
+        historicalOrders:
+          type: object
+          properties:
+            status:
+              const: unavailable
+            reason:
+              const: native_current_day_only
+          required:
+            - status
+            - reason
+          additionalProperties: false
+        limitations:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+        - scope
+        - complete
+        - requestedDays
+        - orders
+        - fills
+        - historicalOrders
+        - limitations
+      additionalProperties: false
+    accountSummary:
+      type: object
+      additionalProperties: true
+    permissions:
+      type: object
+      additionalProperties: true
+    raw:
+      type: object
+      additionalProperties: true
+    preparation:
+      type: object
+      additionalProperties: true
+    backendCapturedAt:
+      type: integer
+    summary:
+      type: object
+      additionalProperties: true
+  required:
+    - contract
+    - backend
+    - account
+    - projection
+    - capturedAt
+    - symbol
+    - preparation
+  additionalProperties: true
+  oneOf:
+    - required:
+        - symbol
+        - spec
+        - quote
+        - positions
+        - orders
+        - readStartedAt
+        - captureMs
+        - accountSummary
+        - permissions
+    - not:
+        required:
+          - symbol
+      required:
+        - summary
+        - positions
+        - orders
+        - fills
+        - historicalOrders
+        - deployments
+        - historyCoverage
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - network
+    - process
+  usage:
+    purpose: sesame.execution-adapter/1 prepare; native SDK mechanics stay in this adapter.
+    inputs: Use the declared normalized operation input, exact account/revision and retained operation IDs.
+    outputs: Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.
+    prerequisites:
+      - Main conversation and existing explicit user instruction only.
+    limitations:
+      - No broker acceptance is inferred from a declaration. Missing history never proves no submission.
+  binding:
+    type: native
+    name: qmt_execution_prepare

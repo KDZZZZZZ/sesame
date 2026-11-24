@@ -1,0 +1,7 @@
+goal: 双均线交叉观察与参数敏感性研究。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-moving-average-discovery
+    tools:
+      - abu_moving_average_analyze
+    resource: skills/abu-moving-average/SKILL.md

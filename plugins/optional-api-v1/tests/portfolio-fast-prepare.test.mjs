@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -382,8 +383,8 @@ test('observe remains a pure snapshot read and an observed execution never calls
 
 test('public declarations expose prepare and enforce exactly one execution source', () => {
   const root = new URL('../packages/portfolio-execution/', import.meta.url);
-  const manifest = JSON.parse(readFileSync(new URL('plugin.json', root), 'utf8'));
-  const declaration = JSON.parse(readFileSync(new URL('capabilities.json', root), 'utf8'));
+  const manifest = readPackageDirectory(new URL('.', root)).manifest;
+  const declaration = readPackageDirectory(new URL('.', root)).capabilities;
   const prep = declaration.capabilities.find(value => value.id === 'manual_trade_prepare');
   const execution = declaration.capabilities.find(value => value.id === 'manual_trade_execute');
   assert.equal(prep.execution, 'run'); assert.ok(manifest.main_tool_names.includes(prep.id));

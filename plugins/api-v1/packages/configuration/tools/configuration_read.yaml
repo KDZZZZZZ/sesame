@@ -1,0 +1,48 @@
+name: configuration_read
+title: configuration_read
+description: 读取模型、认证状态、偏好、应用保存的环境配置和已安装插件。环境配置只返回名称、configured 和 source，不返回密钥或密码。
+inputSchema:
+  type: object
+  properties:
+    section:
+      anyOf:
+        - type: string
+          const: all
+        - type: string
+          const: model
+        - type: string
+          const: preferences
+        - type: string
+          const: environment
+    provider:
+      type: string
+      description: 供应商 ID
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取模型、认证状态、偏好、应用保存的环境配置和已安装插件。环境配置只返回名称、configured 和 source，不返回密钥或密码。
+    inputs: section 默认 all；model 返回模型与认证状态，preferences 返回偏好与版本，environment 返回环境配置名称、configured 和 source；provider 可筛选模型供应商。
+    outputs: 公开设置和 recent_changes 状态回执；environment 只描述配置是否存在及来源，所有 section 均不返回秘密值。
+    prerequisites:
+      - 主 Agent 会话。
+    limitations:
+      - 只读；queued/running/unknown 的变更尚不能算已生效。
+  binding:
+    type: native
+    name: configuration_read

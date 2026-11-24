@@ -1,0 +1,39 @@
+name: trading_decision_report
+title: trading_decision_report
+description: Read the final report artifact already published by this workflow. Report publication happens inside the workflow after its actual child Runs settle; this read never recreates moved, edited or deleted user files.
+inputSchema:
+  type: object
+  required:
+    - run_id
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Persisted trading decision run ID from this task input
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  binding:
+    type: native
+    name: trading_decision_report
+  usage:
+    purpose: Read the final report artifact already published by this workflow. Report publication happens inside the workflow after its actual child Runs settle; this read never recreates moved, edited or deleted user files.
+    inputs: "{run_id:<business run id>}."
+    outputs: '{ref:<published report ArtifactRef>,receipt,entry:"report.html",attachments:[{path:"run.json",mediaType:"application/json"}],state:"published"}. HTML contains only the manager summary; frozen run.json retains fixed research, account, target and actual execution evidence. REPORT_UNAVAILABLE means no completed artifact was published.'
+    prerequisites:
+      - Owning main or authorized task; the workflow must have produced its final report.
+    limitations:
+      - Reading cannot restore user-deleted files; verify actual artifact/render receipts separately from generation.

@@ -1,0 +1,144 @@
+name: financial_research_status
+title: financial_research_status
+description: Inspect credential presence, recent source checks with their query scope and check time, and saved evidence snapshots. A successful check does not establish provider-wide access. Never returns credential values. These research tools cannot trade.
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    plugin_id:
+      type: string
+      const: sesame/financial-research
+    configuration:
+      type: object
+      properties:
+        fmp_key_env:
+          type: string
+        fred_key_env:
+          type: string
+        sec_user_agent_env:
+          type: string
+        reddit_token_env:
+          type: string
+        reddit_user_agent_env:
+          type: string
+    credentials:
+      type: object
+      properties:
+        fmp_api_key:
+          type: boolean
+        fred_api_key:
+          type: boolean
+        sec_user_agent:
+          type: boolean
+        reddit_access_token:
+          type: boolean
+        reddit_user_agent:
+          type: boolean
+    sources:
+      type: array
+      items:
+        type: object
+        properties:
+          provider:
+            type: string
+          kinds:
+            type: array
+            items:
+              type: string
+          configured:
+            type: boolean
+          required_environment_names:
+            type: array
+            items:
+              type: string
+          last_checks:
+            type: array
+            items:
+              type: object
+              properties:
+                query:
+                  type: object
+                  properties:
+                    provider:
+                      type: string
+                    kind:
+                      type: string
+                    symbol:
+                      type: string
+                    series_id:
+                      type: string
+                    start:
+                      type: string
+                    end:
+                      type: string
+                    form:
+                      type: string
+                    quarter:
+                      type: string
+                checked_at:
+                  type: string
+                status:
+                  type: string
+                reason:
+                  type: string
+                row_count:
+                  type: number
+    recent_snapshots:
+      type: array
+      items:
+        type: object
+        properties:
+          dataset_id:
+            type: string
+          raw_dataset_id:
+            type: string
+          query:
+            type: object
+            properties:
+              provider:
+                type: string
+              kind:
+                type: string
+              symbol:
+                type: string
+              series_id:
+                type: string
+              start:
+                type: string
+              end:
+                type: string
+              form:
+                type: string
+              quarter:
+                type: string
+          retrieved_at:
+            type: string
+          row_count:
+            type: integer
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+  usage:
+    purpose: 查看研究来源访问前提和已保存证据目录。
+    inputs: "{}。"
+    outputs: "{plugin_id,configuration:<环境变量名称映射>,sources:[{provider,kinds,configured,required_environment_names,last_checks:[{query,checked_at,status,reason,row_count,series?}]}],recent_snapshots:[{dataset_id,raw_dataset_id,query,retrieved_at,row_count}]}；不返回凭据值。"
+    prerequisites: []
+    limitations:
+      - configured只表示所需凭据已存在（CFTC无凭据要求）；last_checks是各端点/报表周期最近一次查询的历史结果，带kind、symbol/series_id、日期范围等参数及检查时间，不代表整个provider可用或当前凭据仍有权限。
+      - 状态查询本身不联网；历史快照复用不刷新网络检查。401/402/403或429后不要重复相同请求；凭据、套餐或限流条件改变后再验证。
+  binding:
+    type: native
+    name: financial_research_status

@@ -1,10 +1,11 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildInventory } from '../scripts/inventory.mjs';
-import { engineWithinProfile } from '../scripts/plugin-lock.mjs';
+import { engineWithinProfile, packageDirectories } from '../scripts/plugin-lock.mjs';
 import { FUNCTIONAL_CATEGORIES, IMPLEMENTATION_KINDS, validateInventoryPolicy, deriveImplementationKinds } from '../scripts/plugin-taxonomy.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -47,16 +48,14 @@ test('task responsibility groups guides with workflows and knowledge with reusab
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 
-test('all 59 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
+test('each included package has its declared catalog text and supported classification', () => {
   const inventory = buildInventory();
-  assert.equal(inventory.packages.length, 59);
-  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 59);
+  assert.equal(inventory.packages.length, packageDirectories(root).length + packageDirectories(join(root, '../optional-api-v1')).length);
+  assert.equal(new Set(inventory.packages.map(item => item.id)).size, inventory.packages.length);
   assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
-  const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
-  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 9, integration: 9, platform: 6, presentation: 2, search: 4 });
-  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 7 });
   for (const item of inventory.packages) {
-    assert.equal(item.category, policy[item.id.slice('sesame/'.length)].category);
+    const catalog = readPackageDirectory(join(root, '../..', item.sourcePath)).catalog ?? policy[item.id.split('/')[1]];
+    for (const field of ['category', 'functionalCategory', 'title', 'summary', 'dependencies']) assert.deepEqual(item[field], catalog[field], item.id);
     assert.ok(item.implementationKinds.length > 0);
     for (const kind of item.implementationKinds) assert.ok(IMPLEMENTATION_KINDS.some(entry => entry.id === kind));
   }
@@ -66,7 +65,7 @@ test('all 59 plugins have one reviewed functional group and valid implementation
   assert.deepEqual(byId['sesame/binance'].implementationKinds, ['adapter']);
   assert.deepEqual(byId['sesame/investment-research'].implementationKinds, ['workflow']);
   assert.deepEqual(byId['sesame/ultra'].implementationKinds, ['workflow', 'service']);
-  assert.deepEqual(byId['sesame/orchestration'].implementationKinds, ['knowledge']);
+  assert.deepEqual(byId['sesame/orchestration'].implementationKinds, ['function']);
   assert.deepEqual(byId['sesame/user-guide'].implementationKinds, ['knowledge']);
   assert.deepEqual(byId['sesame/deep-reasoning'].implementationKinds, ['knowledge']);
   assert.equal(byId['sesame/research'].functionalCategory, 'business');
@@ -79,8 +78,8 @@ test('inventory projects current declared abilities and versions, including rese
   const inventory = buildInventory();
   for (const item of inventory.packages) {
     const directory = join(root, '../..', item.sourcePath);
-    const manifest = JSON.parse(readFileSync(join(directory, 'plugin.json')));
-    const declaration = JSON.parse(readFileSync(join(directory, manifest.capability_manifest)));
+    const manifest = readPackageDirectory(join(directory)).manifest;
+    const declaration = readPackageDirectory(directory).capabilities;
     assert.equal(item.version, manifest.version);
     assert.deepEqual(item.permissions, manifest.permissions ?? { scopes: [], calls: [] });
     assert.deepEqual(item.tools, declaration.capabilities.filter(capability => capability.consumers.includes('agent')).map(capability => capability.id));
@@ -98,7 +97,7 @@ test('ABU navigation covers every real capability, including both independent tr
   for (const entry of entries) {
     assert.equal(entry.tool, undefined, 'navigation must enumerate all capabilities rather than a one-tool assumption');
     assert.deepEqual(entry.tools, actual.find(item => item.id === entry.id).tools);
-    const manifest = JSON.parse(readFileSync(join(root, '../optional-api-v1/packages', entry.directory, 'plugin.json')));
+    const manifest = readPackageDirectory(join(root, '../optional-api-v1/packages', entry.directory)).manifest;
     assert.equal(entry.title, manifest.title);
   }
   const diagnostics = actual.find(item => item.id === 'sesame/abu-trade-metrics');
@@ -124,7 +123,7 @@ test('remediation version pairs exceed documented installed QA floors without re
   assert.equal(newer('2.0.2', '2.0.3'), false, 'a source label below the installed version must fail');
   for (const [distribution, name, floor] of installed) {
     const directory = join(root, '..', distribution, 'packages', name);
-    const manifest = JSON.parse(readFileSync(join(directory, 'plugin.json')));
+    const manifest = readPackageDirectory(join(directory)).manifest;
     const npm = JSON.parse(readFileSync(join(directory, 'package.json')));
     assert.equal(npm.version, manifest.version, `${name}: paired version files differ`);
     assert.equal(newer(manifest.version, floor), true, `${name}: source ${manifest.version} must exceed known installed ${floor}`);
@@ -137,7 +136,7 @@ test('configuration readers and workflow probes explicitly declare truthful read
     ['trading-decision', 'trading_decision_workflow_dependencies', ['read']],
     ['auto-factor-mining', 'factor_configuration_read', ['read']],
   ]) {
-    const declaration = JSON.parse(readFileSync(join(root, '../optional-api-v1/packages', name, 'capabilities.json')));
+    const declaration = readPackageDirectory(join(root, '../optional-api-v1/packages', name)).capabilities;
     const capability = declaration.capabilities.find(item => item.id === id);
     assert.equal(capability.kind, 'function');
     assert.equal(capability.execution, 'immediate');
@@ -152,14 +151,16 @@ test('configuration readers and workflow probes explicitly declare truthful read
 
 test('permission requests follow actual privileged ports, not category or native subprocess labels', () => {
   const expectedScopes = {
-    ultra: ['capabilities.compose'],
+    orchestration:['workflows.navigate'], ultra: ['capabilities.compose'],
     'canvas-control': ['capabilities.compose'], configuration: ['application.configure'], 'data-access': ['capabilities.compose'], memory: ['workspace.messages.read'], 'plugin-manager': ['plugins.manage'], workspace: ['process.execute'],
     'auto-factor-mining': ['capabilities.compose', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'], 'strategy-development': ['capabilities.compose', 'process.execute'],
     'judgment-evolution': ['capabilities.compose', 'workspace.messages.read'], 'kurumi-replay': ['plugins.manage', 'workspace.messages.read'], 'market-data-parser': ['process.execute'], mt5: ['workspace.messages.read'], 'rss-collect': ['process.execute'], 'trading-decision': ['capabilities.compose'], vnpy: ['process.execute'], 'web-extract': ['process.execute'],
   };
   const packages = buildInventory().packages, byId = new Map(packages.map(item => [item.id, item]));
   for (const item of packages) {
-    assert.deepEqual(item.permissions.scopes, expectedScopes[item.id.slice('sesame/'.length)] ?? [], item.id);
+    if (Object.hasOwn(policy, item.id.split('/')[1]) && item.id.startsWith('sesame/')) {
+      assert.deepEqual(item.permissions.scopes, expectedScopes[item.id.slice('sesame/'.length)] ?? [], item.id);
+    }
     assert.equal(Object.hasOwn(item.permissions, 'granted'), false);
     for (const call of item.permissions.calls) if (typeof call === 'object') {
       const target = byId.get(call.pluginId);

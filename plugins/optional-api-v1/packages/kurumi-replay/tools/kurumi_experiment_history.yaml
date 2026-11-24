@@ -1,0 +1,34 @@
+name: kurumi_experiment_history
+title: kurumi_experiment_history
+description: 只读封存历史摘要与未知lifecycle事务，不推进。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 只读封存历史摘要与未知lifecycle事务，不推进。
+    inputs: "{}."
+    outputs: "{currentRunId,history:[{runId,status,documentDigest,manifestDigest,engineVersion,outcome}],pendingTransactions:[{commandId,status,input,error}]}."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+    limitations:
+      - Read only; a pending archive/create transaction is not silently completed or deleted.
+  binding:
+    type: native
+    name: kurumi_experiment_history

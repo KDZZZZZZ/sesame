@@ -1,0 +1,127 @@
+name: judgment_reflect
+title: judgment_reflect
+description: 完成已核验判断的语义复盘：说明证据、成败归因、适用边界和后续验证。关联据此形成的候选准则；若无需新准则，明确原因。自动评分不等于完成复盘。
+inputSchema:
+  type: object
+  required:
+    - judgment_id
+    - analysis
+  properties:
+    judgment_id:
+      type: string
+      description: 已核验判断 ID
+      minLength: 1
+      maxLength: 2000
+    analysis:
+      type: string
+      description: 证据、成败归因、适用边界与后续验证
+      minLength: 1
+      maxLength: 6000
+    rule_ids:
+      type: array
+      items:
+        type: string
+        description: 以本判断为形成依据的候选准则 ID
+        minLength: 1
+        maxLength: 2000
+      maxItems: 10
+    no_change_reason:
+      type: string
+      description: 没有新增准则时必须明确说明原因，避免为演进而制造规则
+      minLength: 1
+      maxLength: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    claim:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    rationale:
+      type: string
+    probability:
+      type: number
+    baseline_probability:
+      type: number
+    due_at:
+      type: string
+    created_at:
+      type: string
+    conversation_id:
+      type: string
+    source_message_id:
+      type:
+        - string
+        - "null"
+    verification:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        properties: {}
+        required: []
+        additionalProperties: true
+    status:
+      enum:
+        - pending
+        - awaiting_evidence
+        - resolved
+    event_key:
+      type: string
+    next_review_at:
+      type: string
+    review_attempts:
+      type: integer
+    review:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    evidence_gap:
+      type: string
+    last_evidence_check_at:
+      type: string
+  required:
+    - id
+    - claim
+    - probability
+    - due_at
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 完成已核验判断的语义复盘：说明证据、成败归因、适用边界和后续验证。关联据此形成的候选准则；若无需新准则，明确原因。自动评分不等于完成复盘。
+    inputs: "{judgment_id,analysis,rule_ids?:[],no_change_reason?}; analysis connects evidence, cause, boundaries and a testable next hypothesis. If no rule is linked, give no_change_reason. Distinguish source/timing quality, method assumptions and actual outcome; reuse the saved calculation instead of building a second scorer."
+    outputs: Resolved prediction with immutable review.semantic containing analysis, rule_ids/no_change_reason and completed_at.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Requires an actual resolved prediction; a revised candidate rule is a new rule, not an overwritten reflection.
+  binding:
+    type: native
+    name: judgment_reflect

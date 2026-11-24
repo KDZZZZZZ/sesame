@@ -1,0 +1,53 @@
+name: akshare_prepare
+title: akshare_prepare
+description: First verify/reuse compatible existing AKShare. If missing, explicitly create a private plugin-data Python venv and download pinned AKShare 1.19.1 packages from official PyPI. No global/system package install.
+inputSchema:
+  type: object
+  properties:
+    python_path:
+      type: string
+      description: Optional native 64-bit Python >=3.11 executable compatible with this host OS
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+    - private-filesystem
+    - plugin.state.write
+  usage:
+    purpose: 准备缺失的私有 AKShare 依赖并保留来源收据。
+    inputs: '{python_path?}；可指定已存在的本机64位Python>=3.11，例 {python_path:"C:/Python312/python.exe"}。'
+    outputs: "{ready:true,reused,python,mode?,receipt?}；新安装 receipt 含 index、akshareVersion、Python信息和 packages[{name,version,url,hashes.sha256}]；缺解释器/源失败抛明确错误。"
+    prerequisites:
+      - akshare_discover/status 可发现现有环境；prepare 仍会先复用兼容环境。
+    limitations:
+      - 只在插件私有目录建 venv、下载 AKShare 1.19.1 并 pip check；不下载Python，不升级共享环境。安装成功不证明某上游网络可访问。
+  binding:
+    type: native
+    name: akshare_prepare
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

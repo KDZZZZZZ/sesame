@@ -1,0 +1,47 @@
+name: kurumi_display
+title: kurumi_display
+description: 显示原生当前章H1行情与模拟账户/Agent面板，不改账户资金；尊重图表锁，查看真实客户端回执。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 显示原生当前章H1行情与模拟账户/Agent面板，不改账户资金；尊重图表锁，查看真实客户端回执。
+    inputs: "{}."
+    outputs: "{layout,overlay,instanceId,audience,binding,account,simulated:true,note,...}; exact native chart/indicator bindings and simulated account identity."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Prepared challenge with a revealed current chapter and available declared market/account sources.
+    limitations:
+      - Saved layout/instance is not pixels. A current client rendered receipt must support a display claim; no future history is exposed to the player.
+  binding:
+    type: native
+    name: kurumi_display
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

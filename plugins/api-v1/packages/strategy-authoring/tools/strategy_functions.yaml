@@ -1,0 +1,41 @@
+name: strategy_functions
+title: strategy_functions
+description: Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.
+inputSchema:
+  type: object
+  required:
+    - output_path
+  properties:
+    output_path:
+      type: string
+      description: Workspace JSON path for the complete frozen extension object
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - workspace.write
+  usage:
+    purpose: Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.
+    inputs: output_path 指向工作区 JSON；生成固定版本的完整纯函数 extension，可嵌入 SVL1.2。用法见 references/quant-functions.md。
+    outputs: 实际落盘路径、扩展身份/摘要及可用函数；公式仍由同一 SVL 图展开求值。
+    prerequisites:
+      - sesame/workspace 可写。
+    limitations:
+      - 仅写函数模块，不发布 Artifact、不执行行情或原生指标；保留整个扩展及摘要，不手改单个函数后沿用旧摘要。
+  binding:
+    type: native
+    name: strategy_functions

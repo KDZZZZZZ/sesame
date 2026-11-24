@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { REVIEW_MARKER } from './semantic-review.mjs';
 
 export const REPOSITORY = 'KDZZZZZZ/sesame';
 const OWNER = REPOSITORY.split('/')[0];
@@ -32,28 +31,10 @@ export function contributionRoute(event) {
   return { route, pullRequest: pr.number, headSha: pr.head.sha };
 }
 
-// This authorizes taking a snapshot, not the review decision. The existing
-// semantic validator still checks the exact head, reviewer and open discussions.
-export function semanticReviewRequested(eventName, event, actor, ref) {
-  if (!same(event?.repository?.full_name, REPOSITORY) || !same(actor, OWNER) || ref !== 'refs/heads/main') return false;
-  if (eventName === 'workflow_dispatch') {
-    const number = event.inputs?.pull_request;
-    return /^[1-9][0-9]*$/.test(number ?? '') && Number.isSafeInteger(Number(number));
-  }
-  if (eventName !== 'issue_comment' || !['created', 'edited'].includes(event.action) || !event.issue?.pull_request || !same(event.comment?.user?.login, OWNER) || event.comment.user.type !== 'User') return false;
-  const body = event.comment.body;
-  return typeof body === 'string' && (body.startsWith(REVIEW_MARKER) || body === '/sesame-review');
-}
-
 function main() {
   const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-  if (process.argv[2] === '--semantic-event') {
-    assert(semanticReviewRequested(process.env.GITHUB_EVENT_NAME, event, process.env.GITHUB_ACTOR, process.env.GITHUB_REF), 'Only an explicit owner review request on trusted main may create a semantic snapshot');
-    console.log('Authorized final semantic review request; substantive review checks still apply.');
-  } else {
-    assert(process.argv[2] === '--pull-request' && process.env.GITHUB_EVENT_NAME === 'pull_request_target', 'Use --pull-request with trusted pull_request_target metadata');
-    console.log(JSON.stringify(contributionRoute(event), null, 2));
-  }
+  assert(process.argv[2] === '--pull-request' && process.env.GITHUB_EVENT_NAME === 'pull_request_target', 'Use --pull-request with trusted pull_request_target metadata');
+  console.log(JSON.stringify(contributionRoute(event), null, 2));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();

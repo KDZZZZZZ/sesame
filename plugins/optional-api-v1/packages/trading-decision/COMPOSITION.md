@@ -39,6 +39,8 @@ context 工具收到 `{...arguments, action:"identity"}`，返回：
 
 `action:"snapshot", history_days:30` 返回同一冻结账户、capturedAt、summary、positions/orders/fills/historicalOrders/deployments 数组和 historyCoverage。没有记录用空数组，来源不可用必须返回错误或明确覆盖缺口，不伪装完整快照。
 
+工作流首次核验账户时，如果选定的 context 接口声明了 `frozen_context`，控制器会传入保存计划时取得的 `taskContext`。组合执行插件核对所属会话、绑定和账户修订后读取整户快照。角色任务仍使用宿主签发的任务身份。
+
 ## 受托执行
 
 每个角色任务 input 包含 `execution:{pluginId,contextTool,applyTool,arguments,account,context,...}`、`tradingPlan:{id,ownerConversationId,account}`、runId、role。`context` 是 identity 返回的 taskContext，工作流不解释其后端内容。

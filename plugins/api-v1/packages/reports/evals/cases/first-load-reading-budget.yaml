@@ -1,0 +1,23 @@
+id: reports-first-load-reading-budget
+environment:
+  mode: replay
+steps:
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/reports/skills/report-delivery/SKILL.md
+expect:
+  - step: 0
+    pointer: /contents/0/text
+    contains: "1500"
+  - step: 0
+    pointer: /contents/0/text
+    contains: "3000"
+  - step: 0
+    pointer: /contents/0/text
+    contains: "details"
+  - step: 0
+    pointer: /contents/0/text
+    contains: "page_size"
+  - step: 0
+    pointer: /contents/0/text
+    contains: "report_check"

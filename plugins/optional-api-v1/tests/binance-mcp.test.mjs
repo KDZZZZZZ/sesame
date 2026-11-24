@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -11,7 +12,8 @@ const hostRoot = process.env.SESAME_HOST_ROOT ?? fileURLToPath(new URL('../../..
 const evidenceRoot = fileURLToPath(new URL('../../../../outputs/binance-mcp-20261024/', import.meta.url));
 
 test('Binance MCP export is exactly the five non-order-producing tools and version is paired', async () => {
-  const [plugin, packageJson] = await Promise.all(['plugin.json', 'package.json'].map(async file => JSON.parse(await readFile(new URL(`../packages/binance/${file}`, import.meta.url), 'utf8'))));
+  const root=new URL('../packages/binance/',import.meta.url), plugin=readPackageDirectory(root).manifest;
+  const packageJson=JSON.parse(await readFile(new URL('package.json',root),'utf8'));
   assert.equal(plugin.version, '1.0.4'); assert.equal(packageJson.version, plugin.version);
   assert.deepEqual(plugin.mcp_export, exports);
   assert.ok(prohibited.every(name => !plugin.mcp_export.includes(name)));

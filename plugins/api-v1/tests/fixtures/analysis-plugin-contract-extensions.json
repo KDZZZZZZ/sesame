@@ -648,6 +648,30 @@
       "afterDigest": "sha256:cfdcfaa651b180da81340805e03165e72dc70d1b1a97fee1a2628dae027c1063",
       "decision": "approved",
       "reason": "2026-11-16 已有参考从 skills/<任务>/references/ 移到包根 references/。能力 schema、权限、绑定和执行入口不变，只更新清单 resources 与 knowledge 路径。"
+    },
+    {
+      "pluginId": "sesame/web-extract",
+      "component": "declaration",
+      "beforeDigest": "sha256:23ab74d8f2927d96491d4412865f0cc6fd13b2e442c19121f1fe4f34f1677a5d",
+      "afterDigest": "sha256:0a6ddfc379a5c7e943566aa0021a30796e3cb57e12dc370933128d9c4457774b",
+      "decision": "approved",
+      "reason": "2026-11-24 WP-7.1 提示词效率优化：仅更新 tools/extract_webpage.yaml 中 usage.outputs 的长结果读取指引（由 8192 串行改为 part:rows / 49152 并行读页），输入输出 schema、绑定、副作用与权限完全不变。"
+    },
+    {
+      "pluginId": "sesame/rss-collect",
+      "component": "declaration",
+      "beforeDigest": "sha256:526e2885a7659be604b49b273d9b6a5dae960c69995af74a20324d7660682ae2",
+      "afterDigest": "sha256:7f03ec7380b340edeb6b47ca0a46ee2aa6260efa1c588bd1fb40349d451f2143",
+      "decision": "approved",
+      "reason": "2026-11-24 WP-7.1 提示词效率优化：仅更新 tools/parse_feed.yaml 中 usage.outputs 的长结果读取指引（由 8192 串行改为 part:rows / 49152 并行读页），输入输出 schema、绑定、副作用与权限完全不变。"
+    },
+    {
+      "pluginId": "sesame/market-data-parser",
+      "component": "declaration",
+      "beforeDigest": "sha256:3bfa4902351ea8209d2dff4f3768483fdc8170f8d8d03d2752950b04ccdf8e53",
+      "afterDigest": "sha256:4b9773b4638ef9e7f6757248388c77ac315387ae61dd644008772c132a29786a",
+      "decision": "approved",
+      "reason": "2026-11-24 WP-7.1 提示词效率优化：仅更新 tools/parse_fx_xml.yaml 与 tools/parse_fx_json.yaml 中 usage.outputs 的长结果读取指引（由 8192 串行改为 part:rows / 49152 并行读页），输入输出 schema、绑定、副作用与权限完全不变。"
     }
   ]
 }

@@ -1,0 +1,58 @@
+name: report_export_check
+title: report_export_check
+description: Preflight PDF and PNG for an exact published report revision without creating output files. Return supported formats and actionable reasons. Interactive publication/render success is independent; preflight does not verify final exported bytes or guarantee identical later output.
+inputSchema:
+  type: object
+  required:
+    - ref
+  properties:
+    ref:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: report
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - presentation.render
+  usage:
+    purpose: Preflight PDF and PNG for an exact published report revision without creating output files. Return supported formats and actionable reasons. Interactive publication/render success is independent; preflight does not verify final exported bytes or guarantee identical later output.
+    inputs: ref 为完整固定 report ArtifactRef；不按标题猜版本。
+    outputs: '{checked:"rendered-preflight",outputVerified:false,supportedFormats,formats,limits,binding}；每格式含 status/reasons；不返回 PDF/PNG 字节，不保存 rendered 验收回执。'
+    prerequisites:
+      - 宿主报告渲染器及 report-export 检查接口可用。
+    limitations:
+      - 最终导出仍会检查内容/尺寸/32 MiB 预算；检查后的运行时状态可能不同。PDF 拒绝 shadow DOM、音视频/动画 SVG、不能忠实复制的字体/画布/资源。PNG 只保存静态视图，不保留交互。不能为通过导出而静默删掉证据或媒体。
+  binding:
+    type: native
+    name: report_export_check

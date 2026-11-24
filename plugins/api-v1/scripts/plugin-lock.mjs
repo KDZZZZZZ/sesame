@@ -1,8 +1,8 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as yamlSource from '../../../.github/validation-transition/current-source.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
@@ -94,23 +94,42 @@ export function readProfile(source) {
   fail(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1, 'Bundle profile must be an ordinary file');
   const value = JSON.parse(readFileSync(path));
   fail(value.schemaVersion === 1 && ['core', 'optional'].includes(value.kind) && value.engines?.sesame === '>=0.2.0-0', 'Invalid bundle profile or Sesame engine range');
-  fail(Array.isArray(value.packages) && value.packages.length > 0 && value.packages.every(id => /^sesame\/[a-z][a-z0-9-]*$/.test(id)) && new Set(value.packages).size === value.packages.length, 'Profile requires unique package identities');
-  fail(Object.keys(value).every(key => ['schemaVersion', 'kind', 'engines', 'packages'].includes(key)), 'Unknown profile field');
+  const selection = value.discover === true ? ['discover', 'exclude'] : ['packages'];
+  fail(Object.keys(value).every(key => ['schemaVersion', 'kind', 'engines', ...selection].includes(key)), 'Unknown profile field or mixed package selection');
+  if (value.discover === true) {
+    const exclude = value.exclude === undefined ? [] : value.exclude;
+    fail(Array.isArray(exclude) && exclude.every(slug => typeof slug === 'string' && /^[a-z][a-z0-9-]*$/.test(slug)) && new Set(exclude).size === exclude.length, 'Profile exclusions must be unique directory slugs');
+  } else {
+    fail(Array.isArray(value.packages) && value.packages.length > 0 && value.packages.every(id => typeof id === 'string' && /^[a-z0-9][a-z0-9.-]*\/[a-z][a-z0-9-]*$/.test(id) && (value.kind === 'optional' || id.startsWith('sesame/'))) && new Set(value.packages).size === value.packages.length, 'Profile requires unique package identities');
+  }
   return value;
+}
+
+export function packageDirectories(source, profile = readProfile(source)) {
+  const packagesDirectory = join(source, 'packages');
+  const parent = lstatSync(packagesDirectory);
+  fail(parent.isDirectory() && !parent.isSymbolicLink(), 'Package root must be an ordinary directory');
+  const selected = [];
+  for (const directory of readdirSync(packagesDirectory).sort()) {
+    fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
+    const stat = lstatSync(join(packagesDirectory, directory));
+    fail(stat.isDirectory() && !stat.isSymbolicLink(), `Package is not an ordinary directory: ${directory}`);
+    if (!profile?.exclude?.includes(directory)) selected.push(directory);
+  }
+  return selected;
 }
 
 export function buildLock(source = root) {
   const packagesDirectory = join(source, 'packages'), packages = [], profile = readProfile(source);
-  for (const directory of readdirSync(packagesDirectory).sort()) {
-    fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
-    const path = join(packagesDirectory, directory), stat = lstatSync(path);
-    fail(stat.isDirectory() && !stat.isSymbolicLink(), `Package is not an ordinary directory: ${directory}`);
+  for (const directory of packageDirectories(source, profile)) {
+    const path = join(packagesDirectory, directory);
     const files = packageFiles(path), names = new Set(files.map(file => file.path));
     fail(new Set(files.map(file => file.path.normalize('NFD').toLowerCase())).size === files.length, `${directory}: paths collide on a supported filesystem`);
-    const manifest = JSON.parse(readFileSync(join(path, 'plugin.json'))), npm = JSON.parse(readFileSync(join(path, 'package.json'))), extension = manifest.extensions?.['bot.sesame'];
+    const {manifest, capabilities:declared} = readPackageDirectory(path), npm = JSON.parse(readFileSync(join(path, 'package.json'))), extension = manifest.extensions?.['bot.sesame'];
     const id = extension?.id ?? manifest.id;
-    fail(id === `sesame/${directory}`, `Incorrect publisher identity: ${directory}`);
+    fail(id === manifest.id && id.split('/')[1] === directory && (profile?.kind === 'optional' || id === `sesame/${directory}`), `Incorrect publisher identity: ${directory}`);
     if (profile) {
+      fail(files.some(file=>/^evals\/cases\/[^/]+\.yaml$/.test(file.path)), `${id}: official packages require an isolated case`);
       fail(engineWithinProfile((manifest.$schema ? extension?.engines : manifest.engines)?.sesame, profile.engines.sesame), `${id}: Sesame engine range must not widen its profile`);
       fail(!Object.hasOwn(manifest, 'migration') && !Object.hasOwn(extension ?? {}, 'migration'), `${id}: profiled packages cannot request legacy host storage grants`);
       const state = extension?.builtin?.default_state ?? manifest.default_state;
@@ -121,8 +140,7 @@ export function buildLock(source = root) {
     fail(typeof manifest.license === 'string' && manifest.license === npm.license && names.has('LICENSE'), `${id}: explicit per-package license is required`);
     fail(['mounted', 'discoverable', 'disabled'].includes(manifest.default_state), `${id}: invalid default state`);
     fail(!Object.hasOwn(manifest, 'tool_names') && !Object.hasOwn(manifest, 'tool_definitions'), `${id}: capabilities.json is the single capability declaration`);
-    fail(safePath(manifest.capability_manifest) && names.has(manifest.capability_manifest), `${id}: capability manifest is missing`);
-    const declared = JSON.parse(readFileSync(join(path, manifest.capability_manifest)));
+    fail(names.has('plugin.yaml') && names.has('surface.lock.json'), `${id}: surface package is incomplete`);
     fail(declared.apiVersion === '2' && declared.schemaVersion === 1, `${id}: invalid capability manifest version`);
     for (const field of ['capabilities', 'sources', 'views', 'services', 'knowledge', 'hooks', 'stateCollections', 'artifactSchemas']) fail(Array.isArray(declared[field]), `${id}: ${field} must be explicitly declared`);
     fail(new Set(declared.capabilities.map(cap => cap.id)).size === declared.capabilities.length, `${id}: capability IDs must be unique`);
@@ -153,7 +171,7 @@ export function buildLock(source = root) {
     }
     packages.push({ id, version: manifest.version, directory, treeDigest: treeDigest(files), files });
   }
-  if (profile) fail(JSON.stringify(packages.map(pkg => pkg.id).sort()) === JSON.stringify([...profile.packages].sort()), 'Package set differs from the reviewed core/optional profile');
+  if (profile?.packages) fail(JSON.stringify(packages.map(pkg => pkg.id).sort()) === JSON.stringify([...profile.packages].sort()), 'Package set differs from the reviewed core/optional profile');
   fail(packages.length > 0 && packages.length <= 100, 'Bundle requires 1–100 packages');
   return { schemaVersion: 1, apiVersion: '2', channel: 'development', packages };
 }
@@ -185,9 +203,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const args = process.argv.slice(2), sourceIndex = args.indexOf('--source');
   fail(args.length > 0 && args.every((arg, i) => ['--write', '--check', '--archive', '--source'].includes(arg) || ['--archive', '--source'].includes(args[i - 1])), 'Use --write, --check, or --archive <path>, with optional --source <directory>');
   fail(sourceIndex === -1 || args[sourceIndex + 1], '--source needs a directory');
-  const source = sourceIndex === -1 ? root : resolve(args[sourceIndex + 1]), lockPath = join(source, 'official-plugins.lock.json');
-  const checkCurrentYaml = args.includes('--check') && !args.includes('--write') && !args.includes('--archive') && yamlSource.usesYaml(source);
-  const lock = checkCurrentYaml ? yamlSource.buildLock(source) : buildLock(source), text = JSON.stringify(lock, null, 2) + '\n';
+  const source = sourceIndex === -1 ? root : resolve(args[sourceIndex + 1]), lockPath = join(source, 'official-plugins.lock.json'), lock = buildLock(source), text = JSON.stringify(lock, null, 2) + '\n';
   if (args.includes('--write')) writeFileSync(lockPath, text);
   if (args.includes('--check') || args.includes('--archive')) fail(readFileSync(lockPath, 'utf8') === text, 'Lock differs from source; regenerate and review it');
   const archiveIndex = args.indexOf('--archive');

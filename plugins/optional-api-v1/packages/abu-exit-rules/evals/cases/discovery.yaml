@@ -1,0 +1,145 @@
+id: abu-exit-rules-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-exit-rules/skills/abu-exit-rules/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-exit-rules
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_exit_rules_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            position:
+              type: object
+              properties:
+                side:
+                  enum:
+                    - long
+                    - short
+                entry_time:
+                  type: string
+                  description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                entry_price:
+                  type: number
+              additionalProperties: true
+              required:
+                - side
+                - entry_time
+                - entry_price
+            parameters:
+              type: object
+              properties:
+                atr_window:
+                  type: integer
+                  default: 14
+                  minimum: 2
+                  maximum: 200
+                  description: ATR 窗口
+                stop_loss_atr:
+                  type: number
+                  default: 2
+                  minimum: 0.1
+                  maximum: 100
+                  description: 止损 ATR 倍数
+                stop_win_atr:
+                  type: number
+                  default: 3
+                  minimum: 0.1
+                  maximum: 100
+                  description: 止盈 ATR 倍数
+                trailing_atr:
+                  type: number
+                  default: 2
+                  minimum: 0.1
+                  maximum: 100
+                  description: 追踪回撤 ATR 倍数
+                max_holding_bars:
+                  type: integer
+                  default: 20
+                  minimum: 1
+                  maximum: 10000
+                  description: 最长持有根数
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            bars:
+              type: array
+              items:
+                type: object
+                properties:
+                  time:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  available_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  open:
+                    type: number
+                  high:
+                    type: number
+                  low:
+                    type: number
+                  close:
+                    type: number
+                  volume:
+                    type: number
+                additionalProperties: true
+                required:
+                  - time
+                  - available_at
+                  - open
+                  - high
+                  - low
+                  - close
+                  - volume
+              maxItems: 10000
+              minItems: 1
+              description: bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - bars
+            - position
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 退出规则基线"

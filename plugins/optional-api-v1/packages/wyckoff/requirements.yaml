@@ -1,0 +1,6 @@
+goal: 可组合的分析方法：固定区间中的价格推进与成交量是否支持某个阶段候选，以及什么替代解释仍成立；消费已有证据，返回价格事实/量证据/阶段或事件候选对照、替代解释、待确认资料、反证与硬失效条件。
+acceptance:
+  discovery:
+    case: wyckoff-discovery
+    tools: []
+    resource: skills/wyckoff/SKILL.md

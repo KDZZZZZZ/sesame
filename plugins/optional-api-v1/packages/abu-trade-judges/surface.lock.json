@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-trade-judges:instructions#preamble": "a3d260ba4b4e07a24c75ad1850b9a8798cda41a6621ecbca76a0c5a4044147b7",
+    "sesame/abu-trade-judges:plugin.description": "5f71a2afc9230b31ac41895515c65322c7924c7f1d16b73d4e019fa18b60c1c6",
+    "sesame/abu-trade-judges:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-trade-judges:resource/PROVENANCE.md": "5aa49ad241c9e80de6f036726247246c8ebe51d5738f9939206c1d415a4ed3b2",
+    "sesame/abu-trade-judges:resource/README.md": "7c01648692b842af08f2b6c1476162c4347e6bca92d0f95a85eda20c60783daf",
+    "sesame/abu-trade-judges:resource/examples/input.json": "f21b074c242851772fa222951f4eba3f1b1526ef8d67bc5143a96cefbffabc67",
+    "sesame/abu-trade-judges:resource/references/method.md": "35ce27219d9e78e4002f908d798c77685d99fc9435d08f69bc8f6887bdb46ce2",
+    "sesame/abu-trade-judges:resource/scripts/baseline.mjs": "782f2ea7fe5a338bb6a10a2ba24c75b767ab78f79bcc545c900847dc2e0a8460",
+    "sesame/abu-trade-judges:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-trade-judges:skill/abu-trade-judges.body": "b71c9678b7186edc673883b14bd78eeab17e29c6cc761271d9e0479cd3e878fb",
+    "sesame/abu-trade-judges:skill/abu-trade-judges.description": "74854ad0d43441c8971447dc811805eb24dc5222fcf42205f0f5bec8d3473bec",
+    "sesame/abu-trade-judges:tool/abu_trade_judges_analyze.description": "14032285a87344f0dbd9f7321d2223e0499924beff629eb69eb75376e9ddb43c",
+    "sesame/abu-trade-judges:tool/abu_trade_judges_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-trade-judges:tool/abu_trade_judges_analyze.input": "1a0f7ecf244cf7f70183e04e1f83fe1c92f848279a872224eb1da3ed0b0a59d8",
+    "sesame/abu-trade-judges:tool/abu_trade_judges_analyze.output": "1a29cb4cc5ed48153273662665f525f06cd3421139448c820f706b039ff27ce2"
+  },
+  "digest": "eec80f320f0356ba41be7fc08d8279dc0526c0b5b015885e6ce68afa94abf8c9"
+}

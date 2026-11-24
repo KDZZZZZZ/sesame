@@ -1,0 +1,52 @@
+name: report_prepare
+title: report_prepare
+description: Validate a workspace JSON draft containing the complete host_reports_publish request, freeze its input, and return a small publication request with inputRef. Does not publish a report or edit the file.
+inputSchema:
+  type: object
+  additionalProperties: false
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 20000
+      description: Workspace UTF-8 JSON file containing the complete host_reports_publish envelope and inline input. Read host_reports_describe for the two schemas.
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Stable ID for this preparation. Retry unchanged drafts with the same ID; after successful preparation use a new ID when changing content or metadata.
+  required:
+    - path
+    - operation_id
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+    - resource.write
+    - resource.publish
+  usage:
+    purpose: Prepare large structured reports without copying their complete content into another tool call.
+    inputs: "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and original optional metadata or fixed references. Full reports require input.lead, 1–6 input.highlights and nonempty input.content.sections. locale belongs to this outer envelope."
+    outputs: provider and publication. Pass publication unchanged to host_reports_publish. inputRef names an immutable application/json resource; no report exists until publication succeeds.
+    prerequisites:
+      - The selected provider is sesame/reports.
+      - The draft input follows the selected provider schema and contains the original research values and fixed references.
+    limitations:
+      - Schema and renderer errors identify the draft field; edit only that part and prepare again. No automatic rewriting of findings.
+      - Omitted locale remains omitted for the host preference; preflight uses the widest existing language limits, and publication checks the actual host locale.
+      - Prepared input does not bypass provider selection, immutable-reference checks or final report_check.
+  binding:
+    type: native
+    name: report_prepare

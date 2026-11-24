@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 // Actual installer, native workflow, Agent transport and artifact store; all research is a local synthetic fixture.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,7 +28,7 @@ test('new package passes actual registration, executes a native eight-Agent work
   const { fixture } = await load('tests/fixture-provider.js');
   const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
   const { validateCapabilityManifest } = await load('modules/plugins/capability-contract.js');
-  const definition = JSON.parse(await readFile(join(packageRoot, 'capabilities.json'), 'utf8'));
+  const definition = readPackageDirectory(join(packageRoot)).capabilities;
   const checked = await validateCapabilityManifest(definition, { pluginId: 'sesame/investment-research' });
   assert.equal(checked.valid, true, JSON.stringify(checked.diagnostics));
   const observations = [], failures = []; let sourceRef;

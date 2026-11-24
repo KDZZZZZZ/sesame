@@ -1,0 +1,51 @@
+name: data_providers
+title: data_providers
+description: 分页列出市场和账户SourceRef及声明操作。
+inputSchema:
+  type: object
+  properties:
+    contract:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 契约，如sesame.market/1
+    providerId:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 精确来源ID
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主页游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 分页列出市场和账户SourceRef及声明操作。
+    inputs: 与 data_sources 相同过滤和分页；仅保留市场/账户来源。例：{contract:"sesame.market/1"}。
+    outputs: "{items,nextCursor?}，来源 ref、operations 与 binding 配置入口同 data_sources。"
+    prerequisites: []
+    limitations:
+      - nextCursor 是上游页游标；某页筛选后为空仍可能有下一页。列表不证明连接正常。
+  binding:
+    type: native
+    name: data_providers

@@ -1,3 +1,4 @@
+import {parseYaml} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdtemp, rm, readFile } from 'node:fs/promises';
@@ -56,7 +57,7 @@ test('installed MT5 v2 declares sources, redacts ingress credentials and publish
   assert.equal(manifest.kind, 'strategy.target'); assert.equal(manifest.content.id, 'sesame.mt5.mql5');
   let offset = 0, declared = '', total;
   for (;;) {
-    const part = await host.resources.read(target, { part: 'content', entry: 'capabilities.json', encoding: 'utf8', offset, length: 262144 });
+    const part = await host.resources.read(target, { part: 'content', entry: 'tools/mt5_translation_file.yaml', encoding: 'utf8', offset, length: 262144 });
     total ??= part.total;
     assert.equal(part.offset, offset);
     assert.equal(part.total, total);
@@ -68,7 +69,7 @@ test('installed MT5 v2 declares sources, redacts ingress credentials and publish
     assert.equal(part.nextOffset, offset);
     assert.ok(offset < total);
   }
-  assert.equal(JSON.parse(declared).apiVersion, '2');
+  assert.equal(parseYaml(declared).name,'mt5_translation_file');
   const repeated = await call('mt5_target'); assert.deepEqual(repeated, target);
   t.diagnostic(JSON.stringify({ nativeTerminalCalls: 0, vendorCalls: 0, declaredSources: sources.items.filter(row => row.ref.providerId.startsWith('sesame/mt5#')).length, credentialsRedactedBeforePersistence: true, immutableTarget: true }));
 });

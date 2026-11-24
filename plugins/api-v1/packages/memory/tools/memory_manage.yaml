@@ -1,0 +1,248 @@
+name: memory_manage
+title: memory_manage
+description: 主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。 风险红线的创建、修订、接纳、归档、恢复与遗忘另需本次真实用户确认；自动整理只能提风险候选。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: save
+        - type: string
+          const: candidates
+        - type: string
+          const: accept
+        - type: string
+          const: reject
+        - type: string
+          const: archive
+        - type: string
+          const: restore
+        - type: string
+          const: forget
+        - type: string
+          const: stats
+    id:
+      type: string
+      description: accept/reject 使用候选 ID；其余写操作使用正式记忆 ID
+      minLength: 1
+      maxLength: 20000
+    expected_version:
+      type: integer
+      minimum: 1
+      description: 对应对象最新 version：候选来自 candidates，正式记忆来自 memory_read；不是成果 revision
+    entry:
+      type: object
+      properties:
+        category:
+          type: string
+          description: 分类路径，阅读 manage-memory skill 获取完整分类树
+          minLength: 1
+          maxLength: 20000
+        title:
+          type: string
+          description: 稳定的事实或偏好名称
+          minLength: 1
+          maxLength: 20000
+        summary:
+          type: string
+          description: 用于检索的简短摘要
+          minLength: 1
+          maxLength: 20000
+        content:
+          type: string
+          description: 完整结论、依据与适用条件，不保存原始日志
+          minLength: 1
+          maxLength: 20000
+        scope:
+          anyOf:
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  const: global
+              required:
+                - kind
+              additionalProperties: false
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  const: project
+                project_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 160
+                  pattern: ^[\w.-]+$
+                  description: 真实项目 ID
+              required:
+                - kind
+                - project_id
+              additionalProperties: false
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  const: strategy
+                project_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 160
+                  pattern: ^[\w.-]+$
+                  description: 策略所属项目 ID
+                strategy_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 160
+                  pattern: ^[\w.-]+$
+                  description: 真实策略 ID
+              required:
+                - kind
+                - project_id
+                - strategy_id
+              additionalProperties: false
+        sources:
+          type: array
+          items:
+            anyOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    const: user_message
+                  id:
+                    type: string
+                    minLength: 1
+                    maxLength: 20000
+                    description: 真实用户消息 ID；不能使用委派消息或成果 ID
+                required:
+                  - type
+                  - id
+                additionalProperties: false
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    const: artifact
+                  id:
+                    type: string
+                    minLength: 1
+                    maxLength: 20000
+                    description: 原 ArtifactRef.id
+                  revision:
+                    type: string
+                    minLength: 1
+                    maxLength: 20000
+                    description: 原 ArtifactRef.revision 字符串
+                  kind:
+                    type: string
+                    minLength: 1
+                    maxLength: 20000
+                    description: 原 ArtifactRef.kind
+                  digest:
+                    type: string
+                    pattern: ^sha256:[a-f0-9]{64}$
+                    description: 原 ArtifactRef.digest
+                  schemaVersion:
+                    type: string
+                    minLength: 1
+                    maxLength: 20000
+                    description: 原 ArtifactRef.schemaVersion
+                required:
+                  - type
+                  - id
+                  - revision
+                  - kind
+                  - digest
+                  - schemaVersion
+                additionalProperties: false
+            description: 来源必须有 type。冻结成果使用 {type:"artifact",...完整 ArtifactRef}；用户表达使用 {type:"user_message",id:"真实消息ID"}。不省略 type，不改写来源类别或成果版本。
+          minItems: 1
+          maxItems: 20
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 64
+          maxItems: 20
+        evidence:
+          anyOf:
+            - type: string
+              const: explicit
+            - type: string
+              const: verified
+            - type: string
+              const: inferred
+            - type: string
+              const: conflicted
+        pinned:
+          type: boolean
+        value:
+          anyOf:
+            - type: string
+              const: low
+            - type: string
+              const: normal
+            - type: string
+              const: high
+        expires_at:
+          anyOf:
+            - type: string
+            - type: "null"
+        review_at:
+          anyOf:
+            - type: string
+            - type: "null"
+        conflicts_with:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+      additionalProperties: false
+    confirmation_source:
+      type: object
+      properties:
+        type:
+          const: user_message
+          type: string
+        id:
+          type: string
+          minLength: 1
+          maxLength: 160
+      required:
+        - type
+        - id
+      additionalProperties: false
+      description: 仅操作 trading/risk-rules 正式规则时必填：本次明确同意该操作的真实用户消息。修改、归档、恢复、遗忘不能复用上次 confirmed_by；不是用户新确认时先提候选并沟通。
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:memory
+  resultRetention: summary
+  usage:
+    purpose: 主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。
+    inputs: save 使用 entry={category,title,summary,content,scope,sources,...}；新建不传 id，修订传 id/expected_version。candidates 列候选；accept/reject 用候选 id/version；archive/restore/forget 用记忆 id/version；stats 读统计。 风险 save/accept/archive/restore/forget 在顶层增加 confirmation_source:{type:"user_message",id:"本次真实确认消息ID"}。风险 entry 必须 evidence:"explicit"、expires_at:null（或省略），pinned 自动为 true；review_at 仅供复核。sources 保留用户表达和计算依据，正文 Markdown 写清适用账户、阈值、触发动作、计算假设和调整原因。
+    outputs: save/archive/restore 返回正式记忆/version；accept/reject 返回 {id,status,memory?}，顶层 id 是候选，accept 的正式记忆在 memory 字段；candidates 返回 items；forget 为遗忘回执；stats 含 policy 和 compaction。 风险正式记忆含 confirmed_by；其身份真实性由代码验证，是否同意本次具体阈值/撤销由调用者核实原消息。
+    prerequisites:
+      - 主 Agent；sources 采用真实用户消息或完整已发布 ArtifactRef。
+    limitations:
+      - version_conflict 重读对应对象：候选用 candidates，正式记忆用 memory_read，再核验并合并意图。过期候选从真实最终成果重新核验提取，不能修改版本强行接纳。来源无效查 host#messages/固定成果。forget 清除库内正文/历史/索引，不能声称原聊天、报告或外部副本已消失。
+      - 风险规则不允许改分类或降级 evidence 规避保护；不因闲置/自动整理被撤销。memory_risk_confirmation_required 表示缺少本次用户确认：与用户沟通并取得真实消息，不能重放旧 confirmed_by 或编造消息 ID。停止执行、归档或遗忘记忆不表示已有仓位已经关闭。
+  binding:
+    type: native
+    name: memory_manage

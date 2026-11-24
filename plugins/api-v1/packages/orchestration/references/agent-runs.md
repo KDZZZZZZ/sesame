@@ -19,6 +19,8 @@
 
 `instructions` 给出相关能力、因果明确的原则与约束，`objective` 给出可核验目标；不要让子任务重新猜测已经知道的输入或依赖。`allowedCalls` 使用 `{pluginId,capabilityId}`，其中 `capabilityId` 是局部 ID，例如 `{pluginId:"sesame/data-access",capabilityId:"data_query"}`。每个 Agent 自动拥有 host_runs_read / host_runs_wait / host_runs_interrupt / host_resources_read 四项基础能力；`allowedCalls:[]` 不授予业务工具、再次委派、恢复或取消权限。
 
+委派子任务读取固定资料或网页时，在 `instructions` 中明确要求：先列出回答问题所需的全部字段；**已经知道位置且互不依赖的字段，在同一轮并行读取**，只有依赖上一轮输出才能定位的字段才顺序读取；遇到大型 HTML/文本资源时务必在 `allowedCalls` 中授予 `extract_webpage` 或脚本解析工具，并在所需字段覆盖后立即交付，来源未给出的值标为未知。
+
 `plugins` 只选择知识，不授予工具；工具所属插件会自动加入。选中包的 SKILL 入口正文直接可见，方法参考文件通过获授的 plugin_read 按需读取。纯知识无须虚构执行结果，未选中或被禁用的包不能借读取或再次委派加载。
 
 `model` 省略时复用宿主配置，显式选择需使用 `host#models` 返回的 `{provider,id,configurationDigest}`。需要幂等操作标识时，通过 `host.capabilities.invoke`（工具 `host_capabilities_invoke`）向 `host.agent.run` 传递 `input` 和 `operationId`；不要把 `operationId` 塞入 Agent 任务输入或以新 ID 重启未确认的动作。

@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/web-sources:instructions#preamble": "46a252edc3e97b4c67c993e93ffb0f05a615919ec2d323d39a5ba2a8f29ec192",
+    "sesame/web-sources:plugin.description": "3af97fe7abc4b37e615dc96f7a832a91a62b5b71710e73367e7d44f90255c613",
+    "sesame/web-sources:resource/INTERFACES.md": "699cefa9cf77ea89c9bbdf0f96f2d92075fe7382bd1a32068efd8f4fe02bdb15",
+    "sesame/web-sources:resource/SEARCH.md": "79ed3a28e13c668f19b6ef24527c2009d6d3a37d4d821c814a5e611166e05ea0",
+    "sesame/web-sources:tool/sources_fetch.description": "34668cc3b488ac7517acde0d85d741273950a47c88c66b4ad5a9cb73f98dac54",
+    "sesame/web-sources:tool/sources_fetch.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/web-sources:tool/sources_fetch.input": "63126c014d2bea7151614af63ede4d3cbfad81a70c54351648c52dcea258adc5",
+    "sesame/web-sources:tool/sources_fetch.output": "8da4341cab51086c312f11a3a4353e24900a1af8a98c200299cc1e7ea34b3c21",
+    "sesame/web-sources:tool/sources_search.description": "73fd14b558d14b1a58275eb8f2cb6ba5ca9920f85d0075022708aa2673344eb2",
+    "sesame/web-sources:tool/sources_search.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/web-sources:tool/sources_search.input": "a57e94ea9a69bceafc5f5d6d2767bd624a557fb563493dbd514e760423305bf3",
+    "sesame/web-sources:tool/sources_search.output": "1a2cb29ec60ded2ec0cc6208f6f72b4e972752b57affa327d5d587aae44e43fc"
+  },
+  "digest": "79ed24bbf014377c6aef6edfdc291f5b18b6b41d776b243e3693b6a02c6c27c6"
+}

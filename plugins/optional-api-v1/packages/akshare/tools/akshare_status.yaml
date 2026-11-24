@@ -1,0 +1,36 @@
+name: akshare_status
+title: akshare_status
+description: Inspect optional AKShare environment. Never installs or downloads anything.
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - process
+    - plugin.state.write
+  usage:
+    purpose: 核验当前候选 AKShare 环境，返回就绪或具体缺项。
+    inputs: "{}；使用已有选择及本机候选。"
+    outputs: ready:true 返回 python、akshareVersion:"1.19.1"、pythonInfo、reused:true、mode、provenance；ready:false 返回 required、failures[{python,reason}]。成功会保存私有选择记录，查询可立即使用。
+    prerequisites:
+      - 本机64位 Python>=3.11；无需券商账户或API Key。
+    limitations:
+      - 不下载、不升级现有环境；一个失败候选不代表全机无依赖。有已知其他路径可显式 discover；确需安装用 akshare_prepare。
+  binding:
+    type: native
+    name: akshare_status

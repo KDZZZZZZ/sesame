@@ -1,0 +1,16 @@
+goal: 独立执行能力：绑定既有账户，为工作流提供快照与目标仓位执行，保留原生校验、风险停止挂载、幂等回执和直接下单工具。
+acceptance:
+  discovery:
+    case: portfolio-execution-discovery
+    tools:
+      - manual_trade_cancel
+      - manual_trade_execute
+      - manual_trade_inspect
+      - manual_trade_observe
+      - manual_trade_prepare
+      - manual_trade_status
+      - portfolio_execution_apply
+      - portfolio_execution_configure
+      - portfolio_execution_context
+      - portfolio_execution_status
+    resource: instructions.md

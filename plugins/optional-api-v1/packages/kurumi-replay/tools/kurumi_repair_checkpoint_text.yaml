@@ -1,0 +1,60 @@
+name: kurumi_repair_checkpoint_text
+title: kurumi_repair_checkpoint_text
+description: 仅主Agent显式修复：在暂停且角色全部终态时，依据已封存原始角色JSONL和摘要恢复nativeJournal中UTF-8分块损坏的reason/utterance；非文本、价格、仓位、金额或未能证明的差异一律拒绝。完整备份前后检查点并追加修复证据，不改原始归档、不撮合、不请求模型，保留未完成自动延续。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision，新挑战用0
+  required:
+    - command_id
+    - expected_version
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 仅主Agent显式修复：在暂停且角色全部终态时，依据已封存原始角色JSONL和摘要恢复nativeJournal中UTF-8分块损坏的reason/utterance；非文本、价格、仓位、金额或未能证明的差异一律拒绝。完整备份前后检查点并追加修复证据，不改原始归档、不撮合、不请求模型，保留未完成自动延续。
+    inputs: "{command_id,expected_version}; only the narrowly diagnosed UTF-8 reason/utterance corruption case."
+    outputs: Repair receipt plus status; archived before/after checkpoints and exact original role text evidence, with financial/decision state unchanged.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Paused, all roles terminal, sealed original role JSONL and ledger prove the text.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Cannot repair prices, amounts, positions, cursor or unproved differences; refusal preserves evidence.
+  binding:
+    type: native
+    name: kurumi_repair_checkpoint_text
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

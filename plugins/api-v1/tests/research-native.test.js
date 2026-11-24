@@ -10,7 +10,17 @@ import { resourceHost } from './core-v2-fixture.mjs';
 async function fixture(t) {
  const root=await mkdtemp(join(tmpdir(),'research-v2-'));t.after(()=>rm(root,{recursive:true,force:true}));
  const f=resourceHost({workspaceRoot:root}),input={id:'fixed',rows:[{value:'2'},{value:'3'}],provenance:{kind:'demo'}},executions=new Map();
- f.host.data={query:async request=>request.source.providerId==='host#executions'?{items:[executions.get(request.input.executionId)]}:{items:input.rows,metadata:{id:input.id,provenance:input.provenance}}};
+ f.host.data = { query: async request => {
+   if (request.source.providerId !== 'host#executions') return { items: input.rows, metadata: { id: input.id, provenance: input.provenance } };
+   const row = executions.get(request.input.executionId), selection = request.input.evidence;
+   if (selection === 'manifest') {
+     const { files, source_files, ...metadata } = row;
+     return { items: [{ ...metadata, outputPaths: Object.keys(files), sourcePaths: Object.keys(source_files ?? {}) }] };
+   }
+   const { phase, path, offset } = selection, bytes = Buffer.from(row[phase][path], 'base64');
+   const end = Math.min(offset + 4, bytes.length);
+   return { items: [{ path, offset, totalBytes: bytes.length, base64: bytes.subarray(offset, end).toString('base64'), nextOffset: end < bytes.length ? end : null }] };
+ } };
  f.host.capabilities={invoke:async(id,args)=>{assert.equal(id,'sesame/workspace#write');const path=join(root,args.path);await mkdir(dirname(path),{recursive:true});await writeFile(path,args.content);return{type:'result',value:{path}};}};
  const tools=new Map(createCapabilities(f.host).map(c=>[c.name,c.execute]));
  return{...f,root,input,executions,call:(name,args)=>tools.get(name)(args)};
@@ -26,7 +36,7 @@ test('research publishes frozen output and rejects changed input, absent recipe 
  const args={operationId:'actual',executionId:execution.id,path,inputIds:['fixed'],recipePaths:['compute.py'],title:'Demo sum',description:'Frozen fixture'};
  const result=await f.call('research_register',args);assert.deepEqual(f.rows(result.ref),[{sum:5}]);assert.equal(result.provenance.kind,'demo');
  await assert.rejects(f.call('research_register',{...args,operationId:'escape',path:join(f.root,'..','outside.json')}),/inside the frozen/);
- await assert.rejects(f.call('research_register',{...args,operationId:'recipe',recipePaths:['not-frozen.py']}),/frozen execution/);
+ await assert.rejects(f.call('research_register',{...args,operationId:'recipe',recipePaths:['not-frozen.py']}),/not-frozen\.py.*absent at execution start.*compute\.py/);
  f.input.rows[0].value='100';await assert.rejects(f.call('research_register',{...args,operationId:'changed'}),/exact registered/);
 });
 test('fixed DataRef inputs bind actual frozen bytes and become direct data dependencies without rewriting evidence',async t=>{

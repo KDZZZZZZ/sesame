@@ -36,7 +36,7 @@ test('a completed main turn with a pending goal launches a real new exploration 
   const request = planners(f).at(-1).input;
   assert.equal(request.input.progress.branches[0].key, 'initial-data');
   assert.match(JSON.stringify(request.input.progress), /Observed a market regime/);
-  assert.match(request.instructions, /新路径|新方法/);
+  assert.match(request.instructions, /不同假设、独立数据源与验证方法/);
   assert.equal(planners(f).length, 2);
 });
 

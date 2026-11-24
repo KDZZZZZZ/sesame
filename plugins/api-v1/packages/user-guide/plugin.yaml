@@ -1,0 +1,86 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/user-guide
+title: Sesame 使用指南
+description: 面向用户的产品操作知识：安装上手、工作台、聊天命令、设置、研究与策略用法和排障；不注册运行工具。
+version: 3.0.3
+license: MIT
+engines:
+  sesame: ">=0.2.4"
+x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["knowledge"]
+    title:
+      en: "Sesame user guide"
+      zh: "Sesame 使用指南"
+    summary:
+      en: "Explain product setup, workspace, chat, settings and task examples through readable guidance without execution tools."
+      zh: "提供安装上手、工作台、聊天、设置和任务示例等产品操作知识，不注册执行工具。"
+    dependencies:
+      en: "Reading product help needs no model or trading backend; actual operations use the relevant capabilities."
+      zh: "读取产品帮助无需模型或交易后端；实际操作使用对应业务能力。"
+  default_state: mounted
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - references/installation.md
+    - references/dashboard.md
+    - references/chat-and-commands.md
+    - references/settings.md
+    - references/workflows.md
+    - references/troubleshooting.md
+    - references/website-docs.md
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities: []
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: resource.1
+        path: instructions.md
+        description: 产品帮助职责与使用原则
+        kind: prompt
+      - id: resource.2
+        path: skills/sesame-user-guide/SKILL.md
+        description: 知识资料 skills/sesame-user-guide/SKILL.md
+        kind: skill
+      - id: resource.3
+        path: references/installation.md
+        description: 知识资料 references/installation.md
+        kind: reference
+      - id: resource.4
+        path: references/dashboard.md
+        description: 知识资料 references/dashboard.md
+        kind: reference
+      - id: resource.5
+        path: references/chat-and-commands.md
+        description: 知识资料 references/chat-and-commands.md
+        kind: reference
+      - id: resource.6
+        path: references/settings.md
+        description: 知识资料 references/settings.md
+        kind: reference
+      - id: resource.7
+        path: references/workflows.md
+        description: 知识资料 references/workflows.md
+        kind: reference
+      - id: resource.8
+        path: references/troubleshooting.md
+        description: 知识资料 references/troubleshooting.md
+        kind: reference
+      - id: resource.9
+        path: references/website-docs.md
+        description: 知识资料 references/website-docs.md
+        kind: reference
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []

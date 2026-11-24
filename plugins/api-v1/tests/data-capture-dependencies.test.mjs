@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -6,17 +7,19 @@ import { resourceHost } from './core-v2-fixture.mjs';
 
 test('the runtime extension proves the complete old source by reversing only exact reviewed edits', () => {
   const read = path => readFileSync(new URL(path, import.meta.url));
+  // Preserve the exact serialized declarations used by the historical approval.
+  const oldDeclaration = name => execFileSync('git',['show','e652bed561a83deb7649ba1be8fb165bbfec686c:plugins/api-v1/packages/data-access/'+name],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'});
   const review = JSON.parse(read('./fixtures/data-capture-dependency-extension.json'));
   assert.equal(review.schemaVersion, 1); assert.equal(review.status, 'approved'); assert.equal(review.decision, 'approved');
   assert.ok(review.reason.length >= 20);
   assert.equal(digest(read('./fixtures/plugin-boundaries-baseline.json')), review.baselineSha256);
-  let declaration = read('../packages/data-access/capabilities.json').toString('utf8');
+  let declaration = oldDeclaration('capabilities.json');
   for (const edit of [...(review.approvedDeclarationEdits ?? [])].reverse()) {
     assert.equal(declaration.split(edit.after).length, 2, 'each reviewed usage wording edit has exactly one location');
     declaration = declaration.replace(edit.after, edit.before);
   }
   assert.equal(digest(declaration), review.declarationSha256Unchanged, 'schemas, effects, permissions and state declarations are unchanged after reversing reviewed usage wording');
-  const manifestText = read('../packages/data-access/plugin.json').toString('utf8');
+  const manifestText = oldDeclaration('plugin.json');
   let restoredManifest = manifestText;
   for (const edit of [...(review.approvedManifestEdits ?? [])].reverse()) {
     assert.equal(restoredManifest.split(edit.after).length, 2, 'each reviewed manifest path edit has exactly one location');

@@ -1,0 +1,33 @@
+id: trading-decision-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/trading-decision/skills/trading-decision/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/trading-decision
+  - step: 1
+    pointer: /tools/0/name
+    equals: trading_decision_activity
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        run_id:
+          type: string
+          minLength: 1
+      required:
+        - run_id
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: trading-decision
+      description: Convert fixed research, current account facts and personal r

@@ -1,0 +1,97 @@
+name: mt5_dependencies
+title: mt5_dependencies
+description: 先检查已安装的 MT5、Windows Python、Wine 与编译引擎；缺项返回插件私有目录和安装 skill。configure 只保存明确路径，不下载、不启动或替换终端。本机编译无需虚拟机；probe 核对本机依赖。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: inspect
+        - type: string
+          const: configure
+    probe:
+      type: boolean
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+    changes:
+      type: object
+      properties:
+        terminal_directory:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 4096
+              pattern: ^[^\r\n\u0000]*$
+            - type: "null"
+        data_directory:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 4096
+              pattern: ^[^\r\n\u0000]*$
+            - type: "null"
+        python:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 4096
+              pattern: ^[^\r\n\u0000]*$
+            - type: "null"
+        wine:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 4096
+              pattern: ^[^\r\n\u0000]*$
+            - type: "null"
+        wine_prefix:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 4096
+              pattern: ^[^\r\n\u0000]*$
+            - type: "null"
+      additionalProperties: false
+      minProperties: 1
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write-on-configure
+    - process-on-probe
+  usage:
+    purpose: 读取或配置明确本机原生依赖。
+    inputs: '{action:"inspect",probe?:boolean}；probe:true检查编译依赖；configure:{action:"configure",command_id,expected_version,changes:{terminal_directory?,data_directory?,python?,wine?,wine_prefix?}}，路径可null清除。inspect不带配置字段，configure不带probe。'
+    outputs: "{version,settings,platform,private_directory,discovered,compiler:{available,checked,backend},python:{installed,sdk_verified:false,next},connections,missing:[{id,required_for,reason,configure?}],next,scripts}；configure保存后返回新依赖状态。"
+    prerequisites:
+      - 主会话；缺依赖时公开 skills/dependencies/SKILL.md 和 scripts/README.md 给出获取入口。
+    limitations:
+      - 发现文件≠SDK导入/券商已登录；无本机终端不影响已有远程MCP读取。只按实际missing处理，不将安装发现失败等同未安装。
+  binding:
+    type: native
+    name: mt5_dependencies

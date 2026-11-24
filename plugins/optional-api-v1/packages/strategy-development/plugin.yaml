@@ -1,0 +1,170 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/strategy-development
+title: 策略开发 · Strategy Development
+description: 从投资委托提出可检验的交易假设，研究入场后能否捕捉到行情，构建可替换的 SVL 策略，通过原生回测、逐笔诊断和对照实验选择参数与改法。按需复用已有因子。提供产物依赖工作流 strategy.development。
+version: 1.1.1
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.2 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "strategy"
+    functionalCategory: "business"
+    implementationKinds: ["workflow"]
+    title:
+      en: "Strategy development"
+      zh: "策略开发"
+    summary:
+      en: "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate."
+      zh: "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。"
+    dependencies:
+      en: "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional."
+      zh: "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。"
+  default_state: discoverable
+  agent_scope: all
+  permissions:
+    scopes:
+      - capabilities.compose
+      - process.execute
+    calls:
+      - sesame/workspace#write
+      - sesame/strategy-authoring#strategy_publish
+      - sesame/strategy-authoring#strategy_validate
+      - sesame/strategy-authoring#strategy_replay
+      - sesame/strategy-authoring#strategy_pipeline
+      - sesame/strategy-authoring#strategy_workflow
+      - sesame/auto-factor-mining#factor_library
+      - sesame/backtrader#backtrader_environment
+      - sesame/backtrader#backtrader_optimize
+      - sesame/backtrader#backtrader_backtest
+      - host.runs.wait
+      - host.resources.read
+  contributions:
+    capabilities:
+      - tool/strategy_development_plan
+      - tool/strategy_development_build
+      - tool/strategy_development_backtest
+      - tool/strategy_development_read
+      - tool/strategy_development_method
+      - tool/strategy_development_study
+      - tool/strategy_development_verify
+      - tool/strategy_development_compare
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    sources: []
+    services: []
+    views: []
+    hooks: []
+    stateCollections:
+      - name: experiment_partitions
+        schemaVersion: 1.0.0
+        mode: document
+        access: private
+        schema:
+          type: object
+          anyOf:
+            - type: object
+              properties:
+                development:
+                  type: array
+                  items:
+                    type: array
+                    minItems: 2
+                    maxItems: 2
+                    items:
+                      type: integer
+                holdout:
+                  type: array
+                  items:
+                    type: array
+                    minItems: 2
+                    maxItems: 2
+                    items:
+                      type: integer
+              required:
+                - development
+                - holdout
+              additionalProperties: false
+            - type: object
+              properties:
+                fingerprint:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+              required:
+                - fingerprint
+              additionalProperties: false
+    knowledge:
+      - id: instructions
+        kind: prompt
+        path: instructions.md
+        description: Strategy development routing and factor evidence boundaries.
+      - id: guide
+        kind: reference
+        path: README.md
+        description: Workflow, package inputs, parameter search and versioned decisions.
+      - id: hypothesis-design
+        kind: reference
+        path: references/hypothesis-design.md
+        description: 有一个现象或交易想法，需要推导可观察预测、期限和反例。
+      - id: design
+        kind: reference
+        path: references/design-and-build.md
+        description: 需要把想法变成规则，或决定某种信息究竟应该改变哪一项决策。
+      - id: baseline-construction
+        kind: reference
+        path: references/baseline-construction.md
+        description: 第一次完整回测，或希望排除风险规模和交易机会差异。
+      - id: factor-integration
+        kind: reference
+        path: references/factor-integration.md
+        description: 准备将一项特征用作预测、过滤或仓位调整，需要定义决策时点。
+      - id: verification
+        kind: reference
+        path: references/component-verification.md
+        description: 新增数据、递归指标、复杂退出或引擎适配，需要检查规则、预热和可用时间。
+      - id: incremental
+        kind: reference
+        path: references/incremental-evaluation.md
+        description: 添加、移除或替换某项规则，尤其需要区分选择信息、交易次数和敞口。
+      - id: diagnosis
+        kind: reference
+        path: references/trade-diagnosis.md
+        description: 出现亏损、回吐、成本侵蚀、集中回撤或回测与模拟盘分歧。
+      - id: robustness-analysis
+        kind: reference
+        path: references/robustness-analysis.md
+        description: 候选来自大量搜索、参数周围有尖峰，或预期机制具有时变性。
+      - id: strategy-revision
+        kind: reference
+        path: references/strategy-revision.md
+        description: 已有基线和异常证据，需要选择一次有明确预期的修订。
+      - id: forecast-buffer
+        kind: reference
+        path: references/forecast-buffer.md
+        description: Worked, executable example of setting risk-based positions and reducing small rebalances.
+    artifactSchemas:
+      - id: strategy-development-record
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            type:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            path:
+              const: record.json
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+          required:
+            - type
+            - path
+            - digest
+          additionalProperties: false

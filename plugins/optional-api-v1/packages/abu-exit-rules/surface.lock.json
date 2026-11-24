@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-exit-rules:instructions#preamble": "3716f69900a702eb6fd25914c026501e7d62b697491d42ba10a40eedf9c9f5e5",
+    "sesame/abu-exit-rules:plugin.description": "5827765afbc63df79abd8b05e1217b8bdc887f55a2bd41dfe673a5024b275fe9",
+    "sesame/abu-exit-rules:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-exit-rules:resource/PROVENANCE.md": "e5b32c00bc30d5ebea2871fbbb989235197cc2957c289a6aa2049a6528afd103",
+    "sesame/abu-exit-rules:resource/README.md": "3268927c609f60d8659311ccf909c31712c2808fae2c7c8a9a5eae046ee5b20f",
+    "sesame/abu-exit-rules:resource/examples/input.json": "0d76aec1cf02c04e2353f51270a58d9439b8eb806fd1efefc18a3efd9f2cb074",
+    "sesame/abu-exit-rules:resource/references/method.md": "030504c3b5ce8dde2f961c2b79fe95622c231c13b45fed2c80ff374b9ddd2d5c",
+    "sesame/abu-exit-rules:resource/scripts/baseline.mjs": "d62104e7c885b223f8e38b8b5332c2bfc0cd9b65f1c06136147732fc74ff3bf6",
+    "sesame/abu-exit-rules:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-exit-rules:skill/abu-exit-rules.body": "2bfca3219126fe33ab30099506281c50c736697d28f62a3e9fa450f4dc6fbaa4",
+    "sesame/abu-exit-rules:skill/abu-exit-rules.description": "bc7f492f165d707b5172373d2d7956f290649120a462ac579bf086aea465692a",
+    "sesame/abu-exit-rules:tool/abu_exit_rules_analyze.description": "ce013884644284bd43937bc9c0d5aef169517c67428421a262e3a1e442266d72",
+    "sesame/abu-exit-rules:tool/abu_exit_rules_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-exit-rules:tool/abu_exit_rules_analyze.input": "ae06a975f2b1a84cd6a5d4c6c929c8df16d99e4f6160ef3b95f52d5fb9a02dda",
+    "sesame/abu-exit-rules:tool/abu_exit_rules_analyze.output": "e860d02ae0b20db33f3d77aaeb609dfea2bc698c606f35a6b003a37094ce3537"
+  },
+  "digest": "c2b5122fba443c44acad230ff508fc3b1be5002dbb6b08c120a69a4fd885484b"
+}

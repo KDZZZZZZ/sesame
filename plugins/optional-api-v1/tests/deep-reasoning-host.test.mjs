@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Method packaging and host integration only; no live model or user workspace. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,7 +14,7 @@ const read = async path => readFile(join(source, path), 'utf8');
 const json = async path => JSON.parse(await read(path));
 
 test('deep-reasoning is a standalone, closed knowledge package with readable local links', async () => {
-  const manifest = await json('plugin.json'), declaration = await json('capabilities.json');
+  const manifest = readPackageDirectory(source).manifest, declaration = readPackageDirectory(source).capabilities;
   assert.deepEqual(manifest.permissions, { scopes: [], calls: [] });
   assert.deepEqual(manifest.dependencies ?? [], []);
   assert.deepEqual(declaration.capabilities, []);
@@ -81,11 +82,11 @@ test('deep-reasoning installs, is discoverable, loads selectively and survives r
       assert.ok(JSON.stringify(found).includes('sesame/deep-reasoning'));
       const { plugin: loaded } = await call('plugin_load', { pluginId: 'sesame/deep-reasoning' });
       assert.equal(runtime.plugins.active('conv_main', 'sesame/deep-reasoning'), true);
-      assert.deepEqual(loaded.prompts.map(item => item.path), ['prompt.md']);
+      assert.deepEqual(loaded.prompts.map(item => item.path), ['instructions.md']);
       assert.deepEqual(loaded.skills.map(item => item.name), ['deep-reasoning']);
-      assert.equal(loaded.prompts[0].content.trim(), (await read('prompt.md')).trim());
+      assert.equal(loaded.prompts[0].content.trim(), (await read('instructions.md')).trim());
       assert.equal(loaded.skills[0].content.trim(), (await read('skills/deep-reasoning/SKILL.md')).trim());
-      for (const resource of (await json('capabilities.json')).knowledge) {
+      for (const resource of (readPackageDirectory(source).capabilities).knowledge) {
         const response = await call('plugin_read', { pluginId: 'sesame/deep-reasoning', part: 'resource', path: resource.path });
         assert.equal(response.content.trim(), (await read(resource.path)).trim(), resource.path);
       }

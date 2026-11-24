@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
 
 export const ID = 'sesame/ultra';
 export const FINAL = new Set(['completed', 'stopped', 'closed']);
@@ -11,28 +12,44 @@ export function main(host) { check(host.context.kind === 'main' && host.context.
 export const errorInfo = error => ({ code: String(error?.code ?? 'FAILED').slice(0, 100), message: String(error?.message ?? error).slice(0, 2000) });
 const locks = new Map();
 
-export async function locked(host, owner, action) {
-  const key = `${host.context.storageRoot}:${owner}`, previous = locks.get(key) ?? Promise.resolve();
+export async function locked(host, owner, action, lane = 'operation') {
+  const key = JSON.stringify([host.context.storageRoot, owner, lane]), previous = locks.get(key) ?? Promise.resolve();
   const pending = previous.catch(() => {}).then(action); locks.set(key, pending);
   try { return await pending; } finally { if (locks.get(key) === pending) locks.delete(key); }
+}
+
+export const stateWrite = (host, action) => locked(host, host.context.ownerSessionId ?? host.context.sessionId, action, 'state');
+export async function retryConflicts(action) {
+  for (let attempt = 1; ; attempt++) {
+    try { return await action(); }
+    catch (error) {
+      if (!['VERSION_CONFLICT', 'CONFLICT'].includes(error.code) || attempt === 6) throw error;
+      await delay(50 * attempt);
+    }
+  }
+}
+const textLimit = 4000;
+const truncationNote = '\n[已截断，请只保留结论与固定引用 ID。]';
+export function conciseText(value = '') {
+  if (value.length <= textLimit) return value;
+  return value.slice(0, textLimit - truncationNote.length).replace(/[\uD800-\uDBFF]$/u, '') + truncationNote;
 }
 
 export async function read(host, collection, key) {
   try { return await host.state.read({ collection, key }); } catch (error) { if (error.code === 'NOT_FOUND') return null; throw error; }
 }
-export async function put(host, collection, key, value, version = 0) {
+export function stateChange(collection, key, value, version = 0) {
+  if (collection === 'sessions') value = { ...value, context: conciseText(value.context), summary: conciseText(value.summary) };
   check(Buffer.byteLength(JSON.stringify(value)) <= 240 * 1024, 'STATE_TOO_LARGE', 'Keep each Ultra branch input and result bounded; use published resource references for large data.');
-  await host.state.commit([{ op: 'put', key: { collection, key }, expectedVersion: version, value }]);
-  return { value, version: version + 1 };
+  return { op: 'put', key: { collection, key }, expectedVersion: version, value };
 }
 export async function patch(host, collection, key, updater) {
-  for (let attempt = 0; attempt < 4; attempt++) {
+  return stateWrite(host, () => retryConflicts(async () => {
     const record = await read(host, collection, key); check(record, 'NOT_FOUND', 'Ultra state was not found.');
-    const value = updater(structuredClone(record.value));
-    if (JSON.stringify(value) === JSON.stringify(record.value)) return value;
-    try { return (await put(host, collection, key, value, record.version)).value; }
-    catch (error) { if (!['VERSION_CONFLICT', 'CONFLICT'].includes(error.code) || attempt === 3) throw error; }
-  }
+    const change = stateChange(collection, key, updater(structuredClone(record.value)), record.version);
+    if (JSON.stringify(change.value) !== JSON.stringify(record.value)) await host.state.commit([change]);
+    return change.value;
+  }));
 }
 export async function query(host, collection, filter) {
   const items = []; let cursor;
@@ -54,7 +71,7 @@ export async function session(host, id, owner = main(host)) {
         closeAuthority: pointer.value.closeAuthority ?? 0, closeRequestedAt: pointer.value.closeRequestedAt, updatedAt: Date.now(),
       } : value);
   }
-  return record.value;
+  return { ...record.value, context: conciseText(record.value.context), summary: conciseText(record.value.summary) };
 }
 export const branches = (host, id) => query(host, 'branches', { session: id });
 export const branchKey = (id, key) => `${id}:${key}`;
@@ -80,6 +97,6 @@ export function publicState(state, jobs = [], detailed = false) {
       run_refs: job.refs ?? [], ...(job.error ? { error: job.error } : {}), ...(job.result !== undefined ? { result: preview(job.result) } : {}),
       ...(job.stopRefs?.length ? { stop_refs: job.stopRefs, stop_pending: !job.stopDone } : {}), ...(job.stopError ? { stop_error: job.stopError } : {}) })),
     ...(state.error ? { error: state.error } : {}), ...(state.result ? { result: state.result } : {}),
-    next: FINAL.has(state.status) ? 'ended' : continuation === 'draining' ? 'collect-existing-results' : state.status === 'waiting-input' ? 'resolve-and-resume' : 'read-status-and-continue',
+    next: FINAL.has(state.status) ? 'ended' : continuation === 'draining' ? 'collect-existing-results' : state.status === 'waiting-input' ? 'resolve-and-resume' : 'continue-from-current-results',
   };
 }

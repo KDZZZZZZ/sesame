@@ -1,0 +1,120 @@
+workflow: factor.development
+goal: QualifiedFactor
+title: 因子开发
+description: 复用产物前核对品种、周期、数据版本和评价证据。
+artifacts:
+  SanityResult:
+    outcomes:
+    - pass
+    - fail
+  FactorDecision:
+    outcomes:
+    - accept
+    - revise
+    - reject
+imports:
+  StrategyFactorGap: sesame/strategy-development
+steps:
+  research_spec:
+    title: 研究目标与评价方案
+    hint: 搜索前确定评价方法和样本划分，隔离最终留出数据。
+    requires_any:
+    - ResearchRequest
+    - StrategyFactorGap
+    produces:
+    - FactorSpec
+    - EvaluationProtocol
+  data:
+    title: 数据准备
+    requires:
+    - FactorSpec
+    uses:
+    - tool/factor_prepare
+    produces:
+    - ResearchData
+  search_space:
+    title: 搜索空间
+    requires:
+    - FactorSpec
+    uses:
+    - tool/factor_search
+    produces:
+    - SearchSpace
+  propose:
+    title: 候选因子
+    requires:
+    - FactorSpec
+    - SearchSpace
+    uses_any:
+    - tool/factor_search
+    produces:
+    - FactorExpression
+  compute:
+    title: 因子计算
+    requires:
+    - FactorExpression
+    - ResearchData
+    uses:
+    - tool/factor_compute
+    produces:
+    - FactorValues
+  sanity_check:
+    title: 合理性检查
+    hint: 检查缺失值、未来函数与计算异常。
+    requires:
+    - FactorExpression
+    - FactorValues
+    - ResearchData
+    produces:
+    - SanityResult
+  effectiveness:
+    title: 有效性评价
+    requires:
+    - FactorValues
+    - ResearchData
+    - EvaluationProtocol
+    - SanityResult:pass
+    uses:
+    - tool/factor_evaluate
+    produces:
+    - EffectivenessEvidence
+  redundancy:
+    title: 冗余度评价
+    requires:
+    - FactorValues
+    uses:
+    - tool/factor_library
+    produces:
+    - RedundancyEvidence
+  robustness:
+    title: 稳健性评价
+    requires:
+    - EffectivenessEvidence
+    - ResearchData
+    - EvaluationProtocol
+    uses:
+    - tool/factor_evaluate
+    produces:
+    - RobustnessEvidence
+  decide:
+    title: 决定是否采用
+    hint: 根据评价证据选择 accept、revise 或 reject。
+    requires:
+    - SanityResult
+    requires_if_valid:
+    - EffectivenessEvidence
+    - RedundancyEvidence
+    - RobustnessEvidence
+    produces:
+    - FactorDecision
+  register:
+    title: 登记合格因子
+    requires:
+    - FactorDecision:accept
+    - FactorExpression
+    - EffectivenessEvidence
+    - RobustnessEvidence
+    uses:
+    - tool/factor_library
+    produces:
+    - QualifiedFactor

@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-seasonality:instructions#preamble": "e5f6e6f06df5a95031c599258081c86df0e09b44b61b53536d871758fa232eab",
+    "sesame/abu-seasonality:plugin.description": "cbb43aed877efbfdf33ea13436e992f82508aee1238d3561e5504990084100b1",
+    "sesame/abu-seasonality:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-seasonality:resource/PROVENANCE.md": "0fc6ac7204fd844697d4ac258a9f040c889702d448a175d505ebcb6eed1cbf96",
+    "sesame/abu-seasonality:resource/README.md": "1d41cb51b55e016cbd269eb13e4a31125e7bf1b674efb569e2b96934923bbb19",
+    "sesame/abu-seasonality:resource/examples/input.json": "55b503a10e51ec4843d0cef6af92f7826ec099a9e9226bd90b7354517356d48c",
+    "sesame/abu-seasonality:resource/references/method.md": "1d5713acf6ed63e05b817ff564c0d8dfd737bf11cba201a62dd467181cc54485",
+    "sesame/abu-seasonality:resource/scripts/baseline.mjs": "455cc20fc203111d4c79ea01f028d716b744f77d791d583cb4cae33c16260d2a",
+    "sesame/abu-seasonality:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-seasonality:skill/abu-seasonality.body": "c6d4cd78667a4e87fe72a62e29f75cacf368d4467d428fa45c1e7491111a8626",
+    "sesame/abu-seasonality:skill/abu-seasonality.description": "60666ce71fb43545a1195ace6508b05053dcea1021b04025f80c5dabedac929d",
+    "sesame/abu-seasonality:tool/abu_seasonality_analyze.description": "952f1f674b8c6db16ce1f47d93e072281a15daf530c4c549ac6f449a38647a7e",
+    "sesame/abu-seasonality:tool/abu_seasonality_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-seasonality:tool/abu_seasonality_analyze.input": "809cc4b15e4d74c3ba01467086c98b76b8d7ff2a9cb2ff39562ac91a4faf9596",
+    "sesame/abu-seasonality:tool/abu_seasonality_analyze.output": "95124a982a0d80c5b2c85f023b99a2df02835be0736d461fd3c5264b3dd3f87f"
+  },
+  "digest": "606076c51ff6255b900bae91422ca2951fe7fc22b28e4ca9a3989d71931917b2"
+}

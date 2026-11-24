@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -226,12 +227,12 @@ test('mt5_catalog supports tester as a discovery alias for terminal tester tools
 test('published MT5 metadata leaves read-only settings available outside main-only tools and documents tester/time contracts', async () => {
   const host = { context: { sessionId: 'main' } };
   const tools = officialCapabilities(host, { official: { catalog: () => {}, command: () => {} }, market: {} });
-  const declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url), 'utf8')).capabilities;
+  const declared = readPackageDirectory(new URL('../../optional-api-v1/packages/mt5/', import.meta.url)).capabilities.capabilities;
   const catalog = declared.find(tool => tool.id === 'mt5_catalog'), cache = declared.find(tool => tool.id === 'mt5_cache');
   for (const tool of tools) assert.ok(declared.some(item => item.binding.name === tool.name));
   assert.ok(catalog.description.includes('server:"tester"'));
   assert.ok(catalog.inputSchema.properties.server.anyOf.some(item => item.const === 'tester'));
   assert.match(cache.inputSchema.properties.from.description, /券商服务器墙钟/);
-  const manifest = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/plugin.json', import.meta.url), 'utf8'));
+  const manifest = readPackageDirectory(new URL('../../optional-api-v1/packages/mt5/', import.meta.url)).manifest;
   assert.ok(declared.some(tool => tool.id === 'mt5_settings')); assert.ok(!manifest.main_tool_names.includes('mt5_settings'));
 });

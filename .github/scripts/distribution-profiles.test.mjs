@@ -7,6 +7,8 @@ import { execFileSync } from 'node:child_process';
 import { buildLock, readProfile } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildR2Profile } from './plugin-r2.mjs';
 
+import { writeFixturePackage } from './fixtures/protocol-package.mjs';
+
 const lockBytes = lock => Buffer.from(JSON.stringify(lock, null, 2) + '\n');
 function fixture(t) {
   const repo = mkdtempSync(join(tmpdir(), 'sesame-profile-infra-'));
@@ -19,9 +21,9 @@ function fixture(t) {
     inputSchema: {}, outputSchema: {}, binding: { type: 'native', name: 'read' }, usage: { purpose: 'Read example', inputs: 'Empty object', outputs: 'Example record', prerequisites: [], limitations: [] } }],
     sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] };
   const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
-  json(join(pkg, 'plugin.json'), manifest);
+  const writePackage = (header, caps = declaration) => writeFixturePackage(pkg, header, caps);
+  writePackage(manifest);
   json(join(pkg, 'package.json'), { version: '1.0.0', type: 'module', license: 'MIT' });
-  json(join(pkg, 'capabilities.json'), declaration);
   writeFileSync(join(pkg, 'LICENSE'), 'MIT test fixture');
   writeFileSync(join(pkg, 'index.js'), "throw new Error('candidate code must not execute');\n");
   const profile = { schemaVersion: 1, kind: 'core', engines: { sesame: '>=0.2.0-0' }, packages: [manifest.id] };
@@ -35,7 +37,7 @@ function fixture(t) {
     packages: [manifest.id], archiveSha256: '0'.repeat(64), lockSha256: '0'.repeat(64) };
   const built = buildR2Profile(repo, draft, { verifyDigests: false });
   const plan = { ...draft, archiveSha256: built.archiveSha256, lockSha256: built.lockSha256 };
-  return { repo, root, pkg, json, manifest, declaration, profile, plan, git };
+  return { repo, root, pkg, json, manifest, declaration, writePackage, profile, plan, git };
 }
 
 test('API 2 profile release reconstruction uses the exact reviewed source commit', t => {
@@ -52,12 +54,12 @@ test('API 2 profile release reconstruction uses the exact reviewed source commit
 test('API 2 profiles reject altered engines, membership, activation and legacy grants', t => {
   const f = fixture(t);
   for (const engines of [undefined, { sesame: '>=0.1.4' }]) {
-    f.json(join(f.pkg, 'plugin.json'), { ...f.manifest, engines });
+    f.writePackage({ ...f.manifest, engines });
     assert.throws(() => buildLock(f.root), /engine/);
   }
-  f.json(join(f.pkg, 'plugin.json'), { ...f.manifest, migration: { collections: ['old'] } });
+  f.writePackage({ ...f.manifest, migration: { collections: ['old'] } });
   assert.throws(() => buildLock(f.root), /legacy/);
-  f.json(join(f.pkg, 'plugin.json'), f.manifest);
+  f.writePackage(f.manifest);
   f.json(join(f.root, 'bundle-profile.json'), { ...f.profile, kind: 'optional' });
   assert.throws(() => buildLock(f.root), /default state/);
   f.json(join(f.root, 'bundle-profile.json'), { ...f.profile, packages: ['sesame/other'] });
@@ -77,19 +79,18 @@ test('API 2 MCP capabilities require explicit server bindings and host engines',
   const f = fixture(t);
   const manifest = { ...f.manifest, execution: 'mcp', entry: undefined };
   const declaration = { ...f.declaration, capabilities: [{ ...f.declaration.capabilities[0], binding: { type: 'mcp', server: 'analysis', name: 'read' } }] };
-  f.json(join(f.pkg, 'plugin.json'), manifest);
-  f.json(join(f.pkg, 'capabilities.json'), declaration);
+  f.writePackage(manifest, declaration);
   f.json(join(f.pkg, 'mcp.json'), { mcpServers: { analysis: { command: 'node', args: ['server.js'] } } });
   assert.equal(buildLock(f.root).packages.length, 1);
-  f.json(join(f.pkg, 'plugin.json'), { ...manifest, engines: undefined });
+  f.writePackage({ ...manifest, engines: undefined }, declaration);
   assert.throws(() => buildLock(f.root), /engine/);
-  f.json(join(f.pkg, 'plugin.json'), manifest);
+  f.writePackage(manifest, declaration);
   f.json(join(f.pkg, 'mcp.json'), { mcpServers: {} });
   assert.throws(() => buildLock(f.root), /undeclared MCP server/);
 });
 
 test('profile and inventory changes always trigger both required static checks', () => {
-  for (const name of ['plugin-api-v1.yml', 'plugin-catalog.yml']) {
+  for (const name of ['plugin-ci.yml']) {
     const workflow = readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8');
     assert.equal((workflow.match(/branches: \[main, dev\]/g) ?? []).length, 2);
     assert.doesNotMatch(workflow, /^\s*paths(?:-ignore)?:/m);

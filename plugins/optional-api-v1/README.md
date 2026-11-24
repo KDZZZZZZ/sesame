@@ -1,7 +1,7 @@
 # Optional plugins / Plugin API 2
 
-The current development profile contains **47 optional packages**.
-`sesame/ultra` (1.0.4, Sesame >=0.3.0-dev.1 <0.4.0) ships in the default bundle
+The current development profile contains **48 optional packages** including the separately added `sesame/plugin-optimizer`.
+`sesame/ultra` (1.0.5, Sesame >=0.3.0-dev.1 <0.4.0) ships in the default bundle
 with the built-in `/ultra` command. Ultra coordinates persistent
 parallel goals through existing workflows and domain plugins; it does not replace
 their research methods or execution backends. See its [controls and lifecycle](../api-v1/packages/ultra/README.md).

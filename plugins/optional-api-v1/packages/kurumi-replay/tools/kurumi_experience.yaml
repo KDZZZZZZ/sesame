@@ -1,0 +1,130 @@
+name: kurumi_experience
+title: kurumi_experience
+description: 有界首章原生体验计划/status/configure/arm/record_gate；冻结预算拒绝5000，manual pause必须显式arm；记录真实native证据后决定边界暂停。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - configure
+        - arm
+        - record_gate
+        - wait_boundary
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 0
+    limits:
+      type: object
+      properties:
+        maxPaidRoleDecisions:
+          type: integer
+          minimum: 1
+        maxCommittedHours:
+          type: integer
+          minimum: 1
+        maxStepsPerCommand:
+          type: integer
+          minimum: 1
+        maxWeeklyGenerations:
+          type: integer
+          minimum: 1
+        maxNarrationEvents:
+          type: integer
+          minimum: 1
+        maxNarrationGenerations:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+    gate:
+      type: string
+      enum:
+        - portable_install
+        - native_account
+        - native_forming_indicators
+        - native_comparison
+        - weekly_report
+        - native_chat
+        - resume_idempotency
+    evidence_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          revision:
+            type: string
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            type: string
+          schemaVersion:
+            type: string
+            enum:
+              - 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 16
+    verified_by_main:
+      type: boolean
+    timeout_ms:
+      type: integer
+      minimum: 1
+      maximum: 120000
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 有界首章原生体验计划/status/configure/arm/record_gate；冻结预算拒绝5000，manual pause必须显式arm；记录真实native证据后决定边界暂停。
+    inputs: action=status or wait_boundary(timeout_ms?); configure/arm/record_gate require command_id/current expected_version; configure takes limits, record_gate takes declared gate, evidence_refs and verified_by_main:true.
+    outputs: status => {plan,usage}; controls return durable bounded-experience state; wait_boundary returns actual boundary/timeout evidence without advancing history.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - New informed-replay-50x-v1 experiment; changes require paused/reconciled state; configure only before consumption.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Manual pause requires explicit arm for continuation. A gate requires actual fixed native evidence; a fixture cannot certify native UI. timeout ends waiting, not the experiment.
+  binding:
+    type: native
+    name: kurumi_experience
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

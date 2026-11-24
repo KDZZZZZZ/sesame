@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, mkdirSync, cpSync, symlinkSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
@@ -12,7 +13,7 @@ for (const name of ['web-extract', 'rss-collect', 'market-data-parser']) {
     const root = realpathSync(mkdtempSync(join(tmpdir(), 'sesame-mcp-root-'))); t.after(() => rmSync(root, { recursive: true, force: true }));
     const real = join(root, 'real'), alias = join(root, 'alias'), outside = join(root, 'outside');
     mkdirSync(real); mkdirSync(outside); cpSync(join(packages, name), join(real, name), { recursive: true }); symlinkSync(real, alias, 'dir');
-    const source = join(real, name), manifest = JSON.parse(readFileSync(join(source, 'plugin.json')));
+    const source = join(real, name), manifest = readPackageDirectory(join(source)).manifest;
     const sample = manifest.extensions['bot.sesame'].tests.find(item => item.arguments.file_path); assert.ok(sample);
     const external = join(outside, 'external-data'); writeFileSync(external, readFileSync(join(source, sample.arguments.file_path)));
     symlinkSync(external, join(source, 'escape-file')); symlinkSync(outside, join(source, 'escape-directory'), 'dir');

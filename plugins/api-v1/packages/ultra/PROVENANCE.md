@@ -1,6 +1,6 @@
 # 来源与实现边界
 
-本插件由 Sesame contributors 原创实现，采用 MIT 许可证。完整许可见本包 LICENSE；plugin.json 与 package.json 均声明 MIT。
+本插件由 Sesame contributors 原创实现，采用 MIT 许可证。完整许可见本包 LICENSE；plugin.yaml 与 package.json 均声明 MIT。
 
 持久检查点、沿原任务恢复和副作用幂等的设计参考 [LangGraph Persistence](https://docs.langchain.com/oss/javascript/langgraph/persistence)，核对日期为 2026-10-24。这里只借鉴公开的设计原则，没有复制、捆绑或依赖 LangGraph 的源代码、运行时或第三方资产。
 

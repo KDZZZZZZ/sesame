@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sesame workflow definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workflow",
+    "goal",
+    "steps"
+  ],
+  "properties": {
+    "workflow": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]{0,63}$"
+    },
+    "artifacts": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Za-z0-9]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "outcomes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,31}$"
+            }
+          }
+        }
+      }
+    },
+    "imports": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Za-z0-9]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$"
+      }
+    },
+    "steps": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,47}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/step"
+      },
+      "minProperties": 1
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "required": [
+        "title",
+        "produces"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint": {
+          "type": "string"
+        },
+        "requires": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]{0,63}(?::[a-z][a-z0-9_]{0,31})?$"
+          }
+        },
+        "requires_any": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]{0,63}(?::[a-z][a-z0-9_]{0,31})?$"
+          }
+        },
+        "requires_if_valid": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]{0,63}(?::[a-z][a-z0-9_]{0,31})?$"
+          }
+        },
+        "uses": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:)?tool/[a-z][a-z0-9_]{0,127}$"
+          }
+        },
+        "uses_any": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:)?tool/[a-z][a-z0-9_]{0,127}$"
+          }
+        },
+        "produces": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]{0,63}$"
+          },
+          "minItems": 1
+        },
+        "fallback": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:)?[a-z][a-z0-9._-]{0,63}$"
+        },
+        "when": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      }
+    }
+  }
+}

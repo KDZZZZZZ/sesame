@@ -1,0 +1,19 @@
+id: wyckoff-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/wyckoff/skills/wyckoff/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/wyckoff
+  - step: 1
+    pointer: /tools
+    equals: []
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Wyckoff 量价与阶段研究"

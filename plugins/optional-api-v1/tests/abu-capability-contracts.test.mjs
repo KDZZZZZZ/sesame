@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -6,7 +7,7 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 const root = new URL('../packages/', import.meta.url);
 async function fixture(name, capabilityId) {
   const base = new URL(name + '/', root);
-  const declaration = JSON.parse(await readFile(new URL('capabilities.json', base), 'utf8'));
+  const declaration = readPackageDirectory(new URL('.', base)).capabilities;
   const audit = capabilityId === 'abu_trade_results_audit';
   const input = JSON.parse(await readFile(new URL(audit ? 'examples/audit-input.json' : 'examples/input.json', base), 'utf8'));
   const { analyze } = await import(new URL(audit ? 'scripts/audit.mjs' : 'scripts/baseline.mjs', base));
@@ -67,8 +68,8 @@ test('backtest audit accepts order and fill evidence without optional market bar
 });
 
 test('independent trade diagnostics consume supplied evidence without adding source or execution ports', async () => {
-  const plugin = JSON.parse(await readFile(new URL('abu-trade-metrics/plugin.json', root), 'utf8'));
-  const declaration = JSON.parse(await readFile(new URL('abu-trade-metrics/capabilities.json', root), 'utf8'));
+  const plugin = readPackageDirectory(new URL('abu-trade-metrics/', root)).manifest;
+  const declaration = readPackageDirectory(new URL('abu-trade-metrics/', root)).capabilities;
   assert.deepEqual(declaration.capabilities.map(cap => cap.id), ['abu_trade_metrics_analyze', 'abu_trade_results_audit']);
   assert.deepEqual(declaration.sources, []);
   assert.deepEqual(declaration.services, []);

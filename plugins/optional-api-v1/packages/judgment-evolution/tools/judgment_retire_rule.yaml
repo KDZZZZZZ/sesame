@@ -1,0 +1,93 @@
+name: judgment_retire_rule
+title: judgment_retire_rule
+description: 将失效或不再适用的准则退休，保留版本和复盘证据，不抹除历史失败。
+inputSchema:
+  type: object
+  required:
+    - rule_id
+    - reason
+  properties:
+    rule_id:
+      type: string
+      description: 准则 ID
+      minLength: 1
+      maxLength: 2000
+    reason:
+      type: string
+      description: 退休原因
+      minLength: 1
+      maxLength: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    title:
+      type: string
+    guideline:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    limitations:
+      type: string
+    evidence_ids:
+      type: array
+      items:
+        type: string
+    parent_rule_id:
+      type:
+        - string
+        - "null"
+    created_at:
+      type: string
+    status:
+      enum:
+        - candidate
+        - active
+        - probation
+        - retired
+    evaluation:
+      type:
+        - object
+        - "null"
+    retired_at:
+      type: string
+    retirement_reason:
+      type: string
+  required:
+    - id
+    - title
+    - guideline
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 将失效或不再适用的准则退休，保留版本和复盘证据，不抹除历史失败。
+    inputs: "{rule_id,reason}."
+    outputs: Retained rule marked retired with retirement reason/time; prior predictions and evidence remain.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Retirement does not erase earlier trials or create a new validated rule.
+  binding:
+    type: native
+    name: judgment_retire_rule

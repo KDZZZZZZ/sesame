@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdtemp, cp, mkdir, rm } from 'node:fs/promises';
@@ -15,13 +16,13 @@ test('eight independent zero-tool packages have complete resources, licenses and
   try {
     await mkdir(join(root, 'packages'));
     for (const name of names) {
-      const path = join(packages, name), manifest = await json(join(path, 'plugin.json'));
+      const path = join(packages, name), manifest = readPackageDirectory(join(path)).manifest;
       assert.equal(manifest.id, `sesame/${name}`); assert.equal(manifest.default_state, 'discoverable');
       assert.equal(manifest.engines.sesame, '>=0.2.3'); assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined);
       assert.deepEqual(manifest.provides, {}); assert.equal(manifest.migration, undefined); assert.equal(manifest.dependencies, undefined);
       const module = await import(new URL(`../packages/${name}/index.js`, import.meta.url));
       assert.deepEqual(module.createCapabilities(), []); assert.equal(module.activate, undefined);
-      const declaration = await json(join(path, 'capabilities.json')); assert.deepEqual(declaration.capabilities, []); assert.ok(declaration.knowledge.length);
+      const declaration = readPackageDirectory(join(path)).capabilities; assert.deepEqual(declaration.capabilities, []); assert.ok(declaration.knowledge.length);
       const skill = await readFile(join(path, `skills/${name}/SKILL.md`), 'utf8');
       assert.match(skill, new RegExp(`name: ${name}`)); assert.ok(skill.length > 800);
       for (const resource of manifest.resources) await readFile(join(path, resource));
@@ -29,7 +30,7 @@ test('eight independent zero-tool packages have complete resources, licenses and
       assert.ok(manifest.resources.includes('examples/expected.md'));
       const provenance = await readFile(join(path, 'PROVENANCE.md'), 'utf8');
       assert.match(provenance, /2026-10-10/); assert.match(provenance, /GPL-3.0/); assert.match(provenance, /未复制/);
-      const prompt = await readFile(join(path, 'prompt.md'), 'utf8');
+      const prompt = await readFile(join(path, 'instructions.md'), 'utf8');
       for (const other of names.filter(n => n !== name)) assert.ok(!prompt.includes(`按 ${other} skill`));
       await cp(path, join(root, 'packages', name), { recursive: true });
     }

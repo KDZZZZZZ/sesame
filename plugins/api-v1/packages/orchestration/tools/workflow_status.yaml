@@ -1,0 +1,40 @@
+name: workflow_status
+title: workflow_status
+description: 查看流程导航的当前位置：有活动计划时返回可以做、进行中、等待的待办，参考工作流里还没安排的预设步骤，以及下一步提示；没有活动计划时返回已安装插件声明的工作流目录。只读，不改变计划。
+inputSchema:
+  type: object
+  properties:
+    full:
+      type: boolean
+      description: 为 true 时另外返回已完成、已放弃、不需要的待办和全部产物。
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.read
+    - read
+  usage:
+    purpose: 查看流程导航的当前位置：有活动计划时返回可以做、进行中、等待的待办，参考工作流里还没安排的预设步骤，以及下一步提示；没有活动计划时返回已安装插件声明的工作流目录。只读，不改变计划。
+    inputs: 不需要参数。full 为 true 时另外返回已完成、已放弃、不需要的待办和全部产物。
+    outputs: 流程提示：plan（id、标题、参考的工作流、目标、状态、进度）、ready（现在可以做的待办，各含标题、说明、可照抄的 task 标签，以及包含的预设步骤的输入及引用、对应的真实能力和产物）、running、waiting（缺什么、为什么）、reference（参考工作流里还没安排的预设步骤，标出依赖是否已齐）、attention、next。句子里的待办和预设步骤写成“标题（标识）”。没有活动计划时 plan 为 null，catalog 列出可参考的工作流（id、目标、所属插件、是否已加载）和各插件的工作流型能力入口。
+    prerequisites:
+      - 仅主 Agent 可用。
+    limitations:
+      - 被完成通知唤醒、上下文经过压缩或不确定做到哪一步时先调用它，不凭记忆推进。
+      - attention 会指出带本计划标签、已经结束但还没上报的 Run；它不会替你上报，读取该 Run 的真实输出后用 workflow_step 上报。
+      - 目录只列已安装且未禁用的插件；所属插件未加载时先 plugin_read、plugin_load。
+  binding:
+    type: native
+    name: workflow_status

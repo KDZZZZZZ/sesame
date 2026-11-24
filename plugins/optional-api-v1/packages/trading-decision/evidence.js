@@ -3,28 +3,39 @@ import { check } from './shared.js';
 import { checkedArtifact, dataRef } from './research-artifacts.js';
 import { PACKET_TYPE, readPacket } from './investment-research-contract.js';
 
-export async function validateResearchRefs(host, refs, signal) {
+export async function validateResearchRefs(host, refs, signal, frozenArtifacts) {
   check(Array.isArray(refs) && refs.length <= 30 && refs.every(dataRef), 'INVALID_RESEARCH_RESULT', 'Research inputs require complete fixed data ArtifactRefs.');
+  if (frozenArtifacts !== undefined) check(Array.isArray(frozenArtifacts) && frozenArtifacts.length === refs.length, 'INVALID_RESEARCH_RESULT', 'Research selection differs from the frozen plan.');
   const identities = new Map(), selections = [];
-  for (const ref of refs) {
+  for (const [index, ref] of refs.entries()) {
     signal?.throwIfAborted();
     check(!identities.has(ref.id) || identities.get(ref.id) === canonical(ref), 'INVALID_RESEARCH_RESULT', 'One research artifact ID cannot select two revisions.');
     identities.set(ref.id, canonical(ref));
     const { manifest, metadata } = await checkedArtifact(host, ref);
     check(manifest.content?.format === 'json-rows' && typeof manifest.content.path === 'string' && Number.isSafeInteger(manifest.content.rowCount) && manifest.content.rowCount > 0
       && manifest.blobs?.some(blob => blob.path === manifest.content.path && blob.mediaType?.split(';')[0] === 'application/json'), 'INVALID_RESEARCH_RESULT', 'Selected research must be an actual published json-rows artifact.');
-    const producer = await host.plugins.read(metadata.producer.id, { part: 'manifest' });
-    check(producer?.id === metadata.producer.id && producer.artifactSchemas?.some(schema => schema.kind === ref.kind && schema.schemaVersion === ref.schemaVersion), 'INVALID_RESEARCH_RESULT', 'Research must retain a declared data-artifact producer, not an arbitrary resource or untyped text.');
-    let protocol = manifest.content.protocol ?? manifest.content.type ?? 'json-rows/1';
-    if (metadata.producer.id === 'sesame/investment-research') {
-      await readPacket(host, ref, { signal }); protocol = PACKET_TYPE;
+    const investmentResearch = metadata.producer.id === 'sesame/investment-research';
+    const protocol = investmentResearch ? PACKET_TYPE : manifest.content.protocol ?? manifest.content.type ?? 'json-rows/1';
+    const selection = { ref, producer: metadata.producer, protocol };
+    if (frozenArtifacts === undefined) {
+      const producer = await host.plugins.read(metadata.producer.id, { part: 'manifest' });
+      check(producer?.id === metadata.producer.id && producer.artifactSchemas?.some(schema => schema.kind === ref.kind && schema.schemaVersion === ref.schemaVersion), 'INVALID_RESEARCH_RESULT', 'Research must retain a declared data-artifact producer, not an arbitrary resource or untyped text.');
+    } else {
+      // Plan creation checked the producer declaration. A delegated manager only
+      // needs the fixed resource, which it verifies using its own resource access.
+      const frozen = frozenArtifacts[index];
+      check(frozen && canonical(frozen) === canonical(selection),
+        'INVALID_RESEARCH_RESULT', 'Research artifact or producer differs from the frozen plan.');
+    }
+    if (investmentResearch) {
+      await readPacket(host, ref, { signal });
     } else {
       check(protocol !== PACKET_TYPE, 'INVALID_RESEARCH_RESULT', 'Another producer cannot impersonate the investment-research result protocol.');
       // Publication validates the producer's declared artifact schema. Generic
       // research producers need not adopt IR's member/plan schema or have their
       // large content copied into the private trading ledger.
     }
-    selections.push({ ref: structuredClone(ref), producer: structuredClone(metadata.producer), protocol });
+    selections.push(structuredClone(selection));
   }
   return selections;
 }

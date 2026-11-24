@@ -1,0 +1,40 @@
+id: portfolio-execution-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/portfolio-execution/instructions.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/portfolio-execution
+  - step: 1
+    pointer: /tools/0/name
+    equals: manual_trade_cancel
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - operation_id
+        - original_operation_id
+        - user_authorized
+      properties:
+        operation_id:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,100}$
+        original_operation_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Original manual_trade_execute operation
+        user_authorized:
+          type: boolean
+          const: true
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 目标仓位执行"

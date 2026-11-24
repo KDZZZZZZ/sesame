@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-trend:instructions#preamble": "d67083205234aab87b73606ed646fb72e02c9e954c7b7fc1323ba63db9c3a354",
+    "sesame/abu-trend:plugin.description": "bbbaf28364da3a9807e7286e5ac75e41f1207143d3cb64b12381949d02a3c02f",
+    "sesame/abu-trend:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-trend:resource/PROVENANCE.md": "b473b63238e179dedf8a8da5a5b4abb4c6cb7688d6a5578874ed01b441cc8177",
+    "sesame/abu-trend:resource/README.md": "7a0fbadd8943d7a23e25a9e7c3c0051e2081ab6397416e6aa568ad16bedfb843",
+    "sesame/abu-trend:resource/examples/input.json": "b5a717c3c3cbab8cc209cfa4888bc7337c2e52c8e5c8970d6133525ecec60b78",
+    "sesame/abu-trend:resource/references/method.md": "f71143e450115bcc19ba53338404062a63941185cb496d365fbe9530839ea0c5",
+    "sesame/abu-trend:resource/scripts/baseline.mjs": "7eadccda50955504c06445ee0e958ec1586f8c4c44edbabf375f9ad34323cfa5",
+    "sesame/abu-trend:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-trend:skill/abu-trend.body": "cfc40df7eafe03c2ce36d27087a997d9b3fabbe474598058d5cf5db920f818f2",
+    "sesame/abu-trend:skill/abu-trend.description": "d0c5ae4da9dd07111eadf4c7a7158cc537d3da31e39f5eaf57f1468554dd2ada",
+    "sesame/abu-trend:tool/abu_trend_analyze.description": "d56c5a5e60cc05ab901dd0b060402c58951b0c59c79d606b847a7c97940a0cea",
+    "sesame/abu-trend:tool/abu_trend_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-trend:tool/abu_trend_analyze.input": "a2d332fb0e6c4586c8e6e9512e777af830d68d75a7b8c533bf707c25932ea510",
+    "sesame/abu-trend:tool/abu_trend_analyze.output": "d67eb39cfa976d52395d7f5f5d797a8c0414226916b897605d7d9b77180ddb2d"
+  },
+  "digest": "f46796f44cb00301cf16a0c61fda81d1a3d91701ef1de5e2377c4c9baf9f138f"
+}

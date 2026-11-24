@@ -5,9 +5,9 @@
   "packages": [
     {
       "id": "sesame/abu-breakout",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-breakout",
-      "treeDigest": "sha256:380c2658afc86c36a601c660894a8d316508535f72f13102408281493b415520",
+      "treeDigest": "sha256:266b4e03865e2e303320a4a327be01ac5f834203e9ac8662889cc2d531015821",
       "files": [
         {
           "path": "LICENSE",
@@ -25,9 +25,9 @@
           "bytes": 4918
         },
         {
-          "path": "capabilities.json",
-          "sha256": "18f39477d4db57b979fbcf70ba99e65722c2cf378c82f592a3242fd0c58b8532",
-          "bytes": 11869
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "911f8f7aed9e96aa61135ee162f23b68fe99e40b2702493fa9d39875cfd94f58",
+          "bytes": 3746
         },
         {
           "path": "examples/input.json",
@@ -40,24 +40,29 @@
           "bytes": 526
         },
         {
+          "path": "instructions.md",
+          "sha256": "9f8dcdac35246e4119a0731365e6170afa367962e7c58d8e166de513d234aae4",
+          "bytes": 1251
+        },
+        {
           "path": "package.json",
-          "sha256": "ea9c5bd8cd365d667cf8491b62871aee447e0dc0a510c7e3cb416bd4d7081c2f",
+          "sha256": "d45d00850099fac45f3154e5189900c02332fab88c61572f8077a4456dbb3eb9",
           "bytes": 115
         },
         {
-          "path": "plugin.json",
-          "sha256": "7d5c70eb6314c10665df2400b5ef32121b8f2483e44523e98a411606a3dff624",
-          "bytes": 923
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "9f8dcdac35246e4119a0731365e6170afa367962e7c58d8e166de513d234aae4",
-          "bytes": 1251
+          "path": "plugin.yaml",
+          "sha256": "bbb21a8f6d72851d5587076369c83a62461e66eddb8f5861d3afac1747f5f3c1",
+          "bytes": 3477
         },
         {
           "path": "references/method.md",
           "sha256": "543b0b045bb7fa4c07858725062df2093c6fa9568f0421a0a7ec6f2177b89229",
           "bytes": 732
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "c1022bef400e20b4fc636ffac05e1a399f997e1f8a22cebc706bbff414fb1955",
+          "bytes": 380
         },
         {
           "path": "scripts/baseline.mjs",
@@ -75,17 +80,27 @@
           "bytes": 1898
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "0e282b5d1219a02611fc81b48464687f0723cfa4d81702e6df36ee7955651a66",
+          "bytes": 1973
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "1b8802e2ea3fd58c7d9a5916daccc457bfd52e6e43250dbcf66f9d85b1445401",
           "bytes": 1793
+        },
+        {
+          "path": "tools/abu_breakout_analyze.yaml",
+          "sha256": "97ec013e114bfc6930a74407f0aa2e85fec9e2f3027d63f81dedff3888825af5",
+          "bytes": 7626
         }
       ]
     },
     {
       "id": "sesame/abu-exit-rules",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-exit-rules",
-      "treeDigest": "sha256:109d152d39ec9157eee438415abfedde33aec549301bf224e03214864c34bc0e",
+      "treeDigest": "sha256:0f9f0a4eec675cbd58d2d0b04ccb15993e31d90a11326758f401502dbbee45d8",
       "files": [
         {
           "path": "LICENSE",
@@ -103,9 +118,9 @@
           "bytes": 5045
         },
         {
-          "path": "capabilities.json",
-          "sha256": "f6c8a283ae28c9a7109e61a70bb6014f96a0ca6ab25ad4b86a89382e9d04a12a",
-          "bytes": 13832
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "3f832686ff895b9666b9b6c83c5ffa4cee4faaf951ebe6613ae37ef6c71240d2",
+          "bytes": 4904
         },
         {
           "path": "examples/input.json",
@@ -118,24 +133,29 @@
           "bytes": 530
         },
         {
+          "path": "instructions.md",
+          "sha256": "3716f69900a702eb6fd25914c026501e7d62b697491d42ba10a40eedf9c9f5e5",
+          "bytes": 1433
+        },
+        {
           "path": "package.json",
-          "sha256": "47ac8e3a37302259317cc2057a8fd83196d27b92e572b27c43136d4f5042f1c5",
+          "sha256": "f804a7dcd0be79c9c16f732253ca1f7369d8da5949e697cfa479151b600e1a54",
           "bytes": 117
         },
         {
-          "path": "plugin.json",
-          "sha256": "d0025ae9f368bd1bd711888907bdfe1264be76ef1c38d2656510cb397cc89423",
-          "bytes": 919
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "3716f69900a702eb6fd25914c026501e7d62b697491d42ba10a40eedf9c9f5e5",
-          "bytes": 1433
+          "path": "plugin.yaml",
+          "sha256": "d6e90169fec83a21c88e63d4647f69e2ac162ea23791ac217e2a6678e60cfe08",
+          "bytes": 3476
         },
         {
           "path": "references/method.md",
           "sha256": "030504c3b5ce8dde2f961c2b79fe95622c231c13b45fed2c80ff374b9ddd2d5c",
           "bytes": 1080
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "c15cc629febfcbadd9c00d7981cb0d4ec7d95332ed6a246fa5685a46d767e82b",
+          "bytes": 380
         },
         {
           "path": "scripts/baseline.mjs",
@@ -153,17 +173,27 @@
           "bytes": 2101
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "35674cdc610ef1a58fa3b45d0b96717ffb8b8dc3416508c7494867d6fc055f7d",
+          "bytes": 2015
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "849c7d1308d05f39714b1caef95565064f65f58bcb87e91754886eca2525d9a0",
           "bytes": 2758
+        },
+        {
+          "path": "tools/abu_exit_rules_analyze.yaml",
+          "sha256": "28cea8d3a2055793f5792b7db836e497fd138445c2c27e1d02c4179983e395cf",
+          "bytes": 9069
         }
       ]
     },
     {
       "id": "sesame/abu-indicators",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-indicators",
-      "treeDigest": "sha256:00ea1a1b477bf095b2625613b4744cdcd9f3dc59f438f7ad4ca7194af0095d70",
+      "treeDigest": "sha256:80c4aa6ac0c2ec7436febc58edb915d0b35e03bee4745d03332a74acd44d059c",
       "files": [
         {
           "path": "LICENSE",
@@ -181,9 +211,9 @@
           "bytes": 5597
         },
         {
-          "path": "capabilities.json",
-          "sha256": "3820114571b9aa85e7d0b0e984d4d78145b4e18bc9d02855760df2c3bba03cad",
-          "bytes": 17651
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "5daaef7c857a95e196055e3331526a964a0ddeeedb39ca12d1ad51175fa21ae2",
+          "bytes": 6874
         },
         {
           "path": "examples/input.json",
@@ -196,24 +226,29 @@
           "bytes": 530
         },
         {
+          "path": "instructions.md",
+          "sha256": "fead0da91e95905cdb5ee380acc77c5e659dc23d83396137dbad87f9c616aaf1",
+          "bytes": 2680
+        },
+        {
           "path": "package.json",
-          "sha256": "fea087d7683b19571e6c8594768f25d0f6262ffca0439e068d8d54ca0d925898",
+          "sha256": "70cbe6104d3c7278dcc3498f016243dd6e08f7a515ace1bed4a17ea098b41b7e",
           "bytes": 117
         },
         {
-          "path": "plugin.json",
-          "sha256": "519d5525435b28578f23606b536c8874ca3e69c5dcb5be299e53062af674eaf8",
-          "bytes": 926
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "fead0da91e95905cdb5ee380acc77c5e659dc23d83396137dbad87f9c616aaf1",
-          "bytes": 2680
+          "path": "plugin.yaml",
+          "sha256": "09e730a76e2d5ccb93558ccefce5098e76775b82e8bd33a4e08f1e7e3790461a",
+          "bytes": 3486
         },
         {
           "path": "references/method.md",
           "sha256": "c845602074b1f1db7420ea4f813432a2e8e79b051aba24b4750e1119b807bb64",
           "bytes": 2362
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "4cfba739b32faaeb0672285355ff3ea877dda9d889d3c8b50ee96375abe7dc88",
+          "bytes": 387
         },
         {
           "path": "scripts/baseline.mjs",
@@ -231,17 +266,27 @@
           "bytes": 3378
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "d90af27e842fff8242f62b319e2e745b54dac28bc279b19349abb559131418d7",
+          "bytes": 2015
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "73afd4ffa0980f33f1a314dc907816feb0251d2e7441cb9af3f7555d66eec41a",
           "bytes": 2253
+        },
+        {
+          "path": "tools/abu_indicators_analyze.yaml",
+          "sha256": "161ce97b606a3244198f3e479d2ac0245697a828f6858f63019d24a2a2368cf6",
+          "bytes": 12228
         }
       ]
     },
     {
       "id": "sesame/abu-ml-features",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-ml-features",
-      "treeDigest": "sha256:ec22068653a9f4174f0a4de963766a4f00f72b627a40fbaa19a88dbb5cdc0c8c",
+      "treeDigest": "sha256:58a52d334d6d0e4933ef2c4dfc354b5e4070715ea14b3e17cca51dec28dd5484",
       "files": [
         {
           "path": "LICENSE",
@@ -259,9 +304,9 @@
           "bytes": 5504
         },
         {
-          "path": "capabilities.json",
-          "sha256": "074e6b8620d484fe54d72871667a5b0f336086fa0f802b4ff5283719f44c7b3d",
-          "bytes": 13253
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "2ba9bd643e06298d89c88a18d34ddc7fc69c93582a322c7bdcb15cfcb68b3085",
+          "bytes": 4428
         },
         {
           "path": "examples/input.json",
@@ -274,24 +319,29 @@
           "bytes": 532
         },
         {
+          "path": "instructions.md",
+          "sha256": "ff42221a8b9de6300697989233ab1de946640fc78539979ebb11699f23afba11",
+          "bytes": 1416
+        },
+        {
           "path": "package.json",
-          "sha256": "f35e41d0013519955bd8178da98365bc659c870833d9431db8cd75f0188ef171",
+          "sha256": "f3d3753bd926c89c82dc9662a4380f8dfb5f3196854d9ae13dd49753718ad335",
           "bytes": 118
         },
         {
-          "path": "plugin.json",
-          "sha256": "f2397f24fbc185104bbc361c4209b92df226b2dd8e3db70b5f0f4b046261af6e",
-          "bytes": 926
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "ff42221a8b9de6300697989233ab1de946640fc78539979ebb11699f23afba11",
-          "bytes": 1416
+          "path": "plugin.yaml",
+          "sha256": "3e123a92c853527386c4400d26687502a818b4eb61c53f3599936d73ef220b97",
+          "bytes": 3503
         },
         {
           "path": "references/method.md",
           "sha256": "0388b19a8d1eaa6d42815f91a7057a5e617f083538659f01e2caab5940394c0e",
           "bytes": 1651
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "a025783f8427c5cf17e51fc80cc99c0a302207151d9581ce45683f25f3596f22",
+          "bytes": 389
         },
         {
           "path": "scripts/baseline.mjs",
@@ -309,17 +359,27 @@
           "bytes": 2085
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "2672f065c620b008ce5c5e422d06e2ace732215f271b5fd68db74d4a8865bdb2",
+          "bytes": 2036
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "96b88bafdbdf53a2653ea3c7af3a3aa7bbf9cdb4f23ff4e7897e5fd965744e53",
           "bytes": 1939
+        },
+        {
+          "path": "tools/abu_ml_features_analyze.yaml",
+          "sha256": "a2b84bad87725d757f34a5c501411c4488530c68ab4be5f8ff89423d937426a9",
+          "bytes": 8852
         }
       ]
     },
     {
       "id": "sesame/abu-model-lab",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-model-lab",
-      "treeDigest": "sha256:8d2782271dde84550afcd5563e6c73c1c4e6d16fb6d4cc7e77cc8ce8d933b3f4",
+      "treeDigest": "sha256:1bd92f57d80ce186ed17cca2162c6a52d039f09051caad187039bdc9ef8015d8",
       "files": [
         {
           "path": "LICENSE",
@@ -337,9 +397,9 @@
           "bytes": 5396
         },
         {
-          "path": "capabilities.json",
-          "sha256": "6bf606aa60f034fe5066dcf66e4e9ad48535a5178370744d801cedf070f56242",
-          "bytes": 13687
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "91157c38a0fa49a0dd2c742a2fb53bb0f4cbd9f994cae8c7719ea1df0b120ed6",
+          "bytes": 4957
         },
         {
           "path": "examples/input.json",
@@ -352,24 +412,29 @@
           "bytes": 528
         },
         {
+          "path": "instructions.md",
+          "sha256": "bdfcbb368b70ba5a3095b7eb811e6310f48dc06a45f26c11d82e1b42b0d9f033",
+          "bytes": 1304
+        },
+        {
           "path": "package.json",
-          "sha256": "8fb707f4d42ea8e6e113c907f4711fdf0fcdcc01a0ef136ff17baca07147b7ea",
+          "sha256": "aa70b0987f1fbb3f24568cf37a425a745a87ab00af7e198df695842bc0a2bc4c",
           "bytes": 116
         },
         {
-          "path": "plugin.json",
-          "sha256": "310f2294db3b8fdf916263c565bf9fde28bac5d255111d0b03bbed9ae7936295",
-          "bytes": 915
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "bdfcbb368b70ba5a3095b7eb811e6310f48dc06a45f26c11d82e1b42b0d9f033",
-          "bytes": 1304
+          "path": "plugin.yaml",
+          "sha256": "476c6e9072ed92b8bf1fc6166f4762377f9e706e682b4309cc4b3d9953e07ef5",
+          "bytes": 3502
         },
         {
           "path": "references/method.md",
           "sha256": "12704ae09b0b0ce5f683f1660631823b9767bbfadb8dbbff6800ab22464ba207",
           "bytes": 1538
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "e721d5e87185e95eee478cf46755371b023a4c744130c7d82d30ec7a6aed4496",
+          "bytes": 374
         },
         {
           "path": "scripts/baseline.mjs",
@@ -387,17 +452,27 @@
           "bytes": 1974
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "129d27b8a6b0d0a5800fac9016d7a44e139b629a4ff144072859c8473fdc1e06",
+          "bytes": 1994
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "1a6e7a2d002ac3ba704b6ccc50acda58b0fc5591011b65d306886a498b5124b7",
           "bytes": 2425
+        },
+        {
+          "path": "tools/abu_model_lab_analyze.yaml",
+          "sha256": "00c51971926fb6ae052102f66bec8d0c749189b01b2482577b34b0df3c4b3932",
+          "bytes": 9129
         }
       ]
     },
     {
       "id": "sesame/abu-moving-average",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-moving-average",
-      "treeDigest": "sha256:94425ba26cd3e59cec18d66dc00ba72ca1ce50c1d4d9c6b5809931788116f2e7",
+      "treeDigest": "sha256:7f84b8c512ee8bfba098778f0be9d499d0dad1f6d68835a238de73561cb71fd8",
       "files": [
         {
           "path": "LICENSE",
@@ -415,9 +490,9 @@
           "bytes": 4443
         },
         {
-          "path": "capabilities.json",
-          "sha256": "7ff290b7bfbb1068dc9412344d95f430f3513bd4b340f25216c8be1ec7ee33b9",
-          "bytes": 11660
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "ff074e7264ff1dca4644ca358719ba98031025407b612a91962cb6130c9548e7",
+          "bytes": 3735
         },
         {
           "path": "examples/input.json",
@@ -430,24 +505,29 @@
           "bytes": 538
         },
         {
+          "path": "instructions.md",
+          "sha256": "526564c57e5462cda8f684f4090de9e2911aa1c92931ef2c1e9ae6d154fa508a",
+          "bytes": 1204
+        },
+        {
           "path": "package.json",
-          "sha256": "c39b2af4a18db1f70f4b966d20af82c87b8869e08ec35ec781587f440fc305c0",
+          "sha256": "e9923316eb857dacb68ee8741e1b5b5724584af645717062772f8d00cabaed77",
           "bytes": 121
         },
         {
-          "path": "plugin.json",
-          "sha256": "5bef955c4ed821ac0de60fdb32fc9f38f881e8eb9ede10cf1316bf7a3f64432b",
-          "bytes": 914
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "526564c57e5462cda8f684f4090de9e2911aa1c92931ef2c1e9ae6d154fa508a",
-          "bytes": 1204
+          "path": "plugin.yaml",
+          "sha256": "5c1b830a81f93a5c53a9060eccd811ba8943216c98204723a6c40477db29fd0c",
+          "bytes": 3432
         },
         {
           "path": "references/method.md",
           "sha256": "c9466ba261300c8762c369cf5cff81d9854b6e5931a9a6ca5d996282c6dc3d37",
           "bytes": 610
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "fbc4faae6d3e54a60cdd721fc466874bc50891a4e7b8e3e52479e9adaa4dd1e7",
+          "bytes": 383
         },
         {
           "path": "scripts/baseline.mjs",
@@ -465,17 +545,27 @@
           "bytes": 1867
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "f5895e7ce5c6616378593ba5a1f256efa06c6a2f687d2732e43b2c61f7ec099b",
+          "bytes": 2099
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "6a79e3e24d558f96497b91ff9e7b1a6b2172174cae6140a067f56379d55dd058",
           "bytes": 1442
+        },
+        {
+          "path": "tools/abu_moving_average_analyze.yaml",
+          "sha256": "ed25006b034d480da45e5cd9a8f2b835ea7a2b0cc85aa02f5a6652fbdf219e4e",
+          "bytes": 7468
         }
       ]
     },
     {
       "id": "sesame/abu-parameter-search",
-      "version": "2.0.4",
+      "version": "2.0.5",
       "directory": "abu-parameter-search",
-      "treeDigest": "sha256:45d8e36ce831c729c114bbb3fb6b236bbcdca252c355010c0a1b83fa89ba2752",
+      "treeDigest": "sha256:439fb01b36e0dc65967d28d510fa05e0f330396d84ae9834ed90dc7d9c5ba949",
       "files": [
         {
           "path": "LICENSE",
@@ -493,9 +583,9 @@
           "bytes": 7644
         },
         {
-          "path": "capabilities.json",
-          "sha256": "71f21f4834498235af7d17a77293e68b216aa54934ee2b38836e62cea7d3d5bf",
-          "bytes": 16419
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "d74d46bb8a6029470bb4ceea84960c8948a1df70f7ff80c63f739cd03b339ac8",
+          "bytes": 5846
         },
         {
           "path": "examples/development.json",
@@ -513,24 +603,29 @@
           "bytes": 542
         },
         {
+          "path": "instructions.md",
+          "sha256": "58770f0ec41b44b46b8d091fdd2d444287ca56b4d969e781bcf7b1272a486ad4",
+          "bytes": 2246
+        },
+        {
           "path": "package.json",
-          "sha256": "eaf8b79579a04d03fc57dabf2f27b4d512660584da4414a9b06e83f9d503b930",
+          "sha256": "311c38595325fde882d16a5932ee1673bcb7ef76fc2fe4b7ae9834c50d5eddf4",
           "bytes": 123
         },
         {
-          "path": "plugin.json",
-          "sha256": "cc2157e6340c991db05730fd6550381f2777fc60da5630353161000b45bf34c4",
-          "bytes": 964
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "58770f0ec41b44b46b8d091fdd2d444287ca56b4d969e781bcf7b1272a486ad4",
-          "bytes": 2246
+          "path": "plugin.yaml",
+          "sha256": "2002e73a75947d155e7806be40540a35f82d5a5b7d5346f218baf2a48003b359",
+          "bytes": 3767
         },
         {
           "path": "references/method.md",
           "sha256": "76d653ec9bb46c22479f7210743b13567c0ce0eb089e54b04fb1c810b7a41ed5",
           "bytes": 1522
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "1e929f948138e8fca603d678e7aa22b86dc06b4ce33fb34fa03daf4eade64ab2",
+          "bytes": 404
         },
         {
           "path": "scripts/baseline.mjs",
@@ -548,17 +643,27 @@
           "bytes": 2446
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "5d46117f22003e67419ce8911f0ebcc9b7c09cb4bab30499db43871a30f5123f",
+          "bytes": 2279
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "1cb77f4bde9554177333d019115771082565ed92bce7d4800376000a8b508794",
           "bytes": 4685
+        },
+        {
+          "path": "tools/abu_parameter_search_analyze.yaml",
+          "sha256": "7dd1cc1894c05fa209a5a781c7eb7d2e1e078e4667a85597fecd56a25101a216",
+          "bytes": 10727
         }
       ]
     },
     {
       "id": "sesame/abu-position-sizing",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-position-sizing",
-      "treeDigest": "sha256:0d1d1755d50e0397be391be94697ba43c727b4e68fb5fccbc72a93aff6e6e2eb",
+      "treeDigest": "sha256:f0ae98684086b22a26c899add75db6af6f5b0f23fb5c17639cd854c76b463ff2",
       "files": [
         {
           "path": "LICENSE",
@@ -576,9 +681,9 @@
           "bytes": 5930
         },
         {
-          "path": "capabilities.json",
-          "sha256": "50087c6497fb573e05a9897c9fc9b38dc82bcb024ae4eac794d56bbd0ae3e0cb",
-          "bytes": 14889
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "e38a02a5ea7a2046b681b4aa6b504cadbd4645c736663b99cafac1f6fa8e302d",
+          "bytes": 5457
         },
         {
           "path": "examples/input.json",
@@ -591,24 +696,29 @@
           "bytes": 540
         },
         {
+          "path": "instructions.md",
+          "sha256": "1b1eda86aaa152328aaffd129e4198dda3fc40512988fcf0e99e12c0eefbdda0",
+          "bytes": 1547
+        },
+        {
           "path": "package.json",
-          "sha256": "b62251993a2abb38cc01ba3911a24db65efbc19feea832074980d07f7b24a0cb",
+          "sha256": "07290d78676d72eccbaf59ce9de0cb37736d8be8bcf2e9f71cd180d5fc324e87",
           "bytes": 122
         },
         {
-          "path": "plugin.json",
-          "sha256": "60cab059d5051aeed1115bf4a144a0685854c65cc547ac2fc06cf9311fa9bbc1",
-          "bytes": 927
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "1b1eda86aaa152328aaffd129e4198dda3fc40512988fcf0e99e12c0eefbdda0",
-          "bytes": 1547
+          "path": "plugin.yaml",
+          "sha256": "58a7d1d55d4a85d08ff2dde8d3596f6b1865dca562586f1782c0adad8f44147a",
+          "bytes": 3510
         },
         {
           "path": "references/method.md",
           "sha256": "1e80449c37acec3648119416a5dd7939aba06fe26c57efe6da6e46da343ed767",
           "bytes": 1656
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "ec23d0a837d02478dbcdc5f446ba391adee2cbbd603876aa2b011905a0cb56fb",
+          "bytes": 398
         },
         {
           "path": "scripts/baseline.mjs",
@@ -626,17 +736,27 @@
           "bytes": 2233
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "cdabaf5041ab99335f2f4b5048317ec28fd0035ed3d72c0da1d4c555b905bf0d",
+          "bytes": 2120
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "dd47e265b8692af2427f6d0c98da5db9d26aad10d99a9f8b93b86ddee42d96af",
           "bytes": 3166
+        },
+        {
+          "path": "tools/abu_position_sizing_analyze.yaml",
+          "sha256": "179fba4d15125a55a78d0b244f4ef242d31bc6fbc2c7b1a0f7a6f62363772b3a",
+          "bytes": 9895
         }
       ]
     },
     {
       "id": "sesame/abu-price-structure",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-price-structure",
-      "treeDigest": "sha256:9952841074923d8172f26d0339a831587c42d9e68a7d619b903ddb62f00b8110",
+      "treeDigest": "sha256:f1d025d832829e4743ec2e50cd26665e5003759e5913fec33f32839bbf283a6f",
       "files": [
         {
           "path": "LICENSE",
@@ -654,9 +774,9 @@
           "bytes": 4171
         },
         {
-          "path": "capabilities.json",
-          "sha256": "2e325f643d532650cdc5107897bed79ba41a51ec83904a2740b1de37f580237c",
-          "bytes": 12883
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "e8ea025ea9a8a241cab1dd3ae626d2889d3de9f7c84b1dd40ec29e3b3b5a2563",
+          "bytes": 4347
         },
         {
           "path": "examples/input.json",
@@ -669,24 +789,29 @@
           "bytes": 540
         },
         {
+          "path": "instructions.md",
+          "sha256": "74bc48778c2aa2833f1a68e9d9fb761bfe35d993b14c98259396f1f3284bde1c",
+          "bytes": 1296
+        },
+        {
           "path": "package.json",
-          "sha256": "a88a241f24441c9a7f5d9d8eebc5468846f420361e08446c8e9293e30ef29b52",
+          "sha256": "b7392996c9539821081ebf89f1cde6ae4e78d0766a199e0c3112e158d6297504",
           "bytes": 122
         },
         {
-          "path": "plugin.json",
-          "sha256": "2fb5b715a813df28b572b421827144cfd48ae7dcd42e46e185a18bf1da60d424",
-          "bytes": 942
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "74bc48778c2aa2833f1a68e9d9fb761bfe35d993b14c98259396f1f3284bde1c",
-          "bytes": 1296
+          "path": "plugin.yaml",
+          "sha256": "91c2921abd3c07165dc975e1e89906a87507c4d34f163d2f275596ed9e8e6b3c",
+          "bytes": 3546
         },
         {
           "path": "references/method.md",
           "sha256": "2081d0f12400216618f002d9cd51e42938911bfcbc0ef29863bab6b27597fc5e",
           "bytes": 739
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "fb2aeff19d29530fbe4a51ce9bf6adb8cd9498bac5c4ddab2d700b69ea97f8f6",
+          "bytes": 413
         },
         {
           "path": "scripts/baseline.mjs",
@@ -704,17 +829,27 @@
           "bytes": 2010
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "53ccf4e286880aafe4df3198531851b571c229a10b86616d9d186f9331dd87e7",
+          "bytes": 2120
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "763ab094128d9d2db1f1189a09f7a8286eb6b77779f82223a9cd1d5a02466558",
           "bytes": 1917
+        },
+        {
+          "path": "tools/abu_price_structure_analyze.yaml",
+          "sha256": "b9bbdffb10049c23121a308b963f895b5642294c2b64cdd1d223371d7d95576f",
+          "bytes": 8404
         }
       ]
     },
     {
       "id": "sesame/abu-seasonality",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-seasonality",
-      "treeDigest": "sha256:7263b716bdbf0f3bf237d650029f8f2b700a2319bf60d40634abec1456d69150",
+      "treeDigest": "sha256:56bd9c5864cbee90f7bc416276ae2c712d9e91d50bc60ec049572e648938169e",
       "files": [
         {
           "path": "LICENSE",
@@ -732,9 +867,9 @@
           "bytes": 4510
         },
         {
-          "path": "capabilities.json",
-          "sha256": "e4296524ca327d53885350acb86cb84a0c88cf9e5e9f7f46df73b7dfd762e4d7",
-          "bytes": 11554
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "924d98c50211e9133cfb0b923e9c9d747530c8b834ff98a4f871dcdce89691e3",
+          "bytes": 3523
         },
         {
           "path": "examples/input.json",
@@ -747,24 +882,29 @@
           "bytes": 532
         },
         {
+          "path": "instructions.md",
+          "sha256": "e5f6e6f06df5a95031c599258081c86df0e09b44b61b53536d871758fa232eab",
+          "bytes": 1226
+        },
+        {
           "path": "package.json",
-          "sha256": "87ee9cd9fe191105d3564e8770720067413955bd3abb246b4892307a155dcadc",
+          "sha256": "755b925ec6e7d91fc7756526b5ac56b2c1a610031d3969cd36bc65315243ea22",
           "bytes": 118
         },
         {
-          "path": "plugin.json",
-          "sha256": "c9a8abd1fcc95947c96fa183d11c7c80ad4015d6777d33ecb2c1a180f6871933",
-          "bytes": 929
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "e5f6e6f06df5a95031c599258081c86df0e09b44b61b53536d871758fa232eab",
-          "bytes": 1226
+          "path": "plugin.yaml",
+          "sha256": "832c0394aeffccf1504538a349d7d86a1587226c50668e16420f623f4da753c8",
+          "bytes": 3474
         },
         {
           "path": "references/method.md",
           "sha256": "1d5713acf6ed63e05b817ff564c0d8dfd737bf11cba201a62dd467181cc54485",
           "bytes": 579
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "bb3f3fe14d7ea9addb83e38fd336175c89c144b5812ff32ddda276707c608ba1",
+          "bytes": 392
         },
         {
           "path": "scripts/baseline.mjs",
@@ -782,17 +922,27 @@
           "bytes": 1888
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "a39e462d8c37486b1694e07f0fca80083ef10c34921d14ad0075bd32e045ae36",
+          "bytes": 2036
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "87b744124da4a3ac3a61770ead9e13998a3e316c164abb12ddcd16ad8f096875",
           "bytes": 1676
+        },
+        {
+          "path": "tools/abu_seasonality_analyze.yaml",
+          "sha256": "1566d442d1634edd53b914d03c3bcd46ad09d7d58cf2d496848c17931d7cb324",
+          "bytes": 7448
         }
       ]
     },
     {
       "id": "sesame/abu-similarity",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "directory": "abu-similarity",
-      "treeDigest": "sha256:2d787532f0af9207a67153e99e9161e7956921ef5d3a5d3d87ab4a3c0fb1092a",
+      "treeDigest": "sha256:8f8b18cd130885e4c9af118de652e6a861619f95d2046d903cb9e707f930b73a",
       "files": [
         {
           "path": "LICENSE",
@@ -810,9 +960,9 @@
           "bytes": 4645
         },
         {
-          "path": "capabilities.json",
-          "sha256": "0f56df0b443c06a9e493c175faea53fabba5a57a714d25f050ffc5b651b2e2df",
-          "bytes": 13486
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "d09700ac93fd5bcf7daec97bee85a7ca8d1223317b2e7eb9e6e477189a120b26",
+          "bytes": 4783
         },
         {
           "path": "examples/input.json",
@@ -825,24 +975,29 @@
           "bytes": 533
         },
         {
+          "path": "instructions.md",
+          "sha256": "1f30ab0db61212a6d60d11f73f84378905e0d0b8bf032461f3d3ecaba4ec6df5",
+          "bytes": 1529
+        },
+        {
           "path": "package.json",
-          "sha256": "9038aacf154c0cf52a6dc9f6cdecd4523d84278d6d0c1915978fce6ee1b09f27",
+          "sha256": "93d26505442dfb19f5cdb39bd461b1f86b0522fd8a57f6cd5401b5175ae6ab87",
           "bytes": 117
         },
         {
-          "path": "plugin.json",
-          "sha256": "46cd815d2b11764b3bf88ba9fa2dd967bfce5424f48936b0f2c6613c33c86894",
-          "bytes": 931
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "1f30ab0db61212a6d60d11f73f84378905e0d0b8bf032461f3d3ecaba4ec6df5",
-          "bytes": 1529
+          "path": "plugin.yaml",
+          "sha256": "7e9d6bdb87618e763c4eae538ee85f17d45383e6fc085812bb344742019c0d19",
+          "bytes": 3657
         },
         {
           "path": "references/method.md",
           "sha256": "d3fa25a12a3ddf8e2f0405eb24e253e02a64d3506d0394e957e7618aa7418883",
           "bytes": 809
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "d567ddf806033e0c93d7618f6fde40a86457eeb787fafb468e9377c92fbb05d1",
+          "bytes": 383
         },
         {
           "path": "scripts/baseline.mjs",
@@ -860,17 +1015,27 @@
           "bytes": 2185
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "bf320fe3f847b91dcf63da494e49d370fc6add0e6e1ae799799e2ac25c1c20af",
+          "bytes": 2015
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "ab06e38617fca9dd975e1782e6aef44f0fa983d1636b69ef714beafa862560ed",
           "bytes": 2187
+        },
+        {
+          "path": "tools/abu_similarity_analyze.yaml",
+          "sha256": "539f758cbfc3a55635b1bf6e593aa3b5f6a412cc01b2be18d7603f483f183f3c",
+          "bytes": 8901
         }
       ]
     },
     {
       "id": "sesame/abu-stock-screening",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-stock-screening",
-      "treeDigest": "sha256:f90b38d84c0e6cba33e1d300651cfce50e78f7fa9c2c388e8c9938bfe4c8aea3",
+      "treeDigest": "sha256:7578636c76d02b97134147871512a9f9c552d549363a926d19fab3b5231871cb",
       "files": [
         {
           "path": "LICENSE",
@@ -888,9 +1053,9 @@
           "bytes": 4420
         },
         {
-          "path": "capabilities.json",
-          "sha256": "b76ba4cf8819fe53f59e4c8c6a3123ab552970654ed6447e8c6d5b1739928ec1",
-          "bytes": 14491
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "2c1ee0f702e63313f8bac6b2826f40d9c8e7e4b8db57b00ef9718a3dfe8657dd",
+          "bytes": 5633
         },
         {
           "path": "examples/input.json",
@@ -903,24 +1068,29 @@
           "bytes": 540
         },
         {
+          "path": "instructions.md",
+          "sha256": "32af291586092125131e383e888efa632e9ce7412227975d8f101aeb522386ea",
+          "bytes": 1250
+        },
+        {
           "path": "package.json",
-          "sha256": "570b5aef1f484c356c834fc893365fc3629527004239ad4305a62fa8f9976f01",
+          "sha256": "f0c3da601a1143e51fbd69c3a94fbb32ffea7862c5d23a034fd12f589d6cde85",
           "bytes": 122
         },
         {
-          "path": "plugin.json",
-          "sha256": "07d8a7021e360d60027cdeb6af5b21d72269c335b8f9fc15f343fc9d3769e79f",
-          "bytes": 933
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "32af291586092125131e383e888efa632e9ce7412227975d8f101aeb522386ea",
-          "bytes": 1250
+          "path": "plugin.yaml",
+          "sha256": "dac64c7ecd72291bbb6ac0c37e3a898cdcc29ab26261310c8c3641fe0bc992c5",
+          "bytes": 3499
         },
         {
           "path": "references/method.md",
           "sha256": "fd288ccbae7f05cc2a7b5690d8d69aaa1acf180d01e6361fedd5c86b3db87ef3",
           "bytes": 881
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "a7299f27cf3f7c598c206a3179e8e7b012161962bfd31e03753db91cb85bef19",
+          "bytes": 404
         },
         {
           "path": "scripts/baseline.mjs",
@@ -938,17 +1108,27 @@
           "bytes": 1973
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "7d01821d9a18efbd9d34dddc3accda5b4fca0be1caa1a37632c1a0e77fbdf226",
+          "bytes": 2120
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "649534c09d8267cfb5dcf028adc508ac627cd8a09261554f6ae451a9b53e1459",
           "bytes": 2650
+        },
+        {
+          "path": "tools/abu_stock_screening_analyze.yaml",
+          "sha256": "d54a53279069a6e1b0fe7aba0248e91399d639e897bb82f64608b4d86fc047c5",
+          "bytes": 9597
         }
       ]
     },
     {
       "id": "sesame/abu-trade-judges",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-trade-judges",
-      "treeDigest": "sha256:dd67a7cd7977fee0564cfd14ad12a51a6135363ae5463083d711fa7d20794173",
+      "treeDigest": "sha256:72f26628334ea363a4f9d377bdb18cd2007834e82e66d9866d896443f6a3956c",
       "files": [
         {
           "path": "LICENSE",
@@ -966,9 +1146,9 @@
           "bytes": 5300
         },
         {
-          "path": "capabilities.json",
-          "sha256": "8b4d5db4c283362cb0e93c391061b6acbe6c1ce6efbf943cd17c8594b8ae3f64",
-          "bytes": 13659
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "25d1ba79dae516722d6b90359aeee3acdcc918bae076642bf02ff7c02ab318f7",
+          "bytes": 5027
         },
         {
           "path": "examples/input.json",
@@ -981,24 +1161,29 @@
           "bytes": 540
         },
         {
+          "path": "instructions.md",
+          "sha256": "a3d260ba4b4e07a24c75ad1850b9a8798cda41a6621ecbca76a0c5a4044147b7",
+          "bytes": 1252
+        },
+        {
           "path": "package.json",
-          "sha256": "946aadc55118d953b8e2dc13343ab3ba7534089f8cc8fecd02b429467a89993e",
+          "sha256": "c87d54b13447cb34b9e4c5596a170f0a63505822c3285a8e39827a6b814899cb",
           "bytes": 119
         },
         {
-          "path": "plugin.json",
-          "sha256": "a08201651ad408157b3ba244d8bdcd9adb4c8cc0baedcd1e317acb6c206ba3b3",
-          "bytes": 924
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "a3d260ba4b4e07a24c75ad1850b9a8798cda41a6621ecbca76a0c5a4044147b7",
-          "bytes": 1252
+          "path": "plugin.yaml",
+          "sha256": "512ba2f9fac49c90fca4365720b2806db14da68dbdb2a1f001e85304263b77d7",
+          "bytes": 3502
         },
         {
           "path": "references/method.md",
           "sha256": "35ce27219d9e78e4002f908d798c77685d99fc9435d08f69bc8f6887bdb46ce2",
           "bytes": 1333
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "834e59f35ff098ebe0df80399bacafedcbdfe75a285da2aed1bc264df44509a9",
+          "bytes": 383
         },
         {
           "path": "scripts/baseline.mjs",
@@ -1016,17 +1201,27 @@
           "bytes": 1940
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "b305e53ec7c2ff32e8e7c61384266ccaf807eab3ecace8846636bd63ecb3a8dd",
+          "bytes": 2057
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "ad29b8e7b2668a95d02c32c09e378ba27783412028a3e517d13054515e0bde96",
           "bytes": 1430
+        },
+        {
+          "path": "tools/abu_trade_judges_analyze.yaml",
+          "sha256": "8335510f2c95ff90125c15c8c84e24e14fb5091936152884a941c6237c14b09c",
+          "bytes": 8971
         }
       ]
     },
     {
       "id": "sesame/abu-trade-metrics",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "directory": "abu-trade-metrics",
-      "treeDigest": "sha256:a899f84595accc8905007719682226382681d2fe8d232119026ca67fbdb706f8",
+      "treeDigest": "sha256:ad68dab706ac583bf9b5ee004cbdfcf396f9d90252d0d31a77abe767d2dcfdb9",
       "files": [
         {
           "path": "AUDIT-PROVENANCE.md",
@@ -1049,9 +1244,9 @@
           "bytes": 7864
         },
         {
-          "path": "capabilities.json",
-          "sha256": "462cdd2054089ca18f3440c81d8944704eb71f3ac715344fe6148ba98324412a",
-          "bytes": 27322
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "c19ef6d3cf6c702887290fad04084322ed3b1114e9ec7d3dd49f3504d503213b",
+          "bytes": 4841
         },
         {
           "path": "examples/audit-input.json",
@@ -1069,19 +1264,19 @@
           "bytes": 939
         },
         {
+          "path": "instructions.md",
+          "sha256": "6d6929231380368f34ab2180817a77bd8210839fa173b53ddccf0a21fb43cbae",
+          "bytes": 2146
+        },
+        {
           "path": "package.json",
-          "sha256": "33774070c2a8c75743183045d12ad60368c7182a46c439ea9d75396ba734e5ce",
+          "sha256": "51cb1476c9d4fa17c930bafb36b6deb9009837e350f3d1cc8782a887f5fbe06e",
           "bytes": 120
         },
         {
-          "path": "plugin.json",
-          "sha256": "3e90d8cf937f5cc4ca6aeadccb509302755f81248b5fb10095f57abb9b97fa40",
-          "bytes": 1015
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "6d6929231380368f34ab2180817a77bd8210839fa173b53ddccf0a21fb43cbae",
-          "bytes": 2146
+          "path": "plugin.yaml",
+          "sha256": "296993c4f0033e0995b9ba09b7fe9c7e89558fff7196542298ce99d8db775015",
+          "bytes": 4338
         },
         {
           "path": "references/audit.md",
@@ -1092,6 +1287,11 @@
           "path": "references/method.md",
           "sha256": "e99e0f6bf9a4b258e134d0cda6478d0cc391e7d3ccd2db3ac583eb3663184baa",
           "bytes": 1757
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "ce554e9e5e0fb9e21ae045c6008809b2d3ba949589b516d4a652b18cf7e1720b",
+          "bytes": 402
         },
         {
           "path": "scripts/audit.mjs",
@@ -1114,6 +1314,11 @@
           "bytes": 2798
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "2459c83c6cec0cc93260bb11c88c15578c99f07f054735d1d8af79b5311fb54b",
+          "bytes": 3160
+        },
+        {
           "path": "tests/audit.test.mjs",
           "sha256": "7a6ab0daccd1f6e9af74804e53a5eb620d0290360f292eec1e6838ddd177053a",
           "bytes": 1947
@@ -1125,21 +1330,31 @@
         },
         {
           "path": "tests/consolidation.test.mjs",
-          "sha256": "0dac44a6f7cce457f83d7e1a523129ecee6c2b4b94636909c9d5dc8c57e6879d",
-          "bytes": 3451
+          "sha256": "d5afd46236b4fe0c2f79bebe7a8b6ceb99e73a714dc8e79e818409e10a1e641a",
+          "bytes": 3547
         },
         {
           "path": "tests/fixtures/audit-golden.json",
           "sha256": "ad086b07bf55ab3784b6ad4d50b8fcb9ca84ef1bedb32cb33779f4e4dcf2a1dd",
           "bytes": 23643
+        },
+        {
+          "path": "tools/abu_trade_metrics_analyze.yaml",
+          "sha256": "c2844d9e9054939200ba8c623df40752e381bfdfc34d52eab579eb4dd9009e02",
+          "bytes": 9028
+        },
+        {
+          "path": "tools/abu_trade_results_audit.yaml",
+          "sha256": "094e53fd71c20f56f1140796f6d7686345305911be125518f576c74ff152e97c",
+          "bytes": 9992
         }
       ]
     },
     {
       "id": "sesame/abu-trend",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-trend",
-      "treeDigest": "sha256:f12a2430b0ae04ae0ee626346c2460f0009b39486ab47eb4824a37728c4db17b",
+      "treeDigest": "sha256:a933998f53563128e9b8c0196ed7a8c440e9ab9ad193227954960bcc3b52bf9b",
       "files": [
         {
           "path": "LICENSE",
@@ -1157,9 +1372,9 @@
           "bytes": 4037
         },
         {
-          "path": "capabilities.json",
-          "sha256": "52ff6bd0e5b6a4aa8ca32662e2168e303333529215e9d87a0a1a78df345328d6",
-          "bytes": 11978
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "7e536dd3f6350cb002c932d9f99a6e052547be584aeb7284f6cd53c5944e1fac",
+          "bytes": 3888
         },
         {
           "path": "examples/input.json",
@@ -1172,24 +1387,29 @@
           "bytes": 520
         },
         {
+          "path": "instructions.md",
+          "sha256": "d67083205234aab87b73606ed646fb72e02c9e954c7b7fc1323ba63db9c3a354",
+          "bytes": 1255
+        },
+        {
           "path": "package.json",
-          "sha256": "ef9144954b785640a4b3c6bcc15a2d6bc8e4d08e7a2b29db86713d4272c891fa",
+          "sha256": "052f9c6449f544403111b8e1283a778cb5fa750c6270a378a5f77c11ba287142",
           "bytes": 112
         },
         {
-          "path": "plugin.json",
-          "sha256": "a9b601eec1600db02d33906f91579fc4545d68873c4121106d60a023ab1cafe3",
-          "bytes": 926
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "d67083205234aab87b73606ed646fb72e02c9e954c7b7fc1323ba63db9c3a354",
-          "bytes": 1255
+          "path": "plugin.yaml",
+          "sha256": "4102f0019071e545d92b8797e76927e731cc8bdc1d609c9f190a8a40917b389a",
+          "bytes": 3431
         },
         {
           "path": "references/method.md",
           "sha256": "f71143e450115bcc19ba53338404062a63941185cb496d365fbe9530839ea0c5",
           "bytes": 735
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "61f435c702ffec91032f251cd2ee3d4f7a7b31692b442b6d12785dad4f1a4506",
+          "bytes": 377
         },
         {
           "path": "scripts/baseline.mjs",
@@ -1207,17 +1427,27 @@
           "bytes": 1943
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "ffeacddc329537135bc87b23075395d6cc80418066c3a19b413bf8b7c2b6ad5d",
+          "bytes": 1910
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "edc12bb6f148b0a9902bbd5f6cca8ec9d16af9b4aea13462f6acfb381770ea40",
           "bytes": 1715
+        },
+        {
+          "path": "tools/abu_trend_analyze.yaml",
+          "sha256": "b80bec0c4a8a14d198a4f238febe797d187b7876f0566f633081a24cfada5307",
+          "bytes": 7721
         }
       ]
     },
     {
       "id": "sesame/abu-trend-pullback",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-trend-pullback",
-      "treeDigest": "sha256:3bb94b3f187d2a78a3f3814648d7f66fc3b7c3d7947af0a9e902db8328818cfa",
+      "treeDigest": "sha256:9ca5c5aaaad8525f3fcce84042498b8e647c0cdccf64667a96329310c5a47d54",
       "files": [
         {
           "path": "LICENSE",
@@ -1235,9 +1465,9 @@
           "bytes": 4688
         },
         {
-          "path": "capabilities.json",
-          "sha256": "c1675a51effd92d3b1b97272189916baf12a149f2707e2e49bf7f667c945861e",
-          "bytes": 12736
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "031fa93826c9094199977478204e51bbf0accf935db2201fbeb3c273fbaef019",
+          "bytes": 4549
         },
         {
           "path": "examples/input.json",
@@ -1250,24 +1480,29 @@
           "bytes": 538
         },
         {
+          "path": "instructions.md",
+          "sha256": "b4df3eed3b1d7f7d46a8d340c3c92a39a3ec8f7f0ef34848559e05e83d1cca9e",
+          "bytes": 1213
+        },
+        {
           "path": "package.json",
-          "sha256": "85382667ab47265812586d68332139a2c1ff88817bf27413f1387e6abf2d0b46",
+          "sha256": "0c14b159a1c736e6ae6db4d6f4e3809bcda79b341c376611226ce3fdb275a02a",
           "bytes": 121
         },
         {
-          "path": "plugin.json",
-          "sha256": "d4b489e3ee5ec80d1a235076a3ba1787936d0c6d6c6e5ad358d4eee47781e177",
-          "bytes": 914
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "b4df3eed3b1d7f7d46a8d340c3c92a39a3ec8f7f0ef34848559e05e83d1cca9e",
-          "bytes": 1213
+          "path": "plugin.yaml",
+          "sha256": "9a4d355894e61bfe20451433303a1e2fc62c19e86239682d0340898dc0e76922",
+          "bytes": 3428
         },
         {
           "path": "references/method.md",
           "sha256": "03c091583ae466794b90598a82ad22ab346092b68f65a3156187b1166aadca6f",
           "bytes": 626
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "eafad8c60b3a649cdead4d24e10309aeb7c164f9eda9533d44cedee4fbe6c704",
+          "bytes": 383
         },
         {
           "path": "scripts/baseline.mjs",
@@ -1285,17 +1520,27 @@
           "bytes": 1887
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "6ad1baeadf4652991923e46cb5022b89873580030e548ab46825890985cad41e",
+          "bytes": 2099
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "8a9e3af066d181e3f5785443cc7b50c7546c53b62c6cd412e492aa449b54dd95",
           "bytes": 1429
+        },
+        {
+          "path": "tools/abu_trend_pullback_analyze.yaml",
+          "sha256": "4df0756b1c8daf1d8b237b9b07c9b64c04a1ea9a11e906831ff99f51658f1537",
+          "bytes": 8225
         }
       ]
     },
     {
       "id": "sesame/abu-volatility",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "abu-volatility",
-      "treeDigest": "sha256:e62f74ef5013d0b583b08c7a28533a391d8f99b661427a8c350db3a1d7235b33",
+      "treeDigest": "sha256:c7e2279e0113e17e490208cd56364c490e883e1079fd8fb6c4e25915b748600c",
       "files": [
         {
           "path": "LICENSE",
@@ -1313,9 +1558,9 @@
           "bytes": 5419
         },
         {
-          "path": "capabilities.json",
-          "sha256": "c993599fc337556c5d6e500c132e067ef8768a7625b7ab5d7a5b67105c7c7bbb",
-          "bytes": 16399
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "9d05fde8e6a9e3e334d91ab4d288f17bf3254dd4f5bf0c8be8aaf1f2f59749b9",
+          "bytes": 5921
         },
         {
           "path": "examples/input.json",
@@ -1328,24 +1573,29 @@
           "bytes": 533
         },
         {
+          "path": "instructions.md",
+          "sha256": "2d83f79ec39d4ff8d18ee4be57f0503197c8beaf25ad7a49cb69c1980166a9fd",
+          "bytes": 2693
+        },
+        {
           "path": "package.json",
-          "sha256": "0f8f00d0e60e8b0462f5a9a34302e2501ef96795fb4a9b00c2c65e97132a3e7b",
+          "sha256": "f6ee82b47a69dba4bf4890ff0ce345a2d131ef44273c1b149bc38024c91f6720",
           "bytes": 117
         },
         {
-          "path": "plugin.json",
-          "sha256": "f26b7e2dea38083e1111cc1aa35cd4eaeedc1ee01412c071ddb31cefe08a8721",
-          "bytes": 934
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "2d83f79ec39d4ff8d18ee4be57f0503197c8beaf25ad7a49cb69c1980166a9fd",
-          "bytes": 2693
+          "path": "plugin.yaml",
+          "sha256": "d2cae382632d68ca70db960ccd55ef676baecae8622df7a793d9ca61452affdf",
+          "bytes": 3480
         },
         {
           "path": "references/method.md",
           "sha256": "590d5cf5dda0afff901f5d5cb61afbb540cd17a697d164150fc0ebf14ee9a7c7",
           "bytes": 2257
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "544beba100b8b806e240404bc84a6022005027ea587b6c2378dee292440f44dc",
+          "bytes": 392
         },
         {
           "path": "scripts/baseline.mjs",
@@ -1363,17 +1613,27 @@
           "bytes": 3378
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "94a7d90cbaf9b337db74fdec8c1f68565d8077459a03fe5b5ba958f40ce769e7",
+          "bytes": 2015
+        },
+        {
           "path": "tests/baseline.test.mjs",
           "sha256": "3ad51614c5c9fefac7117bbf28985195642a2cd3e7547b551861c1894ccaeffd",
           "bytes": 1877
+        },
+        {
+          "path": "tools/abu_volatility_analyze.yaml",
+          "sha256": "8f0e22006eaf85444875a750ccc35bfd6482e7404540354091b77f496a9e48f4",
+          "bytes": 11377
         }
       ]
     },
     {
       "id": "sesame/akshare",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "akshare",
-      "treeDigest": "sha256:767fb62bbcaf0ae5479a6458d4e5efa2e00fd9eaeec4e31444681beb7877380e",
+      "treeDigest": "sha256:28e502886883d935c744d50455b77d8b96dbce3f14b5973abd98e775955b9700",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -1401,9 +1661,9 @@
           "bytes": 3501
         },
         {
-          "path": "capabilities.json",
-          "sha256": "58f29a47b3c5edb3fa4300f9a2b52b321591e791c12bb08006cca6b01d1b483a",
-          "bytes": 46665
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "a0e39b9379f8291556369b0c8e37c7c0aa557fe96e6d3b5f8566687b73c7afbf",
+          "bytes": 686
         },
         {
           "path": "index.js",
@@ -1411,24 +1671,29 @@
           "bytes": 2916
         },
         {
+          "path": "instructions.md",
+          "sha256": "f32d1af4c3bdd12c425cdc4e80dbd2a877905cb8f7a2b3b2af2189c2a79e8f3b",
+          "bytes": 2096
+        },
+        {
           "path": "package.json",
-          "sha256": "f1ded936a9a8c48f0df0999a275ac82405257a2504ee4db546d05e7ebd12aab7",
+          "sha256": "312d688fb6a5658fe3aa22ba2d5955da759d9d064df560684495fb2d87076ef7",
           "bytes": 120
         },
         {
-          "path": "plugin.json",
-          "sha256": "46e65d662c39d4d93a481111897449a7a1a2c1e1a339b5ff87f3f05ef438abfa",
-          "bytes": 578
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "9633ed18bec79cb1eb04a43be9ec223e925ddf8bbd3897708b6a27e5934d36f7",
-          "bytes": 2882
+          "path": "plugin.yaml",
+          "sha256": "8c0bed55e8b3fcde63354e03d7a172577ef4264a1face708b97626a9e64567a8",
+          "bytes": 31466
         },
         {
           "path": "provider.js",
           "sha256": "1cb38f0ef3ac603934263d07769e6cc38d3a3a11d057c5089c3cbcaa547939c8",
           "bytes": 21912
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "805c8065c2aaaeeb004ad1a9d7ac77408886b22c1c3f53e96a398bfd4953e468",
+          "bytes": 413
         },
         {
           "path": "skills/akshare-research/SKILL.md",
@@ -1446,19 +1711,24 @@
           "bytes": 2024
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "f7fc76744120e44f9664f07550347d0bab6240e414f351a16d2dad19b11bc099",
+          "bytes": 3957
+        },
+        {
           "path": "tests/bridge.test.py",
           "sha256": "5fb7791024d56ece4be601120c4c38a042b4487f77a032a611dd4641d09d0c2e",
           "bytes": 1850
         },
         {
           "path": "tests/catalog-contract.test.js",
-          "sha256": "e057c62b10990ebf96c7f7a0f5f295de6676cd69016a152900418cbe0ebe2de2",
-          "bytes": 827
+          "sha256": "de4dd26bacdb53ea4c74d6ca1d025fea4ced02926275c4e78aa9d5380cbdc9f8",
+          "bytes": 909
         },
         {
           "path": "tests/environment.test.js",
-          "sha256": "93803c1217b873e1975bbacc67ecf11460cd247370a54e03975eebe92b1b3fa9",
-          "bytes": 6487
+          "sha256": "d81a6736b8d5e523791d27c2c1ca26397448a1d327227e2ac922fb29d1264d39",
+          "bytes": 6569
         },
         {
           "path": "tests/live.mjs",
@@ -1469,6 +1739,36 @@
           "path": "tests/provider.test.js",
           "sha256": "1fd9431418bedfe89b638c3c2b70225875a9ab4f50928ecb2c483ca7fdef3d2f",
           "bytes": 11762
+        },
+        {
+          "path": "tools/akshare_catalog.yaml",
+          "sha256": "e3a06717b7df6560a124ba737eeec6feca6373cb9b343d7abe602c653b7eb080",
+          "bytes": 1159
+        },
+        {
+          "path": "tools/akshare_discover.yaml",
+          "sha256": "411c624a0ff9af24323b58cb280f029ddfad1769c290c9810af0aaeb3bba516b",
+          "bytes": 1720
+        },
+        {
+          "path": "tools/akshare_prepare.yaml",
+          "sha256": "47a39a699ea9e6b1c159379e14e3597d9bf4434f57fb242073ec9bf8c9d91a56",
+          "bytes": 1805
+        },
+        {
+          "path": "tools/akshare_query.yaml",
+          "sha256": "2b5d1bc4fe5ca68ac3956be54eb53eef6610443040d3b4683679bc8b74199f66",
+          "bytes": 2648
+        },
+        {
+          "path": "tools/akshare_quote.yaml",
+          "sha256": "87aa9b150fd865dd15b686f9a59ac045bf4fcb7edb490dea09de76d99fe3c25c",
+          "bytes": 1709
+        },
+        {
+          "path": "tools/akshare_status.yaml",
+          "sha256": "14ce674678b3284cd17990cf7f4c54ec1dd63cbf2e2647289b762fadf06ce250",
+          "bytes": 1259
         },
         {
           "path": "worker-call.js",
@@ -1484,9 +1784,9 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.2",
+      "version": "3.1.3",
       "directory": "auto-factor-mining",
-      "treeDigest": "sha256:b8956892a0fd66828b3d3e93a0b74381408bfbc281d2d3df9e568b7b939d94b5",
+      "treeDigest": "sha256:ba26f31adbe51f9ca32a279828a437275878c33130e90ba6624b4daecb1ae72d",
       "files": [
         {
           "path": "LICENSE",
@@ -1505,7 +1805,7 @@
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "5f9aa2f191d6cb7aa0cc965caa75d1a3ed08e55a213035fe5efc8e4942121898",
+          "sha256": "60bb221d2eaf47f94bc6ef28dc6f2c7c3cb2146e3b03bdf07c4741ba2dd28a31",
           "bytes": 5491
         },
         {
@@ -1517,11 +1817,6 @@
           "path": "budgets.js",
           "sha256": "20f3314e4d671750df4344e9b38f7b6d759f6a05b0abb0f080f43fc8ce0150fc",
           "bytes": 2707
-        },
-        {
-          "path": "capabilities.json",
-          "sha256": "22341e742d299f8f0ea2e638454c732959c8f4720c4536788b1bcb1a08b40572",
-          "bytes": 171348
         },
         {
           "path": "compute.js",
@@ -1537,6 +1832,11 @@
           "path": "environment.js",
           "sha256": "be661b00f5e026d7eae5af366560b2463bb0bf98d66f64be0b4418a133743afc",
           "bytes": 6872
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "38733d510a16318c9df76c9bbe9d405eb92958cd31052628445db2e3f3524386",
+          "bytes": 11271
         },
         {
           "path": "evaluate.js",
@@ -1559,6 +1859,11 @@
           "bytes": 5076
         },
         {
+          "path": "instructions.md",
+          "sha256": "f0a424b8116cf2b518d6e93ed0cf8b1ac9dc0520b81fc088287971ff3623f9a6",
+          "bytes": 3282
+        },
+        {
           "path": "journal.js",
           "sha256": "4f04c3ee3dff20fda2b0fe9ed122aeb8e86967663cc8b5edabe743c825a019b0",
           "bytes": 6620
@@ -1575,18 +1880,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "0fa9e8e2ce0b8c39bf28b836c665946876c03495e53eeea1f7d1ff8ae91d372f",
+          "sha256": "8f1d9d22dc486908e93dbce274666efa04be46aa53da31c9e19da68af6f9bf80",
           "bytes": 283
         },
         {
-          "path": "plugin.json",
-          "sha256": "f232a1dc8724ffd68c74ca46519edbc0b42490b6ef8e97d6e14b502736ee11a3",
-          "bytes": 717
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "e0380deeed5d6adc528a0c21f78c39d3ff69838bd6b3fb2ae3e1856897cde69c",
-          "bytes": 2739
+          "path": "plugin.yaml",
+          "sha256": "63aa9f6f1e962587f8485b2b01a245ed9279196f20708490eb4f347b865fe499",
+          "bytes": 16228
         },
         {
           "path": "python/compute.py",
@@ -1635,8 +1935,8 @@
         },
         {
           "path": "references/contracts.md",
-          "sha256": "483fe158d199d17b166a09f07475dc703fb8072430c8f5928cbe26fff5a5b47f",
-          "bytes": 8628
+          "sha256": "9d00537a8c4580d45a0616dc2438c553776e2c6564dbe35356fb56bf6b3a5051",
+          "bytes": 8622
         },
         {
           "path": "references/evaluation.md",
@@ -1659,9 +1959,9 @@
           "bytes": 7998
         },
         {
-          "path": "scripts/generate-contracts.mjs",
-          "sha256": "a85251ec07be735f568e5832c63f2585edeec24a47af3e21ecd242592c64993a",
-          "bytes": 20046
+          "path": "requirements.yaml",
+          "sha256": "c6353a3f03429f153afc702662a21270485925ba9086f380164b2b29e712e546",
+          "bytes": 522
         },
         {
           "path": "scripts/test.mjs",
@@ -1682,6 +1982,11 @@
           "path": "skills/auto-factor-mining/SKILL.md",
           "sha256": "5cb98bfc9b8fc875b13606de296baf8c4b5e1d406430c51b2810705f65033a66",
           "bytes": 3291
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "bf50af97f846df9e8580a81e6f294b80a442ba71a83852e5d82fb28d5356d15b",
+          "bytes": 6988
         },
         {
           "path": "tests/artifacts.test.js",
@@ -1770,8 +2075,8 @@
         },
         {
           "path": "tests/knowledge.test.js",
-          "sha256": "01cddb82f06a3b01b3fbea26f5aec69ef21ac5ee4434e3ad821421acdb3da392",
-          "bytes": 2749
+          "sha256": "f3041f3768b8d50a5caeba1575de0e8dc2f678e84255f284a3e1fab7aa48ed81",
+          "bytes": 2601
         },
         {
           "path": "tests/library.test.js",
@@ -1780,13 +2085,13 @@
         },
         {
           "path": "tests/native-sdk-lifecycle.test.js",
-          "sha256": "dfc5e09c911c99facf2b0d529cecca177aa6169ad2061d3ae1097e67586a96a2",
-          "bytes": 12162
+          "sha256": "0149a4187a86717babaf742dc2d56d8ee2afe8827356372cef9fc2806969c59c",
+          "bytes": 12407
         },
         {
           "path": "tests/public-schema.test.js",
-          "sha256": "f1967ed6d10f3d9cd88c413dc2b21f3dfec25bc58f3c0db7a4c233f4bc2faef2",
-          "bytes": 9932
+          "sha256": "8a226e6bfa2ce89f5794f3286a59438c60ba387c0d97c24bba07aa2ea177b3c2",
+          "bytes": 9989
         },
         {
           "path": "tests/search-session.test.js",
@@ -1812,14 +2117,54 @@
           "path": "tests/worker-integration.test.js",
           "sha256": "65aeee0a154de9cd3ac665f74d5a6866226d354f6026132734141202f948d383",
           "bytes": 6248
+        },
+        {
+          "path": "tools/factor_compute.yaml",
+          "sha256": "b18019641c9c6c99adbe00318fbff0f4065b467077713edd4bbdcafdf9d7b526",
+          "bytes": 13424
+        },
+        {
+          "path": "tools/factor_environment.yaml",
+          "sha256": "d95304c96df6bcdc442df94deac1b21910b599b9e2b9f9f39dd7560cbb5547bc",
+          "bytes": 2099
+        },
+        {
+          "path": "tools/factor_evaluate.yaml",
+          "sha256": "bce0865197d803f2170478dde2ea7908e29ae7c44cebf209c26e5a04d335ed5b",
+          "bytes": 22871
+        },
+        {
+          "path": "tools/factor_library.yaml",
+          "sha256": "086cb0cf1bd8092dda6facfc001aa31bad370e6d4267056bb838cbb7fcfffdf5",
+          "bytes": 22877
+        },
+        {
+          "path": "tools/factor_pool.yaml",
+          "sha256": "6c11088f27dec0300ed90301ac446c461738b65f04e4741b2f7541e049064ec6",
+          "bytes": 6170
+        },
+        {
+          "path": "tools/factor_prepare.yaml",
+          "sha256": "06563bbc5a8e337027d059b1d295006db7b44afb8af595005613f34759c20dfb",
+          "bytes": 10117
+        },
+        {
+          "path": "tools/factor_search.yaml",
+          "sha256": "740bc3be4cee75f3481d1619639e9ef59002a96adb4f032c690b6a3dbf365cf8",
+          "bytes": 20824
+        },
+        {
+          "path": "workflows/factor.development.yaml",
+          "sha256": "755294c6be5adfd32c55d5f1f91928a56e4e0bbcfb1b101bdac39543676c60a0",
+          "bytes": 2494
         }
       ]
     },
     {
       "id": "sesame/backtrader",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "directory": "backtrader",
-      "treeDigest": "sha256:0518d49d37a324bd66a6ee8bf723a33a08d3ef6637c0532b8b4252f130975945",
+      "treeDigest": "sha256:fb6648f00c34547e506668b71fba66ee8b6565c3933ac1b2abf03d0399076ce0",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -1847,14 +2192,14 @@
           "bytes": 6858
         },
         {
-          "path": "capabilities.json",
-          "sha256": "c65a4bf8592e44b7bade385333638e50aa21af1941e5a0c4852b57df3bb69e98",
-          "bytes": 23666
-        },
-        {
           "path": "environment.js",
           "sha256": "e0a0e773ef485e53ac96310384d4cafc6cad8f4db71de0a781736ccb2cff0b6d",
           "bytes": 7942
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "34f3ec88588141f45054c194584aba81f2fe25b8dba3ae8b69b1db3ec9004e7f",
+          "bytes": 3545
         },
         {
           "path": "execution.js",
@@ -1877,29 +2222,34 @@
           "bytes": 1073
         },
         {
+          "path": "instructions.md",
+          "sha256": "1f18301e8fac0e3fc4e038d3bbcd64ed26f858ea99884abbf7fb4cb5dfed0d04",
+          "bytes": 1645
+        },
+        {
           "path": "operation.js",
           "sha256": "4d000b3823fd095efb56798f4dddac998732558410106f33e070c817e8c39c0a",
           "bytes": 1085
         },
         {
           "path": "package.json",
-          "sha256": "5ca98667c56f41fb9ac695d0f752d3912a29fc279b92d4381a1b9caf38ebc134",
+          "sha256": "d0e1c32c1d312eb66dc2d421743bc049e721992fa954433dae60571758bbec0e",
           "bytes": 136
         },
         {
-          "path": "plugin.json",
-          "sha256": "5840ef3c87ef8ac1b6bd407c05d835f4c986cf57d4056d4e1a4fd98381271dc8",
-          "bytes": 860
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "5ef0d0859ff49bba0c4f806015eb95c35952dd26c6ae014f25e7841b84c53c81",
-          "bytes": 2699
+          "path": "plugin.yaml",
+          "sha256": "9996b7a9ec27a1784bd373859536ae8322f373a3ff4f1c73da7786468e094dbc",
+          "bytes": 5172
         },
         {
           "path": "records.js",
           "sha256": "a019a6d1255f95911d6e61a83221dcea38d55ddcdb15c0f3cedd37b377f0d8fb",
           "bytes": 2866
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "44085729a0ed06871834770db2624ff409c04ab9500b1169b3ef3f861627d400",
+          "bytes": 470
         },
         {
           "path": "resource-files.js",
@@ -1920,14 +2270,44 @@
           "path": "skills/backtrader-fixed-research/SKILL.md",
           "sha256": "9ba5e14f4d1c6dd79677725ddcbe881b4620fca22d4b426b285d97dbc1370a2b",
           "bytes": 3631
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "fe4d368c652f9731324da2638b706637e05526410acc5abcf70a005902595f12",
+          "bytes": 3561
+        },
+        {
+          "path": "tools/backtrader_backtest.yaml",
+          "sha256": "ad95187bab8f0c74842e55e72a19ff8a3f9d0fd0c25860908f40c688ec71a99c",
+          "bytes": 5294
+        },
+        {
+          "path": "tools/backtrader_environment.yaml",
+          "sha256": "f36d0607a0320f3b704c469581692437876e550da28aedada17a3a844ac84cd8",
+          "bytes": 2119
+        },
+        {
+          "path": "tools/backtrader_operation.yaml",
+          "sha256": "1c07ac66012c2151d307b1ff39562b3dcf8b5f61994b688653d727a9b6e44441",
+          "bytes": 1043
+        },
+        {
+          "path": "tools/backtrader_optimize.yaml",
+          "sha256": "990dbf28f17e2422196cc7c9d73faeca84d3b6ae7316bcd5eb5127713b737a73",
+          "bytes": 4643
+        },
+        {
+          "path": "tools/backtrader_result.yaml",
+          "sha256": "7814d096c6ee20ea324e5a656cfab813e94afbe10333f60f94f7993edff8f8ea",
+          "bytes": 1695
         }
       ]
     },
     {
       "id": "sesame/behavioral-finance",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "behavioral-finance",
-      "treeDigest": "sha256:009295112ab6ec998cdce4ca21b3c619fab7bd81604b2540684e97753f9cfd6a",
+      "treeDigest": "sha256:8d73d479553fb8bfe12b6a7443f430ac840d93aa0142d34af750075b5e652c33",
       "files": [
         {
           "path": "LICENSE",
@@ -1941,13 +2321,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "88c85f0ce86ef6412f8bf4091265d5a203cad3ac59d5f2f9d9fa73ff1c9bafee",
-          "bytes": 1916
+          "sha256": "0decbff83de413cb28161e9996566c07c7fdfe1a077049752a04ee58bdd145e6",
+          "bytes": 1910
         },
         {
-          "path": "capabilities.json",
-          "sha256": "2047b60de7259414360d0ed0d70c430c7da76a2b3db883dcc91ffd7947d17fb3",
-          "bytes": 2305
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "e3954571c978ae90c5be8836e285dd195cc4e544c3deb3e662e677ec8c86c242",
+          "bytes": 470
         },
         {
           "path": "examples/case.json",
@@ -1965,19 +2345,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "945a430155401607ba7526367b6d4beae75a982688fef7e405f7debbae572691",
+          "bytes": 1078
+        },
+        {
           "path": "package.json",
-          "sha256": "03b1fb755e0984da7e02edc6b3c7d7386739750b069bd86b0258966ffacf1b20",
+          "sha256": "07c80cdbe4c0fd3848ed3113e754d82dc3e322891a21906e4e16f3941fc1cb46",
           "bytes": 113
         },
         {
-          "path": "plugin.json",
-          "sha256": "37c419eff5befc73a80bd5eccfc7bcac597de26d94457aa82c342f488af1da26",
-          "bytes": 944
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "945a430155401607ba7526367b6d4beae75a982688fef7e405f7debbae572691",
-          "bytes": 1078
+          "path": "plugin.yaml",
+          "sha256": "767127c4ee35872ea6b3908bbcf971a2263d3daa5e10ac8b39426427d23a7173",
+          "bytes": 3486
         },
         {
           "path": "references/evidence.md",
@@ -1990,17 +2370,27 @@
           "bytes": 1620
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "a554a1e4f77f7aa742b3185d7884c1716129f7d4d29f4e6fcbb81d0837b84a79",
+          "bytes": 424
+        },
+        {
           "path": "skills/behavioral-finance/SKILL.md",
           "sha256": "dfa73259f56f61371b2af618ca0cdcbad57793cee6df6f6bd3291b2dbbbd2c54",
           "bytes": 3324
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "5877f598e581e0216d1285c3c1a2319781582f596ad1ad1390c1ccf643ffc00a",
+          "bytes": 1523
         }
       ]
     },
     {
       "id": "sesame/binance",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "directory": "binance",
-      "treeDigest": "sha256:ab2dfcb52ffe480b4c1de4a441467784c9818463aaf54fdcb37b98f49285b5f2",
+      "treeDigest": "sha256:273b7380961d0e6dd136405146a1c84c309283e3f9a04a97c0fc53b20e84b00d",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -2028,9 +2418,9 @@
           "bytes": 6901
         },
         {
-          "path": "capabilities.json",
-          "sha256": "5a8d118a6d7a7b13bcf80327e3bb504646701ac0959ac98678b6ba650235d212",
-          "bytes": 104794
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "a2d3b5927316c0b0f208c7287308c73c89eb1a94e1ca3140320db47e28768c58",
+          "bytes": 761
         },
         {
           "path": "index.js",
@@ -2038,19 +2428,24 @@
           "bytes": 3023
         },
         {
+          "path": "instructions.md",
+          "sha256": "0ebfb2da6dc6354b35f55984d3b6b988ac0ef2d1e6cc4a231f2dd4a2cbf7d298",
+          "bytes": 3089
+        },
+        {
           "path": "package.json",
-          "sha256": "302b5fdfddd38411c011bbb402f5c42941205ab9debb4c92115d106864c1f08b",
+          "sha256": "ab1b2bca4f09e4e706b25d457e1c384d98fce4e8f7186fe803a220b6573daff5",
           "bytes": 120
         },
         {
-          "path": "plugin.json",
-          "sha256": "79511bc85e4038590c01d87f24d184e6cea34da399f27e90eae74639a6fc820e",
-          "bytes": 921
+          "path": "plugin.yaml",
+          "sha256": "0e53b72ed50a162834d3898ffe98cd5e89012e1d26de3b8869214ccfed49f8ec",
+          "bytes": 51758
         },
         {
-          "path": "prompt.md",
-          "sha256": "2e3c52f85b0be60c339827e7e9388e803d001d42c56af598c715f07b41039268",
-          "bytes": 2765
+          "path": "requirements.yaml",
+          "sha256": "1fe1109e45057877145670cbfb895f313f92d61fa2290a606786e6eec24d7963",
+          "bytes": 704
         },
         {
           "path": "skills/binance-spot/SKILL.md",
@@ -2106,14 +2501,89 @@
           "path": "src/valuation.js",
           "sha256": "42ad54661ba81e853ada6f844b7345777b277e5e52727f18eec5385338b7bf62",
           "bytes": 4351
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "2320bb2230f5a8d48914e1bf31214cd0fcc7af7f99e206b4dcca38e9e309793b",
+          "bytes": 8181
+        },
+        {
+          "path": "tools/binance_account.yaml",
+          "sha256": "bf056de48edd865920ec6818099b5a9f761d92f9a61621ae6d9004c3aa2bb80a",
+          "bytes": 1807
+        },
+        {
+          "path": "tools/binance_amend.yaml",
+          "sha256": "175417412f4c7673a747baf458795c9f6b6ee286de3c83a0716e65db5db01ea9",
+          "bytes": 2290
+        },
+        {
+          "path": "tools/binance_cancel.yaml",
+          "sha256": "e523ffb2f3dbc9928304bc33cbae3968cdc3767b413c05e7d26495f25f968d98",
+          "bytes": 2165
+        },
+        {
+          "path": "tools/binance_catalog.yaml",
+          "sha256": "82c94da451094197a2ddf7f7e89d61eedeea441d6f7c41cd71b0ffff549d8cb4",
+          "bytes": 1255
+        },
+        {
+          "path": "tools/binance_execution_cancel.yaml",
+          "sha256": "8be0c45abede8aeab22ea8b57a870457252da51c7545e6b9787ba6823d12b025",
+          "bytes": 2828
+        },
+        {
+          "path": "tools/binance_execution_command.yaml",
+          "sha256": "d2eaa6079c649aeba9a9269f1c56a59452ae66ec82f8622628b444b28bdd118b",
+          "bytes": 2735
+        },
+        {
+          "path": "tools/binance_execution_identity.yaml",
+          "sha256": "eb1869380720b1072ee6940a4f8cfa6413db790cf82800b02763d7c229d6f412",
+          "bytes": 1910
+        },
+        {
+          "path": "tools/binance_execution_prepare.yaml",
+          "sha256": "064765443803ee1e17bbea9134be46b557290fb8fb2148f2c63fd1ad03b82292",
+          "bytes": 2600
+        },
+        {
+          "path": "tools/binance_execution_recover.yaml",
+          "sha256": "273b95751d2400222da6d86a9c30ea195bfad12a15cf04d946c0d9259ab0dc2f",
+          "bytes": 3177
+        },
+        {
+          "path": "tools/binance_execution_snapshot.yaml",
+          "sha256": "3d2e5733e96a330865190a095eaf8c8a468b130a1964c8e59682b5257967eb2b",
+          "bytes": 1978
+        },
+        {
+          "path": "tools/binance_execution_submit.yaml",
+          "sha256": "c530712b46d0eccd7bd5d7e179d12a923bed6e07e5b6f2edf6a3cedf5a55bc3e",
+          "bytes": 3955
+        },
+        {
+          "path": "tools/binance_order.yaml",
+          "sha256": "180cacf9940aca61e95c9235b67dce258efcf10dab18728f08548b6ea68148cd",
+          "bytes": 3358
+        },
+        {
+          "path": "tools/binance_order_status.yaml",
+          "sha256": "d2c4c6a7839668a878b3a7abeee9def7baa0eea2da337e6c4f6dd90103da4eaa",
+          "bytes": 2070
+        },
+        {
+          "path": "tools/binance_order_test.yaml",
+          "sha256": "8c2d5559ab8149ecabec1cc389b2a236ca33409d1458f69e23806ff3913c97d7",
+          "bytes": 2835
         }
       ]
     },
     {
       "id": "sesame/ccxt",
-      "version": "2.0.9",
+      "version": "2.0.10",
       "directory": "ccxt",
-      "treeDigest": "sha256:1346f0225919893542da2f06f90553db09c9f775cbebb92b92353f9c91f7ae5e",
+      "treeDigest": "sha256:aa8f376a5685581b8f2340037db0c62542175ce954d99c0e29de2653fd6712ca",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -2146,11 +2616,6 @@
           "bytes": 8222
         },
         {
-          "path": "capabilities.json",
-          "sha256": "41f5b3222295a085d75f136bb2ec42e2c91db5ab5b004f68c1a58b4d300bc17b",
-          "bytes": 37643
-        },
-        {
           "path": "connection.js",
           "sha256": "57c7eb47aaff2dac8e21d83300b60c6b2289e6257c1864e9c09197d571b907c8",
           "bytes": 5504
@@ -2159,6 +2624,11 @@
           "path": "environment.js",
           "sha256": "d6db67f6fdcf53c399d155f68173d7c951bd3d15e5a7667b4e84e4f3361ea6c6",
           "bytes": 8242
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "bd5d04a6da5befb7f5088fc4c8120ea8d993e210450121e1e79232159de0356a",
+          "bytes": 677
         },
         {
           "path": "history.js",
@@ -2171,24 +2641,24 @@
           "bytes": 852
         },
         {
+          "path": "instructions.md",
+          "sha256": "6b68e6e6497485c59f60e9f62fd8f8ff4b71a457ef9e88d9fdef3e29f9712e77",
+          "bytes": 2514
+        },
+        {
           "path": "instruments.js",
           "sha256": "5d0c5f8c257d45829d7e92af89d73ce9571f3e6734fd6e7aa8b8bbb9ad545ecc",
           "bytes": 3289
         },
         {
           "path": "package.json",
-          "sha256": "587c243c18256634baf7284542c147e6bc089f00281f8e07e572a907b032ab43",
-          "bytes": 117
+          "sha256": "595fda2579949ad41461d2781bf6955470832f2efd34cfcbaed961120a90183e",
+          "bytes": 118
         },
         {
-          "path": "plugin.json",
-          "sha256": "a23b045aca519f849ea275b1342f4c27ada7bffa5e67552c78c952ca71b3a315",
-          "bytes": 814
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "c6519bc59c27983b883e517c6bcde24fe99d7a0882a82be8bc00027379eb33cf",
-          "bytes": 3300
+          "path": "plugin.yaml",
+          "sha256": "35a6874942193d0831a60ec2f5c380cea869edc1f0788462607844feddc77f39",
+          "bytes": 29190
         },
         {
           "path": "provider.js",
@@ -2199,6 +2669,11 @@
           "path": "records.js",
           "sha256": "a006b6679aff16a652ab2230794b49fdd0201205bcf9d3974005bd66251b3833",
           "bytes": 3340
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "e6b01fb53599383b2557467b8e2c71d3b9573d5fa3155080aa3b16d64dec83ab",
+          "bytes": 324
         },
         {
           "path": "skills/ccxt-public-markets/SKILL.md",
@@ -2221,14 +2696,29 @@
           "bytes": 5947
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "cb503cf8004c283ff380dcca59aa77c1a66c5b2d9359abca24a7e37a59040c38",
+          "bytes": 1967
+        },
+        {
           "path": "tests/environment.test.js",
           "sha256": "69877cfa128ac72f822466421ac75858d93084f227b022b775e50e0c61e0d30b",
           "bytes": 1892
         },
         {
           "path": "tests/source-contract.test.js",
-          "sha256": "4a48c54392d6b3674555a92ed7ffce1c341b57f2e7bfb89c965ae21472ec50d6",
-          "bytes": 886
+          "sha256": "6562f3a28e25d417a11c096267a15abf6db31f1674f7147918118dd280726ffb",
+          "bytes": 968
+        },
+        {
+          "path": "tools/ccxt_catalog.yaml",
+          "sha256": "37035d0fcb15f54f821cc9e7aa974cbd8052ab524f680f6eb339464ed1af1d27",
+          "bytes": 2505
+        },
+        {
+          "path": "tools/ccxt_environment.yaml",
+          "sha256": "79bd5888ad591d2b40ea7abec65bc0d8d8f229b7f1cfea222a8eeae9642c6afd",
+          "bytes": 2193
         },
         {
           "path": "worker-call.js",
@@ -2244,9 +2734,9 @@
     },
     {
       "id": "sesame/deep-reasoning",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "directory": "deep-reasoning",
-      "treeDigest": "sha256:78acf537ded2432d9522d15410555b66e343151203c433117486f5386cbafda9",
+      "treeDigest": "sha256:af9b52a0d08cc7f73851bb5f4364354aad575643a8269ae76ebdb0f4eb705cc5",
       "files": [
         {
           "path": "LICENSE",
@@ -2264,9 +2754,9 @@
           "bytes": 1893
         },
         {
-          "path": "capabilities.json",
-          "sha256": "e9a665ef1f70d826bcbeb5a260c51307e55ba6c776e0e9017411df6640ca88d2",
-          "bytes": 2760
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "eb2feb3b2eb89f0d9edeb84aee566908574103636371367233b78001b4dbcf17",
+          "bytes": 448
         },
         {
           "path": "examples/evidence.json",
@@ -2289,19 +2779,19 @@
           "bytes": 124
         },
         {
+          "path": "instructions.md",
+          "sha256": "f4cdd4a87895f41e72c92c0481f8fb6e2c7fc18952a271628ab17ed4de7b7883",
+          "bytes": 962
+        },
+        {
           "path": "package.json",
-          "sha256": "d197c514924c0d5c9bb3a555e908edbb5e3aef291b8bca8079fb4ba9dea8bea1",
+          "sha256": "b13ff2c4f0a5996d2f6e15c20c9384851f720f231d415afba51e6611f0a51230",
           "bytes": 127
         },
         {
-          "path": "plugin.json",
-          "sha256": "39b15ae1e5e73313321de627054a2ba7eb4e6d2a1a5be59d6c3a309ae64096e5",
-          "bytes": 1075
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "f4cdd4a87895f41e72c92c0481f8fb6e2c7fc18952a271628ab17ed4de7b7883",
-          "bytes": 962
+          "path": "plugin.yaml",
+          "sha256": "fad1b6105b6292bf7b60fc2808477ceb643f88076bf8b894a5e94daba8a6eb48",
+          "bytes": 4222
         },
         {
           "path": "references/contradictions.md",
@@ -2334,17 +2824,27 @@
           "bytes": 3686
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "33bc4911e42b4d5e8c5a8274d59b8cb66ed41a1682d16eb1a43e384a3b073fe6",
+          "bytes": 355
+        },
+        {
           "path": "skills/deep-reasoning/SKILL.md",
           "sha256": "e0f57472cf1e7e8e4f7d89bc08f963a4265f246fd1f14bf6e6b35e3a699ef13e",
           "bytes": 3979
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "8b37677120944fbc6441e25b5f04cf0a6ce4d484b25faf7f5dedb12eabb9dc4e",
+          "bytes": 2153
         }
       ]
     },
     {
       "id": "sesame/dow-theory",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "dow-theory",
-      "treeDigest": "sha256:553f54e6b63d3e3035d2e54deef57a797d04df9d36e5516a97caa96540874839",
+      "treeDigest": "sha256:412260089fdabd417f139de73836f53d64749ce43020ad7b67410084f7b43c94",
       "files": [
         {
           "path": "LICENSE",
@@ -2358,13 +2858,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "100e5f1b2dec2bed049189fc3b6de8d194f88761e9c99e264599f5b81f41e5a0",
-          "bytes": 1888
+          "sha256": "35a3ff1bfa3258360ddfe848474dba925c46f031b7749fd99c85366c13a1b7f6",
+          "bytes": 1882
         },
         {
-          "path": "capabilities.json",
-          "sha256": "8d6962a2be83a8d1de6df745eac090b8e256a178cc6814fe7a37c0e1f7746196",
-          "bytes": 2271
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "657f6b7d299d3fdc463ea7ad9bf19cd48dbd1c5e6684904aff30b85488aba2a7",
+          "bytes": 443
         },
         {
           "path": "examples/case.json",
@@ -2382,19 +2882,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "64cd6380ecfd857dd19163912c86cfe9ae01cb0a0122478f71799fb2c4740495",
+          "bytes": 1034
+        },
+        {
           "path": "package.json",
-          "sha256": "de31e9710120728de04424f335d3b98d7d12aab88e8503c3258ec47850b532b0",
+          "sha256": "a4b3d585c3f38178c2ab9a0848b3b670fbcf4564423648db92d94219661b53f4",
           "bytes": 105
         },
         {
-          "path": "plugin.json",
-          "sha256": "6904fb399d9273e8b6b7944fa57aa3dce869c6bed8bbc66b7e0ab417fbf8b84e",
-          "bytes": 915
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "64cd6380ecfd857dd19163912c86cfe9ae01cb0a0122478f71799fb2c4740495",
-          "bytes": 1034
+          "path": "plugin.yaml",
+          "sha256": "44341be6d5b91981c2c4e6cabc3b981e70b7e547f5fe70b72ab2397649c80e76",
+          "bytes": 3362
         },
         {
           "path": "references/method.md",
@@ -2407,17 +2907,27 @@
           "bytes": 1811
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "e779542b94c5a2e9d38c7ade0690f11dbefb9e424bfeb89fd3fb3b0aa99b6f0f",
+          "bytes": 380
+        },
+        {
           "path": "skills/dow-theory/SKILL.md",
           "sha256": "5d10b5252a3b8cdd96d99e6a6881b0629c71492a5a66f0abc606a6bbb59123f7",
           "bytes": 3201
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "a7ef8d5a67d626aeecbfbb3cc6c8cf1a45463d7477537bccb3fc11aca0093a36",
+          "bytes": 1421
         }
       ]
     },
     {
       "id": "sesame/elliott-wave",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "elliott-wave",
-      "treeDigest": "sha256:e932e03a6d84a6f9e2d20903bed499c510ea1e0037700d29d28ed5a1d74edcd1",
+      "treeDigest": "sha256:14a557145f873e7d2d2b07141397c3f9a1a0022892d0fa3734070f03cac393d2",
       "files": [
         {
           "path": "LICENSE",
@@ -2431,13 +2941,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "b265aefcb78b14bed8816d75f129c2a61e2e9bfde87957d647896c6459b436b4",
-          "bytes": 1912
+          "sha256": "44a5b6d3faddab401a20e070fa9d2d28758db740ecf5499827070feef1964ae2",
+          "bytes": 1906
         },
         {
-          "path": "capabilities.json",
-          "sha256": "6668e87b8c986b58ba403f82de7a9b2696f1372331a111e0e7169461051a902e",
-          "bytes": 2299
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "2e5058725e3b4f4605204fb4f9aede32f1a9d279309b2dec13ff46d312958d94",
+          "bytes": 448
         },
         {
           "path": "examples/case.json",
@@ -2455,19 +2965,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "8d9b40d1720c2ae0c6f5651b72242173a6e44aa1acb5de8895ddc9c8512a3c8d",
+          "bytes": 1054
+        },
+        {
           "path": "package.json",
-          "sha256": "e51af07a2185fd8996fbc4432696a0e2d887fab1af0d96389376a543aab0c98f",
+          "sha256": "f22d34ce9af106f894b796be06accd51332c16f0fefa89a03e05d519a61cd358",
           "bytes": 107
         },
         {
-          "path": "plugin.json",
-          "sha256": "e29d02bbfc865b0e240ff8ec533a1216ea32b26dddeefe1f6c4b6de97d5fd0d7",
-          "bytes": 938
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "8d9b40d1720c2ae0c6f5651b72242173a6e44aa1acb5de8895ddc9c8512a3c8d",
-          "bytes": 1054
+          "path": "plugin.yaml",
+          "sha256": "48e3e0ec30add53ac9f7ec540f55d1856d15225d834c02970293c4f856fc3033",
+          "bytes": 3457
         },
         {
           "path": "references/method.md",
@@ -2480,17 +2990,27 @@
           "bytes": 1811
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "f27057239833d893ae8de644c4680a2394dcfdcc3671bbf9301f30e28545450a",
+          "bytes": 408
+        },
+        {
           "path": "skills/elliott-wave/SKILL.md",
           "sha256": "26a6e3c910caf9aabe4bd39977f3a33e54836841596ef97e2aa6f474e67ca5d6",
           "bytes": 3241
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "6f7f9efde0126209f8d03a0f2e642c834498030d47953ec3cb1c3e13a325f21b",
+          "bytes": 1447
         }
       ]
     },
     {
       "id": "sesame/financial-research",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "directory": "financial-research",
-      "treeDigest": "sha256:735eb73d23ffcdc6c3989a6198a1f6022c46117a9b45d44d51cf65edeaeaa9d8",
+      "treeDigest": "sha256:5b09577a5068f640f94e500d72efcd4675fa1d980555a097d178d979905571f7",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -2518,14 +3038,14 @@
           "bytes": 1921
         },
         {
-          "path": "capabilities.json",
-          "sha256": "2eb1e579649ee7d39424fda3306ad1739180ca5ecaa21ced392d04f038189f9a",
-          "bytes": 41311
-        },
-        {
           "path": "configuration.js",
           "sha256": "f02f9187f05d233e17da559f6f9a3f28126877bef52fb017d6c519aee996f223",
           "bytes": 4808
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "6f8d06140b3c38b1b0638096f4588a445f8bd42fb7d5eaaf650b49b1576edab5",
+          "bytes": 3835
         },
         {
           "path": "evidence.js",
@@ -2538,24 +3058,29 @@
           "bytes": 651
         },
         {
+          "path": "instructions.md",
+          "sha256": "7be3fbeaca99373bd3e106a478398fab5fe044082bdc4039feaccb633557b67d",
+          "bytes": 2093
+        },
+        {
           "path": "package.json",
-          "sha256": "ca849a800a227969c0a29af0d96c7189cf356ba3f904ddc2b5f61d46f6157f70",
+          "sha256": "1c18068aa22b868ed1c312b34fb26af333913e5234110d6f2ad0714158ade978",
           "bytes": 112
         },
         {
-          "path": "plugin.json",
-          "sha256": "715521149c96b7a427493ca75077c7a9b345a8476328cd4216eb4fc600681028",
-          "bytes": 795
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "f17b001542d14093d355378e3c1c15188c2eaa30aafb132b1345607fcd24cfe3",
-          "bytes": 5365
+          "path": "plugin.yaml",
+          "sha256": "1f0694ebfa2c0aa5c69ffaf8332430c5fe7e97a5436de594ba7bca1bd849ee67",
+          "bytes": 11167
         },
         {
           "path": "records.js",
           "sha256": "803b492f943b9286b4630300043cf0b3f08368c2e0ab78905c7fa5ec9cc6b6c3",
           "bytes": 2743
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "0ace9b944b7ce0eb1a63195b85c95fd6c589694aacdb7584cb6cd33ce16258fb",
+          "bytes": 433
         },
         {
           "path": "resource-files.js",
@@ -2578,6 +3103,31 @@
           "bytes": 15801
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "eb58211f14b5d3a51255878f689a7379fa133b33ef1b3a7ac581157588e407d3",
+          "bytes": 3032
+        },
+        {
+          "path": "tools/financial_research_configure.yaml",
+          "sha256": "c5624798fa434e48bebd2da6333f47603171ec53cfa2373f628aa2aeb6acdf30",
+          "bytes": 7939
+        },
+        {
+          "path": "tools/financial_research_query.yaml",
+          "sha256": "c7fd9ee1633cefd162241dbc2a30c344a20c5cea6c42b98a8d3dbdefc5601f1c",
+          "bytes": 12084
+        },
+        {
+          "path": "tools/financial_research_read.yaml",
+          "sha256": "9c0b9db81931480a27a209b2ae66d2639d080c7422e886ec87d7b5bedfe07450",
+          "bytes": 1666
+        },
+        {
+          "path": "tools/financial_research_status.yaml",
+          "sha256": "6b5e5eb9fe6f6a2edabd925072a87c6c447ad3a4037f685b4c0423f4d72e5320",
+          "bytes": 4387
+        },
+        {
           "path": "transport.js",
           "sha256": "301952cdba2f83918ddddf68f6e029b9171e6881916e6e5d2765a5d6f16520aa",
           "bytes": 6302
@@ -2586,9 +3136,9 @@
     },
     {
       "id": "sesame/historical-evidence",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "directory": "historical-evidence",
-      "treeDigest": "sha256:a1621e2ca2fc31734e283c22d6a4a6ad50e4ca12c6f0c7aef7da642853369fcd",
+      "treeDigest": "sha256:0bda19f9ae5ebf85e4f26fa221b70121449264d2d72eff74ce21455dd0a13753",
       "files": [
         {
           "path": "LICENSE",
@@ -2616,9 +3166,9 @@
           "bytes": 7904
         },
         {
-          "path": "capabilities.json",
-          "sha256": "1229cb2a97f91ad80877b0ce9b8861120516d4c05bcb402b9f97a292e325209c",
-          "bytes": 63166
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "016a2b5f65a0efb2ebf76532b05b3eafdd073e6ed18d7fd2f58dbcf51132fe7b",
+          "bytes": 16506
         },
         {
           "path": "examples/calibration-replay.json",
@@ -2646,19 +3196,24 @@
           "bytes": 576
         },
         {
+          "path": "instructions.md",
+          "sha256": "7fdf8782a7d9ef21fefabd8e9ab173daaee577856d1e5c33d759dd2ec1f52be6",
+          "bytes": 1632
+        },
+        {
           "path": "package.json",
-          "sha256": "c02c07bfd70b6de85288f286117e32a5606731a74f7a562d058ae72f51dbd845",
+          "sha256": "3471cbeb6ba1a721093232c8cad4333f03369c4c5ddc5188c289afdc40e7faa4",
           "bytes": 175
         },
         {
-          "path": "plugin.json",
-          "sha256": "4a546f7b874f7507851259bf2b29a783a7cb49ca207682bd5581732c5231f0ed",
-          "bytes": 769
+          "path": "plugin.yaml",
+          "sha256": "c8932852e33cd571242248d2e117e3561c705fc85db099975e0b60590aebba5a",
+          "bytes": 4328
         },
         {
-          "path": "prompt.md",
-          "sha256": "eecceaad12895364535bcac9df843abca26800b9faba951ea4b4008dbb5c9b55",
-          "bytes": 3223
+          "path": "requirements.yaml",
+          "sha256": "6fe52d987db0b266815a9716812c447f4e168faffe8245db4cf5b187514615ee",
+          "bytes": 395
         },
         {
           "path": "src/calibrate.js",
@@ -2686,9 +3241,14 @@
           "bytes": 6772
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "95ae1884d2f29de832045c30d060753111b7fbe40e6323df48904e0ca38c8387",
+          "bytes": 3170
+        },
+        {
           "path": "tests/evidence.test.js",
-          "sha256": "a2667f227e0ae1a0a1ccabbdbc945cf613901ff64cdb7ab4c0a642677268ee51",
-          "bytes": 22842
+          "sha256": "139c46c6691e6c4fe404848aff1d31fd6cd2a25a5dd8ee441418023a135566c4",
+          "bytes": 22899
         },
         {
           "path": "tests/match-replay.test.js",
@@ -2704,14 +3264,29 @@
           "path": "tests/result-publication.test.js",
           "sha256": "36b691ed56965edcff440fd52cbea757d0f681319a5710db6921cf2770ce05a6",
           "bytes": 5080
+        },
+        {
+          "path": "tools/historical_evidence_calibrate.yaml",
+          "sha256": "e0b3a740a45125808120407716929b17f3565f4c5a21fd93d143f15c8efad836",
+          "bytes": 17718
+        },
+        {
+          "path": "tools/historical_evidence_from_ref.yaml",
+          "sha256": "f92b80527ea7b6fdf385e5c0bf077f4d1b03f53c3faa9acdcfc1bb85d20644e2",
+          "bytes": 4971
+        },
+        {
+          "path": "tools/historical_evidence_match.yaml",
+          "sha256": "4fa3daeb63bfae24cdbdccf4c577bcd59fa27c4370437b3f8ea5af7db1c002da",
+          "bytes": 17508
         }
       ]
     },
     {
       "id": "sesame/ict",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "ict",
-      "treeDigest": "sha256:6b65107f43d5869099ed7a7312db799b9720ef530a8a06f6867fdb955be3565f",
+      "treeDigest": "sha256:1d2a2d919738ffc1dbc54e552003f5c61234db019b84e171bd5c1a501760fae6",
       "files": [
         {
           "path": "LICENSE",
@@ -2725,13 +3300,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "1010f461b01bc5eb63de2d4e0fd1cc950a721456f0a677df4469210310aec19f",
-          "bytes": 2742
+          "sha256": "e7406a4d4af06b90bd890831b961779cd416102ef781980afec88ed208ef8d6f",
+          "bytes": 2736
         },
         {
-          "path": "capabilities.json",
-          "sha256": "3386424141642a7646b0fc033a3c2a2d69fef1e736f0e4b2ade4a6a9e6d3d991",
-          "bytes": 2548
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "bddfd97d70de8404f932eff56aba8f29d1aa545f0e9566d7203f7f169fa600f5",
+          "bytes": 414
         },
         {
           "path": "examples/bars.json",
@@ -2754,19 +3329,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "be9a36a72450a6182d40a35d316d36220ef1ec510e10625c179810e4c7bf6824",
+          "bytes": 1047
+        },
+        {
           "path": "package.json",
-          "sha256": "7109e28048c1deb289c1a2dde9f8952c3998ce6deab4ae2e545f7b1222229a70",
+          "sha256": "ca97b2f54e53b7360b40e68cd75920215a00713a5d25c79a0d08b1db7f315bb9",
           "bytes": 98
         },
         {
-          "path": "plugin.json",
-          "sha256": "5f99337bb04def330bd06dca6cf13593931f227430b1eff3b1847a963b225dfe",
-          "bytes": 1040
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "be9a36a72450a6182d40a35d316d36220ef1ec510e10625c179810e4c7bf6824",
-          "bytes": 1047
+          "path": "plugin.yaml",
+          "sha256": "631df83650fdec2e3d2938b45b681c8dc9efcab250a9fcfa3b5e04aab5a4126a",
+          "bytes": 3808
         },
         {
           "path": "references/execution.md",
@@ -2784,6 +3359,11 @@
           "bytes": 1811
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "04feb32b7b9ed2ff6f6dc954c0238cec15e48f6101137efc05800ef6752233e0",
+          "bytes": 386
+        },
+        {
           "path": "scripts/bar_input.py",
           "sha256": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
           "bytes": 10396
@@ -2797,14 +3377,19 @@
           "path": "skills/ict/SKILL.md",
           "sha256": "bf21c44f7eee716a41542db770104bfbb50f3ebe526ad1484b7a6a046d892b0e",
           "bytes": 3346
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "aa2e05d4d8bc09952c56e297cd368aed02e37023131103f1c6ce7589b8cb3ce7",
+          "bytes": 1795
         }
       ]
     },
     {
       "id": "sesame/institutional-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "institutional-analysis",
-      "treeDigest": "sha256:b7b4edf02b09822db3d765070128e31aa60753d88affb3be0fbf22e5addd7409",
+      "treeDigest": "sha256:4167105bafb842aeeeafefff63e3eb5b4da824c0e3aa16875aa14be92486ca36",
       "files": [
         {
           "path": "LICENSE",
@@ -2818,13 +3403,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "8ed9e408e92de381a37dfd955a35b863d63037eb263b52eb76273573082ff408",
-          "bytes": 1940
+          "sha256": "0b36074fba43589e8144e0013023c1c2ddb64d157beb1177ec04c12c9ddc0d6e",
+          "bytes": 1934
         },
         {
-          "path": "capabilities.json",
-          "sha256": "503ef215943f1b377e6f93538bc4a6e3fd1430484e2e7b00fb1b0035cb03e564",
-          "bytes": 2356
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "18b82928314adbc0cd381caf9afb6b76c83ebaa1bbf4c5b64b29501995210702",
+          "bytes": 495
         },
         {
           "path": "examples/case.json",
@@ -2842,19 +3427,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "74839fb531d9d356133aa59fa45c97a3bb4148948e7f933f8c47e5aabea6020a",
+          "bytes": 1069
+        },
+        {
           "path": "package.json",
-          "sha256": "5ee3ebd69ef874bf36207b0eb8298500aac6adea2f32b93aa2e5052b1dc0e06a",
+          "sha256": "56e04dea6fc8415cc93219ae2f43fad602b85696230bd941140840532fbfa7d5",
           "bytes": 117
         },
         {
-          "path": "plugin.json",
-          "sha256": "a096b8f1bd2d776b15dacdc797219ef87007d62f48d291bf166dd6a9e6841fab",
-          "bytes": 972
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "74839fb531d9d356133aa59fa45c97a3bb4148948e7f933f8c47e5aabea6020a",
-          "bytes": 1069
+          "path": "plugin.yaml",
+          "sha256": "036ff6f30022655d99e7ec820a7aa1f1003688acd9f41207f6b44e82c79696aa",
+          "bytes": 3581
         },
         {
           "path": "references/evidence.md",
@@ -2867,17 +3452,27 @@
           "bytes": 1939
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "13696563c15f8294839d59a6c531e1565b5903af6e42aaa70aa5e575c4c3edd0",
+          "bytes": 447
+        },
+        {
           "path": "skills/institutional-analysis/SKILL.md",
           "sha256": "0d32d3fbd961de261eaf90a58c2381c0d5a40a43018379bbc9ddc2b174df111f",
           "bytes": 3296
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "773175b1f4c901a56d37a962a64904a3621f87869a32423b9179eb72661ac5cc",
+          "bytes": 1575
         }
       ]
     },
     {
       "id": "sesame/investment-research",
-      "version": "4.0.1",
+      "version": "4.0.3",
       "directory": "investment-research",
-      "treeDigest": "sha256:71bbc4c1cfe2d0ee323d40544d890dfeef2ea16200ad443e9472d408fe1e9504",
+      "treeDigest": "sha256:51f015fc3f8f9f537928e74af29cfdd3c91b039001447925231050a0287d211d",
       "files": [
         {
           "path": "HISTORY.md",
@@ -2905,9 +3500,9 @@
           "bytes": 5258
         },
         {
-          "path": "capabilities.json",
-          "sha256": "567c0269f52806155be30b4bb318502cadb156f385186431ac6e333f6657a762",
-          "bytes": 63889
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "50d8c025ea9d29b43c2a446096d45b9dd584a10a06ce9db919cf169f2a0098f8",
+          "bytes": 7370
         },
         {
           "path": "index.js",
@@ -2915,19 +3510,24 @@
           "bytes": 932
         },
         {
+          "path": "instructions.md",
+          "sha256": "124f830b395d92e0f09362cd36b12167aad4a4788bb31f4c65fa30bc6c702738",
+          "bytes": 14075
+        },
+        {
           "path": "package.json",
-          "sha256": "35b2b5e187d7d6bee11a030fdf16921aad6458e9802c3a53f821e4a7a9eb4d97",
+          "sha256": "8a204f6e9aeb1dd98a146a2e7a58eb8e554751d9a6043e18774847690c651863",
           "bytes": 125
         },
         {
-          "path": "plugin.json",
-          "sha256": "33b2c2c803452e7d65129be54813e62b376582eb9496f3fdcd95209d0165729d",
-          "bytes": 801
+          "path": "plugin.yaml",
+          "sha256": "1c28c15f3c78b2634b1a0496358020c7406f062668e4d57397a9cdb89edec767",
+          "bytes": 3888
         },
         {
-          "path": "prompt.md",
-          "sha256": "27283b641c61ffd9088c7621474de5d70b3747679ac16b6938413589404928ae",
-          "bytes": 13528
+          "path": "requirements.yaml",
+          "sha256": "0dfed8e8092fa6dc173fdc2bf319971cb420b6a99b28c986519e8dc47f056f5d",
+          "bytes": 452
         },
         {
           "path": "src/artifacts.js",
@@ -2976,8 +3576,8 @@
         },
         {
           "path": "src/team.js",
-          "sha256": "5a77a127fd8acbb4bd520ce3681b71d0bc68739218b89e600395ba6912a95ed6",
-          "bytes": 22368
+          "sha256": "58ddb97829d1fc17a91014d335936e1f3a2449611594486a7141bba83d6f844a",
+          "bytes": 22869
         },
         {
           "path": "src/workflow-mechanics.js",
@@ -2988,14 +3588,44 @@
           "path": "src/workflow.js",
           "sha256": "7ee455f5a226024a06179769563b3ac5872aff0a5778c5429b8134ebd652f07b",
           "bytes": 785
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "eed067f3653f5d30e78313c070899b922e8ffb75ec802a2ccbd1ed4aa3434d32",
+          "bytes": 3803
+        },
+        {
+          "path": "tools/investment_research_analyze.yaml",
+          "sha256": "6bccbbc909a855e6fae6e62e066abcc57a44f84f6e4a45682834f9119d28b9f4",
+          "bytes": 16083
+        },
+        {
+          "path": "tools/investment_research_ask.yaml",
+          "sha256": "d124f642e239310bdf0e8a67b8a6249af210d92db0aa275c505a0d7c6de96ae7",
+          "bytes": 5655
+        },
+        {
+          "path": "tools/investment_research_event_outcomes.yaml",
+          "sha256": "6d20fafaa7c7ce24be379207801249154428c92f683acaadaaa7042b8b00b8aa",
+          "bytes": 9416
+        },
+        {
+          "path": "tools/investment_research_report.yaml",
+          "sha256": "8834257248b52eda51cdb9dc2b5740129fdbe0c1f8830968d47d42860527e23c",
+          "bytes": 5175
+        },
+        {
+          "path": "tools/investment_research_start.yaml",
+          "sha256": "8c371f0d856b621d6d39669a4e146e45719b762229ee9c1b052987badcd72bde",
+          "bytes": 9454
         }
       ]
     },
     {
       "id": "sesame/judgment-evolution",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "directory": "judgment-evolution",
-      "treeDigest": "sha256:5fffa030d3b9fc2d118e92ed831e3eda02e5d9a12a55b46e22fb706bd410054c",
+      "treeDigest": "sha256:624c96f57e2bd8d6fd3796edb6d401f3c533e7658fbf236dcabee09e95d111b8",
       "files": [
         {
           "path": "LICENSE",
@@ -3008,11 +3638,6 @@
           "bytes": 1122
         },
         {
-          "path": "capabilities.json",
-          "sha256": "4f06078378aa1aa440aac40e5486a20b1d5e524a76638c99a7dad4d4dedcda59",
-          "bytes": 72019
-        },
-        {
           "path": "coverage.js",
           "sha256": "2de405791bad5a92308b9db027440a5c266de1f687ea0eba13de5fed6e6a56af",
           "bytes": 5901
@@ -3021,6 +3646,11 @@
           "path": "dataset-snapshot.js",
           "sha256": "4a672ec68cfc16d801f98acddf7cf656cfe624e88107af98bc8b6d3357d6c88a",
           "bytes": 7411
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "f859fa76cc9c3f8c76e1574c958e3b741ac238625aeb7645a94704832bbf598f",
+          "bytes": 951
         },
         {
           "path": "evidence.js",
@@ -3038,24 +3668,29 @@
           "bytes": 3433
         },
         {
+          "path": "instructions.md",
+          "sha256": "45a6e0e8914933f0ba7d8fbe4df5e2c8209519d9580723c485317ab1680409fe",
+          "bytes": 2453
+        },
+        {
           "path": "package.json",
-          "sha256": "403e696d7ce93bd1826197a720c52f11b224414146c5717f404ea7937f427d2d",
+          "sha256": "211121415e731f613e685b12545f63b5ff4046b3ecf09c8399fbfc32bb8e6419",
           "bytes": 112
         },
         {
-          "path": "plugin.json",
-          "sha256": "4c60ce2b1bc8020603de654db8c3ef324eff373b0afc01776b6c527fbd2cf48a",
-          "bytes": 716
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "4246da56529be82e686410d82a8b48f959a10178e562cf7f06a8412866aca405",
-          "bytes": 3591
+          "path": "plugin.yaml",
+          "sha256": "a0d3f65260492f1d5d9dddf607c3124f707ac625989120903107e9641c89e83d",
+          "bytes": 7169
         },
         {
           "path": "references.md",
           "sha256": "6b19231032dc55357dc951053dcfca32ec8b3b58aac83314817803de64cf9f2e",
           "bytes": 3986
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "b6806333bd8afe6ae4cc8bc99f5c0d0f46bbf9fe4758bf862fab7206f516d87a",
+          "bytes": 605
         },
         {
           "path": "rules.js",
@@ -3083,9 +3718,79 @@
           "bytes": 4161
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "6bf099da32434b7db91c16c95508f47f5b4cc9d9c4802b4f0b76a3799e2b258b",
+          "bytes": 7765
+        },
+        {
           "path": "tests/ports.test.js",
           "sha256": "834d84203ec6b5215923f7852700110dd173e9c9fa03d0b48cbeab55afce0f1c",
           "bytes": 4606
+        },
+        {
+          "path": "tools/judgment_audit_source.yaml",
+          "sha256": "a0d81a20da1dcf4427f5c6c5089461443dc29857ca42f8a7b30a05961d309d27",
+          "bytes": 2449
+        },
+        {
+          "path": "tools/judgment_coverage.yaml",
+          "sha256": "caa44f69cd003c8eb268b10f9a25cb3e25339c301c64a28d4cee069a7161ebf8",
+          "bytes": 3462
+        },
+        {
+          "path": "tools/judgment_defer.yaml",
+          "sha256": "dc412196d12e40412732b3c82d21e76cd94bc0d42a7dadee1239c7230b8daaa4",
+          "bytes": 2752
+        },
+        {
+          "path": "tools/judgment_list.yaml",
+          "sha256": "de550db032d452e6e3d5958ee848644cc8c518fbb5cd54151a02900706a17971",
+          "bytes": 4007
+        },
+        {
+          "path": "tools/judgment_read.yaml",
+          "sha256": "85990e2a7d05fe2604c006e8fa41f9373f61f79a0ca22ec6f24006e775192ba0",
+          "bytes": 2489
+        },
+        {
+          "path": "tools/judgment_record.yaml",
+          "sha256": "43cb3fc152386e835031d241953a929b2d689d66de2f5529c785c068cde6687e",
+          "bytes": 6740
+        },
+        {
+          "path": "tools/judgment_reflect.yaml",
+          "sha256": "f51d732f306753f416bc4db484ef5227d71dea5a90b6864401e1f8dac9acf423",
+          "bytes": 3604
+        },
+        {
+          "path": "tools/judgment_resolve.yaml",
+          "sha256": "ef60e9d94dc37509a1d16e583a9d4e33dbe8b2d83c8e640c9f50f1684f5d136c",
+          "bytes": 4595
+        },
+        {
+          "path": "tools/judgment_retire_rule.yaml",
+          "sha256": "26aa5a4f8570ad942bcba421048f85c92adaf7d332644e23a91484618930509c",
+          "bytes": 2121
+        },
+        {
+          "path": "tools/judgment_review_due.yaml",
+          "sha256": "fe93c8829a5f2ea086ed5956c871fa3c52f3b214e607d23a5ede56e8b4ac9e1a",
+          "bytes": 3600
+        },
+        {
+          "path": "tools/judgment_review_queue.yaml",
+          "sha256": "fcabc755892686ba3d4d43f2d9f08eed5bd27457a47e6a179ac422cdf7b00019",
+          "bytes": 2743
+        },
+        {
+          "path": "tools/judgment_rule.yaml",
+          "sha256": "6ad529549a8a0bf5be67d174cc585da5e695e77861f849564e5dc37bda7cd190",
+          "bytes": 3576
+        },
+        {
+          "path": "tools/judgment_rules.yaml",
+          "sha256": "f9f0ef39b0fa51e2858953b702c4253dcc499175aa38145f92ff4d604fe0ddcd",
+          "bytes": 3351
         },
         {
           "path": "tools.js",
@@ -3096,9 +3801,9 @@
     },
     {
       "id": "sesame/kurumi-replay",
-      "version": "0.1.3-dev.3.9",
+      "version": "0.1.3-dev.3.10",
       "directory": "kurumi-replay",
-      "treeDigest": "sha256:fe7a9916fa4d51fcf2932aaa693415f7127fea92045d07b7332fe8cdcf408645",
+      "treeDigest": "sha256:4549038b4862844efe9bc7d7b7b5a9f2afad6606217791e61efdba35a7aef12e",
       "files": [
         {
           "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
@@ -3177,8 +3882,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "223f5faf827fa06674d0c65b454c2660bf08e60a4986e133b01952e250158642",
-          "bytes": 22768
+          "sha256": "184004a8a10398cae0226858ae4740887ae549a7c1db706e353cf2e95e694f97",
+          "bytes": 22762
         },
         {
           "path": "ROUND2-CORE.md",
@@ -3231,11 +3936,6 @@
           "bytes": 45095
         },
         {
-          "path": "capabilities.json",
-          "sha256": "38d846f5a70235588d97d98aaa3601324a87b4e05c24c686cd28d2e47cb3eea5",
-          "bytes": 105943
-        },
-        {
           "path": "checkpoint-text-repair.js",
           "sha256": "dbbc7b8cfb06207d3ab614cfde1901ae91611ea215934b9b62065b7aba6b55d5",
           "bytes": 5043
@@ -3261,6 +3961,11 @@
           "bytes": 22089
         },
         {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "3fe16d111e1b184f796735f4dcb0d57f5c3f573f4d3c7193f39ad3f6a9d406ca",
+          "bytes": 1198
+        },
+        {
           "path": "experience-plan.js",
           "sha256": "24b5ac7b37beb2abc2d1bb27ee6faef98d6c727989a1b87aa37d645c0addd1e6",
           "bytes": 4030
@@ -3272,8 +3977,8 @@
         },
         {
           "path": "experiment-lifecycle.js",
-          "sha256": "54743d4d740d8800022f8592bc62e69dcc1fe870e795a6a5d19934ed6c5f1eed",
-          "bytes": 17860
+          "sha256": "79ee1c8581ac5a5bd5afec350955c3a6a11f6e1250bbe5e58d9977c037dbe1ef",
+          "bytes": 18076
         },
         {
           "path": "experiment-profiles.js",
@@ -3287,8 +3992,13 @@
         },
         {
           "path": "index.js",
-          "sha256": "5d88b90b2edb217479c79869d86ae8681aeaddd6a12f8727d571c1129aa2a291",
-          "bytes": 10171
+          "sha256": "473b6cac2b410dfaf7f2afe8f61002a6c089f14132cb86162e8ce27bd4d08caf",
+          "bytes": 10220
+        },
+        {
+          "path": "instructions.md",
+          "sha256": "4dcbeae1d2956eceaaae57567591cfc8292299f610b086529112669593e7e557",
+          "bytes": 2331
         },
         {
           "path": "ledger.js",
@@ -3347,23 +4057,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "bb1c95dbd4eca692d22d21f251c3bfaf2c87356180fc22523c348ff101caec3c",
-          "bytes": 331
+          "sha256": "abb30df5bd607fa6710545853af1dad5a64d21312b146c32ac200c0e2e68368c",
+          "bytes": 332
         },
         {
-          "path": "plugin.json",
-          "sha256": "372e1ebd91940643127abc3801759f35d611e73c09e78868d38b980925940176",
-          "bytes": 2353
+          "path": "plugin.yaml",
+          "sha256": "6f3a0a0a1be528ab0161b0c1321bfd206f2703da9e8332f05586a15211dd3233",
+          "bytes": 38516
         },
         {
           "path": "presentation-receipts.js",
           "sha256": "a46c6cd96abfd3d48743510f4ece0187e438f51440e93ac25c5240d099130646",
           "bytes": 3333
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "4dcbeae1d2956eceaaae57567591cfc8292299f610b086529112669593e7e557",
-          "bytes": 2331
         },
         {
           "path": "providers.js",
@@ -3404,6 +4109,11 @@
           "path": "report.js",
           "sha256": "f0aa7c9abe83072e7f8a83e402f0790a57f3121047adc0575b6015c1c8b9d4b3",
           "bytes": 24446
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "62b5c09780de903f5005d4cefb707b060085af530d30be090c372a1b892e5d68",
+          "bytes": 1026
         },
         {
           "path": "reveal-cutoff.js",
@@ -3484,6 +4194,11 @@
           "path": "source-capabilities.js",
           "sha256": "c2d40ee193cf6bfe4faa2e9c8e9a786538852e1464d4efaff395783605522fcd",
           "bytes": 3549
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "8dfbfd0e71310fdf78f40b475b934cd029a6de3d13fbf3dcc15dd9693e9a401b",
+          "bytes": 18071
         },
         {
           "path": "tests/archive-pending-protection.test.mjs",
@@ -3577,8 +4292,8 @@
         },
         {
           "path": "tests/main-agent-scope.test.mjs",
-          "sha256": "6fba08681afabb2414470946361426163aa89ece34387f1d94307b0465add2e7",
-          "bytes": 1249
+          "sha256": "963350f6690e6e3af8447b2a3bcf25fd490588ed35eff9ef8e40fd481733332e",
+          "bytes": 1284
         },
         {
           "path": "tests/main-chat-workflow.test.mjs",
@@ -3697,8 +4412,8 @@
         },
         {
           "path": "tests/terminal-capability-archive.test.mjs",
-          "sha256": "75b3539947dc5a34b0b0b5a13071581f659910951f385d9b98053eb6c1a4df46",
-          "bytes": 2779
+          "sha256": "d53e05e95f9f71fa5dd7b22ea515e3dce5f14f4376660e3b01e9d6848576dda9",
+          "bytes": 2795
         },
         {
           "path": "tests/ui-receiver-public022.test.mjs",
@@ -3721,6 +4436,146 @@
           "bytes": 3517
         },
         {
+          "path": "tools/kurumi_archive_terminal.yaml",
+          "sha256": "2855ec16422fca4f63d402202e9063db4edcaa2af8721e72d0dc56dbc697844f",
+          "bytes": 2111
+        },
+        {
+          "path": "tools/kurumi_audience.yaml",
+          "sha256": "1bcc3b8030460d9b1ea2a4b99509ab3be29bac80631eba2d9a87d1bea474bf7d",
+          "bytes": 2335
+        },
+        {
+          "path": "tools/kurumi_bind_experiment_fx.yaml",
+          "sha256": "6b01646b77be5586326f3f43503188d3890b39665248918339f41b21ff384e42",
+          "bytes": 2103
+        },
+        {
+          "path": "tools/kurumi_configure.yaml",
+          "sha256": "06d27919fc49d31225b8877feb4cb66526c4bcfc250ba4ff0f313784f10b4c23",
+          "bytes": 2796
+        },
+        {
+          "path": "tools/kurumi_continue.yaml",
+          "sha256": "02fb24aed2dc40a56a497c5b2147314701fc7ccd5c3e1ed330cf54287160a258",
+          "bytes": 2380
+        },
+        {
+          "path": "tools/kurumi_decide.yaml",
+          "sha256": "f7ab3e068a7b5d9da0e254e3d74eeb0597b17991236a6c2b5a2ff36f49c63872",
+          "bytes": 2737
+        },
+        {
+          "path": "tools/kurumi_display.yaml",
+          "sha256": "7034151fd71df2085892d47682a1058b7b5872451937ec397dbb49e0cb316018",
+          "bytes": 1566
+        },
+        {
+          "path": "tools/kurumi_experience.yaml",
+          "sha256": "e19eaad54127a696ba6450ca8521e6db5e27befae1499eca015ba8fd71461b4a",
+          "bytes": 3900
+        },
+        {
+          "path": "tools/kurumi_experiment_history.yaml",
+          "sha256": "f581afc824716ba4669b1382f111f62d262eeea87e96b266345c28c790601c6f",
+          "bytes": 1134
+        },
+        {
+          "path": "tools/kurumi_export.yaml",
+          "sha256": "05661c623ac0e23014c66b7c56ee41e97fc83f51a81149a5b474a1144761cff5",
+          "bytes": 1826
+        },
+        {
+          "path": "tools/kurumi_import_fx_supplement.yaml",
+          "sha256": "f0cb15d9b53b0e81d6493202d97221b247d432fbfd337e6077c38ae0df62ab01",
+          "bytes": 2307
+        },
+        {
+          "path": "tools/kurumi_method_workflow.yaml",
+          "sha256": "8f4b3bdf2443bc02f60c8bd9715adbe7ae09e09ebb3955073efd42cace792558",
+          "bytes": 2861
+        },
+        {
+          "path": "tools/kurumi_narration.yaml",
+          "sha256": "db07a4f7653c7b67106e54bcc61915201105d2b19bc83ca85ebd6889871b4c07",
+          "bytes": 2229
+        },
+        {
+          "path": "tools/kurumi_new_experiment.yaml",
+          "sha256": "f76c371a8bb49110f221c97f0a4c0ebb2d8f99836abbfcaaee6b47c2ead3d884",
+          "bytes": 2680
+        },
+        {
+          "path": "tools/kurumi_observe.yaml",
+          "sha256": "bde3f2c86e27970c318c6db78b23c2ee09846973fed313ac8e2b04bfa744de38",
+          "bytes": 1307
+        },
+        {
+          "path": "tools/kurumi_pause.yaml",
+          "sha256": "1dad2e76dc25f84770a1790c69eddd8321f90872d6bbb5f09b8ded1af35741c1",
+          "bytes": 2109
+        },
+        {
+          "path": "tools/kurumi_prepare.yaml",
+          "sha256": "5cd196c5c27d5066fe5669092cafce4cab5cebb46837aeaffad715e1862c7a9a",
+          "bytes": 1839
+        },
+        {
+          "path": "tools/kurumi_reconcile.yaml",
+          "sha256": "f1da1c992b11aef68f2533e2859d64ff52fcecf7307d52880e11de42e8353723",
+          "bytes": 2243
+        },
+        {
+          "path": "tools/kurumi_recording.yaml",
+          "sha256": "2986fd641e17fba5be239f0abeb5e993f86185df806d13df42033d2115683fa1",
+          "bytes": 1935
+        },
+        {
+          "path": "tools/kurumi_recover.yaml",
+          "sha256": "40fa2362acf0d7379934b63f7c2096d5440e7d926194f2e2251edd34b5d142f2",
+          "bytes": 2390
+        },
+        {
+          "path": "tools/kurumi_refresh_presentation.yaml",
+          "sha256": "9f6ab6ac726ff60698113b92cee8b8ce06cb7df1baef441e1f6c51ec5bd4c675",
+          "bytes": 1713
+        },
+        {
+          "path": "tools/kurumi_repair_checkpoint_text.yaml",
+          "sha256": "91e40bd01f63083307058d442a61d514c1360a2cd2dd668a2454d1fa572254a2",
+          "bytes": 2681
+        },
+        {
+          "path": "tools/kurumi_report.yaml",
+          "sha256": "40356cb8fd5e201094d474f79c34e7d67fa76a884fd434dda20ad399bc4deab7",
+          "bytes": 1796
+        },
+        {
+          "path": "tools/kurumi_retry_committed_hooks.yaml",
+          "sha256": "3eb70ecd25c9a2a522c651b2d37cdc4ada073666c04de5b28c02e0bf13f8fb67",
+          "bytes": 1908
+        },
+        {
+          "path": "tools/kurumi_start.yaml",
+          "sha256": "f5fd5c67119c7b3b488d18b5ff49999ed8d5e2300af08027e82ecd541fa173ed",
+          "bytes": 2605
+        },
+        {
+          "path": "tools/kurumi_status.yaml",
+          "sha256": "07f9e7215c9c468b9f36518fd079ee47964edc99a4d70c4202915761c0c4fa97",
+          "bytes": 1269
+        },
+        {
+          "path": "tools/kurumi_step.yaml",
+          "sha256": "1e8d39aaff877f3cd5ba3fc0956ffc834bf41fe0e1a1e88519ad722946bf691d",
+          "bytes": 2114
+        },
+        {
+          "path": "tools/kurumi_weekly.yaml",
+          "sha256": "81896a43d5da3debb784574fe203502dcecb40c44150ca18a2fc19990a6fb277",
+          "bytes": 2297
+        },
+        {
           "path": "utc-before-step.js",
           "sha256": "9407d6119dba1e543446d40e2f5698563751c5f8539c220a48408d54fe862b07",
           "bytes": 8412
@@ -3739,9 +4594,9 @@
     },
     {
       "id": "sesame/market-data-parser",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "market-data-parser",
-      "treeDigest": "sha256:ffb5987be58efa39176acf84e80a4756ec575ae5567aeee69772f3f65f7e9a87",
+      "treeDigest": "sha256:e2dad8d0dbf83609b080c91dbc5083bb39821cb5f636538fa052e2f2b5139272",
       "files": [
         {
           "path": "LICENSE",
@@ -3749,9 +4604,14 @@
           "bytes": 1324
         },
         {
-          "path": "capabilities.json",
-          "sha256": "9e6f1076d5c6f7f7f8042c98a21389e08283f109b6d04aebbb41e9daf5dfc77a",
-          "bytes": 24177
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "e921e4839ac1acc12c9d0a8aab54d71827973b07c95f40d831a085b0a2489999",
+          "bytes": 2570
+        },
+        {
+          "path": "evals/cases/market-data-parser-recorded-call.json",
+          "sha256": "f87f75e962262bd28e24dceec20e36803bacb8d05b18b279b6ff81f194673e92",
+          "bytes": 674
         },
         {
           "path": "index.js",
@@ -3760,7 +4620,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "b675a576770c9a365e9fb8e10470f9079b30f3afe30604916f21fea0fdffbdd0",
+          "sha256": "1101a340b21f1029317cb773592182b0371435ce112e9ab071c31b5249a15237",
           "bytes": 131
         },
         {
@@ -3769,9 +4629,14 @@
           "bytes": 7879
         },
         {
-          "path": "plugin.json",
-          "sha256": "bf8577c422249506299a787a1f5535ab73e9a42b5c3ccccb3e638e026eeb6687",
-          "bytes": 754
+          "path": "plugin.yaml",
+          "sha256": "a600f21c5d4f627b30b9ebfc84732435682c53c82812a05c88e5dfcbff14ceef",
+          "bytes": 2595
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "d8ab0fb31de8ff10f2205a60980485f78b5830dbde9587452d426e69c28b1ae9",
+          "bytes": 414
         },
         {
           "path": "sample_fx.json",
@@ -3790,8 +4655,8 @@
         },
         {
           "path": "server.py",
-          "sha256": "8f694300b63ee8345846be61cdaa1d8a977dfe2073a8fb1e87c2fa057c978fc5",
-          "bytes": 4216
+          "sha256": "b751d7439d0ede91516666afc09f3472bbdb6ef97dd4eee88895e030f01d077b",
+          "bytes": 4217
         },
         {
           "path": "skills/market-data-parser/PROVENANCE.md",
@@ -3800,16 +4665,31 @@
         },
         {
           "path": "skills/market-data-parser/SKILL.md",
-          "sha256": "11958c56e0487755d5f5729e36a78b1eaa035cf8f73232c723d1e62d454432d1",
-          "bytes": 5074
+          "sha256": "49f7c5a34a4751142f418ffafcafd86d2e2ec541f3102f938281cc554a2818aa",
+          "bytes": 4133
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "331ccbc5bdf9c5ab8fbfbfa32e17ba3a990b13438bf701a1d83dd2a2d55e716f",
+          "bytes": 1857
+        },
+        {
+          "path": "tools/parse_fx_json.yaml",
+          "sha256": "92593c7c18f3fb92c433f31263a5f0919ef9a6036e88126ba9c6308d4d382669",
+          "bytes": 8181
+        },
+        {
+          "path": "tools/parse_fx_xml.yaml",
+          "sha256": "4df540498db78575584e1ba5992a4eba29f0acc7c8fba41123a66828abe75517",
+          "bytes": 8389
         }
       ]
     },
     {
       "id": "sesame/mt5",
-      "version": "2.2.4",
+      "version": "2.2.6",
       "directory": "mt5",
-      "treeDigest": "sha256:defa7fe3e5ad2e8c1c71aa6c433dfe8a88b0a42637a375cdcc22dd83c2f8ba83",
+      "treeDigest": "sha256:fcb2a5e6fc364df4da17d3f7cb9538c6d6b9999aa5838fa41d33679e38e82bcb",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -3823,8 +4703,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "0dfb17e1e4e332be1c3ac1a58371b2504689cf93bcf1eeecb72cce60a303c2b4",
-          "bytes": 7750
+          "sha256": "19886e8f7108055e646e459b20e37145309ce4d5fd59d2d2ad913c2b45e22210",
+          "bytes": 7744
         },
         {
           "path": "TRADING.md",
@@ -3908,8 +4788,8 @@
         },
         {
           "path": "backend/execution-adapter.js",
-          "sha256": "7c03194589171f93ba85af97e5e0672c71040cd929593eb34c352d0b1ab0e5d1",
-          "bytes": 16913
+          "sha256": "7e84846925172aabcffa724055d0987aaa1fe7cbe8c189e73a478ae8a961736d",
+          "bytes": 17047
         },
         {
           "path": "backend/execution-evidence.js",
@@ -4138,8 +5018,8 @@
         },
         {
           "path": "backend/target.js",
-          "sha256": "613df7cda6e3ad9ef8c8ec8bd880f3adb47ce123f511575c0c8738897047116f",
-          "bytes": 14376
+          "sha256": "476fbce22a0fae98acef1d66fceae6cb8d7217fe689fa8678467f5ea29a32cc0",
+          "bytes": 14587
         },
         {
           "path": "backend/template/Experts/Strategy.mq5",
@@ -4277,24 +5157,29 @@
           "bytes": 9157
         },
         {
-          "path": "capabilities.json",
-          "sha256": "eb4e6247d28e348e5c93a5185dffe7bc95d15f82dbae8837c9a455640f45022a",
-          "bytes": 399992
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "2b91419da0132a385da833394fd76fbbbaad2c5cb4c9ee0ee7df666fdbdf3750",
+          "bytes": 3632
         },
         {
           "path": "index.js",
-          "sha256": "5694b02db5a89d57e6a45cb8715d2ff142357941395ca79aa9bb3a2c11dd7532",
-          "bytes": 434
+          "sha256": "ddb7036e38b6db333853eff8ea452d79ce2503647f84815287b81e911bec83c5",
+          "bytes": 515
+        },
+        {
+          "path": "instructions.md",
+          "sha256": "801652c56ad030b1d7a0f30f8e4777b8f20bf25f586dab07b41b4550f919539c",
+          "bytes": 7960
         },
         {
           "path": "package.json",
-          "sha256": "21502a5ec54a4a5c53b33302b3dae7e315ff0a88a5a58a6c63584a222c0d4621",
+          "sha256": "572a676b6bab6752c4cb9801b5ad7a5a184a8136de7b01c7220c71ad82802d03",
           "bytes": 97
         },
         {
-          "path": "plugin.json",
-          "sha256": "b86dc0b5fb4eeced0bf75044972c373d67cfa13f786d612a341bcb2f0b497e42",
-          "bytes": 1738
+          "path": "plugin.yaml",
+          "sha256": "8a91c1fe9aae0fec9a395de522c504a65bc2249c8170f431b89d01f168b3b098",
+          "bytes": 117914
         },
         {
           "path": "positions.js",
@@ -4302,14 +5187,14 @@
           "bytes": 15763
         },
         {
-          "path": "prompt.md",
-          "sha256": "35493b6b5d3b512b5389fa66671e05bfa7a86f7cfdfcf25f257a70c3e5541ecf",
-          "bytes": 8746
-        },
-        {
           "path": "references/language.md",
           "sha256": "d04aee3775f4f05fee5f074f7885a452c61d35e3eb169efa5f4cba2df1067bef",
           "bytes": 8618
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "4a312d832c0c6a0b3cf8fe5d049b030dfd5c720a61b50806aad24b2588f283f6",
+          "bytes": 1199
         },
         {
           "path": "scripts/README.md",
@@ -4367,6 +5252,11 @@
           "bytes": 361
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "6a7e7d8882f016ae29b3b9aadc3ebf8e9b8eac9c69a081e9743919fdd7680d88",
+          "bytes": 24869
+        },
+        {
           "path": "target/README.md",
           "sha256": "2a2062e6fb03bb08721e958d9c5a3cce93617fd7397114199d56786fca3a92ab",
           "bytes": 4585
@@ -4398,13 +5288,13 @@
         },
         {
           "path": "target/translation-file.md",
-          "sha256": "23790e635bda31b02764c9047074d4ab42f40b8f8ee71658fc07a83aae7e8cbb",
-          "bytes": 4110
+          "sha256": "40f055ce0e712937357df9ec15a34e03d057c8e43df2ea4a0730e05e6960ae3e",
+          "bytes": 4104
         },
         {
           "path": "tests/configuration-bindings.test.js",
-          "sha256": "ea2d4442fa59f26089940d5c352a6ee19da37a8de6c062bf777c448baf45fa3e",
-          "bytes": 9080
+          "sha256": "ea5c2b275e09207cb8899fde18eb97488f89ce02a196ea1da3dc682c87078598",
+          "bytes": 9162
         },
         {
           "path": "tests/connection-diagnosis.test.js",
@@ -4448,13 +5338,13 @@
         },
         {
           "path": "tests/trading-prepare.test.js",
-          "sha256": "aa63d67bf7b85a374ac7f92f2f5775dea24938c203a7a0b177f86c3c4bb54a5d",
-          "bytes": 21120
+          "sha256": "5045c851b2ab98f99028d690ef04bef469831c8cbc15f898b36da5789cecf4fe",
+          "bytes": 21221
         },
         {
           "path": "tests/v2-boundary.test.js",
-          "sha256": "959f87c46dc3e3ab19f9121835ce83114263b16549ca8fc03aa6bcc7104d2ae6",
-          "bytes": 3658
+          "sha256": "29fef8020a1b8857cbe559c2e95f8865a96567c543bd1d1df36dd57846fbbece",
+          "bytes": 3715
         },
         {
           "path": "tests/v2-sources.test.js",
@@ -4517,6 +5407,211 @@
           "bytes": 363
         },
         {
+          "path": "tools/mt5_backtest.yaml",
+          "sha256": "a294b52e0c7f5397c7cf68007abc1b20074cdecaffc40f4177038b3e8640bc11",
+          "bytes": 7017
+        },
+        {
+          "path": "tools/mt5_backtest_operation.yaml",
+          "sha256": "623d20185a56a457dab3588bef53c0006f64b0672864523a5b8e4b5514a79bd9",
+          "bytes": 1124
+        },
+        {
+          "path": "tools/mt5_cache.yaml",
+          "sha256": "16d9fb144afc2a27d3d6f6bb105f02af9c3c70a7686aba089c41dbf2713c4b5a",
+          "bytes": 5241
+        },
+        {
+          "path": "tools/mt5_call.yaml",
+          "sha256": "d695ddd9b0c12c771dc0ec041112b9a95b1f12f88e2e8c7e68f7999c7b2822d0",
+          "bytes": 8313
+        },
+        {
+          "path": "tools/mt5_catalog.yaml",
+          "sha256": "6e6ad9c4e7c06a73468f7236fd150ac18b27983adc1a544ed6de8a1e53d73f43",
+          "bytes": 2673
+        },
+        {
+          "path": "tools/mt5_chart.yaml",
+          "sha256": "c1d701fe2e3e37483d3fcbfdc833aa4b2bf54bf44e2c057a7eb70be518a49bcc",
+          "bytes": 5780
+        },
+        {
+          "path": "tools/mt5_command.yaml",
+          "sha256": "1eadcf88869c6cd587b44663200db03404c79b3420a335eb2a06b8fc6d8209a0",
+          "bytes": 1675
+        },
+        {
+          "path": "tools/mt5_compile.yaml",
+          "sha256": "c71665eb22eea0bf3bfd95e82728b61555acc4568be6daa68ca379e16a0963da",
+          "bytes": 3014
+        },
+        {
+          "path": "tools/mt5_conformance.yaml",
+          "sha256": "0fab61e2a410a246d505c6b8d3c2e581ca921d0d1906e6ae3b70de71d3f8fdb3",
+          "bytes": 4821
+        },
+        {
+          "path": "tools/mt5_connect.yaml",
+          "sha256": "2c954dfe8af88c2eb3af720483bbc23509751636f184e0ac6221d2650a969a64",
+          "bytes": 2538
+        },
+        {
+          "path": "tools/mt5_dependencies.yaml",
+          "sha256": "ee1052c99e6a6216ab0bb111bac789cca175dd76977c04c6319eefbe107fa46b",
+          "bytes": 3350
+        },
+        {
+          "path": "tools/mt5_deployment.yaml",
+          "sha256": "fc7a2067d7b2893ae6d225e7359c6b3d7bf8aad3a5043c8a79ea19be94da9bc2",
+          "bytes": 4085
+        },
+        {
+          "path": "tools/mt5_edit.yaml",
+          "sha256": "6cc8908780bdec318d8573bf0f41ee1dd3ec776d66e33909be72026b6d679b43",
+          "bytes": 7302
+        },
+        {
+          "path": "tools/mt5_execution_cancel.yaml",
+          "sha256": "03f9018e121456f440f47246c874d62f9683fa650ca47f0ae5a92b1e7b37caf7",
+          "bytes": 3163
+        },
+        {
+          "path": "tools/mt5_execution_command.yaml",
+          "sha256": "bd782c2a0d7532c6412592ee7bf6da5cd7a92d11fa4b0c11286696c134c0dc8a",
+          "bytes": 3045
+        },
+        {
+          "path": "tools/mt5_execution_identity.yaml",
+          "sha256": "eac511001b8966fcead9c5533b10ffcbe9183704cb9ef534ab5038ab67d6c46e",
+          "bytes": 1831
+        },
+        {
+          "path": "tools/mt5_execution_prepare.yaml",
+          "sha256": "428698d43358b9d84e299f0500cb1af4b3386f7e46cd0f923ca5d2a1c8b06f00",
+          "bytes": 6084
+        },
+        {
+          "path": "tools/mt5_execution_recover.yaml",
+          "sha256": "0afb5faade067f8a39e709b304907bc1cd70f1174016c746a1cca8af3bf071bd",
+          "bytes": 4614
+        },
+        {
+          "path": "tools/mt5_execution_snapshot.yaml",
+          "sha256": "25125bede4130560741e6f46408817d85637ee1fd7e7d1568986e3a7c6799b68",
+          "bytes": 6166
+        },
+        {
+          "path": "tools/mt5_execution_submit.yaml",
+          "sha256": "08e09eb362b2286186dc71771978923b0d027e0f509d78cf5ec42193a504f264",
+          "bytes": 4103
+        },
+        {
+          "path": "tools/mt5_import_configuration.yaml",
+          "sha256": "ab54c717dfcc361feeedb1f1f2c4507d5c006928001636385d41ba7190ba8415",
+          "bytes": 2047
+        },
+        {
+          "path": "tools/mt5_inspect.yaml",
+          "sha256": "832b0b8ef7d437f5e1623701558da9bd1e3fcad0eac3003ffa11823151697d81",
+          "bytes": 1996
+        },
+        {
+          "path": "tools/mt5_project.yaml",
+          "sha256": "7834e24d76f449d420e8af4412a3d3cf51dced0d0185e1eb5c12ae21390adf74",
+          "bytes": 4717
+        },
+        {
+          "path": "tools/mt5_python.yaml",
+          "sha256": "d2b5be7bb5028de5669eadc486a8ec3c6d7786dbda96dada0bcb070fa4f18f98",
+          "bytes": 7472
+        },
+        {
+          "path": "tools/mt5_report_data.yaml",
+          "sha256": "cc29d85fd99bd9f0c9a6421c20b65229e0a14d2a04e30f584241a77c2cda5b17",
+          "bytes": 1875
+        },
+        {
+          "path": "tools/mt5_settings.yaml",
+          "sha256": "4f5f215441c5c07f89e0680fdfbb4a51a99b5b1f81d9ad269ba41bc2c5484548",
+          "bytes": 1390
+        },
+        {
+          "path": "tools/mt5_start_terminal.yaml",
+          "sha256": "ac79bd82f80b56e2fb8b436fda277720f40f7abee78ee82884653eceffa10f07",
+          "bytes": 5339
+        },
+        {
+          "path": "tools/mt5_system.yaml",
+          "sha256": "26e32ab647c87a45eb33914029186947a2f0733424ff4ccf949d615cf6623ba9",
+          "bytes": 8875
+        },
+        {
+          "path": "tools/mt5_target.yaml",
+          "sha256": "dc84625c5a75937027f895c0d631f04db1138e43283a0863d4787c29761b57e7",
+          "bytes": 1444
+        },
+        {
+          "path": "tools/mt5_test.yaml",
+          "sha256": "2bdfb916442f07ce2f564918d269aa982cfd7676e50c06dd50a999f35cc24e8f",
+          "bytes": 5780
+        },
+        {
+          "path": "tools/mt5_trade.yaml",
+          "sha256": "712becb9d1a1840142cbdf5f5f4df6ba4691b1ad08b9bf4510a9de3ae26af8da",
+          "bytes": 8850
+        },
+        {
+          "path": "tools/mt5_trade_detail.yaml",
+          "sha256": "e0ad553f50607c5a7842dd69c6f66e7843204d09ef63d1ee8938e5422c569aeb",
+          "bytes": 1604
+        },
+        {
+          "path": "tools/mt5_trading_command.yaml",
+          "sha256": "9370828cb806caaec8d8386a20c72cba9ab78b41af98d2cc51f1ee18fbe8a108",
+          "bytes": 2084
+        },
+        {
+          "path": "tools/mt5_trading_context.yaml",
+          "sha256": "5a498eb360942ec0d454bc61d1cef42b329d77ac67c7f527d2e006b7d2b963c4",
+          "bytes": 8443
+        },
+        {
+          "path": "tools/mt5_trading_order.yaml",
+          "sha256": "a628b91b368d7a4ce7b1e6e51673888e078715e1e539dff43346f659a578dc56",
+          "bytes": 4032
+        },
+        {
+          "path": "tools/mt5_trading_pause.yaml",
+          "sha256": "f65215532ff3852e0223dec7f3dce1f724ca441625d1ad970d8a9e17f87180a0",
+          "bytes": 3649
+        },
+        {
+          "path": "tools/mt5_trading_permissions.yaml",
+          "sha256": "15c4c9f8e95daddc0b8db402946d94e1c8c0f34db77b0a57926e33b950e105fe",
+          "bytes": 5845
+        },
+        {
+          "path": "tools/mt5_trading_prepare.yaml",
+          "sha256": "878d2c7c73c10eb38b21ce742d82043cf52e71de9b2c8d7e7d1f0b3c3140da95",
+          "bytes": 6759
+        },
+        {
+          "path": "tools/mt5_translation.yaml",
+          "sha256": "7ff9391d0a8b7cc3cc96874da51865c5e8a66e14971166783b51c40a299dd729",
+          "bytes": 8848
+        },
+        {
+          "path": "tools/mt5_translation_file.yaml",
+          "sha256": "5ad8d3969e9bb07a905168f76fbaefc9fcbb47ca999e8a142190a6d325e14c83",
+          "bytes": 2596
+        },
+        {
+          "path": "tools/mt5_update_configuration.yaml",
+          "sha256": "ff5d282ac1c201cce76fe0a2ca7ef7d6134fbc53bffb162e046763a16b56b600",
+          "bytes": 14637
+        },
+        {
           "path": "tools/official/index.js",
           "sha256": "5c8ee5b3ddf0b1d6825de7232cc3d6f0f6f75fe0688a5960fa7779e86764c63b",
           "bytes": 1028
@@ -4573,16 +5668,16 @@
         },
         {
           "path": "tools/trading-context.js",
-          "sha256": "3e8f1b2cf5abe3da7a6e38a57c01700c213d217062ec89d2a543640e7584d5de",
-          "bytes": 11520
+          "sha256": "5f691ac30aec70ef2ff178136181f5b5eb74bec7c91cec0e00957728811410af",
+          "bytes": 13004
         }
       ]
     },
     {
       "id": "sesame/narrative-analysis",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "narrative-analysis",
-      "treeDigest": "sha256:03dcdce430befc21c52ab592d0e4d99005ea4eaf7b6ed7504be76261164c6829",
+      "treeDigest": "sha256:5b86f157a71b58b423bbe8fc5aa4ae76c89e945a3ec43ea0af627763c0f989d2",
       "files": [
         {
           "path": "LICENSE",
@@ -4596,13 +5691,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "10d0c166fb26f8a589d192141e8ba075aec84162b618b02dab1e964f9b36b476",
-          "bytes": 1913
+          "sha256": "4be0aea27ef362900a9b03c40394ccee5dfdb3f8ef3e831f7439b6ca33bfc944",
+          "bytes": 1907
         },
         {
-          "path": "capabilities.json",
-          "sha256": "df1115ebfe01f87a31c9ae8a89a62f84e0b36ccaf2e00177de1725b0818d5428",
-          "bytes": 2243
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "7bfa9b0fc72c95043a27d7cac3c12f64a426c7c3c79757b923568c7a56a0780c",
+          "bytes": 470
         },
         {
           "path": "examples/case.json",
@@ -4620,19 +5715,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "59a44d94ba01d77a0489799a5492e8ccebf6a6f9674b56f7cf72cc5aab82c808",
+          "bytes": 1019
+        },
+        {
           "path": "package.json",
-          "sha256": "7f12addc014c6545628e6a5bc3172deb13818bec792c24430128141a17b74766",
+          "sha256": "b4614ae4f6838ef1b8744a281bb8c8c8e3909da16d161e8bcfe2999da528750f",
           "bytes": 113
         },
         {
-          "path": "plugin.json",
-          "sha256": "0509c4fb1b33f12c5c2b4f96aa186603d3fd2b33165ec02801c25dab0d1250be",
-          "bytes": 921
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "59a44d94ba01d77a0489799a5492e8ccebf6a6f9674b56f7cf72cc5aab82c808",
-          "bytes": 1019
+          "path": "plugin.yaml",
+          "sha256": "ae55dc154af72c0b4ce292d592c49c8ac2a16d0c913480ed187585f089984cb9",
+          "bytes": 3400
         },
         {
           "path": "references/evidence.md",
@@ -4645,17 +5740,225 @@
           "bytes": 1768
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "9afb84cc7eea6ecfab3acca615e43336de1f2233fc7c2613ce9da64f5c7056e3",
+          "bytes": 401
+        },
+        {
           "path": "skills/narrative-analysis/SKILL.md",
           "sha256": "52c274688bb36ae7b5e814908ca4d6e0ffb58026153c188a89e34af755a599a4",
           "bytes": 3182
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "b39d9409378f6be135fa2e26596cb38e9cbcc836369d8e97cfff62ca3c90b95d",
+          "bytes": 1523
+        }
+      ]
+    },
+    {
+      "id": "sesame/plugin-optimizer",
+      "version": "1.0.1",
+      "directory": "plugin-optimizer",
+      "treeDigest": "sha256:8cec645dbb8df19db725e89a6aa2466b4a4f1ff2bac893f4228ddc4352194e95",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "054088c40e8a1f3a156c5071b186a2190d8ed1c46445b5f0985cd73563ee2555",
+          "bytes": 279
+        },
+        {
+          "path": "index.js",
+          "sha256": "7cb10412beada02e0cbe1515eaf4b9f58e0b26fb8ba94c64d9ee18c47615276f",
+          "bytes": 1137
+        },
+        {
+          "path": "instructions.md",
+          "sha256": "b71b1d271b90b279ff7469a09688ee1b9a148edca7071b492d7754dac84ce82b",
+          "bytes": 164
+        },
+        {
+          "path": "package.json",
+          "sha256": "ff944c287e3176d2f7b3ede2538c35edf98a6ebdb0dd01cab24a5bda2ebdc849",
+          "bytes": 110
+        },
+        {
+          "path": "plugin.yaml",
+          "sha256": "a65717442c39b34aff697d0e9d507f7d524100d6da0bd4d1780b37e283087818",
+          "bytes": 3498
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "e1852dd82556f3f79d0da04b508054418ee9ee0d8d53153e7cfa1e0ff80f9b60",
+          "bytes": 242
+        },
+        {
+          "path": "skills/attribute-finding/SKILL.md",
+          "sha256": "1181e7936d5c493dc924ff17534202fc463e231d0d792dc3b8e0f3813c357798",
+          "bytes": 288
+        },
+        {
+          "path": "skills/build-case/SKILL.md",
+          "sha256": "76aca9cdfcaac2d3b8ef656e0bab5815f2f2691ece3274947341b4d05eb261d1",
+          "bytes": 217
+        },
+        {
+          "path": "skills/elicit-requirements/SKILL.md",
+          "sha256": "13c473a188ff8a10e9bfe9cff2348f58450476e11852e191687ade883ceecf8b",
+          "bytes": 256
+        },
+        {
+          "path": "skills/evaluate-step/SKILL.md",
+          "sha256": "bd39561c039bd8806b9e75314c67841fffa99013e35180ee789ec1914a4ce63c",
+          "bytes": 280
+        },
+        {
+          "path": "skills/propose-change/SKILL.md",
+          "sha256": "c23dfd9960a8cb5a3b38756b307e4ebf584146a4ee8b8173eacdab47a784e2b3",
+          "bytes": 276
+        },
+        {
+          "path": "skills/scaffold-plugin/SKILL.md",
+          "sha256": "248b27e21f649b0074444d51e81efaeee4641a78a2464dcd80b909c6708cd68f",
+          "bytes": 215
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "18d6f8b8855a8b1d92a45cd063637fd8bc1efb4d188690b92f5135a3dfbe0e0c",
+          "bytes": 14684
+        },
+        {
+          "path": "tools/optimizer_case_new.yaml",
+          "sha256": "4441866e7d490347ef6faf2b5eb5578567940351aa42d603cae7401dd13774b4",
+          "bytes": 1009
+        },
+        {
+          "path": "tools/optimizer_case_run.yaml",
+          "sha256": "0f9482754b8616b23f2153931fd5df1aebaf2df553afc57c71e49982ca5d8b70",
+          "bytes": 935
+        },
+        {
+          "path": "tools/optimizer_change_new.yaml",
+          "sha256": "bce9e5d4726986ba24aa788f437e2a217033d4c2c47c7a8fdaaff8908c599450",
+          "bytes": 1228
+        },
+        {
+          "path": "tools/optimizer_change_verify.yaml",
+          "sha256": "e6c23223aa8c44519d74fcbfbd921164ccd1cffea1cf38584e8d775011e16e3a",
+          "bytes": 858
+        },
+        {
+          "path": "tools/optimizer_eval_run.yaml",
+          "sha256": "39897c6aa2927fb50f0bcdd7ce1531f9dfa4b29658a2889a129d4cafcae76271",
+          "bytes": 1136
+        },
+        {
+          "path": "tools/optimizer_findings_add.yaml",
+          "sha256": "6b611f05c84e77edaf6980c5e413f147e4bfd8ef8d9778ce567be120b1eed774",
+          "bytes": 1043
+        },
+        {
+          "path": "tools/optimizer_findings_inbox.yaml",
+          "sha256": "a769cae9283aef9f226820c56fa92e0572befef6c4cd268865ed6a0887a5a0c7",
+          "bytes": 930
+        },
+        {
+          "path": "tools/optimizer_findings_ls.yaml",
+          "sha256": "0aee1610c83572910f21fed6503df20ea30094ce103f953934d0decc2ca016d9",
+          "bytes": 801
+        },
+        {
+          "path": "tools/optimizer_findings_triage.yaml",
+          "sha256": "a62339774dd242386c20b03cafbbe8e662106090723e9340c8e76714f35f46de",
+          "bytes": 1172
+        },
+        {
+          "path": "tools/optimizer_init.yaml",
+          "sha256": "19ffaf999cf98d21c2a062ae7b923abcce1f07a270eabcc4d8c89ada89c9ec8d",
+          "bytes": 1025
+        },
+        {
+          "path": "tools/optimizer_surface_add.yaml",
+          "sha256": "8a799a3cd4aa77f4b94722ddb19a0a504e568214459182016652bda566450c31",
+          "bytes": 978
+        },
+        {
+          "path": "tools/optimizer_surface_diff.yaml",
+          "sha256": "7acc3944e65991e22ea07b2c63085aeb7c898a8dbf144b40a6e7c494f6acfe9f",
+          "bytes": 970
+        },
+        {
+          "path": "tools/optimizer_surface_lock.yaml",
+          "sha256": "6ff5a04fb678109befbe5ae31112f61bf2c524e0ce7cbd254487ceb95ecd1dc0",
+          "bytes": 845
+        },
+        {
+          "path": "tools/optimizer_surface_ls.yaml",
+          "sha256": "43ba6accfdc39a917fe68578e07300b617854de328a2864d1b24d50e0047b9c4",
+          "bytes": 857
+        },
+        {
+          "path": "tools/optimizer_surface_rm.yaml",
+          "sha256": "21ec7088d76b5b5542aea2f753daf3dd358afb30c21d29f9fe73012311095b8a",
+          "bytes": 910
+        },
+        {
+          "path": "tools/optimizer_surface_set.yaml",
+          "sha256": "9de8d3d968d29d142d6fa1cc908f7f4cde12634ca104a4209a0f6bfa42334066",
+          "bytes": 966
+        },
+        {
+          "path": "tools/optimizer_surface_show.yaml",
+          "sha256": "9f617e640d52350e384e75f831e46b4e117954bcee9268ffb29533213442e173",
+          "bytes": 919
+        },
+        {
+          "path": "tools/optimizer_trace_export.yaml",
+          "sha256": "16bb74d4e697085d22425623507dc0d5b0ba1d66b8c61e21f471ee1a84dfc892",
+          "bytes": 918
+        },
+        {
+          "path": "tools/optimizer_trace_ls.yaml",
+          "sha256": "0b92cc982cd77c4c4c18d4c09c187abf57ec03fe55d5b8d627a79284e931a64a",
+          "bytes": 918
+        },
+        {
+          "path": "tools/optimizer_trace_show.yaml",
+          "sha256": "03119ed816e50939c1fa597521f61129885b9c49034e63956ee2882ec801a178",
+          "bytes": 866
+        },
+        {
+          "path": "tools/optimizer_workflow_check.yaml",
+          "sha256": "e2ca7291ddc24101466dd62fddc80a10233e8480632d43ddd9973d0ebd40747f",
+          "bytes": 845
+        },
+        {
+          "path": "tools/optimizer_workflow_graph.yaml",
+          "sha256": "e54dbe31c0a2c2fa15a034f0f2ff20a3445d805d0f129f1e9a21682e83b7e196",
+          "bytes": 857
+        },
+        {
+          "path": "workflows/plugin.build.yaml",
+          "sha256": "6b1b9784727885bfa7505d6069a510e1a70be693c3c431242a3e3752e8e0ffc9",
+          "bytes": 365
+        },
+        {
+          "path": "workflows/plugin.optimize.yaml",
+          "sha256": "31d1bca80fcca0106b4d7b23c104a1f49f8d371aa9eaf22b525797bbbe92cd0b",
+          "bytes": 560
         }
       ]
     },
     {
       "id": "sesame/portfolio-execution",
-      "version": "2.1.0",
+      "version": "2.1.3",
       "directory": "portfolio-execution",
-      "treeDigest": "sha256:4a1053142d98f5579a0414d76a8b2f356888f1df484e1d3118056bb9dc219be9",
+      "treeDigest": "sha256:ff27bf269a94244df4766d1e72b6694fecf261532430b830a902b03f36dd3691",
       "files": [
         {
           "path": "LICENSE",
@@ -4679,8 +5982,8 @@
         },
         {
           "path": "bindings.js",
-          "sha256": "8189f3b7f842f1ce47ea49b2e514cb2aa413c612a4f3253031ac17dae8665e14",
-          "bytes": 11946
+          "sha256": "d767d75a3b20b3b650315b69013741be97d5094e8d78ca7523bed2359dc72072",
+          "bytes": 14068
         },
         {
           "path": "calls.js",
@@ -4688,9 +5991,9 @@
           "bytes": 972
         },
         {
-          "path": "capabilities.json",
-          "sha256": "4a440b34212792a78d1892db6c1eb5ad0957dc70536bff50c420c49872edd24e",
-          "bytes": 36208
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "299140752b3e3e2b876270bd690b66e58e1fbc7d9970fad849aaf4124371ff2c",
+          "bytes": 1027
         },
         {
           "path": "execution-lock.js",
@@ -4703,24 +6006,24 @@
           "bytes": 1115
         },
         {
+          "path": "instructions.md",
+          "sha256": "7f6b9391883982f80ad06fdcd6082a9ce9732c322eb54f47a355b73e7db7d54d",
+          "bytes": 5202
+        },
+        {
           "path": "package.json",
-          "sha256": "e91f4d078dc73c70b6b3eda69e77f83e67ca4b7fa2d15151abb06644c8a93bea",
+          "sha256": "2f62b4b013b46b4e91101cc58b2514c0bc46de6a1ddb6bd034c0ed9499ff0879",
           "bytes": 113
         },
         {
-          "path": "plugin.json",
-          "sha256": "22f6ecf9154dafe15940378cda7006e8b9c11d8ca68e097a1f0053133ac916a5",
-          "bytes": 2565
+          "path": "plugin.yaml",
+          "sha256": "cd158b24252c6d5cdbacb8c1b6b4fb83666a7dd9763b8db3137b84ec3f1375a5",
+          "bytes": 4501
         },
         {
           "path": "portfolio.js",
-          "sha256": "30b7e031f3f38423d0c9a119d1659d78f12e31d6c1611b88853eba9bd1ed91c7",
-          "bytes": 9267
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "f9dc90dfae53763ff8e6ba9484bd21c03bd2390ab52f5d227fc28cfd8e056521",
-          "bytes": 5186
+          "sha256": "1a847136562674de15b4f9a036b04f389bc181edbd2e4f8c6108ac8d0db0db55",
+          "bytes": 9433
         },
         {
           "path": "records.js",
@@ -4728,17 +6031,77 @@
           "bytes": 2743
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "fcae321e47d878fcc8b1ca1e5a8ee71c0e7d0b043a9d37e52303c33d718aa292",
+          "bytes": 596
+        },
+        {
           "path": "service.js",
           "sha256": "628a72f861953bfb8b90c449c9dfec2e020c2c95c557c30d9560f7664c3fc09d",
           "bytes": 21929
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "c11b35ee0ccb95e99dfd5f2cbd81defe20cfa634baaa7370866cdd4e00baa111",
+          "bytes": 6353
+        },
+        {
+          "path": "tools/manual_trade_cancel.yaml",
+          "sha256": "61585b8f31b5ba21b1a0cd6c57616bf837fc2300388bb41e24ff52286114d02a",
+          "bytes": 2213
+        },
+        {
+          "path": "tools/manual_trade_execute.yaml",
+          "sha256": "03ca48f912e3c17328dd8139bfd851f130bff16725efb3160f45ed9325d5ffba",
+          "bytes": 5743
+        },
+        {
+          "path": "tools/manual_trade_inspect.yaml",
+          "sha256": "952413d69203556b035263456b9337d36541dc54fd29838c576741b7e59ae3bc",
+          "bytes": 1169
+        },
+        {
+          "path": "tools/manual_trade_observe.yaml",
+          "sha256": "fe3c93f81ae691e98fb7d54a573e29eaaf9ee0f4e38e1147a403567412a3673d",
+          "bytes": 2227
+        },
+        {
+          "path": "tools/manual_trade_prepare.yaml",
+          "sha256": "0a54a4315bcd0973ee27a41a73b8681d4db408b4a4a972747568cd1e36452bc1",
+          "bytes": 3312
+        },
+        {
+          "path": "tools/manual_trade_status.yaml",
+          "sha256": "eaaa4dcac3682bfafd51de7b3395b32f01ddd44076d940858c7923d7d164a7ea",
+          "bytes": 1678
+        },
+        {
+          "path": "tools/portfolio_execution_apply.yaml",
+          "sha256": "de687a92ed956fc7a45218fe1eafef364880584c8401926036d219fabc097a80",
+          "bytes": 5851
+        },
+        {
+          "path": "tools/portfolio_execution_configure.yaml",
+          "sha256": "4c1a7cf9901bd0b101ab9e845ff612b13e8ae0b22e826fd82758138c24072391",
+          "bytes": 2306
+        },
+        {
+          "path": "tools/portfolio_execution_context.yaml",
+          "sha256": "b0ba0edf00e0b4db5477e544bfd7f52181919a7a32675e3ce16b86544ef4807f",
+          "bytes": 3262
+        },
+        {
+          "path": "tools/portfolio_execution_status.yaml",
+          "sha256": "01f78dbc475be3c316c81440f43602ecbb7b78a02a4e1e3175792efc5afb20b5",
+          "bytes": 1907
         }
       ]
     },
     {
       "id": "sesame/price-action",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "price-action",
-      "treeDigest": "sha256:a7b1c20d42f061ba992bc28f291c9bd313ee8536acadfd4fa01f2119063dc05f",
+      "treeDigest": "sha256:7513c89a15b598189f4d5fec78ea253ee6b616c068012e0db88d5e92f1e5ecf2",
       "files": [
         {
           "path": "LICENSE",
@@ -4752,13 +6115,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "b6accec1fe6e535da49d81014ca1ce15d0d432300c780183bf68143a3906c6cc",
-          "bytes": 1968
+          "sha256": "876a400033fc8e415b391979d056798d809ae7fe868ac5732a409f7258c65f8d",
+          "bytes": 1962
         },
         {
-          "path": "capabilities.json",
-          "sha256": "7a32b502803487745baf34740eb9cea5539638004851d89ddc66fb3262ceadab",
-          "bytes": 2531
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "fd2aba19764b2378da4085859ec1574052f8a13e56b608b38eb016b837ec0629",
+          "bytes": 453
         },
         {
           "path": "examples/bars.json",
@@ -4781,19 +6144,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "d4631ed5d61f3a0bff00ee74ac80cbd5c87243facd187b07b94a8f929858b3a4",
+          "bytes": 1385
+        },
+        {
           "path": "package.json",
-          "sha256": "2b5202d60e19cc7c2a62508e7fdad93c0af7a1bcdce0a5e28ec7f8cb50495ba8",
+          "sha256": "5859d4a3034ddcf2b279bdab812092c074ab86934f7b184a22645ef1202e4495",
           "bytes": 107
         },
         {
-          "path": "plugin.json",
-          "sha256": "15f24d6b9b4455eca9ebe099e73cbcd7e3d6f8aafa87d5ab131e1e6d19e3e7aa",
-          "bytes": 1034
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "d4631ed5d61f3a0bff00ee74ac80cbd5c87243facd187b07b94a8f929858b3a4",
-          "bytes": 1385
+          "path": "plugin.yaml",
+          "sha256": "08c1e09a69da7ec553c3022c5b45774264d6e3d4f56fe5ebb6c7f9c0b3cfdc9a",
+          "bytes": 3793
         },
         {
           "path": "references/execution.md",
@@ -4811,6 +6174,11 @@
           "bytes": 1811
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "26840ecffdd3ae057707bb8e8046ee7840b1e57cd8d927c4fbb258f444ff80c1",
+          "bytes": 386
+        },
+        {
           "path": "scripts/bar_input.py",
           "sha256": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
           "bytes": 10396
@@ -4824,14 +6192,19 @@
           "path": "skills/price-action/SKILL.md",
           "sha256": "5a167263c21d107d44b99713b8e3bc961d453f44f4b99bf79817b489b9105aef",
           "bytes": 3781
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "a41c7eaf270b5b682a3f7ccc30d972f08a43de9581553bf0fab952b010ad83d0",
+          "bytes": 1948
         }
       ]
     },
     {
       "id": "sesame/qmt",
-      "version": "2.1.0",
+      "version": "2.1.2",
       "directory": "qmt",
-      "treeDigest": "sha256:b22edf0aacf11b3abdd42caea1705526aa66ad1c2159eafd215ff16d7c4cde5d",
+      "treeDigest": "sha256:b8402cc00fbe8cff5ceccdeb973cac27f9bee8386baeeb15cab1b9e10b586956",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -4869,11 +6242,6 @@
           "bytes": 17548
         },
         {
-          "path": "capabilities.json",
-          "sha256": "b117537428679c491eec7694a0cadd54826add7f9805190e611301ce691780b9",
-          "bytes": 175407
-        },
-        {
           "path": "commands.js",
           "sha256": "3520eb4072c2dcb64ecf8b9cb9e091f302bfc0ffb33e0b019957472ec1dffe00",
           "bytes": 6784
@@ -4894,9 +6262,14 @@
           "bytes": 4629
         },
         {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "52269eea8c45dcd0af49c70bc79c3f81d02c08bda94307c73c76ff91d89ddcab",
+          "bytes": 1592
+        },
+        {
           "path": "execution-adapter.js",
-          "sha256": "7ec3563ae31a1760894e29acfb4a62453212dfb194ad1f587e9881a707fbfccc",
-          "bytes": 10658
+          "sha256": "35ec56c66e6f3a0f136f99b4c984e29f5cdae1e287280ad494a4a40899318e38",
+          "bytes": 10791
         },
         {
           "path": "execution-evidence.js",
@@ -4919,6 +6292,11 @@
           "bytes": 2107
         },
         {
+          "path": "instructions.md",
+          "sha256": "b2a4c59d19ba17dc00918f5e7aec441b1d1bdf3972efc91b36a3b3bc39cbc6a2",
+          "bytes": 2553
+        },
+        {
           "path": "mapping.js",
           "sha256": "cad1795c382037353d78f03a6144e464612443f120441287fac809c7469ccea3",
           "bytes": 7532
@@ -4935,23 +6313,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "22d43ef0e415f8bd2be8e1a8ae95a6ff8b805a863e77296290cd7a67f61d9bbf",
+          "sha256": "e1c5d5fe67bb03814cab0c3d9031c4c4d8151154d48344980238ed7720c6d508",
           "bytes": 137
         },
         {
-          "path": "plugin.json",
-          "sha256": "4248c4bc3294659758e32f41c5e7472c5331fc179e5e32379dc67f3205e7e958",
-          "bytes": 787
+          "path": "plugin.yaml",
+          "sha256": "2ac7a521e39ca9a1dc7551837d51795a32a99c347346e8a71ee8be9ad7c92b3d",
+          "bytes": 68715
         },
         {
           "path": "positions.js",
           "sha256": "b84c8b37c4cd71cefb12427ea98c084a97f21de72cb76b9155d8bd973a5e5f19",
           "bytes": 10436
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "fdae976e95bd74b18232f8ba9e133b037c59802a8eaeab5ccbf48fdfd86a0924",
-          "bytes": 3005
         },
         {
           "path": "provider-state.js",
@@ -4967,6 +6340,11 @@
           "path": "requirements.txt",
           "sha256": "d6832c62d81f1241975bc20e0bf328c0a5e5fb16beb27497271b2ccc0fced986",
           "bytes": 1708
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "2b0bac9fc3d6acbbb4021585da675c3b62fdd31a0811b95a7999b632227ce364",
+          "bytes": 754
         },
         {
           "path": "service.js",
@@ -4989,9 +6367,104 @@
           "bytes": 1582
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "1f554ec7a6dcc97114897510082fd2cd7634e6d537011808e74b46489bb21792",
+          "bytes": 9782
+        },
+        {
+          "path": "tools/qmt_cancel.yaml",
+          "sha256": "8320d955b98dd1bc25a0cd43b631ac26f01d3cdbdd80f21fc49e536a9ba087e3",
+          "bytes": 3362
+        },
+        {
+          "path": "tools/qmt_command.yaml",
+          "sha256": "1aade80e59ea6b857b541f56b2b2c2a220bc8d5c82676f149bd080ae34c2c7d5",
+          "bytes": 1582
+        },
+        {
+          "path": "tools/qmt_configure.yaml",
+          "sha256": "464f355cb8a69b198867ac7710d828611b062b430bdafc313a21dd1798073f8e",
+          "bytes": 2751
+        },
+        {
+          "path": "tools/qmt_download_history.yaml",
+          "sha256": "59ed0d73a9f5878f880ed5d5a6be45f1956059651360c111cfc6d843aa22bbfd",
+          "bytes": 1983
+        },
+        {
+          "path": "tools/qmt_environment.yaml",
+          "sha256": "25797199dc506430087c17e82561cf4d008a6ddca2a8cbd48b9e478daecca244",
+          "bytes": 2908
+        },
+        {
+          "path": "tools/qmt_execution_cancel.yaml",
+          "sha256": "77681a3589f4e302fee403e88b1bc983ef0b7688d19a968559766e08f2313ec0",
+          "bytes": 3175
+        },
+        {
+          "path": "tools/qmt_execution_command.yaml",
+          "sha256": "b47d8ecd82930001407b22c5cf297b2dcc4448166770d1b33f2f8f353b108fc7",
+          "bytes": 3057
+        },
+        {
+          "path": "tools/qmt_execution_identity.yaml",
+          "sha256": "9590d683b2bc220138fd05cff9c15b1b6438e64125cc6be4724319140c091a84",
+          "bytes": 1843
+        },
+        {
+          "path": "tools/qmt_execution_prepare.yaml",
+          "sha256": "302dbd63e338a3d805bc1f43cfdcbc3d9eaff820956a8276524ba43f776056cf",
+          "bytes": 6890
+        },
+        {
+          "path": "tools/qmt_execution_recover.yaml",
+          "sha256": "08c0732e87a415b32805a09e036dd18f3c1498548e500355a02645f75e200072",
+          "bytes": 4594
+        },
+        {
+          "path": "tools/qmt_execution_snapshot.yaml",
+          "sha256": "c58ff6c6d52be1c80c182e0ffb8c4583ac1d9d6f5201bf8778efaf4d73ec1d3c",
+          "bytes": 7073
+        },
+        {
+          "path": "tools/qmt_execution_submit.yaml",
+          "sha256": "b07896305ed33b89de8a59a33f237d7e7dea9f257d672939dff775516bc130b9",
+          "bytes": 4115
+        },
+        {
+          "path": "tools/qmt_order.yaml",
+          "sha256": "48bf688ef84d0867cd4b0d14c0f0d557c02c031364f7e10bee0599a4085e9cda",
+          "bytes": 5554
+        },
+        {
+          "path": "tools/qmt_read.yaml",
+          "sha256": "25d5c8c2cb5969cd4282b34c7e36f966025d3e2b93a5d883ceb4183660e7977f",
+          "bytes": 4520
+        },
+        {
+          "path": "tools/qmt_trading_cancel.yaml",
+          "sha256": "11c48706b1f0fc6c031395a8faae0030cedecf1d8078dc341f247b4479dfa416",
+          "bytes": 3446
+        },
+        {
+          "path": "tools/qmt_trading_command.yaml",
+          "sha256": "51ba1644bf2995a4724fd0679344e1ec9c99443fb7c2ead165013e3a211b98bd",
+          "bytes": 1777
+        },
+        {
+          "path": "tools/qmt_trading_context.yaml",
+          "sha256": "3525af0be154674f7e1f55dcab302c6f0977cd08409440e604364894f3da0640",
+          "bytes": 6612
+        },
+        {
+          "path": "tools/qmt_trading_order.yaml",
+          "sha256": "246e64949176dc7a51e7a99285b126bb2a1c6f5c1c15b8d4e658335c4cabb8cc",
+          "bytes": 5749
+        },
+        {
           "path": "trading-context.js",
-          "sha256": "c0ec1e659c72d310cd45f0f3a313816c27423adcdf547ebeb9a40a57ece84745",
-          "bytes": 4856
+          "sha256": "b013579ed3c6b848683a2b0b13daac75d0f9391e765ee9da2a64bca07ac0ad31",
+          "bytes": 6314
         },
         {
           "path": "worker-call.js",
@@ -5007,9 +6480,9 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "4.2.0",
+      "version": "4.2.1",
       "directory": "quantskills-catalog",
-      "treeDigest": "sha256:8a39a83f33cd07a721d14ae6d91c6895f4561f582c243efe361bb2a289d8d9f7",
+      "treeDigest": "sha256:1d1c77c22b9b319b656a881abc1112434cdfbadb81b3fe03e58e1222f6a5e0ec",
       "files": [
         {
           "path": "LICENSE",
@@ -5017,14 +6490,19 @@
           "bytes": 1247
         },
         {
-          "path": "capabilities.json",
-          "sha256": "be9b6a131e7f8a55cdeff9e02e04356b4e026eeadf0766670d41264b199bafa7",
-          "bytes": 24024
-        },
-        {
           "path": "catalog.json",
           "sha256": "760935a4d850669bc0a3d783039eb837e01b512d2fa60601e07dd3835c0fd4db",
           "bytes": 206790
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "537393d38f50935a92162cc06b5f5a0972452a5b6e7d43ec8661563424763661",
+          "bytes": 2401
+        },
+        {
+          "path": "evals/cases/quantskills-catalog-recorded-call.json",
+          "sha256": "53591cb6e013926173f968c637d6cae46359bc1e29e81fcc3e4171cfc3a689ff",
+          "bytes": 1488
         },
         {
           "path": "mcp.json",
@@ -5033,33 +6511,93 @@
         },
         {
           "path": "package.json",
-          "sha256": "ab077c60e2b41835573cffbbdb56853c18e3b2f56bc8352a8803a621ad0b5c1c",
+          "sha256": "64e42bf5f0c2ae277f7126dfbd39031886d2074bb2f38a3a08457cc83ffd9338",
           "bytes": 132
         },
         {
-          "path": "plugin.json",
-          "sha256": "589c96beda32b16bfc6889b3a8cf8396bf1694bd2e764f403ed9a68a8c29e86b",
-          "bytes": 14708
+          "path": "plugin.yaml",
+          "sha256": "0549180a24d44c0915d178062a39edf66c397b59c0fcd6daacabe3c15141cb3e",
+          "bytes": 14020
+        },
+        {
+          "path": "protocol/directory.mjs",
+          "sha256": "b217d489e2e9e2b19e69bceaab705296167a57bd141aa8ab6b3c5f561ed98a83",
+          "bytes": 2832
+        },
+        {
+          "path": "protocol/package.mjs",
+          "sha256": "b5d1b7c9a92c004c64c96c962437354340d4603b034738690906282b9226eaff",
+          "bytes": 12716
+        },
+        {
+          "path": "protocol/vendor/yaml.LICENSE",
+          "sha256": "5bba27375d93e9119f76c1015f7672cf9ad5f70952296e0842fb2243d6376869",
+          "bytes": 738
+        },
+        {
+          "path": "protocol/vendor/yaml.mjs",
+          "sha256": "75501319e31aae0f2305fbd7c54ddd76b403b58fc9aaa31e490b1a0769cf0524",
+          "bytes": 203655
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "ab268b06416a698321f853e8ce32ce1915826a29136dee1a9e77d80c33330260",
+          "bytes": 530
         },
         {
           "path": "server.py",
-          "sha256": "a92b1d083479bbf24360469de4319b80d21fafabb86ed9353b072cb19edf49ed",
-          "bytes": 6760
+          "sha256": "05b474164578e5a8b0018298d7ab0659273a56f3519969e96960f54e248ffcd1",
+          "bytes": 8160
         },
         {
           "path": "skills/quantskills-catalog/PROVENANCE.md",
-          "sha256": "56024e4743a5ee6f15e1c0d2c54e1a3f288923b190b9b4a1ee5f8f887d4f3861",
+          "sha256": "fa1857d72e34d27c0a14415b46aacf0229057316e5d16c1812107e441c528748",
           "bytes": 3316
         },
         {
           "path": "skills/quantskills-catalog/SKILL.md",
-          "sha256": "5245ff172204c79a3856d2bd2b188c3cf278dc0505d5561eac186745f121bfad",
-          "bytes": 7043
+          "sha256": "08fa56205cd5203692950fa4be7f578e7d4dc89f7fe138d487e94f8598dea432",
+          "bytes": 7277
+        },
+        {
+          "path": "snapshot.mjs",
+          "sha256": "33442a70671f01f71319abeac24fb1eda01b437296554b8ab0edfcbd3eb5d366",
+          "bytes": 762
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "d8ea67cb15217b34022df4914ec38dbc0b899d969bf982a370c4e67cf5b550a9",
+          "bytes": 4268
         },
         {
           "path": "tests/usage_examples.test.py",
           "sha256": "b8caf41a670c6acdd469282929f3650b3f7eeaba1ebe69d1f87752e726c9b01c",
           "bytes": 2245
+        },
+        {
+          "path": "tools/catalog_filter.yaml",
+          "sha256": "11a5d7d8eeb315c07ea09513a56fe213a2a241b199d605db139748bc9fc4f438",
+          "bytes": 4467
+        },
+        {
+          "path": "tools/catalog_get_item.yaml",
+          "sha256": "48b006ff32fb1a74fd4e6dcef3d73f219544eb81867187a489952eadf61aaead",
+          "bytes": 3226
+        },
+        {
+          "path": "tools/catalog_list_categories.yaml",
+          "sha256": "56526b9849221a80638341ec50513cf4ea8542a86a39e96f6e5215aed546306c",
+          "bytes": 2506
+        },
+        {
+          "path": "tools/catalog_recommend.yaml",
+          "sha256": "2c4d9a59b9d3b2d49383b4c7d7c39480250458a874e2b3a2bb8e424638bfc531",
+          "bytes": 4945
+        },
+        {
+          "path": "tools/catalog_search.yaml",
+          "sha256": "d63c7d71172a1f8fb5194089e240b8f81f2f09fc3ae43f517444c71e7838e64e",
+          "bytes": 2431
         },
         {
           "path": "workflows.json",
@@ -5070,9 +6608,9 @@
     },
     {
       "id": "sesame/rss-collect",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "rss-collect",
-      "treeDigest": "sha256:88153cb787ab05797bfa86a087de6c9333aa13757c8df496381833fad0f2c44f",
+      "treeDigest": "sha256:fb152c163fe9512e6c3cd327b16b95ca6d911c7034defa0b95c2b9f4a786b7e3",
       "files": [
         {
           "path": "LICENSE",
@@ -5080,9 +6618,14 @@
           "bytes": 1265
         },
         {
-          "path": "capabilities.json",
-          "sha256": "351206fe97f75b9befaa9f36f624deb87c37b982603ce31347a99cc6578195aa",
-          "bytes": 15712
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "1ea7e98dfb1b245f51a9722c63c284a517d0aecdc4a8fde15369d3b4bf0d725f",
+          "bytes": 3937
+        },
+        {
+          "path": "evals/cases/rss-collect-recorded-call.json",
+          "sha256": "5ad04aec074a2668bdbe40fc8d4c90ddc7ef50cd7b03d9ddf13872e131776c7b",
+          "bytes": 2249
         },
         {
           "path": "index.js",
@@ -5091,7 +6634,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "601c5f6efae82021aceceec7ab6af5e4d5010bfeb2e76738ab26a6c16bf88114",
+          "sha256": "6fa4050860d0b62867c91efc51aa17ac10eddb5813f16a6718c26f9fa3e37017",
           "bytes": 124
         },
         {
@@ -5100,9 +6643,14 @@
           "bytes": 7879
         },
         {
-          "path": "plugin.json",
-          "sha256": "dc4a579b73632c8a7ae843dd7b3a31a00c19c67490c74a69341eb1df29da1003",
-          "bytes": 756
+          "path": "plugin.yaml",
+          "sha256": "a321ef6515f4dab7f65cc286763767fcca95ed055d66f57931f0057018e32b60",
+          "bytes": 2467
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "ff38384b24d6d7ea8aad389af840b7a60c0d212c135a3d0e3c415c5b7e039ce1",
+          "bytes": 376
         },
         {
           "path": "sample.atom",
@@ -5116,8 +6664,8 @@
         },
         {
           "path": "server.py",
-          "sha256": "e22d3f86699d6baef6cb781786a6fd7c814558e7ca24ef30fddb200c4727666f",
-          "bytes": 4361
+          "sha256": "0d61814aa552908e45947f19e97496be1bb6fc9245a0a5e7038c2fe1fe7b6e35",
+          "bytes": 4362
         },
         {
           "path": "skills/rss-collect/PROVENANCE.md",
@@ -5126,16 +6674,26 @@
         },
         {
           "path": "skills/rss-collect/SKILL.md",
-          "sha256": "1cd9ba611401266bf8a854f533fd07186fcc7c2092daeb8ca00da6f73ba005c3",
-          "bytes": 4693
+          "sha256": "40c7fd79cd7aa95abe154256f74a49e96dd39ac3cd6c8684a96322580a5ad2c3",
+          "bytes": 3819
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "ba29800dc4b28566dcb9b6aa56197c48bfb512c1b013557dd5b6b4e96aec2635",
+          "bytes": 1232
+        },
+        {
+          "path": "tools/parse_feed.yaml",
+          "sha256": "f38bca8db9338d15a425ce155ae9e04795011e34ea517e451a9fd443e18fc5a8",
+          "bytes": 10852
         }
       ]
     },
     {
       "id": "sesame/strategy-development",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "directory": "strategy-development",
-      "treeDigest": "sha256:89ab5630b1e2b53f9d4d146c5bf25930848726cc15d5a128261168fa1b55e629",
+      "treeDigest": "sha256:4e9773a8f902d7d917263b77bf1a0eb7039b88c68ea8f987ae957028cf5303b0",
       "files": [
         {
           "path": "LICENSE",
@@ -5158,14 +6716,14 @@
           "bytes": 10422
         },
         {
-          "path": "capabilities.json",
-          "sha256": "d5767bade0f00803f645f903ae9d69c7c6884f3a5cc62866a7aba2c896d6cd81",
-          "bytes": 97349
-        },
-        {
           "path": "design-study.js",
           "sha256": "e10acf703e9fd15b8d0750800395d4a252c300150922749086ce9d6e9eee7bf8",
           "bytes": 3775
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "9fce11c92db9f7d1c151f837a987605c80e425982da36a7f04dd02e516bc62de",
+          "bytes": 11964
         },
         {
           "path": "experiments.js",
@@ -5181,6 +6739,11 @@
           "path": "index.js",
           "sha256": "2466753f4bcc4395662f8a5c2a13decf54fe29c6d94cd2c582614b9a049f79bd",
           "bytes": 2471
+        },
+        {
+          "path": "instructions.md",
+          "sha256": "9f42cd0f581e635d9e672dfb21fe44ba32a898baa6e58484518e5325bd77be3e",
+          "bytes": 4086
         },
         {
           "path": "mandate.js",
@@ -5199,7 +6762,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "7101658a4241d631163932d4a08e666495f82ec2307c7a79ca4d1daa529cbaaf",
+          "sha256": "3e3f6a7fd23651e0861f80c5769eb843eda457b84ca812cb1ccb191662dc8c68",
           "bytes": 126
         },
         {
@@ -5208,19 +6771,14 @@
           "bytes": 4707
         },
         {
-          "path": "plugin.json",
-          "sha256": "3e3a94278bf7354941be17cbce7666192bab78d30cf72d457c3011759ceee55d",
-          "bytes": 1218
+          "path": "plugin.yaml",
+          "sha256": "64276e21575ac00820f0cb5f04195daf09ad98fd6477dd056bea860e75d4ca3c",
+          "bytes": 6505
         },
         {
           "path": "project.js",
           "sha256": "1642055ed9a7ba864981411b5dd648339e19e0d61b73cde92eb0e7ff35bd75a7",
           "bytes": 14168
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "43242204d4a6d5fa29fc2eb921fd46629bae4d154008dd6440559d70fa70733f",
-          "bytes": 3563
         },
         {
           "path": "records.js",
@@ -5278,6 +6836,11 @@
           "bytes": 3111
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "0f46ad9b71d17584ef4ce57fbb9c3e3ba146cc97b261e6a327fa342f90225914",
+          "bytes": 662
+        },
+        {
           "path": "research-method.js",
           "sha256": "eebe07997edb087ad3d42b5890d305ea1e997a6dd7d9824baa36b081ee7401b0",
           "bytes": 2219
@@ -5291,6 +6854,11 @@
           "path": "structure.js",
           "sha256": "7409291b4cd22471690fae4bfd419c8bd7f8245be938108442a02b5a45972447",
           "bytes": 28249
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "d2d73b2490d405c9f8509046b753b890a19c2baeb52ffe082ef5f6ab57724784",
+          "bytes": 8118
         },
         {
           "path": "templates/forecast_buffer.py",
@@ -5363,6 +6931,46 @@
           "bytes": 6399
         },
         {
+          "path": "tools/strategy_development_backtest.yaml",
+          "sha256": "56373d154af8f852340b6ed881a8a0eb53418d041ccf6da6526015b38e80c216",
+          "bytes": 12993
+        },
+        {
+          "path": "tools/strategy_development_build.yaml",
+          "sha256": "d915f752ef7fbe489cce75aa7beddbf67ef1e17b205a7b070ae35fc0a2a1df1e",
+          "bytes": 3729
+        },
+        {
+          "path": "tools/strategy_development_compare.yaml",
+          "sha256": "4811ea4ae5f14793b43b8f3f3472ae9683fa9463a7bd29a8a073e358a4b67a9e",
+          "bytes": 3205
+        },
+        {
+          "path": "tools/strategy_development_method.yaml",
+          "sha256": "0afdcfdd05ca5ef46141310492753fea6ae2cab6558dfbfb7b970bc76d89b98d",
+          "bytes": 1242
+        },
+        {
+          "path": "tools/strategy_development_plan.yaml",
+          "sha256": "88e2609f826eb1c8888c122f732d5e5afe9a8f03d6f3d6f41cf2ce5cdf9c98b3",
+          "bytes": 26885
+        },
+        {
+          "path": "tools/strategy_development_read.yaml",
+          "sha256": "073b7a2962408f11f339a73068ed28d5efd159549ff5d070d4d0338bd38d7575",
+          "bytes": 1731
+        },
+        {
+          "path": "tools/strategy_development_study.yaml",
+          "sha256": "aef11b0672f2e539cf6c9ff4da5d811648386d0cf7a932fbd58f3994fc533227",
+          "bytes": 4737
+        },
+        {
+          "path": "tools/strategy_development_verify.yaml",
+          "sha256": "ecface24cfa83d2ee2ca5fa1d5be85b25b38d09f21ee845a6a438822fa0b8d4c",
+          "bytes": 3705
+        },
+        {
           "path": "trade-path.js",
           "sha256": "94ec93edc37424f81e8b5b2250f9e3dce599edc2d44a3aae6d5d0f29cc48326d",
           "bytes": 11586
@@ -5371,19 +6979,24 @@
           "path": "workflow.js",
           "sha256": "043493828f545316a757229e6eb651d76c49f5e8e8db5928cf4b734b13d72c70",
           "bytes": 6501
+        },
+        {
+          "path": "workflows/strategy.development.yaml",
+          "sha256": "cd0c84f5aefbb9f7ba66830fb8ba52aa0e33040fc978dffd660e20d2790d999e",
+          "bytes": 2274
         }
       ]
     },
     {
       "id": "sesame/trading-decision",
-      "version": "3.4.0",
+      "version": "3.4.4",
       "directory": "trading-decision",
-      "treeDigest": "sha256:96a31af89c4e43280f4431677c81aba7be38d583497d101ccd05d03d61fab9e0",
+      "treeDigest": "sha256:f874d15d3cd96259d6d0b0bcbdfdee41e342e64f016c46110795d5acb9dfd880",
       "files": [
         {
           "path": "COMPOSITION.md",
-          "sha256": "1627b1686611f447ed9a1919d08627b4ebc94f411e91800bd403cdccc323c0b4",
-          "bytes": 6264
+          "sha256": "aa4bce03b1d7beefd77eebe6245390f0546c741d77c00b60a96c39ab1b0b2dd1",
+          "bytes": 6554
         },
         {
           "path": "LICENSE",
@@ -5402,18 +7015,13 @@
         },
         {
           "path": "agent-tools.js",
-          "sha256": "7fddba8ae2559c196190abb4f3addd9b8e1e367462b25e478da1e2fe9729f010",
-          "bytes": 3178
-        },
-        {
-          "path": "capabilities.json",
-          "sha256": "ac6b0720f9d86a355d63449a64ede63a87d6260adbe87b64112914e0625d67cf",
-          "bytes": 71420
+          "sha256": "c930888553f83f6fe6e43aab4352837bbed50a29ac3d59590361a8bd38a7e927",
+          "bytes": 3937
         },
         {
           "path": "composition.js",
-          "sha256": "c56767ad7dd4c60ea3198be5bc4b04fa96ef690368fc1dbfe033750f69ffeab2",
-          "bytes": 6566
+          "sha256": "a2babf1593ec15023dc810e07962f4f4f710a3bea0a45490847be6844ac5fffd",
+          "bytes": 6739
         },
         {
           "path": "data.js",
@@ -5426,14 +7034,24 @@
           "bytes": 7411
         },
         {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "fdedb32724b3b3a23a5a39171be5d97ccf6bf6bf15b4291d034aec3f1993203d",
+          "bytes": 815
+        },
+        {
           "path": "evidence.js",
-          "sha256": "f15df8f95ac68a1c474b0c62ec567f48d6770cd5430540eb954e5323ce676488",
-          "bytes": 5096
+          "sha256": "1779edadffcc9a2b83e46f3db7d16d37491c018f94eeeb49ff7250af9393dca1",
+          "bytes": 5844
         },
         {
           "path": "index.js",
           "sha256": "60a88d5b2a31e2351b787cfb862052c92635479af27188f85461ae2e49b94e70",
           "bytes": 1077
+        },
+        {
+          "path": "instructions.md",
+          "sha256": "8926a3c69e0db64df06d4ae80ad7a7130de8bc51b1377d1dbc7eb013058bd639",
+          "bytes": 7061
         },
         {
           "path": "investment-research-contract.js",
@@ -5447,23 +7065,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "f219f3ce5e4930ec178c51848bb6fcc8aedd18da5971263843d79e34b61067c0",
+          "sha256": "ed315143eb2bd68b01097c8b21fb8eebc3478e4b1b6824918e2c9ee0ce8fb434",
           "bytes": 110
         },
         {
           "path": "plans.js",
-          "sha256": "9e42a47d8fec900b7d8eab2f5e8cf8d1433c9da2ddc7d75ff5b3063970094b16",
-          "bytes": 8895
+          "sha256": "83884f8c8ce10558a8d297bc50f726d8e18076711eaaa746cc75da24110a865d",
+          "bytes": 9538
         },
         {
-          "path": "plugin.json",
-          "sha256": "31863b0374a329094aef367b28f1adc949b93f5da5703cc2be4dfd8612965eb5",
-          "bytes": 1008
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "087c2d7b913aa9d246991ebf13372c0814872cfd365b7b0be639a7d094a20cdf",
-          "bytes": 6078
+          "path": "plugin.yaml",
+          "sha256": "c0ae3e5d1f427ce21fa7cd25dbf48587a7fa3d4108c6a01eec1174c547d392d5",
+          "bytes": 11031
         },
         {
           "path": "records.js",
@@ -5472,13 +7085,18 @@
         },
         {
           "path": "report-publication.js",
-          "sha256": "0721bb50d010e53bea548c4aae8d5e6456b03e5bd65eb737ef8c62608b7169d6",
-          "bytes": 4467
+          "sha256": "a89678f3fae868f8bde304742655c6a0a68901ff59eaa7b429585ddcdf781747",
+          "bytes": 4503
         },
         {
           "path": "reports.js",
-          "sha256": "a96b3fc4579aaeb8fae78841a520791d6a9373e98649252e7d66a98cae15069d",
-          "bytes": 1941
+          "sha256": "ec1f89152c68347cd27d31c965d1667a8021f076d297585f69739092fe74665c",
+          "bytes": 2415
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "9ff16ca97b66b0fbf8686d48d4ee2c65160e9b4a119dad0a3a34da01ec35f40f",
+          "bytes": 660
         },
         {
           "path": "research-artifacts.js",
@@ -5487,8 +7105,8 @@
         },
         {
           "path": "runtime.js",
-          "sha256": "d43663c7b54f1a505db5e86226829da2d4eca7e7aada953ee441a3af0a7fb355",
-          "bytes": 40411
+          "sha256": "9b476875181285ed8a1c57ffe5e2fc4ad09fdafa8c9a4de4e9d70a0735ad1e51",
+          "bytes": 42154
         },
         {
           "path": "scheduler.js",
@@ -5511,9 +7129,74 @@
           "bytes": 353
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "91eaed66bc2d246b465ddf5c544ee4ed26c0005cbf8792b268ecb104124343c9",
+          "bytes": 7656
+        },
+        {
           "path": "team.js",
-          "sha256": "52289e39a5cb9b5bbe590a3b17af83c6bab41d8b42290d9ead92488f797e6abc",
-          "bytes": 7422
+          "sha256": "f9f561e96a004e4b70032e5b3da4f7e097d5f3e1040e868b36cc77f152f80cf3",
+          "bytes": 6681
+        },
+        {
+          "path": "tools/trading_decision_activity.yaml",
+          "sha256": "6f695c71bef1987b68d3792316dd4f4c3938da8868030606c4b6bcc48cc4868a",
+          "bytes": 1245
+        },
+        {
+          "path": "tools/trading_decision_apply.yaml",
+          "sha256": "ef89ef51b2dae176c0dfea4b66339810a38a4589329b49cd489240788cf92f38",
+          "bytes": 2138
+        },
+        {
+          "path": "tools/trading_decision_check.yaml",
+          "sha256": "7577f432e0b1be6e216157666e85cb40c9fcf2450b2fe296f290ddf6ee5a78d4",
+          "bytes": 1672
+        },
+        {
+          "path": "tools/trading_decision_context.yaml",
+          "sha256": "1d02bf5f5b9618f1070613c32a6900367a58ddd1cf35048aab0648bad950e210",
+          "bytes": 3336
+        },
+        {
+          "path": "tools/trading_decision_decide.yaml",
+          "sha256": "290773b5b46f47a02e02bad8245c6509fdb3fa7bdaef170951a7d075b9770954",
+          "bytes": 6939
+        },
+        {
+          "path": "tools/trading_decision_event.yaml",
+          "sha256": "7be813562468790b46c816c0a23ee46a7f30589232335f8f59203e02726f3f78",
+          "bytes": 2356
+        },
+        {
+          "path": "tools/trading_decision_models.yaml",
+          "sha256": "dbf01084042ec0f4ca6b475e84a9e031a2b7e6bd466310df8b64afa7fbad3e6d",
+          "bytes": 1695
+        },
+        {
+          "path": "tools/trading_decision_plan.yaml",
+          "sha256": "52aebe6b9afcd3a0da1fa7033cbbb72d61f1fe37e27cd9dd2593fd996fc581e0",
+          "bytes": 15073
+        },
+        {
+          "path": "tools/trading_decision_report.yaml",
+          "sha256": "477b6842960a9e62f3ecd52959327b289668c843e6faf0a7c6d195142cad7718",
+          "bytes": 1730
+        },
+        {
+          "path": "tools/trading_decision_review.yaml",
+          "sha256": "f8bce385445fd0c3ed54d3f00e52bfa148cdbe6a3ceb826eff34be971aa00c61",
+          "bytes": 5328
+        },
+        {
+          "path": "tools/trading_decision_run.yaml",
+          "sha256": "459df92a89d5c41b198595a902c75eadaaba63623f07f2f7c79e091fc2457edc",
+          "bytes": 2274
+        },
+        {
+          "path": "tools/trading_decision_runs.yaml",
+          "sha256": "1e76530d414c9f8fe4799e7acb2131ca2e04236d4e675980d3c74696697205a1",
+          "bytes": 4184
         },
         {
           "path": "workflow-mechanics.js",
@@ -5529,9 +7212,9 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "2.0.6",
+      "version": "2.0.7",
       "directory": "vnpy",
-      "treeDigest": "sha256:af76e9bf3f4223bbef3703e2e8b80c43f13f58f029d1f199f708021bbe8fe5d1",
+      "treeDigest": "sha256:cfe0de5b61c8030bd3f85e748e1f69baa18936f8ddd44f56a32bd4f374543f27",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -5564,11 +7247,6 @@
           "bytes": 2619
         },
         {
-          "path": "capabilities.json",
-          "sha256": "f3b7bba0a6c8f16a76dd6a00885fb91d6b718d07bdc38fa7dff4cdf99a6e423d",
-          "bytes": 18343
-        },
-        {
           "path": "download-wheels.py",
           "sha256": "aaa8d350d561b1955cb1dd3ad4ae5f9fb4c82e6635e4d67ca28f4d1b8278128b",
           "bytes": 6812
@@ -5577,6 +7255,11 @@
           "path": "environment.js",
           "sha256": "f12adbf5eaf8de410b03dbbd345bb46153ace67ca1f25f7bf27cb15b302e71e0",
           "bytes": 13654
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "e803e502b2bc7ef777111b2200988b07db8f1713f882265dd8aef76a8e610018",
+          "bytes": 4142
         },
         {
           "path": "examples/bars.json",
@@ -5604,24 +7287,24 @@
           "bytes": 9406
         },
         {
+          "path": "instructions.md",
+          "sha256": "4a314af86d08e1d21c8a9b60164cc4d500dcfda1e5a6e57d2bd606d6eb2189b2",
+          "bytes": 1550
+        },
+        {
           "path": "operation.js",
           "sha256": "4d000b3823fd095efb56798f4dddac998732558410106f33e070c817e8c39c0a",
           "bytes": 1085
         },
         {
           "path": "package.json",
-          "sha256": "8ad3f53020bd4020771e61387fbb907447766380d04b839e04e1f3e02d540b87",
+          "sha256": "9b389afa203e72bc82f2d542c2e5e275e8bcb665bfe8664dc0e3593440bb1565",
           "bytes": 98
         },
         {
-          "path": "plugin.json",
-          "sha256": "935dbf874c6141a22a38bf186d35bc99a70cae0bed0101e128fc96e445b99782",
-          "bytes": 811
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "8aef38a5211905918ee98276b9ca2cb2c79d3fba55573425924d28f69142e171",
-          "bytes": 2531
+          "path": "plugin.yaml",
+          "sha256": "d275d7b8a1fce958058db5a728e2a47e98fef55565bfbe4ea0f0f299ecd147df",
+          "bytes": 5245
         },
         {
           "path": "records.js",
@@ -5632,6 +7315,11 @@
           "path": "requirements.txt",
           "sha256": "102a07a46979c8192cd82eb1980f1137226b68a1a72b23df8401c822146474f6",
           "bytes": 36
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "4886092d351bd71cd1e199602cfa12f78d3cba92a189933aa9ffc5b895b0f2b0",
+          "bytes": 369
         },
         {
           "path": "resource-files.js",
@@ -5649,6 +7337,11 @@
           "bytes": 3491
         },
         {
+          "path": "surface.lock.json",
+          "sha256": "d45ae4c5dc4dfec6b0ceea42258b0ac77d35bfa775075c8f71dc11a51dde2f6f",
+          "bytes": 3468
+        },
+        {
           "path": "tests/environment-metadata.test.js",
           "sha256": "c222a8a5233bff3b89a943c2c863a714383d449d9ffca8d90679b406f95a5f8c",
           "bytes": 2763
@@ -5657,14 +7350,34 @@
           "path": "tests/execution.test.js",
           "sha256": "44aa9d2c82060a4665f3bbeb22649ef9290850c2d41c4f8efa7359322bedaa22",
           "bytes": 1936
+        },
+        {
+          "path": "tools/vnpy_backtest.yaml",
+          "sha256": "3bd3abb70c9df06ae5f081e734148324931ba2c0b979137e98af524b550416b4",
+          "bytes": 5902
+        },
+        {
+          "path": "tools/vnpy_environment.yaml",
+          "sha256": "9badfc6338d47d390c1097f9b4d589d09a98f9ad5b7e1b42e3bd294ce985f99a",
+          "bytes": 2367
+        },
+        {
+          "path": "tools/vnpy_operation.yaml",
+          "sha256": "b83c86582ae676bc8daff0ed43b178ec900c27c521f3ac8cd301b5379309dd60",
+          "bytes": 1025
+        },
+        {
+          "path": "tools/vnpy_result.yaml",
+          "sha256": "f6daae51c981ee686bcec6cf3e29074299d7bebdcc426234368a6a0e205b4fbc",
+          "bytes": 1738
         }
       ]
     },
     {
       "id": "sesame/web-extract",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "directory": "web-extract",
-      "treeDigest": "sha256:bd791da526799aebc18b114f14ab1e1e98694336800541525bdcbf2c3179499a",
+      "treeDigest": "sha256:546e2c0177dc3ca2005344cc929c831909473f669c7a55a2111dbf6ac9f5cb92",
       "files": [
         {
           "path": "LICENSE",
@@ -5672,9 +7385,14 @@
           "bytes": 1261
         },
         {
-          "path": "capabilities.json",
-          "sha256": "a3074a668839175ddef7c7534a569d7b8f0b816a205983e295ae42b4808ea602",
-          "bytes": 16709
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "2fbcc5342a01f4636379725846f7f2730b0cbf4db378c5de7d251b33f1c04018",
+          "bytes": 6091
+        },
+        {
+          "path": "evals/cases/web-extract-recorded-call.json",
+          "sha256": "73ddafb6176eb7e9a37900f404eecf905f9a1c2d09788d53ff9cfee915167b18",
+          "bytes": 4344
         },
         {
           "path": "index.js",
@@ -5683,7 +7401,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "1f365ea86da460ef43f9e407b305a40703e40c5f404f8dddaf8feb6a286aa9d1",
+          "sha256": "49509ac86492ce0682c31a3d10d731689e02c1e9f7ed07ebf621363876edde7b",
           "bytes": 124
         },
         {
@@ -5692,9 +7410,14 @@
           "bytes": 7879
         },
         {
-          "path": "plugin.json",
-          "sha256": "d87d400d0f95f699811e0d44f6cc5cda2ea9bfad1a9e8da179b738820bdef47d",
-          "bytes": 805
+          "path": "plugin.yaml",
+          "sha256": "d7b38b1210fc0c5964de6dd938ca47f5272269f970994e1e44d5f8e0869f2963",
+          "bytes": 2571
+        },
+        {
+          "path": "requirements.yaml",
+          "sha256": "7dbf91312a7b30fdf2bbed418cae833c13774b96e78593f43087cce40a554c23",
+          "bytes": 434
         },
         {
           "path": "sample.html",
@@ -5708,8 +7431,8 @@
         },
         {
           "path": "server.py",
-          "sha256": "3c3a3140e79f137be483a5b8455515ffed7bad42812a603b8f7166369f1aa7ac",
-          "bytes": 4446
+          "sha256": "7aa4860e8d53a58fefb7996922be43d87e3c0ca0e5d92561b108d0230e13418d",
+          "bytes": 4447
         },
         {
           "path": "skills/web-extract/PROVENANCE.md",
@@ -5718,21 +7441,31 @@
         },
         {
           "path": "skills/web-extract/SKILL.md",
-          "sha256": "e57e60543918998a9b187d7fe0d0ec82a3b55ab468b2211a9b4c7d66ec68e0fd",
-          "bytes": 4870
+          "sha256": "d315efc39f6de37cf0fa1ae59e48279d809d9f1f256a0ab2b10bb470f881a573",
+          "bytes": 4046
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "fc3087c00d66bab333ec14caaad11e160b9e5a18f2e662caf471c9af6d8b468b",
+          "bytes": 1252
+        },
+        {
+          "path": "tools/extract_webpage.yaml",
+          "sha256": "486a9b0a7b8123a1ba2a33f791908bef9cdc4fafc01181100f0ab4878ff23329",
+          "bytes": 12410
         }
       ]
     },
     {
       "id": "sesame/web-sources",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "directory": "web-sources",
-      "treeDigest": "sha256:ff0bf52a574982c63eaf0b77f1d6984e5b348b2d389a1be56b0d96a7e7d73173",
+      "treeDigest": "sha256:3383cca4984024c5fe257667de81abea5be747f19093de0564fcc7ac859583ba",
       "files": [
         {
           "path": "INTERFACES.md",
-          "sha256": "4209d4e99b90eb5cf2c89ae6aa13938c4185766cdf081addeea4d0329596ab3c",
-          "bytes": 6912
+          "sha256": "699cefa9cf77ea89c9bbdf0f96f2d92075fe7382bd1a32068efd8f4fe02bdb15",
+          "bytes": 7186
         },
         {
           "path": "LICENSE",
@@ -5750,14 +7483,14 @@
           "bytes": 1921
         },
         {
-          "path": "capabilities.json",
-          "sha256": "3460f8d4f191a4ec20c954c1f22dc2d0e68eed8f59c23ba24197d8d68a7c6c38",
-          "bytes": 24318
-        },
-        {
           "path": "data.js",
           "sha256": "b176a8020d3600598414925deb7648891a2b4caee1c49bd574f35e29cb9dd5c3",
           "bytes": 2409
+        },
+        {
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "4f5ed7239d8e8f6ff2bb6ee76e069e63e7a749b62297b6358b145c6a00f5bdf8",
+          "bytes": 761
         },
         {
           "path": "fetch.js",
@@ -5770,19 +7503,24 @@
           "bytes": 2794
         },
         {
+          "path": "instructions.md",
+          "sha256": "46a252edc3e97b4c67c993e93ffb0f05a615919ec2d323d39a5ba2a8f29ec192",
+          "bytes": 3113
+        },
+        {
           "path": "package.json",
-          "sha256": "8904e8e826f61f91ac50b0e04f16c99e2f0f346a356f9cec2531562671496c98",
+          "sha256": "fb23043104ff158280fcc4719c22a5c363fd34e9be9d57a94d7e882604f7f4c6",
           "bytes": 105
         },
         {
-          "path": "plugin.json",
-          "sha256": "9e58ff5233796a4ec005c1eadbc8efefaef909aa035b0ede8cf75faa26903a01",
-          "bytes": 513
+          "path": "plugin.yaml",
+          "sha256": "112a65f4624e496a7fb7774197a1d26c683d6c4de764aa4560e757adddb4c60d",
+          "bytes": 8071
         },
         {
-          "path": "prompt.md",
-          "sha256": "17904e5d059f84c7b82b3abf3439b16d5c67b166c30208c3b227d2967f6ee504",
-          "bytes": 2734
+          "path": "requirements.yaml",
+          "sha256": "8a7a48ae5515c13c8c9a010b0e40ad7426180bb6045e155caff8c7ae6ca71752",
+          "bytes": 308
         },
         {
           "path": "resource-files.js",
@@ -5798,14 +7536,29 @@
           "path": "support.js",
           "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
           "bytes": 546
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "550a328bd3623366a31abd4b124f4fa76dfd6e9992c43a9c14f0af08d5a0a8d8",
+          "bytes": 1584
+        },
+        {
+          "path": "tools/sources_fetch.yaml",
+          "sha256": "e6eb3204eab945016e61929797d891c864cc0fcbe7dd6a454c319f257df2c721",
+          "bytes": 5705
+        },
+        {
+          "path": "tools/sources_search.yaml",
+          "sha256": "116e328181c39e04ab5bf17acc7dff48f998d89be7350349a9ef6bac61d7425d",
+          "bytes": 7257
         }
       ]
     },
     {
       "id": "sesame/wyckoff",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "wyckoff",
-      "treeDigest": "sha256:d5a8a3cf5fa84323b98b5ea51be95658be9bd513d17b48cdfe9bf8c1eaef1ef9",
+      "treeDigest": "sha256:a69434e3061cf38e83730d3027b8d714e753c0a542ac11235f898b9d8ee86c0d",
       "files": [
         {
           "path": "LICENSE",
@@ -5819,13 +7572,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "fdb142facab10c78929098ca7f81e8dfd574b9b50a7fcd8916f1c33424f1357b",
-          "bytes": 1906
+          "sha256": "636d72c51c3c7ef65104dedf048d6969ca3fe3d446cd52b8f1f3c1a4415e16ac",
+          "bytes": 1900
         },
         {
-          "path": "capabilities.json",
-          "sha256": "3adbed515c87706f67fbd8dc8b340bd7ec126dd0659028a795d6b8f970134980",
-          "bytes": 2300
+          "path": "evals/cases/discovery.yaml",
+          "sha256": "1ebfe56b12e55c75eee3a8c65c606c9f6cbbacdaab36509c8636869e57e442ea",
+          "bytes": 437
         },
         {
           "path": "examples/case.json",
@@ -5843,19 +7596,19 @@
           "bytes": 114
         },
         {
+          "path": "instructions.md",
+          "sha256": "43f55b5bcede0ce8c2d19bb048b0c4cdf19584078217dfd3d68eeeea29cdc7e4",
+          "bytes": 1010
+        },
+        {
           "path": "package.json",
-          "sha256": "160a53633149a90b5e125cf7cf9c9a9683b074d1563b4a8de1ae589197dfbe11",
+          "sha256": "857018b0917f12ddfdf0cae2251ff8da063548c107ce12b6582afcb50c17031e",
           "bytes": 102
         },
         {
-          "path": "plugin.json",
-          "sha256": "ba73d5f62d29821bef30aa023f2aa88e1584a7ff1cf6c76f1177f147b499d732",
-          "bytes": 934
-        },
-        {
-          "path": "prompt.md",
-          "sha256": "43f55b5bcede0ce8c2d19bb048b0c4cdf19584078217dfd3d68eeeea29cdc7e4",
-          "bytes": 1010
+          "path": "plugin.yaml",
+          "sha256": "135a4fce22cf6f5335220ef01726ff619bc494cb94204d43c0f99d35b1503993",
+          "bytes": 3410
         },
         {
           "path": "references/method.md",
@@ -5868,9 +7621,19 @@
           "bytes": 1811
         },
         {
+          "path": "requirements.yaml",
+          "sha256": "976c72e60ad0215e27d881cc2d24b3b482d44a55b24a21799ab6ca8e146e0553",
+          "bytes": 390
+        },
+        {
           "path": "skills/wyckoff/SKILL.md",
           "sha256": "9a88a48027be6ff759d9760caf38df08c12cf69d31702cb1f0e6d3073f338634",
           "bytes": 3197
+        },
+        {
+          "path": "surface.lock.json",
+          "sha256": "28cf72b384367ca2dfde2685c17d32b311cb257ff3ddd4a3cb9afce0a97f73e7",
+          "bytes": 1382
         }
       ]
     }

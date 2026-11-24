@@ -1,0 +1,11 @@
+goal: 投资研究工作流：按问题选用 Research 方法与专业知识、取得证据、综合判断并交付统一视觉报告；复用原生 Run 与固定成果。
+acceptance:
+  discovery:
+    case: investment-research-discovery
+    tools:
+      - investment_research_analyze
+      - investment_research_ask
+      - investment_research_event_outcomes
+      - investment_research_report
+      - investment_research_start
+    resource: README.md

@@ -1,0 +1,152 @@
+id: abu-stock-screening-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-stock-screening/skills/abu-stock-screening/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-stock-screening
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_stock_screening_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            parameters:
+              type: object
+              properties:
+                momentum_window:
+                  type: integer
+                  default: 5
+                  minimum: 1
+                  maximum: 500
+                  description: 动量回看根数
+                trend_window:
+                  type: integer
+                  default: 8
+                  minimum: 3
+                  maximum: 500
+                  description: 趋势窗口
+                efficiency_window:
+                  type: integer
+                  minimum: 3
+                  maximum: 500
+                  description: 路径效率窗口，默认 trend_window 或 8
+                price_window:
+                  type: integer
+                  default: 20
+                  minimum: 2
+                  maximum: 1000
+                  description: 价格位置窗口
+                top_n:
+                  type: integer
+                  default: 10
+                  minimum: 1
+                  maximum: 100
+                  description: 最多返回排名数
+                max_instruments:
+                  type: integer
+                  default: 50
+                  minimum: 2
+                  maximum: 500
+                  description: 股票池数量上限
+                max_bars_per_instrument:
+                  type: integer
+                  default: 5000
+                  minimum: 10
+                  maximum: 10000
+                  description: 每标的根数上限
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            instruments:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  bars:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        time:
+                          type: string
+                          description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                        available_at:
+                          type: string
+                          description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                        open:
+                          type: number
+                        high:
+                          type: number
+                        low:
+                          type: number
+                        close:
+                          type: number
+                        volume:
+                          type: number
+                      additionalProperties: true
+                      required:
+                        - time
+                        - available_at
+                        - open
+                        - high
+                        - low
+                        - close
+                        - volume
+                    maxItems: 10000
+                    minItems: 1
+                    description: bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。
+                additionalProperties: true
+                required:
+                  - id
+                  - bars
+              maxItems: 10000
+              minItems: 1
+              description: "instruments 为 1..max_instruments 个 {id,bars}；id 唯一、1..80 字符且只含字母数字 _ . : -。各标的最新 bar.time 必须一致；bars 遵循 OHLCV 契约且不超过 max_bars_per_instrument。efficiency_window 省略时使用 trend_window，再省略则为 8。"
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - instruments
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 股票筛选基线"

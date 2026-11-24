@@ -23,6 +23,19 @@ export function assertTradingTask(host, account, write = false, identity = false
   return task;
 }
 const sameAccount = (a, b) => a?.accountId === b.accountId && a?.server === b.server && a?.revision === b.revision;
+function assertWorkflowSnapshot(context, account, expectedAccount, provenance) {
+  const { workflow, caller, chain, agent } = provenance ?? {};
+  const portfolio = 'sesame/portfolio-execution';
+  const reader = portfolio + '#portfolio_execution_context';
+  const capabilities = ['sesame/trading-decision#trading_decision_workflow_execute', reader, 'sesame/mt5#mt5_execution_snapshot'];
+  const tail = Array.isArray(chain) ? chain.slice(-3) : [];
+  requireValue(context.kind === 'subagent' && !agent && context.runId && context.sessionId && context.ownerSessionId
+    && workflow?.runId === context.runId && workflow.sessionId === context.sessionId && workflow.ownerSessionId === context.ownerSessionId
+    && caller?.sessionId === context.sessionId && caller.runId === context.runId && caller.pluginId === portfolio && caller.capabilityId === reader
+    && tail.length === capabilities.length && tail.every((frame, i) => frame.capabilityId === capabilities[i] && frame.pluginId === capabilities[i].split('#')[0]),
+  'A bound workflow snapshot requires the live trading decision to portfolio snapshot call chain', 403, 'FORBIDDEN');
+  requireValue(sameAccount(expectedAccount, account), 'Current account or configuration differs from the frozen snapshot binding', 409, 'ACCOUNT_MISMATCH');
+}
 const sameDomain = (a, b) => a?.accountId === b.accountId && a?.server === b.server;
 export function verifyExecutionAuthorization(task, action, parameters, now = Date.now(), executionContext) {
   const { authorization: _authorization, ...args } = parameters;
@@ -62,8 +75,10 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
     return pythonEnvelope(result, tool, null, value => mt5.official.redact(value)).result;
   }
   return {
-    async context(args, signal, executionContext) {
-      const account = accountOf(mt5); assertTradingTask(host, account, false, args.action === 'identity', executionContext);
+    async context(args, signal, executionContext, expectedAccount) {
+      const account = accountOf(mt5);
+      if (expectedAccount !== undefined && args.action === 'snapshot') assertWorkflowSnapshot(host.context, account, expectedAccount, executionContext?.provenance);
+      else assertTradingTask(host, account, false, args.action === 'identity', executionContext);
       if (args.action === 'identity') return { account };
       requireValue(args.action === 'snapshot', 'Unsupported trading context action');
       const days = args.history_days ?? 7;

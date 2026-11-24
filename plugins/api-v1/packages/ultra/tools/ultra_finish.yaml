@@ -1,0 +1,56 @@
+name: ultra_finish
+title: ultra_finish
+description: 当用户目标有实际完成证据且所有分支已结算时结束 Ultra；不要把完成一轮误当作长期目标已达成。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    summary:
+      type: string
+      minLength: 1
+      maxLength: 8000
+    evidence:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 2000
+      minItems: 1
+      maxItems: 64
+  required:
+    - summary
+    - evidence
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - execution
+  usage:
+    purpose: 当用户目标有实际完成证据且所有分支已结算时结束 Ultra；不要把完成一轮误当作长期目标已达成。
+    inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_finish

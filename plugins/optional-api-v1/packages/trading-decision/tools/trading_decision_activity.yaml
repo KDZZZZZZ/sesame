@@ -1,0 +1,40 @@
+name: trading_decision_activity
+title: trading_decision_activity
+description: Open the actual trading workflow Run graph with its child Agents and final report.
+inputSchema:
+  type: object
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+  required:
+    - run_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - open:native-run-view
+  binding:
+    type: native
+    name: trading_decision_activity
+  usage:
+    purpose: Open the actual trading workflow Run graph with its child Agents and final report.
+    inputs: "{run_id:<business run id>}."
+    outputs: Host view-open receipt for run.workflow.id; the view displays real child Runs and the final artifact.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+      - The saved run has a workflow reference; queued work without it returns NOT_STARTED.
+    limitations:
+      - Opening the view does not start or complete the workflow.

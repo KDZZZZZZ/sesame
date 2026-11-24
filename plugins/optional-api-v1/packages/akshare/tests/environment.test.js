@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile, readdir } from 'node:fs/promises';
@@ -9,7 +10,7 @@ import { EventEmitter } from 'node:events';
 import { PassThrough, Writable } from 'node:stream';
 import { execute } from '../worker.js';
 import { createCapabilities } from '../index.js';
-import declaration from '../capabilities.json' with { type: 'json' };
+const declaration = readPackageDirectory(new URL('../',import.meta.url)).capabilities;
 
 async function context(t) {
     const storageRoot = await mkdtemp(join(tmpdir(), 'sesame-akshare-test-'));

@@ -1,0 +1,86 @@
+name: research_read
+title: research_read
+description: 按方法目录的ID批量读取1–5项完整调查指南或字段资料，保留专业问题差异并支持任务裁剪。
+inputSchema:
+  type: object
+  properties:
+    ids:
+      type: array
+      minItems: 1
+      maxItems: 5
+      uniqueItems: true
+      items:
+        type: string
+        minLength: 1
+        maxLength: 100
+      description: research_methods返回的方法或资料ID，不能传任意文件路径
+  required:
+    - ids
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - items
+  properties:
+    items:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - kind
+          - title
+          - summary
+          - path
+          - content
+        properties:
+          id:
+            type: string
+          kind:
+            enum:
+              - method
+              - reference
+          title:
+            type: string
+          summary:
+            type: string
+          path:
+            type: string
+          questions:
+            type: array
+            items:
+              type: string
+          related:
+            type: array
+            items:
+              type: string
+          references:
+            type: array
+            items:
+              type: string
+          content:
+            type: string
+        additionalProperties: false
+  additionalProperties: false
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取选中的调查重点、证据、回答结构、条件分支与完成检查。
+    inputs: '{ids:["earnings-preview","evidence-and-judgment"]}；每批1–5项。'
+    outputs: items含与目录相同的元数据和完整content；references为下一步可按需读取的资料ID。
+    prerequisites: []
+    limitations:
+      - 方法不是必填模板，字段资料不是计算请求；研究判断、数据计算、编排和渲染由实际Agent与对应插件承担。
+  binding:
+    type: native
+    name: research_read

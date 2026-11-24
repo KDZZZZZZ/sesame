@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -10,7 +11,7 @@ const table = capabilities => new Map(capabilities.map(item => [item.name, item.
 
 test('core tool factories exactly implement declared API 2 names without legacy factories', async () => {
   for (const name of ['plugin-manager', 'workspace', 'data-access', 'reports', 'research', 'canvas-control']) {
-    const root = new URL(`../packages/${name}/`, import.meta.url), declared = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8')), implementation = await import(new URL('index.js', root));
+    const root = new URL(`../packages/${name}/`, import.meta.url), declared = readPackageDirectory(new URL('.', root)).capabilities, implementation = await import(new URL('index.js', root));
     assert.equal(implementation.createTools, undefined);
     const capabilities = implementation.createCapabilities({ context: { filePolicy: { protectedRoots: [], readRoots: [], writeRoots: [] } } });
     assert.deepEqual(capabilities.map(item => item.name).sort(), declared.capabilities.map(item => item.binding.name).sort());

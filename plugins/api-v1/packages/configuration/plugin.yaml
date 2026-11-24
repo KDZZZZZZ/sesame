@@ -1,0 +1,75 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/configuration
+title: 配置助手
+description: 主 Agent 直接保存模型认证、兼容接口、插件环境凭据和应用偏好；私有持久保存并返回脱敏状态，无需手工导入。
+version: 3.1.6
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  catalog:
+    category: "workspace"
+    functionalCategory: "platform"
+    implementationKinds: ["service"]
+    title:
+      en: "Settings"
+      zh: "设置"
+    summary:
+      en: "Read and change application settings through verified, versioned actions."
+      zh: "通过带版本核验的操作读取和修改应用设置。"
+    dependencies:
+      en: "Manage application settings and declared plugin fields through one entry point, preserving each existing configuration store. Requirements apply to consuming capabilities; saving does not verify external authentication or connectivity."
+      zh: "统一管理应用设置及插件声明的配置字段，沿用各自既有存储；按消费能力检查依赖，保存不代表外部认证或连接成功。"
+    implementationReason: "Functions adapt the host application configuration authority; this package is a management service rather than a computation."
+  default_state: discoverable
+  agent_scope: main
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - README.md
+  permissions:
+    scopes:
+      - application.configure
+    calls:
+      - host.configuration.read
+      - host.configuration.update
+      - host.configuration.catalog
+      - host.configuration.check
+      - host.configuration.apply
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/configuration_read
+      - tool/configuration_update
+      - tool/configuration_open
+      - tool/configuration_integration_catalog
+      - tool/configuration_integration_check
+      - tool/configuration_integration_apply
+      - tool/configuration_integration_open
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: documentation-0
+        path: instructions.md
+        description: "Documentation: prompt.md"
+        kind: prompt
+      - id: documentation-1
+        path: skills/configure-application/SKILL.md
+        description: "Documentation: skills\\configure-application\\SKILL.md"
+        kind: skill
+      - id: configuration-guide
+        path: README.md
+        description: Agent 直接配置模型、插件凭据和偏好的参数与生效方式。
+        kind: reference
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []

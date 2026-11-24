@@ -1,3 +1,4 @@
+import {createProtocolFiles} from '../../protocol/package.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
@@ -9,9 +10,10 @@ import { buildLock, createArchive, packageFiles, portableGzip, sha256, treeDiges
 function source(t) {
   const directory = mkdtempSync(join(tmpdir(), 'sesame-plugin-lock-')), root = join(directory, 'packages/example'); mkdirSync(root, { recursive: true });
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  writeFileSync(join(root, 'plugin.json'), JSON.stringify({ id: 'sesame/example', apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: 'discoverable', capability_manifest: 'capabilities.json', prompts: [], resources: [] }));
+  const metadata = {id:'sesame/example',title:'Example',description:'Fixture',version:'1.0.0',license:'MIT',prompts:[],resources:[]};
+  for (const [file,bytes] of Object.entries(createProtocolFiles(metadata,{capabilities:[]}))) writeFileSync(join(root,file),bytes);
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@sesame/plugin-example', version: '1.0.0', type: 'module', license: 'MIT' }));
-  writeFileSync(join(root, 'LICENSE'), 'Fixture license'); writeFileSync(join(root, 'capabilities.json'), JSON.stringify({schemaVersion:1,apiVersion:'2',capabilities:[],sources:[],views:[],services:[],knowledge:[],hooks:[],stateCollections:[],artifactSchemas:[]}));
+  writeFileSync(join(root, 'LICENSE'), 'Fixture license');
   return { directory, root };
 }
 
@@ -39,13 +41,13 @@ test('archive is deterministic and contains exactly lock and declared package fi
     offset += 512 + Math.ceil(size / 512) * 512;
   }
   assert.deepEqual(names.sort(), ['official-plugins.lock.json', ...lock.packages[0].files.map(file => `example/${file.path}`)].sort());
-  writeFileSync(join(f.root, 'capabilities.json'), '[{"name":"changed"}]');
-  assert.throws(() => createArchive(f.directory, lock), /differs|changed|invalid capability manifest/);
+  writeFileSync(join(f.root, 'surface.lock.json'), '[{"name":"changed"}]');
+  assert.throws(() => createArchive(f.directory, lock), /differs|changed|Surface lock mismatch/);
 });
 
 test('source validation rejects symlinks, private imports, stale metadata and unexpected local files', t => {
   const f = source(t);
-  symlinkSync('capabilities.json', join(f.root, 'alias.json')); assert.throws(() => packageFiles(f.root), /Unsafe/); rmSync(join(f.root, 'alias.json'));
+  symlinkSync('surface.lock.json', join(f.root, 'alias.json')); assert.throws(() => packageFiles(f.root), /Unsafe/); rmSync(join(f.root, 'alias.json'));
   writeFileSync(join(f.root, 'index.js'), "import x from '../../../../modules/agent/private.js';"); assert.throws(() => buildLock(f.directory), /escapes/); rmSync(join(f.root, 'index.js'));
   writeFileSync(join(f.root, 'nul.json'), '{}'); assert.throws(() => packageFiles(f.root), /Unsafe/); rmSync(join(f.root, 'nul.json'));
   mkdirSync(join(f.root, 'node_modules')); assert.throws(() => buildLock(f.directory), /Local or generated/); rmSync(join(f.root, 'node_modules'), { recursive: true });

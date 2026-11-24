@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/user-guide:instructions#preamble": "cfc3fe8e96f42be54c0195a9c01d415d4794792f1a86481d97c05e3eb3265edd",
+    "sesame/user-guide:plugin.description": "c921a3cc4e18383554575c9b7ff9b92fd412e091e93eb2a36c2d69d2491196c8",
+    "sesame/user-guide:resource/references/chat-and-commands.md": "aaeaddf40e962035fe58ef177e22556545da59999e2e69490c87ea9531db87d6",
+    "sesame/user-guide:resource/references/dashboard.md": "94b5120da03ba0f8d4e855458e2b1bbf5a9e26fd5684e799c3671271343f7095",
+    "sesame/user-guide:resource/references/installation.md": "512c2d279117d755d38427e325a83582e38cba3357c4dfa137d0144382be96dc",
+    "sesame/user-guide:resource/references/settings.md": "03f18b5fd2ebf04840a7f513d48448fa20b9babc6d8ecc201d3101efe18e03c1",
+    "sesame/user-guide:resource/references/troubleshooting.md": "38e5edf1e3b74a9b8936c0b57c46da307b754972dbd3237f014ca23c176b8563",
+    "sesame/user-guide:resource/references/website-docs.md": "af9076910e7f552b55d89b1215a1fb3e8f7ffeb67dd550c1c3d9aecfb6884b05",
+    "sesame/user-guide:resource/references/workflows.md": "f36c19d218b3aad627f80e018df65ec76773b71de78d45188a5925b58e7accef",
+    "sesame/user-guide:skill/sesame-user-guide.body": "821c8ea7e644eab1dc32019257b9bba4850f441cf12412a641c1ccc078984b59",
+    "sesame/user-guide:skill/sesame-user-guide.description": "3877e5cf3564043336b33dbad33ca213d4039b92e75608ce9872ecc6e338da9d"
+  },
+  "digest": "36d785fde7742c7384ccb2c187c8a4092836087f81aa49c87079eeb8e8521a70"
+}

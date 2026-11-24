@@ -1,0 +1,113 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/historical-evidence
+title: 历史同类情景与概率校准
+description: 固定输入的历史匹配、条件频率与isotonic时间分割校准；真实预测日志和明确标记的历史回放分开，保留条件、反例、缺失与适用边界。
+version: 1.1.3
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame contributors
+entry: index.js
+x-sesame:
+  catalog:
+    category: "research"
+    functionalCategory: "analysis"
+    implementationKinds: ["function"]
+    title:
+      en: "Historical scenarios and probability calibration"
+      zh: "历史情景与概率校准"
+    summary:
+      en: "Match fixed comparable historical situations and evaluate calibration with separate fit/evaluation evidence; explicitly labelled present-day historical replay remains exploratory and yields no current calibrated probability."
+      zh: "匹配固定历史同类情景，并分开拟合和评价证据；明确标注的今日历史回放仅作探索诊断，不输出当前校准概率。"
+    dependencies:
+      en: "Supplied features, verified availability and matured outcomes; prospective calibration requires original timestamped predictions. Historical replay requires fixed code/data and distinct actual/virtual clocks. No network or broker."
+      zh: "需要已提供特征、可验证可见时间和到期结果；前瞻校准须原始带时间预测。历史回放须固定代码/数据并区分实际与虚拟时钟。不联网或连接券商。"
+  execution: native
+  default_state: discoverable
+  agent_scope: all
+  permissions:
+    scopes: []
+    calls:
+      - host.resources.read
+      - host.resources.create
+      - host.resources.publish
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/historical_evidence_match
+      - tool/historical_evidence_calibrate
+      - tool/historical_evidence_from_ref
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: prompt
+        kind: prompt
+        path: instructions.md
+        description: 历史匹配和校准工具的适用范围、来源与权限边界。
+      - id: reference-0
+        kind: reference
+        path: README.md
+        description: 实际入口、固定输入和Research/Strategy组合方式。
+      - id: reference-1
+        kind: reference
+        path: METHOD.md
+        description: 匹配、PAVA、时间切分、概率与区间含义。
+      - id: reference-2
+        kind: reference
+        path: PROVENANCE.md
+        description: 一手文献依据与原创代码来源。
+      - id: reference-3
+        kind: reference
+        path: examples/match.json
+        description: 明确合成的匹配输入，包含反例与跨条件组。
+      - id: reference-4
+        kind: reference
+        path: examples/calibration.json
+        description: 明确合成的独立时间校准与无标签当前预测输入。
+      - id: reference-replay
+        kind: reference
+        path: REPLAY.md
+        description: 历史回放的真实生成时间、虚拟prefix时钟、固定代码/数据引用与探索性边界。
+      - id: example-replay
+        kind: reference
+        path: examples/calibration-replay.json
+        description: 明确合成的软件回放输入算例；不能替代真实行情和实际回放执行。
+      - id: example-match-replay
+        kind: reference
+        path: examples/match-replay.json
+        description: 明确合成的历史查询回放匹配；保留真实计划/观察/生成日期和虚拟决策截止。
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: historical-evidence-result
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              const: rows.json
+            rowCount:
+              const: 1
+            columns:
+              type: array
+              items:
+                type: string
+            provenance:
+              type: object
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: false

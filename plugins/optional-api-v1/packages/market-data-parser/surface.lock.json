@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/market-data-parser:plugin.description": "9a692e9752caf61a382431513f2f7c0fbc5d33365bdfd030d70f7199873d04a2",
+    "sesame/market-data-parser:resource/skills/market-data-parser/PROVENANCE.md": "a75e24b3050577887e98f13bef6eaea9d0b66e830b33e709a7e3e6cd9fe3ea45",
+    "sesame/market-data-parser:skill/market-data-parser.body": "a7cacd327229ebfd648cb94d2b8ca7b62314a979d11735513abf1477a94d853e",
+    "sesame/market-data-parser:skill/market-data-parser.description": "245d815f14c5359db28e67a10beb384b4c3a9d6fdee341e5d7e0810f9b9e7daf",
+    "sesame/market-data-parser:skill/market-data-parser.file/PROVENANCE.md": "a75e24b3050577887e98f13bef6eaea9d0b66e830b33e709a7e3e6cd9fe3ea45",
+    "sesame/market-data-parser:tool/parse_fx_json.description": "d1d6c73c9b546570edad4464d96e17dd9b39e8d6a79f4e928385c846464720c8",
+    "sesame/market-data-parser:tool/parse_fx_json.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/market-data-parser:tool/parse_fx_json.input": "7760bd76ed6aea30a10059939dd653705bed67b733831895a16ec97695a090d7",
+    "sesame/market-data-parser:tool/parse_fx_json.output": "cf731d5af47c83f9bd436e81919d3308df71d2260191fabeea78653ed96bf025",
+    "sesame/market-data-parser:tool/parse_fx_xml.description": "1aec45392c8d1ebc9e0812f6c75d8a76beaf22516c2dbcbd1540910798c34433",
+    "sesame/market-data-parser:tool/parse_fx_xml.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/market-data-parser:tool/parse_fx_xml.input": "0d4117aa8f752b76cd23c8c1e9d077a2f3f1cf833ea55839db3eaf333c875b32",
+    "sesame/market-data-parser:tool/parse_fx_xml.output": "d466e68e906877ce43ab917d5b70a4549765d71562508d1cc363abbfc32ab749"
+  },
+  "digest": "ba75d23f460d95a933198d6469881bdb27bc798e56ee9ec6a0c5ab6eecfde3c0"
+}

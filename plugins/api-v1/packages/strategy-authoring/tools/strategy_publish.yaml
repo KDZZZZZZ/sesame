@@ -1,0 +1,93 @@
+name: strategy_publish
+title: strategy_publish
+description: Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - source_path
+    - title
+    - change_summary
+  properties:
+    operation_id:
+      type: string
+      description: Unique idempotency key for this exact publication
+      minLength: 1
+      maxLength: 20000
+    source_path:
+      type: string
+      description: Workspace SVL JSON path
+      minLength: 1
+      maxLength: 20000
+    title:
+      type: string
+      description: Strategy title
+      minLength: 1
+      maxLength: 20000
+    change_summary:
+      type: string
+      description: What this source revision changes
+      minLength: 1
+      maxLength: 20000
+    parent:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: strategy.source
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    artifact_id:
+      type: string
+      description: Existing artifact ID when publishing a new revision
+      minLength: 1
+      maxLength: 20000
+    expected_revision:
+      type: string
+      description: Exact current revision when updating an existing artifact
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:resource
+    - publish:artifact
+  usage:
+    purpose: Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.
+    inputs: operation_id/source_path/title/change_summary 必填；parent 可保存来源关系；更新已有成果使用 artifact_id+expected_revision。
+    outputs: '{ref,sourceDigest,graph,validationScope:"svl-source-only"}；ref 是后续 replay/graph/目标适配的固定 strategy.source。'
+    prerequisites:
+      - 可读取 SVL；发布内部会重新验证，无需为发布机械重复单独校验。
+    limitations:
+      - 同一操作 ID 仅重试相同内容；内容变化用新 ID。发布不执行或交易。
+  binding:
+    type: native
+    name: strategy_publish

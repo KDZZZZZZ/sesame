@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 /** Real API2 installation, state persistence and renderer integration.
  * All content and data are synthetic software fixtures. The temporary host has
  * no user account, network provider, real model call or daily application state.
@@ -55,7 +56,7 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     const checked = await runtime.plugins.manager.test('conv_main', { path: draft });
     assert.equal(checked.passed, true, JSON.stringify(checked));
     const installed = await runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
-    assert.equal(installed.runtime_status, 'ready'); assert.equal(installed.version, JSON.parse(await readFile(join(core,'packages/reports/plugin.json'),'utf8')).version);
+    assert.equal(installed.runtime_status, 'ready'); assert.equal(installed.version, readPackageDirectory(join(core, 'packages/reports/')).manifest.version);
     for (const name of ['report_styles', 'report_style_save', 'components_show', 'components_validate', 'report_check']) {
       assert.ok(runtime.plugins.definitions({ conversationId: 'conv_main' }).some(tool => tool.name === name), name + ' is registered');
     }

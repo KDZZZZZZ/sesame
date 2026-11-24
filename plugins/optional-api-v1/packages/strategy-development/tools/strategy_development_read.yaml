@@ -1,0 +1,70 @@
+name: strategy_development_read
+title: strategy_development_read
+description: 读取某个固定版本，查看委托、可编辑的策略模型、缺口和下一轮诊断。
+inputSchema:
+  type: object
+  properties:
+    project_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    trade_page:
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+      required: []
+      additionalProperties: false
+  required:
+    - project_ref
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 读取某个固定版本，查看委托、可编辑的策略模型、缺口和下一轮诊断。
+    inputs: Use the exact projectRef from a prior step, optionally page through the measured development trades.
+    outputs: The project and evidence-based diagnostics.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_read

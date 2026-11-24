@@ -1,0 +1,76 @@
+name: kurumi_method_workflow
+title: kurumi_method_workflow
+description: 可重放main-only方法catalog/discover/inspect/显式install/load/adopt诊断；无隐含包或启动自动安装。采用须真实固定输入输出与成功receipt，只给角色一般风险假设。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - catalog
+        - discover
+        - inspect
+        - install
+        - load
+        - adopt
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    plugin_id:
+      type: string
+    authorize_install:
+      type: boolean
+    record:
+      type: object
+      additionalProperties: true
+    package_path:
+      type: string
+      description: Explicit absolute API 2 plugin package path for install.
+    package_digest:
+      type: string
+      description: Optional exact tested source digest.
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 可重放main-only方法catalog/discover/inspect/显式install/load/adopt诊断；无隐含包或启动自动安装。采用须真实固定输入输出与成功receipt，只给角色一般风险假设。
+    inputs: action=status; other actions use command_id and a declared plan plugin_id. catalog/discover/inspect read public status; install additionally requires authorize_install:true and absolute package_path, optional package_digest; adopt takes record with actual fixed input/output and successful capability receipt.
+    outputs: status => {plan,records}; dependency action => {action,pluginId,result,adopted:false,diagnostic}; adopt => {adopted,roleBrief,predictiveValidity:"unverified"}.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Main only; allowed method IDs come from status.plan. Adopt only before new-run consumption.
+    limitations:
+      - Current catalog/discover inspect installed plugins via host.plugins.search; external optional packages use plugin_catalog. If plugin_catalog fails once in a session, stop retrying it and rely on locally installed plugins. Installed/loaded is not applied or predictive validation. Unknown install/load retains its command identity.
+  binding:
+    type: native
+    name: kurumi_method_workflow
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

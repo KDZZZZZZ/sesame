@@ -1,0 +1,39 @@
+id: judgment-evolution-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/judgment-evolution/skills/judgment-review/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/judgment-evolution
+  - step: 1
+    pointer: /tools/0/name
+    equals: judgment_audit_source
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - message_id
+      properties:
+        message_id:
+          type: string
+          description: 待核对的消息 ID
+          minLength: 1
+          maxLength: 2000
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20000
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 判断复盘与准则演进"

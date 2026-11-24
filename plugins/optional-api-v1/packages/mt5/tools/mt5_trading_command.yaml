@@ -1,0 +1,50 @@
+name: mt5_trading_command
+title: mt5_trading_command
+description: Read a retained plan order receipt for its exact owner and account, including after a configuration revision change. Never submits or replays an order.
+inputSchema:
+  type: object
+  required:
+    - command_id
+  properties:
+    command_id:
+      type: string
+      description: Existing signed plan command ID
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取执行组合原生交易命令的保留回执。
+    inputs: "{command_id:<已保留计划命令ID>}。"
+    outputs: "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。"
+    prerequisites:
+      - 当前主拥有者、同login/server，或宿主匹配工作流；配置版本变化后仍可核对原记录。
+    limitations:
+      - 只读取，不发送、不自动补偿；未知结果保持未知直到原生证据确认。
+  binding:
+    type: native
+    name: mt5_trading_command
+  configurationRequirements:
+    - field: account_login
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true
+    - field: account_server
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true

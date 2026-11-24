@@ -1,3 +1,5 @@
+import {createProtocolFiles} from '@sesame/plugin-sdk/surface';
+import {dirname} from 'node:path';
 // Opt-in probes against the unmodified production SDK, using an isolated test plugin.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -29,10 +31,13 @@ test('real SDK fences cancelled writes and distinguishes safe recovery from stop
     await runtime.init();
     const draft = join(runtime.workspaces.root('conv_main'), 'native-lifecycle');
     await mkdir(draft, { recursive: true });
-    await writeFile(join(draft, 'plugin.json'), json({ id: pluginId, version: '1.0.0', apiVersion: '2', title: 'Native lifecycle probe', description: 'Isolated synthetic lifecycle fixture', default_state: 'mounted', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], skills: [], permissions: { scopes: ['process.execute', 'capabilities.compose'], calls: ['host.process.exec'] } }));
-    await writeFile(join(draft, 'capabilities.json'), json({ schemaVersion: 1, apiVersion: '2', configSchema: { type: 'object' },
+    const metadata = { id: pluginId, version: '1.0.0', apiVersion: '2', title: 'Native lifecycle probe', description: 'Isolated synthetic lifecycle fixture', default_state: 'mounted', entry: 'index.js', capability_manifest: 'capabilities.json', prompts: [], skills: [], permissions: { scopes: ['process.execute', 'capabilities.compose'], calls: ['host.process.exec'] } };
+    const protocolFiles = createProtocolFiles(metadata,{ schemaVersion: 1, apiVersion: '2', configSchema: { type: 'object' },
       capabilities: ['fixture_checkpoint', 'fixture_cancel_commit', 'fixture_process'].map(name => ({ ...capability(name), ...(name === 'fixture_process' ? { effects: ['process', 'filesystem'] } : {}) })), sources: [], views: [], services: [], knowledge: [], hooks: [], artifactSchemas: [],
-      stateCollections: [{ name: 'evidence', schemaVersion: '1.0.0', mode: 'document', access: 'private', schema: boundedObject({ value: { type: 'integer' } }) }] }));
+      stateCollections: [{ name: 'evidence', schemaVersion: '1.0.0', mode: 'document', access: 'private', schema: boundedObject({ value: { type: 'integer' } }) }] });
+    for (const [file,bytes] of Object.entries(protocolFiles)) {
+      const target=join(draft,file); await mkdir(dirname(target),{recursive:true}); await writeFile(target,bytes);
+    }
     await writeFile(join(draft, 'index.js'), `
 export function createCapabilities(host) {
   return [

@@ -1,0 +1,284 @@
+name: market_read
+title: market_read
+description: 一次获取并冻结真实市场历史K线，保留Decimal、SourceTime、显式成交量单位、覆盖范围和固定证据。
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - title
+    - instrument
+    - spec
+    - range
+    - include_forming
+    - volume_kind
+    - source
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 本会话此精确查询的幂等ID；重新采集使用新ID
+    title:
+      type: string
+      description: 固定数据名称
+      minLength: 1
+      maxLength: 20000
+    instrument:
+      type: object
+      required:
+        - sourceId
+        - instrumentId
+      properties:
+        sourceId:
+          type: string
+          description: market_instruments返回的来源ID
+          minLength: 1
+          maxLength: 20000
+        instrumentId:
+          type: string
+          description: 准确品种ID
+          minLength: 1
+          maxLength: 20000
+      additionalProperties: false
+    spec:
+      type: object
+      required:
+        - timeframe
+        - priceBasis
+        - adjustment
+        - session
+        - calendarRevision
+      properties:
+        timeframe:
+          type: string
+          description: 提供方声明的周期，如1d/1h
+          minLength: 1
+          maxLength: 20000
+        priceBasis:
+          anyOf:
+            - type: string
+              const: bid
+            - type: string
+              const: ask
+            - type: string
+              const: mid
+            - type: string
+              const: last
+        adjustment:
+          anyOf:
+            - type: string
+              const: none
+            - type: string
+              const: forward
+            - type: string
+              const: backward
+        session:
+          type: string
+          description: 提供方声明的时段
+          minLength: 1
+          maxLength: 20000
+        calendarRevision:
+          anyOf:
+            - type: object
+              required:
+                - status
+                - value
+              properties:
+                status:
+                  type: string
+                  const: value
+                value:
+                  type: object
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  properties:
+                    id:
+                      type: string
+                    revision:
+                      type: string
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      type: string
+                    schemaVersion:
+                      type: string
+                      const: 1.0.0
+                  additionalProperties: false
+              additionalProperties: false
+            - type: object
+              required:
+                - status
+              properties:
+                status:
+                  anyOf:
+                    - type: string
+                      const: unknown
+                    - type: string
+                      const: unsupported
+                    - type: string
+                      const: not_applicable
+                reason:
+                  type: string
+              additionalProperties: false
+      additionalProperties: false
+    range:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          anyOf:
+            - type: object
+              required:
+                - basis
+                - unixMs
+              properties:
+                basis:
+                  type: string
+                  const: utc
+                unixMs:
+                  type: integer
+                raw:
+                  type: string
+              additionalProperties: false
+            - type: object
+              required:
+                - basis
+                - authority
+                - value
+              properties:
+                basis:
+                  type: string
+                  const: wall
+                authority:
+                  type: string
+                  description: 来源时钟身份，不能猜测UTC
+                  minLength: 1
+                  maxLength: 20000
+                value:
+                  type: string
+                  pattern: ^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?$
+                zone:
+                  type: string
+                fold:
+                  anyOf:
+                    - type: number
+                      const: 0
+                    - type: number
+                      const: 1
+              additionalProperties: false
+        to:
+          anyOf:
+            - type: object
+              required:
+                - basis
+                - unixMs
+              properties:
+                basis:
+                  type: string
+                  const: utc
+                unixMs:
+                  type: integer
+                raw:
+                  type: string
+              additionalProperties: false
+            - type: object
+              required:
+                - basis
+                - authority
+                - value
+              properties:
+                basis:
+                  type: string
+                  const: wall
+                authority:
+                  type: string
+                  description: 来源时钟身份，不能猜测UTC
+                  minLength: 1
+                  maxLength: 20000
+                value:
+                  type: string
+                  pattern: ^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?$
+                zone:
+                  type: string
+                fold:
+                  anyOf:
+                    - type: number
+                      const: 0
+                    - type: number
+                      const: 1
+              additionalProperties: false
+      additionalProperties: false
+    include_forming:
+      type: boolean
+      description: 是否明确包含形成中K线；回测通常选false
+    volume_kind:
+      anyOf:
+        - type: string
+          const: real
+        - type: string
+          const: tick
+        - type: string
+          const: none
+    max_rows:
+      type: integer
+      minimum: 1
+      maximum: 100000
+      description: 总行数预算，默认10000；不会截断后冒充完整数据
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: data_sources 返回的完整来源ID
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确声明版本
+        binding:
+          type: object
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - data.query
+    - resource.create
+    - artifact.publish
+    - state.write
+  usage:
+    purpose: 一次获取并冻结真实市场历史K线，保留Decimal、SourceTime、显式成交量单位、覆盖范围和固定证据。
+    inputs: source 为完整 SourceRef，instrument 为搜索返回的 ref；spec={timeframe,priceBasis,adjustment,session,calendarRevision}；range={from,to} 使用实际 SourceTime。operation_id/title 固定本次观察；include_forming 和 volume_kind(real/tick/none) 必填；max_rows 默认10000。
+    outputs: "{ref,evidence,rowCount,columns,sample,provenance,receipt,coverage,volume,status}；status=partial/coverage.complete=false 表示已返回行未证明无缺口，不表示所有行无效。"
+    prerequisites:
+      - 来源可 queryBars；精确品种与支持口径可由 market_instruments describe 或 canvas_binding 获取。
+    limitations:
+      - 历史读取不证明图表实时订阅。保留 Decimal/时区/量单位；DST fold 不支持时换实际支持的无歧义区间。超出行数/200页/16MiB预算不冒充完整结果。
+      - 对陌生品种批量拉取前，先用 market_instruments(describe) 核清精确 sourceId/instrumentId、支持的 priceBasis、volume_kind 与时钟口径，禁止一轮并发盲猜多个未核验合约。
+  binding:
+    type: native
+    name: market_read

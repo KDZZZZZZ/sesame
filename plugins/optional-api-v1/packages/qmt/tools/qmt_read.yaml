@@ -1,0 +1,143 @@
+name: qmt_read
+title: qmt_read
+description: Perform fixed read-only XtQuant calls on the configured Windows MiniQMT. search/describe/quotes map mainland stocks; asset/positions query the configured STOCK account. orders/fills preserve native fields and cover only the current trading day. None is ambiguous and raises an error. This tool never submits or cancels orders; explicit main-conversation trading tools are separate. No transfer, script execution or terminal launch exists.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: search
+        - type: string
+          const: describe
+        - type: string
+          const: quotes
+        - type: string
+          const: asset
+        - type: string
+          const: positions
+        - type: string
+          const: orders
+        - type: string
+          const: fills
+    query:
+      type: string
+      maxLength: 100
+    symbols:
+      type: array
+      items:
+        type: string
+        pattern: ^\d{6}\.(SH|SZ|BJ)$
+      minItems: 1
+      maxItems: 50
+      uniqueItems: true
+    page:
+      type: object
+      required:
+        - limit
+      properties:
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+        cursor:
+          type: string
+          minLength: 1
+          maxLength: 200
+      additionalProperties: false
+      description: search/positions/orders/fills use a frozen 60-second snapshot; default 200 rows, repeat unchanged filters with nextCursor
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+  usage:
+    purpose: 读取明确范围的股票行情或账户事实，交给方法/工作流；只读任务不升级为交易意图。
+    inputs: '{action:"search",query:"000001",page:{limit:20}}；describe/quotes 用 symbols:["000001.SZ"]（1–50）；asset无附加参数；positions/orders/fills 可带 page:{limit:1..200,cursor?}，其他过滤条件保持不变。'
+    outputs: search/positions/orders/fills:{items,nextCursor,snapshotId,consistency,meta,coverage,connection,nativeFieldPolicy}；describe/quotes:{items,connection,meta,nativeFieldPolicy}；asset:{asset,connection,meta,nativeFieldPolicy}。
+    prerequisites:
+      - qmt_environment/ qmt_configure 的现有Windows原生环境、实际行情端口；账户类读取额外需要授权STOCK账号和userdata_mini。
+    limitations:
+      - orders/fills 仅原生当日回报，时间单位/price_type保留原值；None/SDK错误不等于空账户。冻结快照cursor约60秒有效，过期可重新获取首个快照。
+  binding:
+    type: native
+    name: qmt_read
+  configurationRequirements:
+    - field: python_path
+      reason: Native QMT calls use the saved existing Windows Python executable.
+    - field: market_port
+      reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - search
+              - describe
+              - quotes
+        required:
+          - action
+    - field: account_id
+      reason: Account reads and commands target the explicitly configured STOCK account.
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - asset
+              - positions
+              - orders
+              - fills
+        required:
+          - action
+    - field: userdata_directory
+      reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - asset
+              - positions
+              - orders
+              - fills
+        required:
+          - action
+    - field: sector
+      reason: Stock search uses the configured catalog sector, whose existing default is 沪深京A股.
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - search
+        required:
+          - action
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

@@ -9,6 +9,19 @@ export const tradingAccount = host => {
   return { accountId: c.account_id, connectionId: c.connection_id, revision: String(c.version) };
 };
 const sameAccount = (a, b) => a?.accountId === b.accountId && a?.connectionId === b.connectionId && a?.revision === b.revision;
+function assertWorkflowSnapshot(context, account, expectedAccount, provenance) {
+  const { workflow, caller, chain, agent } = provenance ?? {};
+  const portfolio = 'sesame/portfolio-execution';
+  const reader = portfolio + '#portfolio_execution_context';
+  const capabilities = ['sesame/trading-decision#trading_decision_workflow_execute', reader, 'sesame/qmt#qmt_execution_snapshot'];
+  const tail = Array.isArray(chain) ? chain.slice(-3) : [];
+  check(context.kind === 'subagent' && !agent && context.runId && context.sessionId && context.ownerSessionId
+    && workflow?.runId === context.runId && workflow.sessionId === context.sessionId && workflow.ownerSessionId === context.ownerSessionId
+    && caller?.sessionId === context.sessionId && caller.runId === context.runId && caller.pluginId === portfolio && caller.capabilityId === reader
+    && tail.length === capabilities.length && tail.every((frame, i) => frame.capabilityId === capabilities[i] && frame.pluginId === capabilities[i].split('#')[0]),
+  'A bound workflow snapshot requires the live trading decision to portfolio snapshot call chain', 'FORBIDDEN');
+  check(sameAccount(expectedAccount, account), 'Current account or configuration differs from the frozen snapshot binding', 'ACCOUNT_MISMATCH');
+}
 export function verifyExecutionAuthorization(task, action, parameters) {
   const { authorization: _authorization, ...args } = parameters;
   if (!task) return args;
@@ -42,8 +55,10 @@ export function assertTradingTask(host, account, write = false, identity = false
 }
 
 export function createTradingContext(host, service, { now = Date.now } = {}) {
-  return async (args, signal) => {
-    const account = tradingAccount(host); assertTradingTask(host, account, false, args.action === 'identity');
+  return async (args, signal, expectedAccount) => {
+    const account = tradingAccount(host);
+    if (expectedAccount !== undefined && args.action === 'snapshot') assertWorkflowSnapshot(host.context, account, expectedAccount, currentExecution()?.provenance);
+    else assertTradingTask(host, account, false, args.action === 'identity');
     if (args.action === 'identity') return { account };
     check(args.action === 'snapshot', 'Unsupported context action', 'INVALID_ARGUMENT');
     const days = args.history_days ?? 7;

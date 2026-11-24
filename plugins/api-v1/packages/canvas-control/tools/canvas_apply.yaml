@@ -1,0 +1,348 @@
+name: canvas_apply
+title: canvas_apply
+description: 原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - expected_version
+    - operations
+  properties:
+    command_id:
+      type: string
+      description: 至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID
+      minLength: 16
+      maxLength: 100
+      pattern: ^[a-zA-Z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+      description: canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次
+    operations:
+      type: array
+      items:
+        type: object
+        required:
+          - op
+        properties:
+          op:
+            anyOf:
+              - type: string
+                const: add
+              - type: string
+                const: update
+              - type: string
+                const: remove
+              - type: string
+                const: panels
+              - type: string
+                const: focus
+              - type: string
+                const: arrange
+              - type: string
+                const: workspace
+              - type: string
+                const: reorder
+              - type: string
+                const: dock
+              - type: string
+                const: tile
+          id:
+            type: string
+            description: 目标图表 ID；add 可省略
+            minLength: 1
+            maxLength: 100
+          target_id:
+            type: string
+            description: reorder 的交换目标或 dock 的插入参照图表
+            minLength: 1
+            maxLength: 100
+          side:
+            anyOf:
+              - type: string
+                const: left
+              - type: string
+                const: right
+              - type: string
+                const: top
+              - type: string
+                const: bottom
+          tiles:
+            type: array
+            items:
+              anyOf:
+                - type: object
+                  required:
+                    - path
+                    - chart_id
+                  properties:
+                    path:
+                      type: string
+                      pattern: ^[01]{0,31}$
+                      description: 根路径为空字符串；0 是左/上子区，1 是右/下子区
+                    chart_id:
+                      type: string
+                      description: 图表 ID
+                      minLength: 1
+                      maxLength: 100
+                  additionalProperties: false
+                - type: object
+                  required:
+                    - path
+                    - axis
+                    - ratio
+                  properties:
+                    path:
+                      type: string
+                      pattern: ^[01]{0,31}$
+                      description: 根路径为空字符串；0 是左/上子区，1 是右/下子区
+                    axis:
+                      anyOf:
+                        - type: string
+                          const: x
+                        - type: string
+                          const: y
+                    ratio:
+                      type: number
+                      exclusiveMinimum: 0
+                      exclusiveMaximum: 1
+                      description: 左侧或上侧区域所占比例
+                  additionalProperties: false
+            maxItems: 63
+            description: 完整的比例平铺树，必须包含所有图表且不重复；空图表场景使用空数组
+          groups:
+            type: array
+            items:
+              type: array
+              items:
+                type: string
+                description: 图表 ID
+                minLength: 1
+                maxLength: 100
+              minItems: 1
+              maxItems: 32
+            minItems: 1
+            maxItems: 32
+          chart:
+            type: object
+            properties:
+              binding:
+                anyOf:
+                  - type: "null"
+                  - type: object
+                    required:
+                      - source
+                      - instrument
+                      - spec
+                    properties:
+                      instrument:
+                        type: object
+                        required:
+                          - sourceId
+                          - instrumentId
+                        properties:
+                          sourceId:
+                            type: string
+                            description: 来源 ID
+                            minLength: 1
+                            maxLength: 100
+                          instrumentId:
+                            type: string
+                            description: 来源内品种 ID
+                            minLength: 1
+                            maxLength: 100
+                        additionalProperties: false
+                      spec:
+                        type: object
+                        required:
+                          - timeframe
+                          - priceBasis
+                          - adjustment
+                          - session
+                          - calendarRevision
+                        properties:
+                          timeframe:
+                            type: string
+                            description: 提供方声明的周期，如 1m/1h/1d/1mo
+                            minLength: 1
+                            maxLength: 100
+                          priceBasis:
+                            type: string
+                            description: 提供方声明的价格口径
+                            minLength: 1
+                            maxLength: 100
+                          adjustment:
+                            type: string
+                            description: 复权口径
+                            minLength: 1
+                            maxLength: 100
+                          session:
+                            type: string
+                            description: 交易时段口径
+                            minLength: 1
+                            maxLength: 100
+                          calendarRevision: {}
+                        additionalProperties: false
+                      source:
+                        type: object
+                        properties:
+                          providerId:
+                            type: string
+                            minLength: 1
+                            maxLength: 4096
+                            description: data_sources 返回的完整来源ID
+                          revision:
+                            type: string
+                            minLength: 1
+                            maxLength: 4096
+                            description: 精确声明版本
+                          binding:
+                            type: object
+                        required:
+                          - providerId
+                          - revision
+                        additionalProperties: false
+                    additionalProperties: false
+              symbol:
+                type: string
+                description: 仅显示标签；数据身份由 binding 决定
+                minLength: 1
+                maxLength: 100
+              style:
+                anyOf:
+                  - type: string
+                    const: candles
+                  - type: string
+                    const: bars
+                  - type: string
+                    const: line
+                  - type: string
+                    const: area
+              x:
+                type: number
+                minimum: -20000
+                maximum: 20000
+              y:
+                type: number
+                minimum: -20000
+                maximum: 20000
+              width:
+                type: number
+                minimum: 360
+                maximum: 5000
+              height:
+                type: number
+                minimum: 240
+                maximum: 5000
+              volume:
+                type: boolean
+              averages:
+                type: boolean
+              markers:
+                type: boolean
+              logarithmic:
+                type: boolean
+              collapsed:
+                type: boolean
+              locked:
+                type: boolean
+              sync_group:
+                type: string
+                description: 默认独立；仅用户明确要求联动拖动/缩放时设置相同非空分组；空字符串取消联动
+                maxLength: 32
+            additionalProperties: false
+          workspace:
+            type: object
+            properties:
+              column:
+                anyOf:
+                  - type: string
+                    const: charts
+                  - type: string
+                    const: agents
+                  - type: string
+                    const: research
+              widths:
+                type: object
+                properties:
+                  charts:
+                    anyOf:
+                      - type: number
+                        minimum: 320
+                        maximum: 3000
+                      - type: "null"
+                  agents:
+                    anyOf:
+                      - type: number
+                        minimum: 320
+                        maximum: 3000
+                      - type: "null"
+                  research:
+                    anyOf:
+                      - type: number
+                        minimum: 320
+                        maximum: 3000
+                      - type: "null"
+                additionalProperties: false
+            additionalProperties: false
+          panels:
+            type: object
+            properties:
+              agents:
+                type: boolean
+              account:
+                type: boolean
+            additionalProperties: false
+          mode:
+            anyOf:
+              - type: string
+                const: center
+              - type: string
+                const: maximize
+              - type: string
+                const: restore
+              - type: string
+                const: auto
+          columns:
+            anyOf:
+              - type: integer
+                minimum: 1
+                maximum: 4
+              - type: "null"
+          height:
+            anyOf:
+              - type: number
+                minimum: 1
+                maximum: 1000000
+              - type: "null"
+            description: 仅 tile：展开图表区的内容高度（像素），超出视口允许纵向滚动；省略保留，null 恢复自适应
+        additionalProperties: false
+      minItems: 1
+      maxItems: 64
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - view.write
+  usage:
+    purpose: 原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。
+    inputs: command_id 为16–100字符稳定ID；expected_version 用 canvas_inspect 或最近成功写入返回的 version。同一轮相关图表操作合并到 operations，不能并行复用旧版本；绑定时将 canvas_binding.chart 放入 add/update 的 chart，仅改需要的字段。
+    outputs: 宿主画布修改回执，包含更新后的画布/版本；表示布局与绑定被接受。当前显示结果仍见 canvas_inspect.rendering。
+    prerequisites: []
+    limitations:
+      - 版本冲突重读画布后重新规划补丁并用新 command_id；用户锁/拖动冲突保留用户操作。历史覆盖 warning 不阻断渲染；不要因 warning 重绑相同数据。
+  binding:
+    type: native
+    name: canvas_apply

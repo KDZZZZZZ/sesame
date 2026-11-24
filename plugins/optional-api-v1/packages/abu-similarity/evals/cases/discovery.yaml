@@ -1,0 +1,129 @@
+id: abu-similarity-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-similarity/skills/abu-similarity/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-similarity
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_similarity_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            parameters:
+              type: object
+              properties:
+                min_overlap:
+                  type: integer
+                  default: 3
+                  minimum: 2
+                  maximum: 10000
+                  description: 最少对齐收益对数
+                max_instruments:
+                  type: integer
+                  default: 20
+                  minimum: 2
+                  maximum: 100
+                  description: 最大标的数
+                max_bars_per_instrument:
+                  type: integer
+                  default: 5000
+                  minimum: 10
+                  maximum: 10000
+                  description: 每标的最大根数
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            instruments:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  bars:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        time:
+                          type: string
+                          description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                        available_at:
+                          type: string
+                          description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                        open:
+                          type: number
+                        high:
+                          type: number
+                        low:
+                          type: number
+                        close:
+                          type: number
+                        volume:
+                          type: number
+                      additionalProperties: true
+                      required:
+                        - time
+                        - available_at
+                        - open
+                        - high
+                        - low
+                        - close
+                        - volume
+                    maxItems: 10000
+                    minItems: 1
+                    description: bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。
+                additionalProperties: true
+                required:
+                  - id
+                  - bars
+              maxItems: 10000
+              minItems: 2
+              description: "instruments 至少 2 个且 <= max_instruments，每项 {id,bars}；id 唯一、1..80 字符且只含字母数字 _ . : -。每个 bars 遵循 OHLCV 契约且不超过 max_bars_per_instrument。仅起止时点都相同的相邻收益对可对齐。"
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - instruments
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 同期收益相似性基线"

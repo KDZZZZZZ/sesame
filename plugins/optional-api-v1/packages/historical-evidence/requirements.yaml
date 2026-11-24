@@ -1,0 +1,9 @@
+goal: 固定输入的历史匹配、条件频率与isotonic时间分割校准；真实预测日志和明确标记的历史回放分开，保留条件、反例、缺失与适用边界。
+acceptance:
+  discovery:
+    case: historical-evidence-discovery
+    tools:
+      - historical_evidence_calibrate
+      - historical_evidence_from_ref
+      - historical_evidence_match
+    resource: README.md

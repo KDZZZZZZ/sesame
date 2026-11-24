@@ -1,0 +1,289 @@
+name: investment_research_event_outcomes
+title: investment_research_event_outcomes
+description: Align explicitly selected frozen historical events with frozen closed-bar prices or price observations. Record bounded endpoint returns, exact-time instrument baseline, availability uncertainty, gaps and overlapping windows. No model, acquisition, event matching, PIT certification, confidence or prediction probability.
+inputSchema:
+  type: object
+  properties:
+    events_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    market_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    selection:
+      type: string
+      minLength: 1
+      maxLength: 2000
+      description: Describe the already selected event population; this call does not search, select or certify preregistration.
+    price_basis:
+      type: string
+      minLength: 1
+      maxLength: 2000
+      description: Exact upstream price basis, such as split-adjusted close in USD; no corporate-action, reinvestment or FX adjustment is added.
+    price_time_semantics:
+      enum:
+        - closed_bar_close
+        - price_observation
+      description: market.time must denote an actually closed bar or explicit price observation, never a bar-open timestamp pretending its close was known.
+    as_of:
+      type: string
+      minLength: 20
+      maxLength: 35
+      description: Explicit timezone timestamp. Price observations or declared price availability after this cutoff are excluded.
+    anchor:
+      enum:
+        - event_at
+        - first_available_at
+    entry:
+      enum:
+        - last_at_or_before
+        - first_at_or_after
+    tolerance_seconds:
+      type: integer
+      minimum: 0
+      maximum: 604800
+    windows:
+      type: array
+      minItems: 1
+      maxItems: 8
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+          seconds:
+            type: integer
+            minimum: 1
+            maximum: 2678400
+        required:
+          - id
+          - seconds
+        additionalProperties: false
+    baseline:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              const: none
+          required:
+            - kind
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              const: instrument
+            instrument:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - kind
+            - instrument
+          additionalProperties: false
+    fields:
+      type: object
+      properties:
+        events:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            instrument:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            event_at:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            published_at:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            first_available_at:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            retrieved_at:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            source_url:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+          additionalProperties: false
+        market:
+          type: object
+          properties:
+            instrument:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            time:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            price:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            unit:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+            available_at:
+              type: string
+              pattern: ^[A-Za-z_][A-Za-z0-9_-]{0,79}$
+          additionalProperties: false
+      additionalProperties: false
+  required:
+    - events_ref
+    - market_ref
+    - selection
+    - price_basis
+    - price_time_semantics
+    - as_of
+    - anchor
+    - entry
+    - tolerance_seconds
+    - windows
+    - baseline
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    result_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    method:
+      const: fixed-event-window-returns/1.0.0
+    counts:
+      type: object
+      properties:
+        events:
+          type: integer
+          minimum: 0
+        outcomes:
+          type: integer
+          minimum: 0
+        complete:
+          type: integer
+          minimum: 0
+        partial:
+          type: integer
+          minimum: 0
+        missing:
+          type: integer
+          minimum: 0
+        pending:
+          type: integer
+          minimum: 0
+        overlapping:
+          type: integer
+          minimum: 0
+      required:
+        - events
+        - outcomes
+        - complete
+        - partial
+        - missing
+        - pending
+        - overlapping
+      additionalProperties: false
+    point_in_time_status:
+      const: not_established
+    status:
+      enum:
+        - no_events
+        - complete
+        - partial
+  required:
+    - result_ref
+    - method
+    - counts
+    - point_in_time_status
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.read
+    - resources.write
+  usage:
+    purpose: Bridge already selected historical events and fixed market data with transparent retrospective endpoint arithmetic; no model or source configuration is required.
+    inputs: Complete events_ref and market_ref DataRefs, explicit as_of, selection, price_basis, price_time_semantics, anchor, entry rule, 1..8 windows, tolerance_seconds and baseline. Defaults use flat event_id/instrument/event_at/published_at/first_available_at/retrieved_at/source_url and instrument/observed_at/close/unit/available_at columns; fields can map flat names. See README for the exact row contract.
+    outputs: Immediate result_ref to one json-rows packet containing full parameters, input provenance, per-event/window prices, fraction returns, exact-time baseline/excess return, availability statuses, gaps, overlaps and source refs. Counts are accounting totals, not frequencies, independent sample counts or confidence.
+    prerequisites:
+      - Frozen json-rows event and price artifacts with exact producer-backed refs; at most 256 events, 50000 price rows and 8 MiB per input.
+      - Price timestamps represent actual bar closes or explicit observations. Price availability, publication time and retrieval time have separate meanings. Normalize incompatible source formats separately and preserve their input dependencies.
+    limitations:
+      - No event search, semantic matching, historical snapshot authentication, causal attribution, probability calibration, cost/slippage model, FX conversion, dividend reinvestment or trading backtest. Methods and features remain freely selected outside Report.
+      - Published_at is never promoted to first_available_at. Declared first_available_at is retained but not verified; every sample remains excluded from point-in-time validation by this capability. Recently retrieved old stories remain retrospective evidence.
+      - Exit is first observation at/after anchor+seconds inside the explicit tolerance; baseline requires the exact chosen target endpoint times. Missing, not-yet-elapsed, invalid-price and unit-change cases remain visible.
+      - "No result claims independent votes: overlapping same-instrument event windows and multiple windows remain dependent. Selection is recorded but not certified as prospective. Zero supplied events is no_events, not a successful search with zero historical matches."
+  binding:
+    type: native
+    name: investment_research_event_outcomes
