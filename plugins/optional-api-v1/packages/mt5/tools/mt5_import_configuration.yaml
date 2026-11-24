@@ -1,0 +1,54 @@
+name: mt5_import_configuration
+title: mt5_import_configuration
+description: 可选：复用已由宿主提取的 MT5 MCP 或账户凭据引用。没有引用时可直接用 mt5_update_configuration 保存用户已提供的 token/password。保存立即生效，不登录、不启动终端；随后核验所需连接。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - source_message_id
+    - expected_version
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    source_message_id:
+      type: string
+      pattern: ^msg_[A-Za-z0-9_-]{1,100}$
+    expected_version:
+      type: integer
+      minimum: 1
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - application-configuration
+  usage:
+    purpose: 复用安全消息引用保存已有原生配置；它是直接配置之外的可选入口。
+    inputs: "{command_id,source_message_id:<settings.pendingImports中的msg_ID>,expected_version:<settings.version>}；没有secret/token/password参数。"
+    outputs: "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。"
+    prerequisites:
+      - 主会话，已有被宿主接收并脱敏的用户配置引用。
+    limitations:
+      - 引用限原会话/绑定账户；账户变更或引用失效不能凭猜测重建。敏感配置原文不读回工具参数。
+  binding:
+    type: native
+    name: mt5_import_configuration

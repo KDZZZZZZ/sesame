@@ -1,0 +1,100 @@
+name: qmt_trading_cancel
+title: qmt_trading_cancel
+description: "Main Agent or a host-proven workflow-to-execution call chain: cancel only an existing exact-account original order through the native ownership and idempotence checks. Agent-provided authorization or legacy signed intent does not establish this chain. Inspect native status after unknown results."
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - user_authorized
+    - account_id
+    - connection_revision
+    - original_operation_id
+    - order_id
+  properties:
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,100}$
+    user_authorized:
+      type: boolean
+      const: true
+    account_id:
+      type: string
+      description: Exact authorized account ID
+      minLength: 1
+      maxLength: 20000
+    connection_revision:
+      type: string
+      description: Exact configured connection revision
+      minLength: 1
+      maxLength: 20000
+    authorization:
+      type: object
+      required:
+        - expiresAt
+        - signature
+      properties:
+        expiresAt:
+          type: integer
+          minimum: 1
+        signature:
+          type: string
+          minLength: 88
+          maxLength: 88
+      additionalProperties: false
+    original_operation_id:
+      type: string
+      description: Original qmt_order operation ID
+      minLength: 1
+      maxLength: 20000
+    order_id:
+      type: string
+      pattern: ^[1-9]\d*$
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - external-trading
+    - plugin.state.write
+  usage:
+    purpose: 针对原始下单意图提交撤单请求。
+    inputs: "{operation_id:<本次撤单稳定ID>,user_authorized:true,account_id,connection_revision,original_operation_id:<原order键>,order_id:<原生正整数文本>}；只引用本连接原请求及唯一匹配订单。"
+    outputs: "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。"
+    prerequisites:
+      - 主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。
+    limitations:
+      - 会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。
+  binding:
+    type: native
+    name: qmt_trading_cancel
+  configurationRequirements:
+    - field: python_path
+      reason: Native QMT calls use the saved existing Windows Python executable.
+    - field: account_id
+      reason: Account reads and commands target the explicitly configured STOCK account.
+    - field: userdata_directory
+      reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

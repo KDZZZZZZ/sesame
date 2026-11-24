@@ -1,0 +1,57 @@
+name: strategy_graph
+title: strategy_graph
+description: Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.
+inputSchema:
+  type: object
+  required:
+    - source
+  properties:
+    source:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: strategy.source
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:resource
+  usage:
+    purpose: Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.
+    inputs: source 是 strategy_publish 的完整 strategy.source 引用。
+    outputs: 从固定源同一 AST 派生的图节点与连线。
+    prerequisites: []
+    limitations:
+      - 不能把手画说明图当执行证据；摘要不符时重新读取正确成果，勿改引用字段。
+  binding:
+    type: native
+    name: strategy_graph

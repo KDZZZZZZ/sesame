@@ -1,0 +1,50 @@
+name: plugin_uninstall
+title: plugin_uninstall
+description: 按预期版本卸载插件并撤销能力注册。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    expectedRevision:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+    operationId:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 稳定操作 ID，重试保持不变
+  required:
+    - pluginId
+    - expectedRevision
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.remove
+  usage:
+    purpose: 按预期版本卸载插件并撤销能力注册。
+    inputs: pluginId 和 expectedRevision 锁定待卸载的安装摘要；operationId 标识此次移除。
+    outputs: 宿主卸载回执，能力注册和所属运行资源会释放。
+    prerequisites:
+      - 主 Agent；用户任务确实要求移除此插件。
+    limitations:
+      - 卸载不证明插件外部程序、业务订单或用户导出文件已删除。冲突读 plugin_inspect 后确认目标。
+  binding:
+    type: native
+    name: plugin_uninstall

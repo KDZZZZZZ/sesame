@@ -35,7 +35,9 @@ export function targetOrders(backend, target, positions) {
   const orders = opposing.map(row => close(row));
   let excess = Decimal.sub(matching.reduce((sum, row) => Decimal.add(sum, dec(row.quantity)), '0'), desired);
   for (const row of matching) if (positive(excess)) { const quantity = min(excess, dec(row.quantity)); orders.push(close(row, quantity)); excess = Decimal.sub(excess, quantity); }
-  if (Decimal.compare(excess, '0') < 0) orders.push({ action: 'market', side, quantity: Decimal.abs(excess) });
+  if (Decimal.compare(excess, '0') < 0) orders.push({ action: 'market', side, quantity: Decimal.abs(excess),
+    ...(target.stop_loss !== undefined ? { stop_loss: target.stop_loss } : {}),
+    ...(target.take_profit !== undefined ? { take_profit: target.take_profit } : {}) });
   return orders;
 }
 

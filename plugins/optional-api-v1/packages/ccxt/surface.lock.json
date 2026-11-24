@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/ccxt:instructions#preamble": "c6519bc59c27983b883e517c6bcde24fe99d7a0882a82be8bc00027379eb33cf",
+    "sesame/ccxt:plugin.description": "9d1cfa2aef426b6344e66258600ba34ce2767e892c53f19f2284af5cdf692eb1",
+    "sesame/ccxt:resource/INTERFACES.md": "08dbe5270ffeb5f772f5659382d8df800d7b2b7dc238b8c5f202c6c2cb824168",
+    "sesame/ccxt:resource/PROVENANCE.md": "06bd924c7c81d8b9dac02f96ddcdd596fd35a8590900264bd4f7f82c0240e8b6",
+    "sesame/ccxt:resource/README.md": "73a301c06687711a988ce9f362f51df1c899c88618199dbf08bf7be5fadbbc71",
+    "sesame/ccxt:resource/VALIDATION.md": "24afc62aebabe2b09aa76181e7bb8e58480d447d55574dafb6a415f4d727333b",
+    "sesame/ccxt:skill/ccxt-public-markets.body": "12f2315d7858494bb42d14cfd0622746179b647d129ab5374a1e700ecc47399b",
+    "sesame/ccxt:skill/ccxt-public-markets.description": "bc4b7db0ed5a7b9f80bee46746b14216167fea09dac76e94febca846eb24779c",
+    "sesame/ccxt:tool/ccxt_catalog.description": "01a9ba615edbd7b2e0a5e7ca589ee57f8842e1d21d3a114b84e0642e14b73929",
+    "sesame/ccxt:tool/ccxt_catalog.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/ccxt:tool/ccxt_catalog.input": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+    "sesame/ccxt:tool/ccxt_catalog.output": "ae84e6cf19bf1fc4efe46856934f85f2bd1bb26d23faf4be6bcfa63c2f8c2505",
+    "sesame/ccxt:tool/ccxt_environment.description": "37c6ae72df9b8b3de5b9c40d0d0ee4b5853226e7b2c79e45837178bd5334f82f",
+    "sesame/ccxt:tool/ccxt_environment.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/ccxt:tool/ccxt_environment.input": "2da6dc1b36afc40e7464ec2d2d9404f20991cf0acd960f92192b631a6c58c2ab",
+    "sesame/ccxt:tool/ccxt_environment.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d"
+  },
+  "digest": "28ded144631e37fbdc592ae7fff68acf01f06b0d3771134fb8bf06690b4cea8e"
+}

@@ -1,28 +1,39 @@
+import {readPackageDirectory} from '../../protocol/directory.mjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildLock, readProfile } from './plugin-lock.mjs';
-import { FUNCTIONAL_CATEGORIES, IMPLEMENTATION_KINDS, validateInventoryPolicy, deriveImplementationKinds } from './plugin-taxonomy.mjs';
+import { FUNCTIONAL_CATEGORIES, IMPLEMENTATION_KINDS, validateInventoryPolicy, deriveImplementationKinds, packageCatalog } from './plugin-taxonomy.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export function buildInventory(directory = root) {
   const policy = JSON.parse(readFileSync(join(directory, 'inventory-policy.json'))), entries = [];
   const distributions = [directory, resolve(directory, '../optional-api-v1')].map(source => ({ source, profile: readProfile(source), lock: buildLock(source) }));
-  const taxonomy = validateInventoryPolicy(policy, distributions.flatMap(({ lock }) => lock.packages.map(pkg => pkg.directory))) === 'taxonomy';
+  const ids = new Set(), allowedFallbackNames = new Set(distributions.flatMap(({ profile, lock }) => [
+    ...(profile.exclude ?? []), ...lock.packages.filter(pkg => pkg.id === `sesame/${pkg.directory}`).map(pkg => pkg.directory),
+  ]));
+  validateInventoryPolicy(policy, [...allowedFallbackNames], []);
   for (const { source, profile, lock } of distributions) {
     for (const pkg of lock.packages) {
-      const manifest = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, 'plugin.json')));
-      const declared = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, manifest.capability_manifest)));
+      if (ids.has(pkg.id)) throw new Error(`Duplicate package identity across distributions: ${pkg.id}`);
+      ids.add(pkg.id);
+      const {manifest,capabilities:declared} = readPackageDirectory(join(source, 'packages', pkg.directory));
+      const paths = pkg.files.map(file => file.path);
+      const own = packageCatalog(manifest, declared, paths);
+      const official = pkg.id === `sesame/${pkg.directory}`;
+      const display = own ?? (official && Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined);
+      if (!display) throw new Error(`Missing reviewed package explanation: ${pkg.id}. Declare x-sesame.catalog in plugin.yaml`);
       entries.push({ id: pkg.id, version: pkg.version, distribution: profile.kind, state: manifest.default_state, engines: manifest.engines,
         format: manifest.execution === 'mcp' ? 'sesame-mcp' : 'sesame-native', license: manifest.license, author: manifest.author ?? { name: 'Sesame contributors' },
-        ...policy[pkg.directory],
-        ...(taxonomy ? { implementationKinds: deriveImplementationKinds(manifest, declared, pkg.files.map(file => file.path), policy[pkg.directory]), permissions: manifest.permissions ?? { scopes: [], calls: [] } } : {}),
+        ...display,
+        ...(display.functionalCategory ? { implementationKinds: own?.implementationKinds ?? deriveImplementationKinds(manifest, declared, paths, display), permissions: manifest.permissions ?? { scopes: [], calls: [] } } : {}),
         tools: declared.capabilities.filter(capability => capability.consumers.includes('agent')).map(capability => capability.id),
         capabilities: declared.capabilities.map(({id,kind,consumers,execution}) => ({id,kind,consumers,execution})),
         hostContributions: Object.fromEntries(['sources','views','services','hooks'].map(kind => [kind, declared[kind].map(({id,contract,operations}) => ({id,contract,operations}))])),
         sourcePath: `plugins/${profile.kind === 'core' ? 'api-v1' : 'optional-api-v1'}/packages/${pkg.directory}` });
     }
   }
+  const taxonomy = entries.some(entry => Object.hasOwn(entry, 'functionalCategory'));
   return { schemaVersion: 1, apiVersion: '2', status: 'descriptive-inventory', application: { minimum: '0.2.0', engines: { sesame: '>=0.2.0-0' } },
     notice: taxonomy
       ? 'This descriptive inventory is not an installation catalog. application.minimum is the distribution profile floor, not a promise that every package supports that host; honor each package engines range. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.'

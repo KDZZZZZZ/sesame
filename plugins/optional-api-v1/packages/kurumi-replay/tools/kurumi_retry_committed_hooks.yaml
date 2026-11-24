@@ -1,0 +1,58 @@
+name: kurumi_retry_committed_hooks
+title: kurumi_retry_committed_hooks
+description: 已提交H1的展示/周报冻结钩子显式恢复；不重放交易，模块自身幂等，不在重启自动发付费任务。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 0
+  required:
+    - command_id
+    - expected_version
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 已提交H1的展示/周报冻结钩子显式恢复；不重放交易，模块自身幂等，不在重启自动发付费任务。
+    inputs: "{command_id,expected_version}."
+    outputs: Retained hook-processing result/status for already committed H1 presentation and report-freeze work.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Existing committed ledger and pending hook records.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Retries derived presentation/freezing only; no new simulation fill or implicit paid weekly generation.
+  binding:
+    type: native
+    name: kurumi_retry_committed_hooks
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

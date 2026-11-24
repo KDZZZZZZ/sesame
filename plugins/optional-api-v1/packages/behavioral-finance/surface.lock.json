@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/behavioral-finance:instructions#preamble": "945a430155401607ba7526367b6d4beae75a982688fef7e405f7debbae572691",
+    "sesame/behavioral-finance:plugin.description": "0622d95f21168bc0e0e0ec9d9e1972bfff753fafae31a975384f3f21f06d8116",
+    "sesame/behavioral-finance:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/behavioral-finance:resource/PROVENANCE.md": "150c13c644784cb64d313e782ec018300ee1c6fbbf418744bf2c8e5ba1fcb591",
+    "sesame/behavioral-finance:resource/README.md": "0decbff83de413cb28161e9996566c07c7fdfe1a077049752a04ee58bdd145e6",
+    "sesame/behavioral-finance:resource/examples/case.json": "ca2e625e70fb038ca230a71a91aa05f880a8c87c4a0ff0c55dad5d51c1fb8542",
+    "sesame/behavioral-finance:resource/examples/expected.md": "efc6141f140df13bc8d03a2fd08c173acecd1e5c2cbab8b87c8e80581143915d",
+    "sesame/behavioral-finance:resource/references/evidence.md": "f66b548788d849ffef164f72b3270110e6b5b36836a8f8495dfe352f172dd733",
+    "sesame/behavioral-finance:resource/references/method.md": "6ac85512a919d6da8a11d85e666c24523cd14d97962d94b0a72239457c1d7074",
+    "sesame/behavioral-finance:skill/behavioral-finance.body": "a99bdff95f75a16efb4ff0a0776b68642142e32fd226e9042b3961fc5823e541",
+    "sesame/behavioral-finance:skill/behavioral-finance.description": "7fc518aeddfca9d49058bb7a12632917a27d30b919fd59ef6b4b10a22ed8544c"
+  },
+  "digest": "ec47812e21a216a1aa62c75ac232e5bb6232f5e30a3bd5d116c50b815107143f"
+}

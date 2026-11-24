@@ -1,0 +1,389 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/ultra
+title: Ultra 持续协作
+description: 把当前用户目标组织成持久、并行、可恢复的研究和盯盘交易周期，组合现有工作流、知识与数据插件；真实任务完成后续办，达到目标或用户停止后结束。
+version: 1.0.7
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame contributors
+entry: index.js
+x-sesame:
+  default_state: mounted
+  agent_scope: all
+  permissions:
+    scopes:
+      - capabilities.compose
+    calls:
+      - host.agent.run
+      - host.capabilities.list
+      - host.sessions.query
+      - host.runs.read
+      - host.runs.wait
+      - host.runs.cancel
+      - host.runs.resume
+      - host.resources.read
+      - sesame/plugin-manager#plugin_discover
+      - sesame/plugin-manager#plugin_read
+  contributions:
+    capabilities:
+      - tool/ultra_start
+      - tool/ultra_status
+      - tool/ultra_dispatch
+      - tool/ultra_wait
+      - tool/ultra_resume
+      - tool/ultra_close
+      - tool/ultra_stop
+      - tool/ultra_finish
+      - id: ultra_cycle
+        kind: workflow
+        consumers:
+          - host
+        description: 内部持久周期：一次规划或等待真实 Run/时间/数据事件，完成后利用宿主原生通知续办主 Agent。
+        inputSchema:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 100
+            number:
+              type: integer
+              minimum: 1
+            mode:
+              enum:
+                - plan
+                - runs
+                - time
+                - event
+            refs:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                  kind:
+                    enum:
+                      - agent
+                      - workflow
+                      - process
+                      - function
+                  revision:
+                    type: integer
+                    minimum: 1
+                required:
+                  - id
+                additionalProperties: false
+              maxItems: 256
+              minItems: 1
+            until:
+              type: string
+              minLength: 1
+              maxLength: 100
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 4000
+            source:
+              type: object
+              properties:
+                providerId:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+                binding:
+                  type: object
+                  additionalProperties: true
+              required:
+                - providerId
+                - revision
+              additionalProperties: false
+            operation:
+              type: string
+              minLength: 1
+              maxLength: 128
+            input:
+              type: object
+              additionalProperties: true
+          required:
+            - id
+            - number
+            - mode
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: run
+        resumable: true
+        effects:
+          - state.write
+          - execution
+          - data.subscribe
+        usage:
+          purpose: 内部持久周期：一次规划或等待真实 Run/时间/数据事件，完成后利用宿主原生通知续办主 Agent。
+          inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+          outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+          prerequisites:
+            - Configured model for planning; selected capabilities remain enabled and locally authorized.
+          limitations:
+            - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+            - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+        binding:
+          type: native
+          name: ultra_cycle
+      - id: ultra_before_turn
+        kind: function
+        consumers:
+          - host
+        execution: immediate
+        description: Keep trusted human-input authority and explicit Ultra reopen intent without modifying visible message content.
+        inputSchema:
+          type: object
+          properties:
+            messageId:
+              type: string
+            conversation:
+              type: object
+              additionalProperties: true
+            parts:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            source: {}
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - messageId
+            - conversation
+            - parts
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            parts:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+          required:
+            - parts
+          additionalProperties: false
+        effects:
+          - state.write
+        usage:
+          purpose: Keep a durable human-input boundary and explicit Ultra reopening intent.
+          inputs: Trusted host lifecycle metadata and message parts. Only real human input advances authority; explicit Ultra restart intent is retained as a boolean, never message text.
+          outputs: Unchanged message parts; visible user content never receives internal mode instructions.
+          prerequisites:
+            - Trusted beforeAgentTurn lifecycle.
+          limitations:
+            - Automatic/delegated input never advances user authority. Closed mode does not disable normal collaboration capabilities.
+        binding:
+          type: native
+          name: ultra_before_turn
+      - id: ultra_after_turn
+        kind: function
+        consumers:
+          - host
+        execution: immediate
+        description: Continue an unfinished Ultra goal after its owning main Agent turn settles, using queued work or a real exploration cycle.
+        inputSchema:
+          type: object
+          properties:
+            conversationId:
+              type: string
+              minLength: 1
+            responseId:
+              type: string
+              minLength: 1
+            status:
+              type: string
+              minLength: 1
+            scope:
+              type: string
+              minLength: 1
+          required:
+            - conversationId
+            - responseId
+            - status
+            - scope
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        effects:
+          - state.write
+          - declared-calls
+          - start:workflow
+        usage:
+          purpose: Prevent a completed main reply from leaving an unfinished Ultra goal without real continuation.
+          inputs: Host afterAgentTurn conversationId, responseId, status and scope; owner must match the bound main context.
+          outputs: Retained goal state or a newly accepted real cycle. An unchanged non-executed plan becomes a concrete scheduler interruption rather than an empty loop.
+          prerequisites:
+            - Trusted afterAgentTurn lifecycle; an existing active Ultra goal.
+          limitations:
+            - Stopped, completed, interrupted and explicitly waiting goals do not auto-restart. No new authorization or message impersonation.
+        binding:
+          type: native
+          name: ultra_after_turn
+    sources: []
+    views: []
+    services: []
+    hooks:
+      - id: beforeAgentTurn
+        event: lifecycle.beforeAgentTurn
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: ultra_before_turn
+      - id: afterAgentTurn
+        event: lifecycle.afterAgentTurn
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: ultra_after_turn
+    knowledge:
+      - id: ultra-provenance
+        path: PROVENANCE.md
+        kind: reference
+        description: Original implementation, MIT license and design-reference boundaries.
+      - id: ultra-prompt
+        path: instructions.md
+        kind: prompt
+        description: Persistent parallel research and monitoring control, command use and continuation rules.
+      - id: ultra-guide
+        path: README.md
+        kind: reference
+        description: Public command contract, durable state, recovery and verification.
+    stateCollections:
+      - name: human_inputs
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            owner:
+              type: string
+            messageId:
+              type: string
+          required:
+            - owner
+            - messageId
+          additionalProperties: false
+      - name: authorities
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            owner:
+              type: string
+            messageId:
+              type: string
+            counter:
+              type: integer
+              minimum: 1
+            ultraRequested:
+              type: boolean
+          required:
+            - owner
+            - messageId
+            - counter
+          additionalProperties: false
+      - name: owners
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 100
+            closeGeneration:
+              type: integer
+              minimum: 0
+            closeAuthority:
+              type: integer
+              minimum: 0
+            closeRequestedAt:
+              type: number
+              minimum: 0
+          required: []
+          additionalProperties: false
+      - name: sessions
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 100
+            owner:
+              type: string
+              minLength: 1
+              maxLength: 200
+            status:
+              type: string
+              minLength: 1
+              maxLength: 64
+          required:
+            - id
+            - owner
+            - status
+          additionalProperties: true
+      - name: branches
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            session:
+              type: string
+              minLength: 1
+              maxLength: 100
+            key:
+              type: string
+              minLength: 1
+              maxLength: 96
+            status:
+              type: string
+              minLength: 1
+              maxLength: 64
+          required:
+            - session
+            - key
+            - status
+          additionalProperties: true
+    artifactSchemas: []
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false

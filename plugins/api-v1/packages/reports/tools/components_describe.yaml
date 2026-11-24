@@ -1,0 +1,43 @@
+name: components_describe
+title: components_describe
+description: Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.
+inputSchema:
+  type: object
+  properties:
+    ids:
+      type: array
+      minItems: 1
+      maxItems: 12
+      uniqueItems: true
+      items:
+        type: string
+        minLength: 1
+        maxLength: 100
+  required:
+    - ids
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in IDs. Structural report.highlights maps directly to the top-level highlights array; body components remain inside content.
+    inputs: IDs returned by components_list; choose only the components needed for the current content.
+    outputs: Selected component schemas and examples derived from the current renderer contract.
+    prerequisites: []
+    limitations:
+      - Examples are demonstration values, not research evidence.
+  binding:
+    type: native
+    name: components_describe

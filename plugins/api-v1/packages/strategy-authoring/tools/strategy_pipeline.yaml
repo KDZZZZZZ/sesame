@@ -1,0 +1,53 @@
+name: strategy_pipeline
+title: strategy_pipeline
+description: Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.
+inputSchema:
+  type: object
+  required:
+    - fixture_path
+  properties:
+    fixture_path:
+      type: string
+      description: Workspace JSON conforming to the plugin pipeline.md fixture contract
+      minLength: 1
+      maxLength: 20000
+    output_path:
+      type: string
+      description: Optional workspace path for the complete evaluation result
+      minLength: 1
+      maxLength: 20000
+    operation_id:
+      type: string
+      description: If provided, preserve the fixture and result as a resource artifact
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:resource
+    - publish:artifact
+    - workspace.write
+  usage:
+    purpose: Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.
+    inputs: fixture_path 是 references/pipeline.md 的固定信号→目标→风险→执行输入，嵌入完整成果引用；output_path/operation_id 可保存结果与证据。
+    outputs: 实际阶段求值、validationScope 与可选 evidence；验证输入所属策略，保留 nativeEngineExecuted=false。
+    prerequisites:
+      - 已有固定 strategy.source 与输入引用；输入≤4MiB。
+    limitations:
+      - 不调用模型/经纪商；无效或过期引用修具体输入，不将提议指令当已执行订单。
+  binding:
+    type: native
+    name: strategy_pipeline

@@ -1,0 +1,212 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/web-sources
+title: 网页搜索与取证
+description: 搜索与来源：免Key关键词搜索、站点筛选，抓取选定HTTP/HTTPS原文并保存固定引用；与RSS、正文解析和金融来源独立协作。
+version: 3.1.0
+license: MIT
+engines:
+  sesame: ">=0.2.3"
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  prompts:
+    - instructions.md
+  skills: []
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/sources_search
+      - tool/sources_fetch
+      - id: http_query
+        kind: function
+        consumers:
+          - host
+        description: "Query one HTTP/HTTPS source as a row page. Inspect metadata.status: available carries observed provenance; unavailable carries the URL and failure, with no provenance. An unavailable page is not an observed empty dataset."
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: false
+            query:
+              type: object
+              properties:
+                url:
+                  type: string
+                  pattern: ^https?://
+              required:
+                - url
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          oneOf:
+            - type: object
+              properties:
+                items:
+                  type: array
+                metadata:
+                  type: object
+                  properties:
+                    status:
+                      const: available
+                    provenance:
+                      type: object
+                      additionalProperties: true
+                  required:
+                    - status
+                    - provenance
+                  additionalProperties: false
+              required:
+                - items
+                - metadata
+              additionalProperties: false
+            - type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 0
+                metadata:
+                  type: object
+                  properties:
+                    status:
+                      const: unavailable
+                    url:
+                      type: string
+                      minLength: 1
+                    error:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          enum:
+                            - source_http_error
+                            - source_dns_error
+                            - source_tls_error
+                            - source_network_error
+                            - source_proxy_error
+                            - source_timeout
+                            - source_too_large
+                            - source_redirect_error
+                            - source_encoding_error
+                            - source_content_error
+                        message:
+                          type: string
+                          minLength: 1
+                        http_status:
+                          type: integer
+                          minimum: 100
+                          maximum: 599
+                      required:
+                        - code
+                        - message
+                      additionalProperties: false
+                  required:
+                    - status
+                    - url
+                    - error
+                  additionalProperties: false
+              required:
+                - items
+                - metadata
+              additionalProperties: false
+        execution: immediate
+        effects:
+          - network
+        usage:
+          purpose: 为宿主提供一次HTTP来源行快照。
+          inputs: 宿主 {query:{url:"https://example.org/data.json"}}；绑定为空，page不改变这次有界抓取。Agent用sources_fetch冻结，或data_query({source:<data_sources返回的sesame/web-sources#http精确ref>,input:{url}})只查询。
+          outputs: '先检查metadata.status。available: {items:<JSON/CSV行或[{url,text}]>,metadata:{status:"available",provenance:{kind,source_kind,provider,as_of,data_hash,content_type,encoding}}}。unavailable: {items:[],metadata:{status:"unavailable",url,error:{code,message,http_status?}}}；items仅保持宿主行页协议，不表示观测到0条数据，禁止按成功空样本分析。不返回nextCursor，不自动发布artifact。'
+          prerequisites:
+            - 宿主 data.query 数据源调用。
+          limitations:
+            - 每次查询重新联网，完整有界响应不代表所有来源内容；时限/大小/重定向与sources_fetch一致；需要复现应冻结artifact。
+            - 单地址HTTP/网络/编码/格式等不可用原因通过metadata返回，不抛成工作流依赖中断。消费者必须先检查metadata.status再消费items；无证据与真实空样本不可混淆。
+        binding:
+          type: native
+          name: http_query
+    sources:
+      - id: http
+        contract: sesame.rows/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          query: http_query
+    views: []
+    services: []
+    knowledge:
+      - id: documentation-0
+        path: instructions.md
+        description: "Documentation: prompt.md"
+        kind: prompt
+      - id: public-interface-contract
+        path: INTERFACES.md
+        consumers:
+          - agent
+          - host
+        description: "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries."
+        kind: reference
+      - id: search-and-sources
+        path: SEARCH.md
+        kind: reference
+        consumers:
+          - agent
+          - host
+        description: 搜索与来源插件分工、官方免费入口、固定证据交接与历史可知性边界。
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true

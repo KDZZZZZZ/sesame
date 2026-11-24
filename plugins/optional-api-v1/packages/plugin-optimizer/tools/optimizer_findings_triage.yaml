@@ -1,0 +1,54 @@
+name: optimizer_findings_triage
+title: optimizer_findings_triage
+description: 给发现指定一个归因对象和依据
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+    category:
+      type: string
+      enum:
+        - requirement
+        - host
+        - implementation
+        - element
+        - model
+    object:
+      type: string
+      minLength: 1
+    reason:
+      type: string
+      minLength: 1
+  required:
+    - id
+    - category
+    - object
+    - reason
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: 给发现指定一个归因对象和依据
+    inputs: id, category, object, reason
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_findings_triage

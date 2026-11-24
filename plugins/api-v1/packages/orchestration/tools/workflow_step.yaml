@@ -1,0 +1,102 @@
+name: workflow_step
+title: workflow_step
+description: 上报流程计划中一条待办的进展（开始、完成、失败或放弃），并立即取得新的流程提示。每完成一条待办就调用一次；后续该做什么以返回值为准。
+inputSchema:
+  type: object
+  properties:
+    step:
+      type: string
+      pattern: ^[a-z][a-z0-9_]{0,47}$
+      description: 当前计划里的待办名。
+    presets:
+      type: array
+      maxItems: 20
+      uniqueItems: true
+      items:
+        type: string
+        pattern: ^[a-z][a-z0-9_]{0,47}$
+      description: 这次实际完成了这条待办里的哪些预设步骤。done 时省略表示全部，failed 时省略表示都没完成。
+    status:
+      type: string
+      enum:
+        - started
+        - done
+        - failed
+        - skipped
+      description: started 开始（已完成的待办表示重做）；done 完成；failed 本次未全部完成，可重试；skipped 本计划不再执行这条待办。
+    produced:
+      type: array
+      maxItems: 32
+      items:
+        type: string
+        pattern: ^[A-Z][A-Za-z0-9]{0,63}(:[a-z][a-z0-9_]{0,31})?$
+      description: 要带结果的产物："Name:outcome"。必须是这次完成的预设步骤声明的产物。
+    refs:
+      type: object
+      maxProperties: 32
+      additionalProperties:
+        type: string
+        minLength: 1
+        maxLength: 500
+      description: 产物名 → 固定引用。
+    runs:
+      type: array
+      maxItems: 16
+      uniqueItems: true
+      items:
+        type: string
+        minLength: 1
+        maxLength: 190
+      description: 执行这条待办的 Run id。
+    fallback:
+      type: string
+      minLength: 1
+      maxLength: 196
+      description: 与 failed 一起使用：这条待办里某个预设步骤声明的回退工作流 id。
+    gap:
+      type: string
+      pattern: ^[A-Z][A-Za-z0-9]{0,63}$
+      description: 与 fallback 一起使用：交给回退工作流的缺口产物，必须是它的外部输入。
+    note:
+      type: string
+      minLength: 1
+      maxLength: 500
+      description: 说明，显示在用户的流程面板上。done 时可以写一句结果；failed、skipped 必填，写原因。
+  required:
+    - step
+    - status
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.read
+    - state.write
+    - read
+  usage:
+    purpose: 上报流程计划中一条待办的进展（开始、完成、失败或放弃），并立即取得新的流程提示。每完成一条待办就调用一次；后续该做什么以返回值为准。
+    inputs: step 是当前计划里的待办名，status 为 started、done、failed 或 skipped。done 默认这条待办里的预设步骤全部完成；只完成了一部分时用 presets 列出完成的，没列出的回到预设参考。produced 只需列出要带结果的产物，如 ["SanityResult:fail"]，声明了结果取值的产物必须带结果。refs 登记产物的固定引用，供后续待办和短任务使用。runs 仅用于补挂未带标签的 Run。failed、skipped 必须写 note。待办里的预设步骤声明了回退工作流而自身无法完成时，用 status=failed 加 fallback（回退工作流 id）和 gap（交给回退工作流的缺口产物）。
+    outputs: 新的流程提示（与 workflow_status 相同），另有 accepted。出错时 accepted 为 false，error 给出 code、message 和 fix，流程提示照常返回。
+    prerequisites:
+      - 仅主 Agent 可用，且已有活动计划。
+      - 上报的结果和引用必须来自实际的 Run 输出或成果，不能凭预期填写。
+    limitations:
+      - started 可以省略；委派 Run 之前先报 started，这条待办会立刻显示为进行中，避免重复派发。对进行中的待办再次上报 started 不会新开一轮，attention 会提示它已在进行。
+      - 依赖只用于推荐下一步，不拦截。对还没被推荐的待办上报 started 或 done 会照常记录并标记为偏离，attention 列出缺什么；确有理由时在 note 里说明。
+      - 对已完成的待办上报 started 即开启重做；它的产物更新后，用过旧版本的下游产物失效，相应的已完成待办回到待办。
+      - runs 中的 Run 必须属于本会话且已经结束；仍在运行或处于中断的会被拒绝。
+      - 同一条待办同一时间只交给一个执行者。需要执行多个相关短任务时，由带标签的父 Run 派发，子 Run 继承待办标签。
+  binding:
+    type: native
+    name: workflow_step

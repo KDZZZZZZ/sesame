@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -7,7 +8,7 @@ import { createLibrary } from '../library.js';
 import { COLLECTIONS, digest, identifier, OPERATOR_DIGEST, validateDiagnostics } from '../contracts.js';
 import { storageFixture } from './storage-fixture.js';
 
-const capabilities = JSON.parse(readFileSync(new URL('../capabilities.json', import.meta.url))).capabilities;
+const capabilities = readPackageDirectory(new URL('../', import.meta.url)).capabilities.capabilities;
 const pool = capabilities.find(value => value.id === 'factor_pool');
 const compute = capabilities.find(value => value.id === 'factor_compute');
 const libraryCapability = capabilities.find(value => value.id === 'factor_library');

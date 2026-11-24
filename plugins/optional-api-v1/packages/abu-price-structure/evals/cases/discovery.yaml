@@ -1,0 +1,127 @@
+id: abu-price-structure-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/abu-price-structure/skills/abu-price-structure/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/abu-price-structure
+  - step: 1
+    pointer: /tools/0/name
+    equals: abu_price_structure_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        input:
+          type: object
+          properties:
+            schema_version:
+              const: 1
+            source:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                kind:
+                  enum:
+                    - synthetic
+                    - historical
+                    - live
+              required:
+                - id
+                - kind
+              additionalProperties: true
+              description: Caller-declared provenance; synthetic remains synthetic in output artifacts.
+            as_of:
+              type: string
+              description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+            parameters:
+              type: object
+              properties:
+                left:
+                  type: integer
+                  default: 2
+                  minimum: 1
+                  maximum: 20
+                  description: 左侧确认根数
+                right:
+                  type: integer
+                  default: 2
+                  minimum: 1
+                  maximum: 20
+                  description: 右侧确认根数
+                cluster_tolerance_pct:
+                  type: number
+                  default: 0.02
+                  minimum: 0.0001
+                  maximum: 0.2
+                  description: 水平聚类相对容差
+                max_bars:
+                  type: integer
+                  default: 5000
+                  minimum: 10
+                  maximum: 10000
+                  description: 输入根数上限
+                max_pivots:
+                  type: integer
+                  default: 100
+                  minimum: 1
+                  maximum: 1000
+                  description: 确认拐点数量上限
+              additionalProperties: false
+              description: Optional overrides. Defaults and limits match the existing calculation.
+            bars:
+              type: array
+              items:
+                type: object
+                properties:
+                  time:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  available_at:
+                    type: string
+                    description: Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time.
+                  open:
+                    type: number
+                  high:
+                    type: number
+                  low:
+                    type: number
+                  close:
+                    type: number
+                  volume:
+                    type: number
+                additionalProperties: true
+                required:
+                  - time
+                  - available_at
+                  - open
+                  - high
+                  - low
+                  - close
+                  - volume
+              maxItems: 10000
+              minItems: 1
+              description: bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。
+          additionalProperties: true
+          required:
+            - schema_version
+            - source
+            - as_of
+            - bars
+          description: 完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。
+      required:
+        - input
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 价格结构基线"

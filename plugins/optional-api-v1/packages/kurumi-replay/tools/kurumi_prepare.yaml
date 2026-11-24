@@ -1,0 +1,53 @@
+name: kurumi_prepare
+title: kurumi_prepare
+description: 主Agent显式准备固定Dukascopy H1观看/真实bidask细数据与私有成熟撮合依赖，或清除无挑战的缓存；不得填造缺失报价。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - prepare
+        - clear
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent显式准备固定Dukascopy H1观看/真实bidask细数据与私有成熟撮合依赖，或清除无挑战的缓存；不得填造缺失报价。
+    inputs: '{action:"prepare"|"clear"}; prepare is explicit acquisition/probe of the private fixed dependencies and historical inputs; clear only when no challenge depends on the cache.'
+    outputs: Preparation result/native environment diagnostics; kurumi_status.prepared and nativeEnvironment distinguish data availability from a usable matching backend.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Main conversation; explicit preparation intent.
+    limitations:
+      - Unsupported platform, failed dependency probe or missing real quotes pauses preparation; no synthetic fallback. clear does not erase an existing challenge.
+  binding:
+    type: native
+    name: kurumi_prepare
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

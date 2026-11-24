@@ -1,0 +1,19 @@
+id: price-action-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/price-action/skills/price-action/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/price-action
+  - step: 1
+    pointer: /tools
+    equals: []
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Price Action 价格行为"

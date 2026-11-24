@@ -1,0 +1,881 @@
+name: strategy_development_plan
+title: strategy_development_plan
+description: 根据上下文填写研究委托，选用策略结构，按需接入已有因子；从固定项目局部修订。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Stable operation key for this exact input. Choose a new key for a revision or a changed experiment.
+    goal:
+      type: string
+      minLength: 1
+      maxLength: 8000
+    project_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    mandate:
+      type: object
+      additionalProperties: false
+      properties:
+        brief:
+          type: string
+          minLength: 1
+          maxLength: 12000
+          description: Current user wording or objective. Supply existing facts through context.
+        context:
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              source:
+                enum:
+                  - assumption
+                  - research
+                  - project
+                  - user
+              evidence:
+                type: string
+                minLength: 1
+                maxLength: 2000
+                description: User quote, project revision, dataset/fee schedule or reason for a research assumption.
+              fields:
+                type: object
+                additionalProperties: false
+                properties:
+                  goal:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  objective:
+                    anyOf:
+                      - type: object
+                        additionalProperties: false
+                        properties:
+                          metric:
+                            enum:
+                              - netReturn
+                              - finalEquity
+                              - maxDrawdown
+                              - closedTrades
+                          direction:
+                            enum:
+                              - maximize
+                              - minimize
+                        required:
+                          - metric
+                          - direction
+                      - type: "null"
+                  benchmark:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  hypothesis:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  instruments:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 100
+                        uniqueItems: true
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                      - type: "null"
+                  excludedInstruments:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 100
+                        uniqueItems: true
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                      - type: "null"
+                  sessions:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 100
+                        uniqueItems: true
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                      - type: "null"
+                  directions:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 2
+                        uniqueItems: true
+                        items:
+                          enum:
+                            - long
+                            - short
+                      - type: "null"
+                  capital:
+                    anyOf:
+                      - type: object
+                        additionalProperties: false
+                        properties:
+                          amount:
+                            anyOf:
+                              - anyOf:
+                                  - type: number
+                                    minimum: 0
+                                  - type: string
+                                    maxLength: 80
+                                    pattern: ^(0|[1-9][0-9]*)([.][0-9]+)?$
+                              - type: "null"
+                          currency:
+                            anyOf:
+                              - type: string
+                                pattern: ^[A-Z]{3}$
+                              - type: "null"
+                        required: []
+                      - type: "null"
+                  horizon:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  frequency:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  target:
+                    anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 2000
+                      - type: "null"
+                  costs:
+                    anyOf:
+                      - type: object
+                        additionalProperties: false
+                        properties:
+                          commission:
+                            anyOf:
+                              - anyOf:
+                                  - type: number
+                                    minimum: 0
+                                  - type: string
+                                    maxLength: 80
+                                    pattern: ^(0|[1-9][0-9]*)([.][0-9]+)?$
+                              - type: "null"
+                          slippage:
+                            anyOf:
+                              - anyOf:
+                                  - type: number
+                                    minimum: 0
+                                  - type: string
+                                    maxLength: 80
+                                    pattern: ^(0|[1-9][0-9]*)([.][0-9]+)?$
+                              - type: "null"
+                          model:
+                            anyOf:
+                              - type: string
+                                minLength: 1
+                                maxLength: 2000
+                              - type: "null"
+                        required: []
+                      - type: "null"
+                  maxDrawdown:
+                    anyOf:
+                      - type: number
+                        minimum: 0
+                        description: Maximum peak-to-trough drawdown as a positive fraction; 0.10 = 10%.
+                        maximum: 1
+                      - type: "null"
+                  maxGrossExposure:
+                    anyOf:
+                      - type: number
+                        minimum: 0
+                        description: Maximum exposure as a multiple of equity. Net exposure uses its absolute magnitude.
+                      - type: "null"
+                  maxNetExposure:
+                    anyOf:
+                      - type: number
+                        minimum: 0
+                        description: Maximum exposure as a multiple of equity. Net exposure uses its absolute magnitude.
+                      - type: "null"
+                  maxPositionExposure:
+                    anyOf:
+                      - type: number
+                        minimum: 0
+                        description: Maximum exposure as a multiple of equity. Net exposure uses its absolute magnitude.
+                      - type: "null"
+                  leverage:
+                    anyOf:
+                      - type: number
+                        minimum: 0
+                        description: Maximum exposure as a multiple of equity. Net exposure uses its absolute magnitude.
+                      - type: "null"
+                  reviewConditions:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 100
+                        uniqueItems: true
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                      - type: "null"
+                  haltConditions:
+                    anyOf:
+                      - type: array
+                        minItems: 1
+                        maxItems: 100
+                        uniqueItems: true
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 2000
+                      - type: "null"
+                required: []
+              amend:
+                type: boolean
+                description: An explicit user amendment superseding earlier terms for these fields. Null leaves a term unspecified.
+            required:
+              - source
+              - evidence
+              - fields
+        assumptions:
+          type: array
+          minItems: 0
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          description: Additional research assumptions to test.
+      required: []
+    design:
+      type: object
+      properties:
+        strategyId:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        mode:
+          enum:
+            - framework
+            - state_machine
+            - hybrid
+        components:
+          type: object
+          properties:
+            universe:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+            alpha:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+            portfolio:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+            risk:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+            execution:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+            stateMachine:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 2000
+                - type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    settings:
+                      type: object
+                  required:
+                    - model
+                  additionalProperties: false
+                - type: "null"
+          required: []
+          additionalProperties: false
+        bindings:
+          type: object
+          properties:
+            instruments:
+              type: array
+              items:
+                type: object
+                properties:
+                  sourceId:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  instrumentId:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                required:
+                  - sourceId
+                  - instrumentId
+                additionalProperties: false
+            marketDataRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            candidateSnapshotRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            riskPolicyRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            costModelRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            targetProfileRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            volatilityRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            confidenceRef:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            workflowFixture:
+              type: object
+          required: []
+          additionalProperties: false
+        factors:
+          type: array
+          maxItems: 64
+          description: Optional uses of existing factor definitions. Omit for rules and direct signals.
+          items:
+            type: object
+            properties:
+              purpose:
+                enum:
+                  - alpha
+                  - entry_filter
+                  - regime
+                  - sizing
+                  - exit
+                  - risk
+              factorId:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              definitionDigest:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              evaluationId:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              sourcePartition:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              profileId:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              snapshotId:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              librarySearched:
+                type: boolean
+              consumption:
+                type: object
+              implementation:
+                type: object
+            required:
+              - purpose
+            additionalProperties: false
+      required: []
+      additionalProperties: false
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    research_design:
+      type: object
+      properties:
+        mechanism:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        rival:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        prediction:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        distinguishing_test:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        falsifier:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        method:
+          enum:
+            - hypothesis-design
+            - strategy-decomposition
+            - baseline-construction
+            - factor-integration
+            - component-verification
+            - incremental-evaluation
+            - trade-diagnosis
+            - robustness-analysis
+            - strategy-revision
+      required:
+        - mechanism
+      additionalProperties: false
+    parameter_trial:
+      type: object
+      properties:
+        parameter:
+          type: string
+          pattern: ^[A-Za-z_][A-Za-z0-9_]*$
+        to:
+          anyOf:
+            - type: number
+            - type: boolean
+            - type: string
+              maxLength: 1000
+        component:
+          enum:
+            - alpha
+            - entry
+            - exit
+            - portfolio
+            - risk
+            - execution
+        hypothesis:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        primary:
+          enum:
+            - turnover
+            - commission
+            - netReturn
+            - maxDrawdown
+            - closedTrades
+            - finalEquity
+        direction:
+          enum:
+            - maximize
+            - minimize
+      required:
+        - parameter
+        - to
+        - component
+        - hypothesis
+        - primary
+        - direction
+      additionalProperties: false
+    replace:
+      type: object
+      properties:
+        slot:
+          enum:
+            - universe
+            - alpha
+            - portfolio
+            - risk
+            - execution
+            - stateMachine
+        component:
+          anyOf:
+            - type: string
+              minLength: 1
+              maxLength: 2000
+            - type: object
+              properties:
+                model:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                settings:
+                  type: object
+              required:
+                - model
+              additionalProperties: false
+            - type: "null"
+      required:
+        - slot
+        - component
+      additionalProperties: false
+  required:
+    - operation_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - projectRef
+    - mandateRef
+    - stage
+  properties:
+    projectRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    mandateRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    stage:
+      type: string
+      minLength: 1
+      maxLength: 2000
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.write
+    - declared-calls
+  usage:
+    purpose: 根据上下文填写研究委托，选用策略结构，按需接入已有因子；从固定项目局部修订。
+    inputs: Start from goal or continue project_ref. Agent can supply research_design with a market mechanism, competing explanation, prediction and distinguishing test. Use design, replace one slot, or register parameter_trial from a frozen baseline.
+    outputs: Immutable projectRef, mandateRef, component gaps, questions requiring a decision, and the next action.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_plan

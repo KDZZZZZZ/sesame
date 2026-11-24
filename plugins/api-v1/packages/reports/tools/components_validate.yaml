@@ -1,0 +1,575 @@
+name: components_validate
+title: components_validate
+description: Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked. 完整报告必须提供标题、lead 开篇回答、1–6项 highlights 关键结果和非空正文章节；target=answer 的单独图表或内容块不需要报告骨架。
+inputSchema:
+  type: object
+  properties:
+    title:
+      type: string
+      minLength: 1
+      maxLength: 1000
+      description: 完整报告必填：非空报告标题；target=answer 的独立组件可省略。
+    summary:
+      type: string
+      maxLength: 20000
+      description: 仅用于目录索引的元数据，不展示为报告开篇结论；开篇回答写入 lead。
+    locale:
+      type: string
+      minLength: 1
+      maxLength: 128
+    provenance_kind:
+      anyOf:
+        - type: string
+          const: observed
+        - type: string
+          const: derived
+        - type: string
+          const: user_input
+        - type: string
+          const: demo
+      description: Optional provenance. Inherits fixed dependencies; demo cannot be downgraded. Without fixed provenance, supplied rows or text are recorded as derived, not inferred observations or user input.
+    data:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - ref
+          - usage
+        properties:
+          id:
+            type: string
+            description: Local data binding ID used by report.readData
+            minLength: 1
+            maxLength: 20000
+          ref:
+            type: object
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            properties:
+              id:
+                type: string
+              revision:
+                type: string
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                type: string
+                const: data
+              schemaVersion:
+                type: string
+                const: 1.0.0
+            additionalProperties: false
+          usage:
+            type: string
+            description: What this fixed data supports
+            minLength: 1
+            maxLength: 20000
+        additionalProperties: false
+      maxItems: 32
+      default: []
+    related:
+      type: array
+      items:
+        type: object
+        required:
+          - role
+        properties:
+          role:
+            anyOf:
+              - type: string
+                const: strategy
+              - type: string
+                const: translation
+              - type: string
+                const: run
+              - type: string
+                const: result
+              - type: string
+                const: source
+          artifact:
+            type: object
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            properties:
+              id:
+                type: string
+              revision:
+                type: string
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                type: string
+              schemaVersion:
+                type: string
+                const: 1.0.0
+            additionalProperties: false
+          record:
+            type: object
+            required:
+              - id
+              - version
+            properties:
+              id:
+                type: string
+              version:
+                type: integer
+                minimum: 1
+            additionalProperties: false
+        additionalProperties: false
+      maxItems: 32
+    references:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        properties:
+          id:
+            type: string
+          revision:
+            type: string
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            type: string
+          schemaVersion:
+            type: string
+            const: 1.0.0
+        additionalProperties: false
+      maxItems: 64
+    style:
+      type: object
+      properties:
+        custom:
+          type: object
+          properties:
+            reason:
+              type: string
+              description: User-requested presentation need
+              minLength: 1
+              maxLength: 2000
+            tokens:
+              type: object
+              properties:
+                accent:
+                  type: string
+                  pattern: ^#[a-fA-F0-9]{6}$
+                context:
+                  type: string
+                  pattern: ^#[a-fA-F0-9]{6}$
+                accent_dark:
+                  type: string
+                  pattern: ^#[a-fA-F0-9]{6}$
+                context_dark:
+                  type: string
+                  pattern: ^#[a-fA-F0-9]{6}$
+                heading:
+                  enum:
+                    - serif
+                    - sans
+                body_size:
+                  type: integer
+                  minimum: 14
+                  maximum: 20
+                content_width:
+                  type: integer
+                  minimum: 640
+                  maximum: 1440
+                section_gap:
+                  type: integer
+                  minimum: 24
+                  maximum: 88
+                chart_height:
+                  type: integer
+                  minimum: 180
+                  maximum: 640
+                columns:
+                  type: integer
+                  minimum: 1
+                  maximum: 3
+              required: []
+              additionalProperties: false
+          required:
+            - reason
+            - tokens
+          additionalProperties: false
+        saved_id:
+          type: string
+          pattern: ^[a-z][a-z0-9-]{0,63}$
+        saved_version:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      description: One unified blue/gray frameless layout. Omit style by default. Only use custom safe tokens or a saved exact style version for user-requested presentation changes; no presets, themes, raw CSS or scripts.
+    assets:
+      type: array
+      items:
+        type: object
+        required:
+          - path
+          - media_type
+        properties:
+          path:
+            type: string
+            description: Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.
+            minLength: 1
+            maxLength: 256
+            pattern: ^(?!.*[\\:\u0000-\u001f])(?:(?!\.{1,2}/)[^/]+/)*(?!\.{1,2}$)[^/]+$
+          source_path:
+            type: string
+            description: Workspace file containing this asset
+            minLength: 1
+            maxLength: 20000
+          media_type:
+            type: string
+            description: "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments."
+            minLength: 1
+            maxLength: 20000
+            pattern: ^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\s\S]*)?$
+          ref:
+            type: object
+            properties:
+              id:
+                type: string
+                maxLength: 256
+                minLength: 1
+              revision:
+                type: string
+                maxLength: 256
+                minLength: 1
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                type: string
+                maxLength: 128
+                minLength: 1
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+          entry:
+            type: string
+            minLength: 1
+            maxLength: 256
+            pattern: ^(?!.*[\\:\u0000-\u001f])(?:(?!\.{1,2}/)[^/]+/)*(?!\.{1,2}$)[^/]+$
+        additionalProperties: false
+        oneOf:
+          - required:
+              - source_path
+            not:
+              anyOf:
+                - required:
+                    - ref
+                - required:
+                    - entry
+          - required:
+              - ref
+              - entry
+            not:
+              required:
+                - source_path
+        allOf:
+          - if:
+              type: object
+              properties:
+                media_type:
+                  type: string
+                  pattern: ^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\s\S]*)?$
+              required:
+                - media_type
+            then:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: \.(?:[jJ][sS][oO][nN])$
+          - if:
+              type: object
+              properties:
+                media_type:
+                  type: string
+                  pattern: ^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\s\S]*)?$
+              required:
+                - media_type
+            then:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: \.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$
+          - if:
+              type: object
+              properties:
+                media_type:
+                  type: string
+                  pattern: ^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\s\S]*)?$
+              required:
+                - media_type
+            then:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: \.(?:[pP][nN][gG])$
+          - if:
+              type: object
+              properties:
+                media_type:
+                  type: string
+                  pattern: ^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\s\S]*)?$
+              required:
+                - media_type
+            then:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: \.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$
+          - if:
+              type: object
+              properties:
+                media_type:
+                  type: string
+                  pattern: ^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\s\S]*)?$
+              required:
+                - media_type
+            then:
+              type: object
+              properties:
+                path:
+                  type: string
+                  pattern: \.(?:[wW][eE][bB][pP])$
+      maxItems: 64
+      description: Inert attachments only. Prefer a complete fixed ref + entry declared in envelope references. Workspace source_path is read at rendering time, not represented as historical point-in-time evidence.
+    content:
+      type: object
+      description: 正文组件文档。完整报告至少一个非空 section，与顶层 title、lead、highlights 共同构成报告；仅有图表也可组成正文。组件的精确字段可按需 components_describe。
+      properties:
+        kind:
+          const: document
+        sections:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+      required:
+        - kind
+        - sections
+      additionalProperties: false
+    component:
+      type: object
+      description: One existing block or chart, copied directly from a components_describe example. The tool supplies the document wrapper.
+    components:
+      type: array
+      minItems: 1
+      maxItems: 12
+      items:
+        type: object
+      description: Existing blocks/charts in reading order. The tool supplies the document and group wrappers.
+    layout:
+      enum:
+        - stack
+        - columns
+      description: Layout for component/components only; multiple components default to stack.
+    target:
+      type: string
+      enum:
+        - report
+        - answer
+      default: report
+      description: Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden.
+    lead:
+      type: string
+      minLength: 1
+      maxLength: 20000
+      pattern: \S
+      description: 完整报告必填：直接回答用户核心问题的开篇结论，作为标题后独立正文展示；不是目录元数据 summary。仅使用已有结论，不补造分析。target=answer 的独立组件可省略。
+    highlights:
+      type: array
+      minItems: 1
+      maxItems: 6
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+            maxLength: 20000
+            minLength: 1
+            pattern: \S
+          value:
+            type:
+              - string
+              - number
+            minLength: 1
+            pattern: \S
+          tone:
+            type: string
+            enum:
+              - auto
+              - positive
+              - negative
+              - neutral
+            description: "Financial gain/up: positive (green); loss/down: negative (red); zero: neutral. auto requires a numeric value; omit for ordinary metrics."
+        required:
+          - label
+          - value
+        additionalProperties: false
+        allOf:
+          - if:
+              type: object
+              properties:
+                tone:
+                  const: auto
+              required:
+                - tone
+            then:
+              type: object
+              properties:
+                value:
+                  type: number
+      description: 完整报告必填：首屏1–6项关键结果，复用block.metrics.items的{label,value,tone?}。value为已有数值或短定性结论；不从正文自动提取，不必凑满6项，不加说明字段。target=answer可省略。 首屏仅作快速概览，不能替代正文趋势、比较或条件关系的图表设计。
+  required: []
+  additionalProperties: false
+  oneOf:
+    - required:
+        - component
+      not:
+        anyOf:
+          - required:
+              - components
+          - required:
+              - content
+    - required:
+        - components
+      not:
+        anyOf:
+          - required:
+              - component
+          - required:
+              - content
+    - required:
+        - content
+      not:
+        anyOf:
+          - required:
+              - component
+          - required:
+              - components
+  allOf:
+    - if:
+        anyOf:
+          - required:
+              - content
+      then:
+        not:
+          required:
+            - layout
+    - if:
+        not:
+          anyOf:
+            - properties:
+                target:
+                  const: answer
+              required:
+                - target
+            - required:
+                - input_ref
+      then:
+        required:
+          - title
+          - lead
+          - highlights
+        properties:
+          title:
+            type: string
+            minLength: 1
+            pattern: \S
+  examples:
+    - title: 合成比较示例
+      lead: B 的样本数量是 A 的两倍。
+      provenance_kind: demo
+      content:
+        kind: document
+        sections:
+          - title: 样本数量
+            blocks:
+              - type: chart
+                kind: bar
+                rows:
+                  - item: A
+                    value: 2
+                  - item: B
+                    value: 4
+                options:
+                  x: item
+                  y: value
+      highlights:
+        - label: A
+          value: 2
+        - label: B
+          value: 4
+        - label: Comparison
+          value: B is twice A
+    - target: answer
+      provenance_kind: demo
+      component:
+        type: chart
+        kind: bar
+        rows:
+          - item: A
+            value: 2
+          - item: B
+            value: 4
+        options:
+          x: item
+          y: value
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.
+    inputs: Exactly one of component, components or content; layout stack/columns applies only to shorthand components. Reports (default target) require an explicit nonempty title, lead opening answer, 1–6 highlights key results and nonempty body; target=answer needs no report skeleton. data defaults to []. Preserve original references/assets/style/summary/locale/provenance_kind/related; summary is index-only and cannot replace lead. Highlights provide a quick overview; use the appropriate body charts for trends, comparisons and conditional relationships.
+    outputs: valid, status (valid/invalid/incomplete), diagnostics[{path,message}], protocol and explicit schema/renderer/fixedData/assets/browser coverage. A failed resource read is incomplete, never valid.
+    prerequisites:
+      - Fixed bindings and attachment references must be accessible and complete.
+    limitations:
+      - Reads fixed json-rows data and checks the current chartValue mapping rules; unsupported data formats cannot pass.
+      - This is static/server validation. Actual chart drawing, browser layout and interaction still require report_check after publication.
+      - No data values, findings or methods are invented or changed.
+  binding:
+    type: native
+    name: components_validate

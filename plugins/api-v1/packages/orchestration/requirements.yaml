@@ -1,0 +1,9 @@
+goal: 为主 Agent 记录流程计划并推荐下一步：计划由 Agent 写的待办组成，可以参考插件声明的工作流。同时说明如何组织研究阶段、传递证据并用宿主 Run 验收成果。导航不执行步骤，也不增加权限。
+acceptance:
+  discovery:
+    case: orchestration-discovery
+    tools:
+      - workflow_plan
+      - workflow_status
+      - workflow_step
+    resource: skills/coordinate-research/SKILL.md

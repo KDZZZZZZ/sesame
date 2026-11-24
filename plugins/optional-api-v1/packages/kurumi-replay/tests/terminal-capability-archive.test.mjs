@@ -31,10 +31,10 @@ test('terminal archive retains the actual API 2 capability manifest in both copi
   assert.equal(result.sealed, true);
   assert.deepEqual(service.getDocument(), document);
   const history = records(host).get('experiment-history', engine.id);
-  const manifest = history.manifest.files.find(file => file.path.endsWith('/code/capabilities.json'));
+  const manifest = history.manifest.files.find(file => file.path.endsWith('/code/tools/kurumi_observe.yaml'));
   assert.ok(manifest, 'Archive the current public capability contract');
   assert.equal(history.manifest.files.some(file => file.path.endsWith('/code/tools.json')), false);
-  const source = await readFile(new URL('../capabilities.json', import.meta.url));
+  const source = await readFile(new URL('../tools/kurumi_observe.yaml', import.meta.url));
   for (const root of [service.recorder.root, service.recorder.mirror]) assert.deepEqual(await readFile(join(root, manifest.path)), source);
   assert.deepEqual(await service.archiveTerminal(input), result);
 });

@@ -1,0 +1,20 @@
+goal: 币安现货与 Spot Testnet 后端：公开行情与共享实时订阅、账户余额、订单成交、幂等下单/减量改单/撤单与未知结果恢复；统一配置密钥。
+acceptance:
+  discovery:
+    case: binance-discovery
+    tools:
+      - binance_account
+      - binance_amend
+      - binance_cancel
+      - binance_catalog
+      - binance_execution_cancel
+      - binance_execution_command
+      - binance_execution_identity
+      - binance_execution_prepare
+      - binance_execution_recover
+      - binance_execution_snapshot
+      - binance_execution_submit
+      - binance_order
+      - binance_order_status
+      - binance_order_test
+    resource: skills/binance-spot/SKILL.md

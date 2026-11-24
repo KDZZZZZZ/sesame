@@ -1,0 +1,229 @@
+name: mt5_backtest
+title: mt5_backtest
+description: 受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。SVL pass 返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。结果自动登记后端数据；完成不等于策略有效。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: start
+        - type: string
+          const: get
+        - type: string
+          const: list
+        - type: string
+          const: wait
+        - type: string
+          const: stop
+    build_id:
+      type: string
+      description: 编译成功的构建 ID
+      minLength: 1
+      maxLength: 20000
+    backtest_id:
+      type: string
+      description: 回测任务 ID
+      minLength: 1
+      maxLength: 20000
+    project_id:
+      type: string
+      description: list 可按工程过滤
+      minLength: 1
+      maxLength: 20000
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+      description: start 必填的稳定任务请求 ID；重试同一请求不会重复启动 Tester
+    config:
+      type: object
+      required:
+        - symbol
+        - period
+        - from_date
+        - to_date
+        - deposit
+        - currency
+        - leverage
+        - model
+        - parameters
+      properties:
+        symbol:
+          type: string
+          description: 券商精确品种名
+          minLength: 1
+          maxLength: 20000
+        period:
+          type: string
+          description: M1/H1 等原生周期
+          minLength: 1
+          maxLength: 20000
+        from_date:
+          type: string
+          description: YYYY-MM-DD，券商服务器日期
+          minLength: 1
+          maxLength: 20000
+        to_date:
+          type: string
+          description: YYYY-MM-DD，排除终止日
+          minLength: 1
+          maxLength: 20000
+        deposit:
+          type: number
+          exclusiveMinimum: 0
+        currency:
+          type: string
+          description: USD 等货币
+          minLength: 1
+          maxLength: 20000
+        leverage:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        model:
+          anyOf:
+            - type: number
+              const: 0
+            - type: number
+              const: 1
+            - type: number
+              const: 2
+            - type: number
+              const: 4
+        parameters:
+          type: object
+          properties: {}
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+      additionalProperties: false
+    parameter_space:
+      type: object
+      properties: {}
+      additionalProperties:
+        type: array
+        items:
+          anyOf:
+            - type: string
+            - type: number
+            - type: boolean
+        minItems: 1
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - resources.publish
+    - process.exec
+    - process.cancel
+  usage:
+    purpose: 运行或观察管理中的真实MT5 Tester任务。
+    inputs: start:{action:"start",command_id,build_id,config:{symbol,period,from_date,to_date,deposit,currency,leverage,model,parameters},parameter_space?}；model=0|1|2|4，日期为券商日期，终止日排除；参数网格最多64组。其他：{action:"list",project_id?} 或 {action:"get"|"wait"|"stop",backtest_id}。
+    outputs: start/get/wait/stop返回job及passes[{id,status,metrics?,error?,run_record}]；list为任务数组并附run_records。queued/running/canceling不是完成；终态succeeded/failed/canceled/unknown按原生证据，SVL pass可有固定run_record，旧工程可为null。
+    prerequisites:
+      - 成功固定build；真实Tester所需终端/账户由 mt5_dependencies/mt5_settings 明确。
+    limitations:
+      - wait最多20秒只等待，不自动停止；stop显式终止Tester，不撤实盘单。稳定command_id不重复启动。引擎成功不证明策略有效，unknown不能换ID自动重跑。
+  binding:
+    type: native
+    name: mt5_backtest
+  configurationRequirements:
+    - field: account_login
+      reason: 使用已绑定的券商账户身份。
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: account_server
+      reason: 使用已绑定的券商服务器身份。
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: account_password
+      reason: 独立 Tester 启动使用已绑定券商账户的密码。
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: python
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: start
+        required:
+          - action

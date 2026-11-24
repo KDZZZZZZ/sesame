@@ -1,0 +1,43 @@
+name: strategy_development_method
+title: strategy_development_method
+description: 按当前研发问题查找方法，读取适用情形、替代解释、区分它们的实验和具体改法。
+inputSchema:
+  type: object
+  properties:
+    method:
+      enum:
+        - hypothesis-design
+        - strategy-decomposition
+        - baseline-construction
+        - factor-integration
+        - component-verification
+        - incremental-evaluation
+        - trade-diagnosis
+        - robustness-analysis
+        - strategy-revision
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 按当前研发问题查找方法，读取适用情形、替代解释、区分它们的实验和具体改法。
+    inputs: Omit method for the index or select a method by its ID.
+    outputs: Research technique and worked guidance for the judgment at hand.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_method

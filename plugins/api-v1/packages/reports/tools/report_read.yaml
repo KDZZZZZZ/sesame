@@ -1,0 +1,66 @@
+name: report_read
+title: report_read
+description: List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.
+inputSchema:
+  type: object
+  properties:
+    ref:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: report
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    include_checks:
+      type: boolean
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主返回的分页游标
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.
+    inputs: 无 ref 分页列出 report 成果（limit 默认30）；有 ref 读该固定版本，include_checks=true 同时读取渲染回执。
+    outputs: 列表为 {items,nextCursor?}；单项为资源 metadata、manifest 和可选 checks。
+    prerequisites: []
+    limitations:
+      - 旧 revision 的 rendered 只证明旧版本；未完成/未检查报告不冒充已验证成果。
+  binding:
+    type: native
+    name: report_read

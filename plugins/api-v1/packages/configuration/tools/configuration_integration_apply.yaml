@@ -1,0 +1,64 @@
+name: configuration_integration_apply
+title: configuration_integration_apply
+description: 保存统一配置目录中声明的字段；values 省略字段保留，null 清除。即时写入既有配置存储，密钥不进入 Run。
+inputSchema:
+  type: object
+  properties:
+    plugin_id:
+      type: string
+      minLength: 1
+      maxLength: 256
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+    values:
+      type: object
+      writeOnly: true
+      minProperties: 1
+      maxProperties: 64
+      patternProperties:
+        ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$:
+          anyOf:
+            - type: string
+              maxLength: 8192
+            - type: number
+            - type: boolean
+            - type: "null"
+      additionalProperties: false
+  additionalProperties: false
+  required:
+    - plugin_id
+    - command_id
+    - values
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - application-configuration
+  usage:
+    purpose: 保存统一配置目录中声明的字段；values 省略字段保留，null 清除。即时写入既有配置存储，密钥不进入 Run。
+    inputs: 先读取目录；传 plugin_id、稳定 command_id 和 values，仅提交同一 authority 组中实际修改的字段。expected_version 仅在该组目录返回时传入；省略字段保留，null 只清除 clearable 字段。同次重试保持输入不变。
+    outputs: applied 回执和当前配置目录，不含秘密。
+    prerequisites:
+      - 主 Agent 会话。
+    limitations:
+      - 配置存在不代表远端可用。设置写入必须即时执行。
+  binding:
+    type: native
+    name: configuration_integration_apply

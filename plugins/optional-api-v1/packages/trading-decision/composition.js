@@ -41,6 +41,7 @@ export async function bindExecution(host, input, signal) {
   if (!names(tools) || !tools.includes(contextTool) || !tools.includes(applyTool)) issues.push('tools: unique complete nested-call names including the selected context and apply');
   if (!names(readTools) || !readTools.includes(contextTool) || readTools.includes(applyTool) || !names(tools) || !readTools.every(name => tools.includes(name))) issues.push('readTools: unique subset of tools including context and excluding apply');
   if (!rules || typeof rules.unit !== 'string' || !rules.unit.length || rules.unit.length > 40 || typeof rules.signed !== 'boolean' || typeof rules.integer !== 'boolean') issues.push('quantityRules: {unit:nonempty string,signed:boolean,integer:boolean}');
+  if (rules?.supportsAttachedStops !== undefined && typeof rules.supportsAttachedStops !== 'boolean') issues.push('quantityRules.supportsAttachedStops: optional boolean');
   if (!identity?.taskContext || typeof identity.taskContext !== 'object' || Array.isArray(identity.taskContext) || Buffer.byteLength(JSON.stringify(identity.taskContext)) > 8000) issues.push('taskContext: frozen binding object, at most 8KB');
   check(!issues.length, 'SOURCE_DATA_INVALID', `${pluginId}#${contextTool} action=identity does not satisfy the execution contract. Missing or invalid: ${issues.join('; ')}. ${executionHelp}`);
   const declarations = await catalog(host), dependencies = new Map([[entry.id, entry]]), allowedCalls = [];

@@ -1,0 +1,109 @@
+name: market_instruments
+title: market_instruments
+description: 通过固定市场来源搜索或描述真实品种。
+inputSchema:
+  type: object
+  properties:
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: data_sources 返回的完整来源ID
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确声明版本
+        binding:
+          type: object
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+    action:
+      enum:
+        - search
+        - describe
+    query:
+      type: string
+      maxLength: 200
+    instrument:
+      type: object
+      properties:
+        sourceId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 来源ID
+        instrumentId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 来源内品种ID
+      required:
+        - sourceId
+        - instrumentId
+      additionalProperties: false
+    assetClasses:
+      type: array
+      items:
+        enum:
+          - equity
+          - future
+          - option
+          - fx
+          - crypto
+          - index
+          - fund
+          - other
+      maxItems: 8
+    venues:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 4096
+        description: 场所ID
+      maxItems: 16
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主页游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  required:
+    - source
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - data.query
+  usage:
+    purpose: 通过固定市场来源搜索或描述真实品种。
+    inputs: action=search 使用 source/query，可加 assetClasses/venues/limit/cursor；action=describe 使用搜索项 ref 作为 instrument。source 来自 data_sources/data_providers。
+    outputs: search 返回 {items,nextCursor?,metadata?}；describe 返回 {source,instrument,metadata}，含精确 ref、symbol、features、timeBasis、calendar。metadata.connection 是可复用连接修订。
+    prerequisites:
+      - 来源声明 searchInstruments/describeInstrument 且插件可用。
+    limitations:
+      - 名称相似时依据返回 ref 选择；不把展示 symbol 当 instrumentId。周期取 features.timeframes，如 15m 而非 MT5 M15。
+  binding:
+    type: native
+    name: market_instruments

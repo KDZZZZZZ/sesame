@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/financial-research:instructions#preamble": "f17b001542d14093d355378e3c1c15188c2eaa30aafb132b1345607fcd24cfe3",
+    "sesame/financial-research:plugin.description": "55351a606c4b62805474aa9e3552efb8ede40fea989f7691708006e24bc7d1f5",
+    "sesame/financial-research:resource/INTERFACES.md": "7396c3e62dc84535c259e7ae3f15920bc8a374083eb8ffae280a1274af1d45b8",
+    "sesame/financial-research:resource/PROVENANCE.md": "7554ec013eda6e31d7e65f90d5c6fa2398856314065598069adc7416f7c3b481",
+    "sesame/financial-research:resource/README.md": "93fa14f23787ffc7cfe24b17b010e8ad754b00217f79c8b168c0a8bef82f460a",
+    "sesame/financial-research:tool/financial_research_configure.description": "7ee78b84dca0c7927cc9ab300bbdeb6143d6eda7c46937f76d60d3052f9a13f4",
+    "sesame/financial-research:tool/financial_research_configure.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/financial-research:tool/financial_research_configure.input": "9375d7fe8f519df2ca5c246eb07fd96370c25d5b7c82800952986ebf0a31ba19",
+    "sesame/financial-research:tool/financial_research_configure.output": "861743bebbd8f2755473ee177bd69fcbef83635e7829d8df08cd9d0d0fefe96e",
+    "sesame/financial-research:tool/financial_research_query.description": "578151aef4d597735a59353797b389df40aa0c5905560d8c28ad71f2df9be270",
+    "sesame/financial-research:tool/financial_research_query.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/financial-research:tool/financial_research_query.input": "f5443b571ed3bc663f7fe3371d2293f9b547f2f6f17915e78445409431c9617b",
+    "sesame/financial-research:tool/financial_research_query.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
+    "sesame/financial-research:tool/financial_research_read.description": "dd67757fc86f46f4da0b2bc4ff413a09055727cf58eb5685300d843847a812ba",
+    "sesame/financial-research:tool/financial_research_read.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/financial-research:tool/financial_research_read.input": "1b43aadbe17432415d732d84e3f67137ca6b46f8ac97c3807594d4491a51806a",
+    "sesame/financial-research:tool/financial_research_read.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842",
+    "sesame/financial-research:tool/financial_research_status.description": "2fc9ab8db51d78e869cfb05ebe025daba48214bd396e981003f2be7bbdc518b6",
+    "sesame/financial-research:tool/financial_research_status.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/financial-research:tool/financial_research_status.input": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+    "sesame/financial-research:tool/financial_research_status.output": "861743bebbd8f2755473ee177bd69fcbef83635e7829d8df08cd9d0d0fefe96e"
+  },
+  "digest": "c7d4158c93bc78f439c2a28ffc878d3e0e959aed35fd2bf1f48c800109ebd3ce"
+}

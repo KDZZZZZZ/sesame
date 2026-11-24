@@ -1,6 +1,6 @@
 # MetaTrader 5
 
-本插件提供 MT5 行情、账户、MQL5 工程、编译、Tester、交易与持久运行观察。能力及输入输出由 `capabilities.json` 明确声明；完整用法见 [INTERFACES.md](INTERFACES.md)。Agent 可以直接保存连接配置和用户提供的凭据，无需导入文件、打开 Sesame 设置页或重启应用。
+本插件提供 MT5 行情、账户、MQL5 工程、编译、Tester、交易与持久运行观察。能力及输入输出由 `plugin.yaml` 明确声明；完整用法见 [INTERFACES.md](INTERFACES.md)。Agent 可以直接保存连接配置和用户提供的凭据，无需导入文件、打开 Sesame 设置页或重启应用。
 
 已授权手动交易通过 `mt5_trading_prepare({symbol, command_id, user_authorized:true})` 集中准备，无需模型先逐项检查配置、权限、账户、目录和历史。它只在必要时开启 Sesame 交易许可、复用原终端权限准备和一次 Python IPC 初始化；正常连接跳过初始化与重启。账户核验后一起调度品种规格、持仓和挂单，再读取最新原始 tick，最后复核账户与配置。Python worker 仍按队列串行调用 SDK，不宣称原生并发。返回 `account/summary/terminal/spec/positions/orders/tick/readStartedAt/capturedAt/preparation`；可选 `expected_account:{accountId,server,revision}` 用于组合入口的精确账户锁。
 

@@ -1,0 +1,105 @@
+name: memory_trading_context
+title: memory_trading_context
+description: 一次读取个人交易风格、风险红线与策略认知。风险正文跨范围完整返回或明确列出未读 ID，包含冲突和待复核规则；不受启动摘要条数限制。只读，不代表交易授权或已经部署风控。
+inputSchema:
+  type: object
+  properties:
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 20
+      default: 10
+      description: 风格和策略认知各自返回的摘要条数；不截断风险规则条数。
+    risk_offset:
+      type: integer
+      minimum: 0
+      default: 0
+      description: 仅当上一页 next_risk_offset 非 null 时传回；通常省略。
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    risk_state:
+      enum:
+        - missing
+        - needs_review
+        - documented
+    complete:
+      type: boolean
+    risk_rules:
+      type: array
+      items:
+        type: object
+    unread_risk_rule_ids:
+      type: array
+      items:
+        type: string
+    pending_risk_candidates:
+      type: integer
+      minimum: 0
+    style:
+      type: array
+      items:
+        type: object
+    strategy_knowledge:
+      type: array
+      items:
+        type: object
+    totals:
+      type: object
+      properties:
+        risk_rules:
+          type: integer
+        style:
+          type: integer
+        strategy_knowledge:
+          type: integer
+      required:
+        - risk_rules
+        - style
+        - strategy_knowledge
+    risk_offset:
+      type: integer
+      minimum: 0
+    next_risk_offset:
+      anyOf:
+        - type: integer
+          minimum: 0
+        - type: "null"
+  required:
+    - risk_state
+    - complete
+    - risk_rules
+    - unread_risk_rule_ids
+    - pending_risk_candidates
+    - style
+    - strategy_knowledge
+    - totals
+    - risk_offset
+    - next_risk_offset
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:memory
+  resultRetention: summary
+  usage:
+    purpose: 为交易相关任务取得三类个人记忆；增加实盘风险、设立或调整规则时读取，风险红线优先于风格和策略观点。
+    inputs: "{} 即可；可传 limit:1..20，默认10，仅控制另两类摘要。无需猜测账户筛选字段；返回的 scope 和正文明确适用条件。 仅当结果 next_risk_offset 非 null 时，传 risk_offset 续取剩余规则元数据。"
+    outputs: risk_rules 是未被手工归档的全部风险规则正文、来源、确认记录与版本，跨 global/project/strategy 返回供核对实际后端/账户/市场。style/strategy_knowledge 是各 limit 条带来源摘要，正文用 memory_read(id)，更多按对应 category 用 memory_search；totals 是总数。complete 仅表示风险正文是否齐全；整份结果限制在32000 UTF8字节和1800行内，无法纳入的正文列 unread_risk_rule_ids，用 memory_read({id,offset:0,length:4000}) 及 next_offset 读全。极大量规则的元数据需按 next_risk_offset 继续；分页期间有修订需重新核对版本，不能把某页当完整集合。另两类摘要也可能因预算少于 limit，totals 保留全数。risk_state=missing 表示无正式规则；needs_review 表示冲突、过期、复核到期、未确认或尚有未读；documented 仅表示已登记。pending_risk_candidates 不计入生效规则。
+    prerequisites:
+      - 有当前会话且长期记忆插件可用；工作流须显式授予此能力与 memory_read。
+    limitations:
+      - 返回不代替适用账户判断，不授予交易权限，不保证规则科学或已在券商落实。缺规则时主 Agent 使用当前账户和合约数据核算方案、取得用户确认；风险状态不完整或冲突时暂停新增风险并说明缺项，不能凭偏好或策略放宽红线。
+      - review_at 是复核提醒，原规则不会自动失效；候选不是现行规则。既有授权内的减仓/平仓不能仅因缺少新规则被阻止；仍需核对实际仓位和执行结果。
+  binding:
+    type: native
+    name: memory_trading_context

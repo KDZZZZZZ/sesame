@@ -1,0 +1,60 @@
+name: kurumi_reconcile
+title: kurumi_reconcile
+description: 重启/取消后显式核对原任务及恢复预约与真实账本；未提交允许新ID显式recover，已提交不再推进，不确定保留阻塞。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision，新挑战用0
+  required:
+    - command_id
+    - expected_version
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 重启/取消后显式核对原任务及恢复预约与真实账本；未提交允许新ID显式recover，已提交不再推进，不确定保留阻塞。
+    inputs: "{command_id,expected_version}; use current revision and the retained role/recovery identity in status."
+    outputs: "Current status with reconciliation facts: committed means the original decision already exists; not_committed permits explicit recovery of the original; unknown remains blocked."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Prior task/recovery has an observable terminal host state.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Reads actual host task and persistent ledger evidence; it does not manufacture a decision or replay a committed step.
+  binding:
+    type: native
+    name: kurumi_reconcile
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

@@ -1,0 +1,43 @@
+[
+  {
+    "name": "parse_feed",
+    "arguments": {
+      "file_path": "sample.atom",
+      "max_entries": 3
+    },
+    "result": {
+      "structuredContent": {
+        "format": "atom",
+        "feed_title": "Release notes from trafilatura",
+        "feed_updated": "2026-10-02T16:53:21Z",
+        "entry_count": 10,
+        "entries": [
+          {
+            "title": "trafilatura-2.3.0",
+            "link": "https://github.com/adbar/trafilatura/releases/tag/v2.3.0",
+            "published": "2026-10-02T16:53:41Z",
+            "id": "tag:github.com,2008:Repository/180136168/v2.3.0",
+            "content_snippet": "Major changes: Downloads and decompression overhaul by @adbar ( #921 ) Simplified document handling code and better correctness by @adbar ( #938 ) Simpler and faster deduplication, scoped caches accepted by @adbar ( #919 ) Fixes: Better text extraction: forms, link farms, inline code, infinite scrol"
+          },
+          {
+            "title": "trafilatura-2.2.0",
+            "link": "https://github.com/adbar/trafilatura/releases/tag/v2.2.0",
+            "published": "2026-07-31T16:07:10Z",
+            "id": "tag:github.com,2008:Repository/180136168/v2.2.0",
+            "content_snippet": "Major changes: Revamped text recovery and extraction sequence: better recall overall and better extraction on forums by @adbar ( #881 ) More targeted boilerplate pruning to reduce over-extraction by @adbar ( #887 ) More robust tests and better processing for nested elements by @adbar ( #866 ) Better"
+          },
+          {
+            "title": "trafilatura-2.1.0",
+            "link": "https://github.com/adbar/trafilatura/releases/tag/v2.1.0",
+            "published": "2026-06-07T17:44:28Z",
+            "id": "tag:github.com,2008:Repository/180136168/v2.1.0",
+            "content_snippet": "Major changes: Dependencies updated, lxml in particular (with minimal changes in the code) Faster XPath performance using XSLT extensions by @Honesty-of-the-Cavernous-Tissue ( #793 ) More deprecation warnings More robust code Fixes: Fix node pruning raising an AttributeError in certain cases by @PLP"
+          }
+        ],
+        "source": "sample.atom",
+        "version": "3.0.0"
+      },
+      "isError": false
+    }
+  }
+]

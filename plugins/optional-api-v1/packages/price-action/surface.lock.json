@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/price-action:instructions#preamble": "d4631ed5d61f3a0bff00ee74ac80cbd5c87243facd187b07b94a8f929858b3a4",
+    "sesame/price-action:plugin.description": "bbfc6e0a83688d2c90971a01c881e342f04f8d6c157cb3532eb4d571fe20d23b",
+    "sesame/price-action:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/price-action:resource/PROVENANCE.md": "86212a3d78dc3241caa2fc886dabf37014303f9d3ee7d7b58730e2e80ac5758e",
+    "sesame/price-action:resource/README.md": "876a400033fc8e415b391979d056798d809ae7fe868ac5732a409f7258c65f8d",
+    "sesame/price-action:resource/examples/bars.json": "3b475c9d668a7afaac75778acecc70b621fb5e992f2a59560b194e064f2d541a",
+    "sesame/price-action:resource/examples/expected.md": "c9f9c61bd43a805dcabeaacf205437f56378735423876b022b41ae549ab7f29d",
+    "sesame/price-action:resource/examples/source.json": "2feb68724c120551298977493f834cb32449fce1ba83f7d6dbda86fe5384ac18",
+    "sesame/price-action:resource/references/execution.md": "c7919f6e71e97c5522b611b179bfe04a152de4c51fa30a41666fd68956dd51ef",
+    "sesame/price-action:resource/references/method.md": "4a34c5d2e230304469fc1baee208833147ad1e4f6240265a0131677111ad5e2f",
+    "sesame/price-action:resource/references/validation.md": "d4dbd236c4e01a074b148d9f85e912a803d12166ef67c3fdea81ee648e064f97",
+    "sesame/price-action:resource/scripts/bar_input.py": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
+    "sesame/price-action:resource/scripts/observe.py": "2bea4ab05991ca16e38348a17c7be57f513b0a9e5401815cc8a4b83237c7df87",
+    "sesame/price-action:skill/price-action.body": "b09796a9ad14912beea8dec9850892298782c9bb7db172f88c27ed00c51ec6d3",
+    "sesame/price-action:skill/price-action.description": "7ff644670a62d710d94afd314606c3e2e212735d8e925778317e68a28aca21cf"
+  },
+  "digest": "e7911177e3d00def3c88392687e4bd44869d292fd22a4ecdd3bd875fde89aeaa"
+}

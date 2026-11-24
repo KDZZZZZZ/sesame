@@ -1,0 +1,41 @@
+name: optimizer_surface_diff
+title: optimizer_surface_diff
+description: 比较两个草稿的元素，给出版本变更建议
+inputSchema:
+  type: object
+  properties:
+    baseline:
+      type: string
+      minLength: 1
+    candidate:
+      type: string
+      minLength: 1
+  required:
+    - baseline
+    - candidate
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 比较两个草稿的元素，给出版本变更建议
+    inputs: baseline, candidate
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_surface_diff

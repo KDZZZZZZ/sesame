@@ -1,0 +1,73 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/web-extract
+title: 网页正文提取
+description: 信息解析能力：从已有完整HTML提取标题、文本、绝对链接和元数据；接收冻结source_ref、inline内容或包内文件，不联网、不解释市场。source_ref输入自动保留来源引用。
+version: 3.0.2
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  agent_scope: all
+  execution: native
+  prompts: []
+  skills:
+    - skills
+  resources: []
+  permissions:
+    scopes:
+      - process.execute
+    calls:
+      - host.process.exec
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false
+    capabilities:
+      - tool/extract_webpage
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: knowledge-0
+        path: skills/web-extract/PROVENANCE.md
+        description: 网页正文提取 — skills/web-extract/PROVENANCE.md
+        kind: reference
+      - id: knowledge-1
+        path: skills/web-extract/SKILL.md
+        description: 网页正文提取 — skills/web-extract/SKILL.md
+        kind: skill
+    hooks: []
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true

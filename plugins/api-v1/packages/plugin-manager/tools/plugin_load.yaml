@@ -1,0 +1,40 @@
+name: plugin_load
+title: plugin_load
+description: 在当前会话启用允许使用的插件并刷新工具。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+  required:
+    - pluginId
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.session.load
+  usage:
+    purpose: 将已安装、可发现且策略允许的插件加载到当前会话；不改变工作区挂载状态。
+    inputs: pluginId 是 plugin_discover 返回的完整 ID，如 sesame/data-access。
+    outputs: 当前会话启用结果；宿主刷新该会话的工具与公开资料。
+    prerequisites:
+      - 插件已安装，工作区策略允许启用。
+    limitations:
+      - 工作区 disabled 不能用 plugin_load 绕过；运行失败应先 plugin_inspect 读取诊断。加载成功不证明外部连接或业务执行成功。
+  binding:
+    type: native
+    name: plugin_load

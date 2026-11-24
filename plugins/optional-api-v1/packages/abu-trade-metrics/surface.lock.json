@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-trade-metrics:instructions#preamble": "6d6929231380368f34ab2180817a77bd8210839fa173b53ddccf0a21fb43cbae",
+    "sesame/abu-trade-metrics:plugin.description": "9de232f1f09e892b23ce054008f229811fac36e0409eff09ed19134ca924d87f",
+    "sesame/abu-trade-metrics:resource/AUDIT-PROVENANCE.md": "6b9507a74813f156a0e3f913782eefa1eef7820d8ef345d09deb8f64a2e35ce2",
+    "sesame/abu-trade-metrics:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-trade-metrics:resource/PROVENANCE.md": "c9e3ba274c1ec5f9fe6e073b946f2e3f6e23c619dacaa97f102cd68416282709",
+    "sesame/abu-trade-metrics:resource/README.md": "77ffc04f17e37e09d29981e3c580f20dfb17c2f99a040c8e224c0661d8187362",
+    "sesame/abu-trade-metrics:resource/examples/audit-input.json": "6ce2895ce6dc4c8a9eb2d6d4edf3506c0dd67570ca2be53751e3fb0853f09553",
+    "sesame/abu-trade-metrics:resource/examples/input.json": "f243cacac4c46a71f51e4e6ea63009a26c1894a01f6244fd26229e6f9c2386b4",
+    "sesame/abu-trade-metrics:resource/references/audit.md": "77138894fa45849e1d4f248b7566292cf2f7ed91008a15b8408668eff846484b",
+    "sesame/abu-trade-metrics:resource/references/method.md": "e99e0f6bf9a4b258e134d0cda6478d0cc391e7d3ccd2db3ac583eb3663184baa",
+    "sesame/abu-trade-metrics:resource/scripts/audit.mjs": "600daa6dfb42c329625189adbac08659bfd57b886cf4f151bba642e3d8ecb631",
+    "sesame/abu-trade-metrics:resource/scripts/baseline.mjs": "89950a67eb4c6eeadc414963bf9f6dcab366b0141f82df264bf3a85d336a74a1",
+    "sesame/abu-trade-metrics:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-trade-metrics:skill/abu-trade-metrics.body": "ffc585584c61b379fbd121fbea3bf2a7257b8a66b3a675345987f3cf3c8fdc77",
+    "sesame/abu-trade-metrics:skill/abu-trade-metrics.description": "c6a46cfde6ecb9fc4c2c02e48b61eb0260d6bd53920e91ab9352fe613e388277",
+    "sesame/abu-trade-metrics:tool/abu_trade_metrics_analyze.description": "52018aa2cf49c32736b362e5403dabe1128c69b73cb8a8225f99cedb886197da",
+    "sesame/abu-trade-metrics:tool/abu_trade_metrics_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-trade-metrics:tool/abu_trade_metrics_analyze.input": "ad3c237236fbb416832896e9eb6916a7f3871c62cd017572d4092e439e2359e4",
+    "sesame/abu-trade-metrics:tool/abu_trade_metrics_analyze.output": "d89bb9f19a000741980c911d081059e9f442b724a2f9fe82936c4461f656adba",
+    "sesame/abu-trade-metrics:tool/abu_trade_results_audit.description": "2e533a005fc3ee1d135721fd2a9f170b989aee9ecfd4a29f0ed81e4c24ec4886",
+    "sesame/abu-trade-metrics:tool/abu_trade_results_audit.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-trade-metrics:tool/abu_trade_results_audit.input": "fecf1d1738bba180770bdad1f1dadc98fce486ca18292a80adf6c6b09731adcd",
+    "sesame/abu-trade-metrics:tool/abu_trade_results_audit.output": "6717268609ac5c6cb45dc78b34de33f44c39bf5e4b74123b21c4a6b662e91460"
+  },
+  "digest": "523ed749dcded984d940f934ed38508c553cff2f381dc7cc3a74a26a9629c767"
+}

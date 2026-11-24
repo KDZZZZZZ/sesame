@@ -1,0 +1,34 @@
+goal: 非官方久留美三章连续模拟挑战，真实历史、真实角色Agent、只读行情与模拟账户观战；4小时决策与完整素材归档模式。
+acceptance:
+  discovery:
+    case: kurumi-replay-discovery
+    tools:
+      - kurumi_archive_terminal
+      - kurumi_audience
+      - kurumi_bind_experiment_fx
+      - kurumi_configure
+      - kurumi_continue
+      - kurumi_decide
+      - kurumi_display
+      - kurumi_experience
+      - kurumi_experiment_history
+      - kurumi_export
+      - kurumi_import_fx_supplement
+      - kurumi_method_workflow
+      - kurumi_narration
+      - kurumi_new_experiment
+      - kurumi_observe
+      - kurumi_pause
+      - kurumi_prepare
+      - kurumi_reconcile
+      - kurumi_recording
+      - kurumi_recover
+      - kurumi_refresh_presentation
+      - kurumi_repair_checkpoint_text
+      - kurumi_report
+      - kurumi_retry_committed_hooks
+      - kurumi_start
+      - kurumi_status
+      - kurumi_step
+      - kurumi_weekly
+    resource: skills/kurumi-replay/SKILL.md

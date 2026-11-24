@@ -1,0 +1,113 @@
+name: memory_search
+title: memory_search
+description: 检索长期记忆摘要，可按主题和资料范围筛选。默认包含归档，排除过期事实；检索不会刷新采用时间，也不授予权限。
+inputSchema:
+  type: object
+  properties:
+    query:
+      type: string
+      description: 中文或其他语言关键词
+      minLength: 1
+      maxLength: 500
+    category:
+      type: string
+      description: 分类路径前缀
+      minLength: 1
+      maxLength: 320
+    scope:
+      anyOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: global
+          required:
+            - kind
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: project
+            project_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 真实项目 ID
+          required:
+            - kind
+            - project_id
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: strategy
+            project_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 策略所属项目 ID
+            strategy_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 真实策略 ID
+          required:
+            - kind
+            - project_id
+            - strategy_id
+          additionalProperties: false
+    include_archived:
+      type: boolean
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+    q:
+      type: string
+      maxLength: 500
+    status:
+      enum:
+        - hot
+        - warm
+        - archived
+        - expired
+        - conflict
+    project_id:
+      type: string
+    strategy_id:
+      type: string
+    include_expired:
+      type: boolean
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:memory
+  resultRetention: summary
+  usage:
+    purpose: 检索当前会话有权读取的长期记忆摘要。默认包含归档记忆，可按需召回；过期事实默认不返回。检索与读取不会刷新采用时间，不把记忆当作权限来源。
+    inputs: query（或q）为关键词；可按 category/scope/status 筛选；默认含 archived，不含 expired；limit 默认50、最大200。 交易分类为 trading/style、trading/risk-rules、trading/strategy-knowledge；实盘红线读取使用 memory_trading_context，不能把搜索首屏当作全部规则。
+    outputs: "{items,total}；items 是摘要/状态/版本/source_count，正文和来源用 memory_read(id)。"
+    prerequisites:
+      - 有当前会话；插件私有库由宿主激活。
+    limitations:
+      - 搜索不刷新采用时间；归档可用，expired/conflict 必须重新核实。scope 是资料分类，不授予权限。
+  binding:
+    type: native
+    name: memory_search

@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/investment-research:instructions#preamble": "9540aee2608d03ddd518b2ce41240afd3dae3b44d8d788ed256429199a8d6b3d",
+    "sesame/investment-research:instructions#从指定进度重跑": "f82c3acf9ceec3837e6ff7cb9a909a0da00f790f49710e3a6c06615607662907",
+    "sesame/investment-research:plugin.description": "93fc6bca707ccc451e49791d82204be8babfb056f007f614a08ab94818a8c6ee",
+    "sesame/investment-research:resource/HISTORY.md": "c5c9ac9f4bcde07c7ab4dcd3a454208aa76811f89c23bcbf3bf1088fc892e9d1",
+    "sesame/investment-research:resource/README.md": "249bb10198a9490f62a910bbac1d2a9e64649a8fd8e90ee03674f2abe2f901ce",
+    "sesame/investment-research:resource/WORKFLOW.md": "e23752a1f136f586db24fa2e668fb79d659d39b293f67421f6e79f7266e1ffe5",
+    "sesame/investment-research:tool/investment_research_analyze.description": "7a9529b7ad213ecc89ec906748fccb86a9c6168dc7c72739a1a361931a357aa8",
+    "sesame/investment-research:tool/investment_research_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/investment-research:tool/investment_research_analyze.input": "7c0774b1fc3c753d389a9ea7c064f11264d4ba21ae2d4f44a8f3cb86e4016eb3",
+    "sesame/investment-research:tool/investment_research_analyze.output": "75fe5ed0090df07cba7566c4f5384a0c11e20c9d8a8bdf04e0b4e93d5fae853e",
+    "sesame/investment-research:tool/investment_research_ask.description": "9a1e1eb71ddc576ce8b053b53d2f10b30969f49709b0361899609df0d79d1e7b",
+    "sesame/investment-research:tool/investment_research_ask.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/investment-research:tool/investment_research_ask.input": "9cd2020a13fe8f878526b7dd89670c8626bff4af77be30061fcf8a65a3d689aa",
+    "sesame/investment-research:tool/investment_research_ask.output": "b8990479606ccc4c0522dd25d61d3a18fd19eb2c3673da50972220290698bce2",
+    "sesame/investment-research:tool/investment_research_event_outcomes.description": "8d2094f718d0d98a7d19ece7287015b8820e7c490961f5f14df55097ca159dd8",
+    "sesame/investment-research:tool/investment_research_event_outcomes.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/investment-research:tool/investment_research_event_outcomes.input": "597e0bc079d6ebe902d7f2a2849f8e88e4155f6a7452b9135c720f36003dffaf",
+    "sesame/investment-research:tool/investment_research_event_outcomes.output": "bbea38b88c441fc8f3819d9a14fa84e6c1ba54693c55d5ecb6f035828ee88454",
+    "sesame/investment-research:tool/investment_research_report.description": "52f2d9272c0ed1e40c570fc649905043de6223ed7ace2201184f7ed801200a6f",
+    "sesame/investment-research:tool/investment_research_report.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/investment-research:tool/investment_research_report.input": "4a38b5040afcacbb4b0e617ff212e8f3379cea1f449702d0802513a314b5d726",
+    "sesame/investment-research:tool/investment_research_report.output": "75fe5ed0090df07cba7566c4f5384a0c11e20c9d8a8bdf04e0b4e93d5fae853e",
+    "sesame/investment-research:tool/investment_research_start.description": "b234105084e43c57b60923171099d2c373f0556a563529ba49a2aed4c1197ee2",
+    "sesame/investment-research:tool/investment_research_start.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/investment-research:tool/investment_research_start.input": "8fa73e0c1765aab40e8e23d65cbe621888893d2589ffa05c4e45115737dd27c6",
+    "sesame/investment-research:tool/investment_research_start.output": "75fe5ed0090df07cba7566c4f5384a0c11e20c9d8a8bdf04e0b4e93d5fae853e"
+  },
+  "digest": "8628c3b907ead9fade35ebb747f5c7757a733e94db8bff98d565fa4209318255"
+}

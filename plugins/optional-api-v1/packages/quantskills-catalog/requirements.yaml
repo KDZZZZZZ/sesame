@@ -1,0 +1,14 @@
+goal: 查询固定 QuantSkills 元数据；综合投资研究推荐 Research，因子与策略研究推荐 Strategy，具体方法与后端独立选择，安装可用性另行核验。
+acceptance:
+  discovery:
+    case: quantskills-catalog-discovery
+    tools:
+      - catalog_filter
+      - catalog_get_item
+      - catalog_list_categories
+      - catalog_recommend
+      - catalog_search
+    resource: skills/quantskills-catalog/SKILL.md
+  recordedCall:
+    tool: catalog_list_categories
+    case: quantskills-catalog-discovery

@@ -1,0 +1,51 @@
+name: portfolio_execution_status
+title: portfolio_execution_status
+description: Read this main owner's retained workflow execution applications and their operation IDs, including interrupted runs. Does not submit, resume or replay execution. Query individual order receipts with manual_trade_status.
+inputSchema:
+  type: object
+  properties:
+    binding_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Immutable binding from portfolio_execution_configure
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Saved workflow run ID
+    offset:
+      type: integer
+      minimum: 0
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - backend.read
+  usage:
+    purpose: Read this main owner's retained workflow execution applications and their operation IDs, including interrupted runs. Does not submit, resume or replay execution. Query individual order receipts with manual_trade_status.
+    inputs: "{binding_id?,run_id?,offset?:0,limit?:20}; run_id is the source workflow business ID."
+    outputs: "{items,total,nextOffset}; each application has run_id,plan_id,binding_id,status,orders:[{operation_id,symbol,status}],pauses,error,recovery."
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - running/interrupted/blocked does not imply rejection. manual_trade_status on retained operation IDs reconciles evidence; this read never resumes execution.
+  binding:
+    type: native
+    name: portfolio_execution_status

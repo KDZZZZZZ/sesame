@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-model-lab:instructions#preamble": "bdfcbb368b70ba5a3095b7eb811e6310f48dc06a45f26c11d82e1b42b0d9f033",
+    "sesame/abu-model-lab:plugin.description": "a65c133c7df54e5b8a87d815891f7b43288811a3d587b8baf8593bc417eb066b",
+    "sesame/abu-model-lab:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-model-lab:resource/PROVENANCE.md": "aee18f39b44cb0cb9de59a21032db3ad9dfc8dae311d248457eaa2c5a6a4de41",
+    "sesame/abu-model-lab:resource/README.md": "08650c20470f14c35d321e039cd9c535ea3ab6c318da075ae6d82320d58e8e92",
+    "sesame/abu-model-lab:resource/examples/input.json": "d76b7e3763d7dd60d1487a6e5a76405a8c3d308b9a592d7ba1c587deef3bd95f",
+    "sesame/abu-model-lab:resource/references/method.md": "12704ae09b0b0ce5f683f1660631823b9767bbfadb8dbbff6800ab22464ba207",
+    "sesame/abu-model-lab:resource/scripts/baseline.mjs": "b5d8594868d8cf4ac11da48e49f43c70045bad894b9c432a83f5c4e5c7b48c9e",
+    "sesame/abu-model-lab:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-model-lab:skill/abu-model-lab.body": "7e1f30eec3c3fc69a2773835d5532ebe04d45ce6bc51e6d2b57d4a4d8b00a371",
+    "sesame/abu-model-lab:skill/abu-model-lab.description": "28683d5a4ce8f68a50272ddd7c9271236c284366436acc90fb3b64e19182eb79",
+    "sesame/abu-model-lab:tool/abu_model_lab_analyze.description": "e34cc6d30ccd00b3e368be0d97b36d74267b36baa77acb99789ed3781616e6d5",
+    "sesame/abu-model-lab:tool/abu_model_lab_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-model-lab:tool/abu_model_lab_analyze.input": "0329923170f6cbf7463203fdbd25b6e0378c6a304825c2c97101793c9c9edd58",
+    "sesame/abu-model-lab:tool/abu_model_lab_analyze.output": "5c2198b361da17af9792923ddc962652356283d0f1331702356806e32fffc909"
+  },
+  "digest": "4d55eb84c20f5b50cc1f5d65d595982b2060ceb784e1d64362eb63f0465749d1"
+}

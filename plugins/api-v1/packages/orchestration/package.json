@@ -1,6 +1,6 @@
 {
   "name": "@sesame-plugin/orchestration",
-  "version": "3.3.0",
+  "version": "5.0.1",
   "type": "module",
   "license": "MIT"
 }

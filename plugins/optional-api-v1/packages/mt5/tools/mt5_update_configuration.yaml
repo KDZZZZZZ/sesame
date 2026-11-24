@@ -1,0 +1,414 @@
+name: mt5_update_configuration
+title: mt5_update_configuration
+description: 直接保存用户提供的 MT5 连接 token、券商账户密码、MetaTester 代理密码或普通运行选项。只需当前版本和稳定 command_id，无需导入文件、设置页或重启；返回脱敏回执，连接另行核验。
+inputSchema:
+  type: object
+  required:
+    - command_id
+    - expected_version
+    - changes
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+    changes:
+      anyOf:
+        - type: object
+          required:
+            - import_native
+          properties:
+            import_native:
+              type: boolean
+              const: true
+          additionalProperties: false
+          minProperties: 1
+        - type: object
+          properties:
+            allow_trading:
+              type: boolean
+            allow_host_operations:
+              type: boolean
+            servers:
+              type: object
+              properties:
+                terminal:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+                metaeditor:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+                marketdata:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+              additionalProperties: false
+              minProperties: 1
+            account:
+              type: object
+              properties:
+                login:
+                  type: string
+                  pattern: ^(|[1-9][0-9]{0,19})$
+                server:
+                  type: string
+                  maxLength: 200
+                  pattern: ^[^\r\n\u0000]*$
+                password:
+                  type: string
+                  maxLength: 1024
+                  pattern: ^[^\r\n\u0000]*$
+                  writeOnly: true
+                  description: 用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。
+              additionalProperties: false
+              minProperties: 1
+            tester_agent:
+              type: object
+              properties:
+                address:
+                  type: string
+                  maxLength: 15
+                  pattern: ^[^\r\n\u0000]*$
+                port:
+                  type: integer
+                  minimum: 1024
+                  maximum: 65535
+                password:
+                  type: string
+                  maxLength: 1024
+                  pattern: ^[^\r\n\u0000]*$
+                  writeOnly: true
+                  description: 用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。
+              additionalProperties: false
+              minProperties: 1
+          additionalProperties: false
+          minProperties: 1
+  additionalProperties: false
+outputSchema:
+  type: object
+  description: Public configuration receipt. Submitted credentials remain private; result contains only settings and credential-presence flags.
+  properties:
+    id:
+      type: string
+    conversation_id:
+      type: string
+    target:
+      type: string
+      const: mt5
+    status:
+      type: string
+      enum:
+        - running
+        - applied
+        - failed
+    changes:
+      anyOf:
+        - type: object
+          required:
+            - import_native
+          properties:
+            import_native:
+              type: boolean
+              const: true
+          additionalProperties: false
+          minProperties: 1
+        - type: object
+          properties:
+            allow_trading:
+              type: boolean
+            allow_host_operations:
+              type: boolean
+            servers:
+              type: object
+              properties:
+                terminal:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+                metaeditor:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+                marketdata:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 2048
+                      pattern: ^[^\r\n\u0000]*$
+                    enabled:
+                      type: boolean
+                    token:
+                      type: string
+                      maxLength: 8192
+                      pattern: ^[^\r\n\u0000]*$
+                      writeOnly: true
+                      description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+                  additionalProperties: false
+                  minProperties: 1
+              additionalProperties: false
+              minProperties: 1
+            account:
+              type: object
+              properties:
+                login:
+                  type: string
+                  pattern: ^(|[1-9][0-9]{0,19})$
+                server:
+                  type: string
+                  maxLength: 200
+                  pattern: ^[^\r\n\u0000]*$
+                password:
+                  type: string
+                  maxLength: 1024
+                  pattern: ^[^\r\n\u0000]*$
+                  writeOnly: true
+                  description: 用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。
+              additionalProperties: false
+              minProperties: 1
+            tester_agent:
+              type: object
+              properties:
+                address:
+                  type: string
+                  maxLength: 15
+                  pattern: ^[^\r\n\u0000]*$
+                port:
+                  type: integer
+                  minimum: 1024
+                  maximum: 65535
+                password:
+                  type: string
+                  maxLength: 1024
+                  pattern: ^[^\r\n\u0000]*$
+                  writeOnly: true
+                  description: 用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。
+              additionalProperties: false
+              minProperties: 1
+          additionalProperties: false
+          minProperties: 1
+    result:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        allow_trading:
+          type: boolean
+        allow_host_operations:
+          type: boolean
+        servers:
+          type: object
+          properties:
+            terminal:
+              type: object
+              properties:
+                url:
+                  type: string
+                enabled:
+                  type: boolean
+                authenticated:
+                  type: boolean
+              required:
+                - url
+                - enabled
+                - authenticated
+              additionalProperties: false
+            metaeditor:
+              type: object
+              properties:
+                url:
+                  type: string
+                enabled:
+                  type: boolean
+                authenticated:
+                  type: boolean
+              required:
+                - url
+                - enabled
+                - authenticated
+              additionalProperties: false
+            marketdata:
+              type: object
+              properties:
+                url:
+                  type: string
+                enabled:
+                  type: boolean
+                authenticated:
+                  type: boolean
+              required:
+                - url
+                - enabled
+                - authenticated
+              additionalProperties: false
+          required:
+            - terminal
+            - metaeditor
+            - marketdata
+          additionalProperties: false
+        account:
+          type: object
+          properties:
+            login:
+              type: string
+            server:
+              type: string
+            password_configured:
+              type: boolean
+              writeOnly: false
+          required:
+            - login
+            - server
+            - password_configured
+          additionalProperties: false
+        tester_agent:
+          type: object
+          properties:
+            address:
+              type: string
+            port:
+              type: integer
+            password_configured:
+              type: boolean
+              writeOnly: false
+          required:
+            - address
+            - port
+            - password_configured
+          additionalProperties: false
+        startup_configured:
+          type: boolean
+        python_installed:
+          type: boolean
+      required:
+        - version
+        - allow_trading
+        - allow_host_operations
+        - servers
+        - account
+        - tester_agent
+        - startup_configured
+        - python_installed
+      additionalProperties: false
+    created_at:
+      type: string
+    completed_at:
+      type: string
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+      additionalProperties: false
+  required:
+    - id
+    - conversation_id
+    - target
+    - status
+    - changes
+    - created_at
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - application-configuration
+  usage:
+    purpose: 直接配置 MT5 连接、账户、凭据及运行权限，立即刷新后台配置并保留脱敏幂等回执。
+    inputs: '{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}。changes支持 servers:{terminal|metaeditor|marketdata:{url?,enabled?,token?}}、account:{login?,server?,password?}、tester_agent:{address?,port?,password?}、allow_trading、allow_host_operations；也可单独用 {import_native:true} 读取已有原生配置。例 {command_id:"configure-terminal-token-01",expected_version:1,changes:{servers:{terminal:{token:"用户提供的API Key"}}}}。凭据字段省略保留现有值，空字符串清除；更换endpoint或账户身份会清除对应旧凭据，必要时同次传入新凭据。'
+    outputs: "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；changes里的token/password均为[redacted]，result只含脱敏settings。applied说明已保存且立即生效；mt5_connect核验终端与账户，mt5_catalog单独核验其他服务。"
+    prerequisites:
+      - 主会话；expected_version来自mt5_settings。目标及凭据来自用户提供或已知配置，已取得的用户授权继续有效。
+    limitations:
+      - 直接配置和可选mt5_import_configuration均可用；用户已给信息就保存并核验，不要求重新导出、设置页填写或重复授权。不回显密钥，不把密钥写入报告、脚本或长期记忆。
+      - 版本冲突读取当前settings；相同command_id和输入重试仅返回原回执。保存不自动登录、启动终端或下单；外部原生拒绝保留其具体事实。
+  binding:
+    type: native
+    name: mt5_update_configuration

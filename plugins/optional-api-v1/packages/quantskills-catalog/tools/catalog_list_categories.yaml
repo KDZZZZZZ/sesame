@@ -1,0 +1,90 @@
+name: catalog_list_categories
+title: catalog_list_categories
+description: List all categories with counts
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    categories:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          count:
+            type: number
+        additionalProperties: true
+    total_items:
+      type: number
+    version:
+      type: string
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+  invalid_input:
+    message: Invalid catalog arguments.
+    recovery: Correct the indicated arguments and retry.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  binding:
+    type: mcp
+    server: analysis
+    name: catalog_list_categories
+  usage:
+    purpose: List all categories with counts
+    inputs: Use the catalog query fields; omitted optional filters mean no restriction.
+    outputs: Structured JSON fields follow outputSchema; original source and version are preserved.
+    prerequisites:
+      - Python 3 available to the host MCP transport.
+    limitations:
+      - Results describe supplied content or the bundled snapshot, not live network observations.
+    examples:
+      - input: {}
+        output:
+          categories:
+            - id: "01"
+              name: 01 数据接口与数据仓库
+              count: 7
+            - id: "02"
+              name: 02 因子研发工具箱
+              count: 44
+            - id: "03"
+              name: 03 市场与标的分析
+              count: 44
+            - id: "04"
+              name: 04 风险监控与预警
+              count: 22
+            - id: "05"
+              name: 05 策略回测与交易工具
+              count: 25
+            - id: "06"
+              name: 06 投研模型与研究复现
+              count: 30
+            - id: "07"
+              name: 07 研究验证与质量工具
+              count: 12
+            - id: "08"
+              name: 08 资讯搜索与知识分析
+              count: 10
+            - id: "09"
+              name: 09 量化智能体与自动化
+              count: 14
+            - id: "10"
+              name: 10 基础设施与模板
+              count: 6
+          total_items: 214
+          version: 4.2.0

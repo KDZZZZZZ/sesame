@@ -1,0 +1,37 @@
+name: optimizer_surface_ls
+title: optimizer_surface_ls
+description: 列出草稿中的全部接口元素和摘要
+inputSchema:
+  type: object
+  properties:
+    draft:
+      type: string
+      minLength: 1
+  required:
+    - draft
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 列出草稿中的全部接口元素和摘要
+    inputs: draft
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_surface_ls

@@ -1,0 +1,8 @@
+goal: 对已提供权益与闭合交易计算绩效，对订单与成交审计时序、限价、数量和成本。两项可独立使用的计算基线，保留固定证据；不运行回测或重建券商账单。
+acceptance:
+  discovery:
+    case: abu-trade-metrics-discovery
+    tools:
+      - abu_trade_metrics_analyze
+      - abu_trade_results_audit
+    resource: skills/abu-trade-metrics/SKILL.md

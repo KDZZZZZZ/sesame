@@ -1,0 +1,51 @@
+name: manual_trade_observe
+title: manual_trade_observe
+description: Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.
+inputSchema:
+  type: object
+  required:
+    - backend
+    - symbol
+  properties:
+    backend:
+      anyOf:
+        - type: string
+          const: mt5
+        - type: string
+          const: qmt
+    symbol:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Exact broker symbol
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - state.write
+  usage:
+    purpose: Provide fresh exact-account, quote and position facts for an already authorized decision path. This observation is evidence, not a strategy recommendation or order authorization.
+    inputs: '{backend:"mt5"|"qmt",symbol:<exact broker symbol>}.'
+    outputs: "{observation_id,backend,symbol,account,accountSummary,quote,positions,orders?,spec,capturedAt,expiresAt,policy,...}; times are epoch milliseconds. Use the returned observation_id for one intent."
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+      - Already enabled/configured native backend with a fresh source-timestamped executable quote.
+    limitations:
+      - Observation expires after the decision window and does not authorize execution. An observation consumed by an intent cannot be used for another intent.
+      - MT5 requires the configured Python terminal, not only an EA/MCP quote connection. MT5_PYTHON_UNAVAILABLE with details.retryable=false identifies confirmed missing IPC; its recovery field explains the connection/account prerequisites. Account health is checked before the remaining snapshot reads; the capability never logs in or retries automatically.
+  binding:
+    type: native
+    name: manual_trade_observe

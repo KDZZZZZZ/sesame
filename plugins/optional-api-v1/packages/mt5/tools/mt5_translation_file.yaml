@@ -1,0 +1,53 @@
+name: mt5_translation_file
+title: mt5_translation_file
+description: 以短参数登记当前工作区内的 UTF-8 JSON 清单（≤8 MiB）：结构与 mt5_translation 相同，但不含 operation_id；files 内嵌源码文本，不扫描目录。同样严格校验源、目标、参数和映射。首次读取后固定输入；相同操作 ID/路径重试直接复用快照，不重读文件，即使文件已删除。修改内容需新操作 ID。返回成果引用/摘要，不回全文；不编译、不启动终端、不交易。
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - manifest_path
+  properties:
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+      minLength: 16
+      maxLength: 128
+    manifest_path:
+      type: string
+      description: 当前工作区内的 JSON 清单路径；重试使用相同操作 ID 和路径，读取已固定快照
+      minLength: 1
+      maxLength: 4096
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - workspace.read
+    - plugin.state.write
+    - resources.publish
+  usage:
+    purpose: 从单文件冻结长翻译输入，避免重复传输长程序。
+    inputs: '{operation_id,manifest_path:"translation.json"}；工作区UTF8 JSON包含mt5_translation所有字段但去掉operation_id，files内嵌文本，不扫描目录/跟随JSON文件引用。'
+    outputs: '{project_id,revision:1,source,translation:<strategy.translation Ref>,validation:<strategy.validation Ref>,implementation:"translated_unverified",limitations}；validation为partial，尚无原生语义证明。 另有manifest:{digest,source:{sha256,...},reused,...}解释已固定输入。'
+    prerequisites:
+      - 同内联translation；长源码可用workspace能力写清单。输入规则和完整形状在公开target/translation-file.md。
+    limitations:
+      - 同ID/同路径复用首次固定字节，不重读已修改文件；验证失败后修内容用新ID。≤8MiB清单，项目≤4MiB/128文件，单源≤1MiB；不产生原生执行证明。
+  binding:
+    type: native
+    name: mt5_translation_file

@@ -1,0 +1,56 @@
+name: host_files_search
+title: host_files_search
+description: 在宿主目录中按文件名片段递归搜索；不执行内容，不递归跟随符号链接。
+inputSchema:
+  type: object
+  required:
+    - path
+    - query
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+    query:
+      type: string
+      minLength: 1
+      maxLength: 200
+    depth:
+      type: integer
+      minimum: 0
+      maximum: 8
+    offset:
+      type: integer
+      minimum: 0
+      maximum: 10000
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.read
+  usage:
+    purpose: 在宿主目录中按文件名片段递归搜索；不执行内容，不递归跟随符号链接。
+    inputs: path 为宿主目录，query 为文件名/相对路径片段；depth 默认3、最大8；offset/limit 分页。
+    outputs: "{path,query,items,next_offset,scanned,scan_truncated,read_only:true}；不搜索文件内容或跟随目录符号链接。"
+    prerequisites: []
+    limitations:
+      - 无匹配不证明程序未安装，可能是范围或扫描预算；缩小到相关目录后查找。
+  binding:
+    type: native
+    name: host_files_search

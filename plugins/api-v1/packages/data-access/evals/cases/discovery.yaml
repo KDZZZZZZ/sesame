@@ -1,0 +1,45 @@
+id: data-access-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/data-access/skills/analyze-data/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/data-access
+  - step: 1
+    pointer: /tools/0/name
+    equals: data_providers
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        contract:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 契约，如sesame.market/1
+        providerId:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确来源ID
+        cursor:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 宿主页游标
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+      required: []
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 分析固定输入"

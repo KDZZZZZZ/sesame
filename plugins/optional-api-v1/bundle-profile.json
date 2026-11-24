@@ -41,6 +41,7 @@
     "sesame/market-data-parser",
     "sesame/mt5",
     "sesame/narrative-analysis",
+    "sesame/plugin-optimizer",
     "sesame/portfolio-execution",
     "sesame/price-action",
     "sesame/qmt",

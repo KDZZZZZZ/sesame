@@ -1,0 +1,56 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/workspace
+title: 工作区、文件与执行
+description: 插件本地文件业务与宿主管理的进程Run；路径保护、原子写入、冲突检查和精确编辑。
+version: 3.0.2
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  default_state: mounted
+  prompts:
+    - instructions.md
+  skills:
+    - skills/prepare-environment
+  execution: native
+  permissions:
+    scopes:
+      - process.execute
+    calls:
+      - host.process.exec
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      additionalProperties: false
+    capabilities:
+      - tool/read
+      - tool/write
+      - tool/edit
+      - tool/bash
+      - tool/host_files_list
+      - tool/host_files_search
+      - tool/host_files_read
+      - tool/host_files_import
+      - tool/host_files_write
+      - tool/host_files_mkdir
+      - tool/host_files_move
+      - tool/host_files_remove
+      - tool/host_files_run
+    sources: []
+    views: []
+    services: []
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []
+    knowledge:
+      - id: resource.1
+        path: instructions.md
+        description: 随包文件能力说明 prompt.md
+        kind: prompt
+      - id: resource.2
+        path: skills/prepare-environment/SKILL.md
+        description: 随包文件能力说明 skills/prepare-environment/SKILL.md
+        kind: skill

@@ -1,0 +1,61 @@
+name: report_check
+title: report_check
+description: Render an exact published report revision through the host inspector. Return the persisted actual rendering receipt, viewport checks and diagnostics. Correct the component input, publish a new revision, and inspect that exact revision again.
+inputSchema:
+  type: object
+  required:
+    - ref
+  properties:
+    ref:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: report
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - presentation.render
+    - write:receipt
+  usage:
+    purpose: Render an exact published report revision through the host inspector. Return the persisted actual rendering receipt, viewport checks and diagnostics. Correct the component input, publish a new revision, and inspect that exact revision again.
+    inputs: ref 为 components_show 返回的完整固定 report ArtifactRef。
+    outputs: 宿主真实渲染检查回执，含状态、视口/运行时检查和 diagnostics，并保存到该版本 receipts。
+    prerequisites:
+      - 宿主报告渲染器可用；已发布该 ref。
+    limitations:
+      - rendered 才证明本次检查通过；失败根据具体诊断修正受控组件或数据，发布新 revision 再检查。无渲染器时明确未验证。
+      - rendered 不等于可导出；receipt.exportability 是源级建议，真实静态准备检查另用 report_export_check。
+  binding:
+    type: native
+    name: report_check

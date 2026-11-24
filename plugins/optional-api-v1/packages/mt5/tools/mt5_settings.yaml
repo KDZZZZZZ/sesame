@@ -1,0 +1,36 @@
+name: mt5_settings
+title: mt5_settings
+description: 读取 MT5 脱敏连接、账户绑定、环境与待导入凭据引用。不会登录、启动终端或交易。
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取脱敏配置、待导入引用和连接观察。
+    inputs: "{}。"
+    outputs: "{settings:{version,account,servers,allow_trading,allow_host_operations,...},pendingImports,environment,connection}；敏感值脱敏，pendingImports提供可导入引用。"
+    prerequisites:
+      - 只读能力对有该能力授权的 Agent 开放，不要求主会话；修改、导入和连接仍沿用各自权限。
+    limitations:
+      - 配置存在、python_installed或文件存在不证明Python IPC或券商账户连接成功；Terminal MCP与Python是独立通道。
+  binding:
+    type: native
+    name: mt5_settings

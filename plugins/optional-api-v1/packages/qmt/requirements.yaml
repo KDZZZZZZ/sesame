@@ -1,0 +1,24 @@
+goal: 可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。
+acceptance:
+  discovery:
+    case: qmt-discovery
+    tools:
+      - qmt_cancel
+      - qmt_command
+      - qmt_configure
+      - qmt_download_history
+      - qmt_environment
+      - qmt_execution_cancel
+      - qmt_execution_command
+      - qmt_execution_identity
+      - qmt_execution_prepare
+      - qmt_execution_recover
+      - qmt_execution_snapshot
+      - qmt_execution_submit
+      - qmt_order
+      - qmt_read
+      - qmt_trading_cancel
+      - qmt_trading_command
+      - qmt_trading_context
+      - qmt_trading_order
+    resource: skills/qmt-readonly/SKILL.md

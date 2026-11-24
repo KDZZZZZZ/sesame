@@ -1,0 +1,105 @@
+name: mt5_trading_pause
+title: mt5_trading_pause
+description: "Risk executor only: stop one EA belonging to the exact account. Native action removes the expert; no automatic resume, state-preserving pause or position close is implied. Unknown receipts require inspection, not replay."
+inputSchema:
+  type: object
+  required:
+    - deployment_id
+    - account
+    - reason
+  properties:
+    deployment_id:
+      type: string
+      description: Exact deployment ID from the account snapshot
+      minLength: 1
+      maxLength: 20000
+    account:
+      type: object
+      required:
+        - accountId
+        - server
+        - revision
+      properties:
+        accountId:
+          type: string
+          description: Exact login
+          minLength: 1
+          maxLength: 20000
+        server:
+          type: string
+          description: Exact server
+          minLength: 1
+          maxLength: 20000
+        revision:
+          type: string
+          description: Exact configuration revision
+          minLength: 1
+          maxLength: 20000
+      additionalProperties: false
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    authorization:
+      type: object
+      required:
+        - expiresAt
+        - signature
+      properties:
+        expiresAt:
+          type: integer
+          minimum: 1
+        signature:
+          type: string
+          minLength: 88
+          maxLength: 88
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - external-strategy-operation
+    - plugin.state.write
+  usage:
+    purpose: 停止精确账户的一项受管理EA挂载。
+    inputs: '{deployment_id:<snapshot真实挂载id>,account:{accountId,server,revision},reason:<具体原因>}；示例reason:"用户要求停止此EA"。'
+    outputs: '{account,deployment,run_record,requestedAction:"pause",nativeAction:"remove_expert",status,reason,planId,runId,capturedAt,limitation}。'
+    prerequisites:
+      - 主会话明确停止指令或宿主已证明的工作流executor→执行能力→MT5调用链；Agent不生成authorization签名。
+    limitations:
+      - 实际移除EA，不平仓、不保证保留运行状态/自动恢复；unknown核对部署回执，不冒称停止完成。
+  binding:
+    type: native
+    name: mt5_trading_pause
+  configurationRequirements:
+    - field: account_login
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true
+    - field: account_server
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true
+    - field: terminal_url
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+    - field: terminal_enabled
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+    - field: terminal_token
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true

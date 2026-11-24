@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/deep-reasoning:instructions#preamble": "f4cdd4a87895f41e72c92c0481f8fb6e2c7fc18952a271628ab17ed4de7b7883",
+    "sesame/deep-reasoning:plugin.description": "d39505d0070eea3d6af22b9d38a5dcc5f783e33f2f9c4f9a18b47490ea40f862",
+    "sesame/deep-reasoning:resource/LICENSE": "fd0425639ea21ed2e8e6c52378a2c9ffea091c102339ca940fd7492b70fb32bb",
+    "sesame/deep-reasoning:resource/PROVENANCE.md": "02fae2a9094c5e12b306139bd5a5beb72e7a399bad0f19208e69d06795404bcf",
+    "sesame/deep-reasoning:resource/README.md": "d402906e962f258faa04225a9dff8452b186f6337409f38769b11bae97b25fe6",
+    "sesame/deep-reasoning:resource/examples/evidence.json": "97cf50368aa7a6bdd6a93ee2fad9c8f87b87d7f36be47ab9c72f540c494b46ad",
+    "sesame/deep-reasoning:resource/examples/parallel-tasks.json": "4760c2e0132729b8eb48060beb349e42d5a7f2481d0d61e81d2e9c97d348e57e",
+    "sesame/deep-reasoning:resource/examples/review-cases.md": "8488fcde93b93b938949e495470870bc669c66f026eb210a842e6a3f734db8bb",
+    "sesame/deep-reasoning:resource/references/contradictions.md": "ba12051d4f377a2b37c5fb4b78bae644581453f0977f74d30e14eefb547092e3",
+    "sesame/deep-reasoning:resource/references/coordination.md": "97e0b73987c7ddd828bf560024fb398f8d41898bdd78b99c3baf1a08be1efc56",
+    "sesame/deep-reasoning:resource/references/game-theory.md": "6225489a8b6f78ced0d3dc1535f2b2682451a78c58d8ba065de7ab5fba619f35",
+    "sesame/deep-reasoning:resource/references/historical.md": "67471860fdbd52d5eade2752b905324a3994a9f027f3f7050d40351f1e9afc73",
+    "sesame/deep-reasoning:resource/references/protocol.md": "6717e36eb566177d4db6ce1e0bc2016c2b069c7fed647c6093af43d3ec586a10",
+    "sesame/deep-reasoning:resource/references/reconciliation.md": "8bb71a35099bfc65edb036509c4690d29cd1a88d67554e99f4746a1b986687c1",
+    "sesame/deep-reasoning:skill/deep-reasoning.body": "8a0e9f73f65fa63213dc5e6da3f6fb25f3d23967077da763e8e4d204de39011a",
+    "sesame/deep-reasoning:skill/deep-reasoning.description": "135de7f38460fb9c3164a2eeed8a084eacdda43d7de6d552d5aa8849b2466728"
+  },
+  "digest": "13cc8d2053dc28cc63bdc28f125d71bbf845e0ffdc6a4aee0ebe8d2dc4a9ab79"
+}

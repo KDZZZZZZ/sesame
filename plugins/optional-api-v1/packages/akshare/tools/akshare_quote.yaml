@@ -1,0 +1,59 @@
+name: akshare_quote
+title: akshare_quote
+description: Read actual explicitly selected Eastmoney or Tencent single-stock quote snapshot; polling observation, not an exchange tick stream.
+inputSchema:
+  type: object
+  properties:
+    symbol:
+      type: string
+      pattern: ^[0-9]{6}$
+    source:
+      anyOf:
+        - type: string
+          const: eastmoney
+        - type: string
+          const: tencent
+  required:
+    - symbol
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+  usage:
+    purpose: 取得一个A股公开报价观察；仅提供信息，不替代研究解释或可执行报价。
+    inputs: '{symbol:"000001",source:"tencent"}；symbol六位代码，source=eastmoney（默认）|tencent。'
+    outputs: "{...原生查询回执,rows,source,exchangeTimeAvailable:false}；Tencent 从全市场快照筛选该代码；Eastmoney 返回报价项目行。"
+    prerequisites:
+      - 已有 ready:true 的 AKShare 环境。
+    limitations:
+      - observedAt 是本次HTTP观察时间；不宣称交易所逐笔或freshness live。无匹配行不证明零价格。
+      - 此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。
+  binding:
+    type: native
+    name: akshare_quote
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

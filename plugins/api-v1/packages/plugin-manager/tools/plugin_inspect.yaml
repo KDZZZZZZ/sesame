@@ -1,0 +1,38 @@
+name: plugin_inspect
+title: plugin_inspect
+description: 读取插件当前版本、摘要、运行状态和诊断。
+inputSchema:
+  type: object
+  properties:
+    pluginId:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+  required:
+    - pluginId
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取插件当前版本、摘要、运行状态和诊断。
+    inputs: pluginId 来自发现/安装结果。
+    outputs: 版本、digest、runtime_status、启用状态与 diagnostics；是更新 expectedRevision 和故障定位的来源。
+    prerequisites: []
+    limitations:
+      - ready 只说明插件加载就绪，不证明其外部连接或业务任务成功。
+  binding:
+    type: native
+    name: plugin_inspect

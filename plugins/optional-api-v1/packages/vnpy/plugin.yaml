@@ -1,0 +1,162 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/vnpy
+title: VeighNa CTA 回测
+description: 计算验证能力：消费固定数据与已编写CtaTemplate运行原生回测，交付可追溯结果与假设；候选比较由工作流负责，不连接实盘。
+version: 2.0.6
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - README.md
+    - requirements.txt
+    - runner.py
+    - examples/strategy.py
+    - examples/bars.json
+    - PROVENANCE.md
+  permissions:
+    scopes:
+      - process.execute
+    calls:
+      - host.process.exec
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/vnpy_environment
+      - tool/vnpy_backtest
+      - tool/vnpy_result
+      - id: vnpy_dispose
+        kind: function
+        consumers:
+          - host
+        description: Close private plugin storage and owned resources.
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            closed:
+              const: true
+          required:
+            - closed
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - plugin.session.close
+        usage:
+          purpose: 关闭插件自有资源。
+          inputs: 宿主生命周期输入 {}。
+          outputs: "{closed:true}。"
+          prerequisites:
+            - 仅宿主卸载/关闭时调用。
+          limitations:
+            - 释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。
+        binding:
+          type: native
+          name: vnpy_dispose
+      - tool/vnpy_operation
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: documentation-0
+        path: PREPARATION-VALIDATION.md
+        description: "Documentation: PREPARATION-VALIDATION.md"
+        kind: reference
+      - id: documentation-1
+        path: instructions.md
+        description: "Documentation: prompt.md"
+        kind: prompt
+      - id: documentation-2
+        path: PROVENANCE.md
+        description: "Documentation: PROVENANCE.md"
+        kind: reference
+      - id: documentation-3
+        path: README.md
+        description: "Documentation: README.md"
+        kind: reference
+      - id: documentation-4
+        path: VALIDATION.md
+        description: "Documentation: VALIDATION.md"
+        kind: reference
+      - id: documentation-5
+        path: skills/vnpy-backtest/SKILL.md
+        description: "Documentation: skills\\vnpy-backtest\\SKILL.md"
+        kind: skill
+      - id: public-interface-contract
+        path: INTERFACES.md
+        consumers:
+          - agent
+          - host
+        description: "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries."
+        kind: reference
+    hooks:
+      - id: dispose
+        event: lifecycle.dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: vnpy_dispose
+    stateCollections: []
+    artifactSchemas:
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              type: string
+              minLength: 1
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+            provenance:
+              type: object
+              additionalProperties: true
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: true
+      - id: environment
+        kind: environment
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          additionalProperties: true
+      - id: resource
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          additionalProperties: true
+      - id: strategy.result
+        kind: strategy.result
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          additionalProperties: true

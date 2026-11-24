@@ -59,8 +59,9 @@ export function createExecutionAdapter(host, mt5, { now = Date.now, prepare = tr
     });
   }
   async function snapshot(args, signal, execution) {
+    check(args.expected_account === undefined || args.symbol === undefined, 'A bound workflow may request only a whole-account snapshot', 'INVALID_ARGUMENT');
     if (!args.symbol) {
-      const value = await trading.context({ action: 'snapshot', ...(args.history_days === undefined ? {} : { history_days: args.history_days }) }, signal, execution);
+      const value = await trading.context({ action: 'snapshot', history_days: args.history_days }, signal, execution, args.expected_account);
       return result({ ...value, projection: projection(value.positions, value.orders) });
     }
     const startedAt = now(), { account } = await identity({}, signal, execution);

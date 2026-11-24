@@ -1,0 +1,34 @@
+name: kurumi_status
+title: kurumi_status
+description: 读取真实模拟账本、版本、当前角色Agent任务与模型，不推进历史。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取真实模拟账本、版本、当前角色Agent任务与模型，不推进历史。
+    inputs: "{}."
+    outputs: Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+    limitations:
+      - Read only. revision is the control CAS version; account values are simulated and do not establish broker performance.
+  binding:
+    type: native
+    name: kurumi_status

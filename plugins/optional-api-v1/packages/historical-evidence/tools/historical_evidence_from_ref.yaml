@@ -1,0 +1,164 @@
+name: historical_evidence_from_ref
+title: historical_evidence_from_ref
+description: 读取并验证固定单行输入，执行相同匹配/校准后发布完整原样JSON结果，返回紧凑摘要和result_ref供后续图表、分析与引用；不属于input-only能力。
+inputSchema:
+  type: object
+  properties:
+    operation:
+      enum:
+        - match
+        - calibrate
+    input_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: 可选稳定发布操作ID；重试保持相同ID和固定输入。省略时按操作、精确输入引用和版本派生。
+  required:
+    - operation
+    - input_ref
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    schemaVersion:
+      const: 1.0.0
+    status:
+      enum:
+        - computed
+        - insufficient_data
+        - exploratory
+    input_digest:
+      type: string
+      pattern: "^sha256:"
+    source_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            const: data
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 512
+    result_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    result_data:
+      type: object
+      description: 完整单行json-rows结果的路径、字节数、内容摘要与complete标记。
+    summary:
+      type: object
+      description: 最多8个条件组的展示摘要；完整样本、可靠性和逐行结果读取result_ref。
+  required:
+    - type
+    - schemaVersion
+    - status
+    - input_digest
+    - source_refs
+    - result_ref
+    - result_data
+    - summary
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.read
+    - resources.create
+    - resources.publish
+  usage:
+    purpose: 读取并验证固定单行输入，执行相同匹配/校准后发布完整原样JSON结果，返回紧凑摘要和result_ref供后续图表、分析与引用；不属于input-only能力。
+    inputs: operation:match|calibrate、完整input_ref，可选operation_id；输入仍是固定单行JSON包。原方法、参数、时钟与证据不改，重复调用使用相同操作ID和输入。
+    outputs: result_ref是已发布的完整单行json-rows DataRef，rows.json原样保留完整计算结果；result_data给出内容摘要/大小，summary只提供最多8组的精简预览。用data_read或resources.read按需读取完整结果，不把工具预览当全集。
+    prerequisites: []
+    limitations:
+      - 最多读取8 MiB固定输入，完整输出最多32 MiB，超过预算明确失败而不截断发布。
+      - 真实effects是resources.read/create/publish；没有网络、模型或状态集合，不属于隔离留出的input-only能力。
+      - 资源创建和发布复用宿主幂等operationId及事务/CAS机制；不修改旧成果，不从已知结果重选方法，不把经验频率当当前概率。
+    references:
+      - title: "Probability calibration: disjoint fitting, Brier and reliability"
+        url: https://scikit-learn.org/stable/modules/calibration.html
+      - title: Wilson score interval
+        url: https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm
+  binding:
+    type: native
+    name: historical_evidence_from_ref

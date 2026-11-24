@@ -1,0 +1,74 @@
+name: trading_decision_context
+title: trading_decision_context
+description: Read the shared frozen account and paginated peer evidence for this workflow. Reuse prior observations and method findings before collecting a concrete gap; all position origins are included. Sections expose account facts, history, team findings and prior decision reflections.
+inputSchema:
+  type: object
+  required:
+    - run_id
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Persisted trading decision run ID from this task input
+    section:
+      anyOf:
+        - type: string
+          const: all
+        - type: string
+          const: account
+        - type: string
+          const: history
+        - type: string
+          const: team
+        - type: string
+          const: memory
+    offset:
+      type: integer
+      minimum: 0
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    runId:
+      type: string
+    plan:
+      type: object
+      additionalProperties: true
+    capturedAt:
+      type: number
+  required:
+    - runId
+    - plan
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:selected-account
+    - write:context-checkpoint
+  binding:
+    type: native
+    name: trading_decision_context
+  usage:
+    purpose: Read the shared frozen account and paginated peer evidence for this workflow. Reuse prior observations and method findings before collecting a concrete gap; all position origins are included. Sections expose account facts, history, team findings and prior decision reflections.
+    inputs: '{run_id,section?:"all"|"account"|"history"|"team"|"memory",offset?,limit?}; use the business runId from the assigned task.'
+    outputs: Frozen plan/account evidence and section pages with items,total,nextOffset, plus available peer outputs and prior decision memory. section=team reads saved peer reports without fetching an account snapshot; capturedAt is present only when that snapshot exists. Page until nextOffset=null when complete evidence is needed. plan.researchRefs contains the exact fixed research result references supplied by the main Agent; consume them through data_read. Context does not fetch external research.
+    prerequisites:
+      - Owning main conversation or a registered role task for this exact run.
+    limitations:
+      - This reads an already admitted run; it does not create a portfolio execution binding or obtain current market prices. The snapshot includes all position origins. account/history/memory/all require the full snapshot; memory includes actual held symbols as well as plan symbols.
+      - When the execution provider explicitly reports error.details.retryable=false, the same run retains and returns that failure without querying again. Follow its recovery diagnosis, verify the connection/account, then resume the original host Run. The resumed attempt clears the unavailable context cache and rechecks the connection; repeating context before repair does not help. team remains available.

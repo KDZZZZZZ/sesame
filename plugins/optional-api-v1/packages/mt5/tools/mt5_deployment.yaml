@@ -1,0 +1,120 @@
+name: mt5_deployment
+title: mt5_deployment
+description: 受管理的原生挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。check 的 ready:false 若 preparable:true，授权 mount 会自动处理算法交易启用/构建准备并再次核验；不要猜测或调用 MCP 开关。仅支持已回测冻结 EX5。SVL 运行返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。unknown 不换 ID 重试；stop 停止 EA，不平仓。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: list
+        - type: string
+          const: check
+        - type: string
+          const: mount
+        - type: string
+          const: stop
+    pass_id:
+      type: string
+      description: 已成功回测的 pass_id
+      minLength: 1
+      maxLength: 20000
+    deployment_id:
+      type: string
+      description: 挂载 ID
+      minLength: 1
+      maxLength: 20000
+    request_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+    login:
+      type: string
+      description: 检查返回的账户
+      minLength: 1
+      maxLength: 20000
+    server:
+      type: string
+      description: 检查返回的服务器
+      minLength: 1
+      maxLength: 20000
+    artifact_digest:
+      type: string
+      description: 检查返回的冻结 EX5 摘要
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - external-strategy-operation
+    - plugin.state.write
+  usage:
+    purpose: 检查、显式挂载或停止原生EA。
+    inputs: '{action:"list"}；{action:"check",pass_id:<成功Tester pass>}；mount:{action:"mount",pass_id,request_id,login,server,artifact_digest} 用check真实返回值；{action:"stop",deployment_id}。'
+    outputs: list:{items,candidates,preparations}；check含ready/preparable、账户及artifact_digest、原因、run_record；mount/stop返回真实部署记录含id/status/run_record。running需原生挂载确认，unknown保留不确定。
+    prerequisites:
+      - 主会话，且用户明确要求运行/停止策略；只能挂载已回测冻结EX5。
+    limitations:
+      - check.preparable:true表示已授权mount可完成准备并复核，不需要猜MCP开关。stop移除EA但不平仓；unknown不换request_id重复。
+  binding:
+    type: native
+    name: mt5_deployment
+  configurationRequirements:
+    - field: terminal_url
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - check
+              - mount
+              - stop
+        required:
+          - action
+    - field: terminal_enabled
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - check
+              - mount
+              - stop
+        required:
+          - action
+    - field: terminal_token
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - check
+              - mount
+              - stop
+        required:
+          - action

@@ -1,0 +1,6 @@
+goal: 面向用户的产品操作知识：安装上手、工作台、聊天命令、设置、研究与策略用法和排障；不注册运行工具。
+acceptance:
+  discovery:
+    case: user-guide-discovery
+    tools: []
+    resource: skills/sesame-user-guide/SKILL.md

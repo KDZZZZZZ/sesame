@@ -1,0 +1,44 @@
+id: workspace-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/workspace/skills/prepare-environment/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/workspace
+  - step: 1
+    pointer: /tools/0/name
+    equals: bash
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - command
+      properties:
+        command:
+          type: string
+          minLength: 1
+          maxLength: 100000
+        timeout:
+          type: integer
+          minimum: 1
+          maximum: 600
+        cwd:
+          type: string
+          maxLength: 1000
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: prepare-environment
+      description: 检查、复用和按需准备本机依赖或原生应用环境；用于用户要求配置插件、运行已有工具链或安装缺失依赖时。
+      ---
+
+      先确

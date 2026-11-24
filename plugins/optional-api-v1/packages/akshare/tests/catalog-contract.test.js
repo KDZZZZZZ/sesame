@@ -1,6 +1,7 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import manifest from '../capabilities.json' with { type: 'json' };
+const manifest = readPackageDirectory(new URL('../',import.meta.url)).capabilities;
 import { createCapabilities } from '../index.js';
 
 test('the public AKShare catalog covers every callable query interface with argument guidance', async () => {

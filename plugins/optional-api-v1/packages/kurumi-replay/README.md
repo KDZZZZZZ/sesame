@@ -1,4 +1,4 @@
-本目录已迁移为 Host API 2；唯一接口声明是 `capabilities.json`，入口仅导出 `createCapabilities`。角色授权使用宿主提供的 `executionContext.provenance.agent.runId`，不接受调用参数伪造身份。私有 SQLite 保存账本与幂等回执，公开证据通过资源发布，图表使用静态 SourceRef。激活和恢复不会自动请求模型或安装依赖。
+本目录已迁移为 Host API 2；唯一接口声明是 `plugin.yaml`，入口仅导出 `createCapabilities`。角色授权使用宿主提供的 `executionContext.provenance.agent.runId`，不接受调用参数伪造身份。私有 SQLite 保存账本与幂等回执，公开证据通过资源发布，图表使用静态 SourceRef。激活和恢复不会自动请求模型或安装依赖。
 
 本插件负责固定历史中的模拟时间、模拟账户与回放决策。investment-research 负责现实研究，trading-decision 负责获授权的真实账户决策，portfolio-execution 负责实盘操作；回放结果只可作为标明样本和时点的研究证据，不能直接接成实盘指令。
 

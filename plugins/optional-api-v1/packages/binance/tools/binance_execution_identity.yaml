@@ -1,0 +1,57 @@
+name: binance_execution_identity
+title: binance_execution_identity
+description: Binance Spot 标准执行适配 identity；保留精确账户环境、原生数量和真实回执。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    contract:
+      type: string
+      const: sesame.execution-adapter/1
+    backend:
+      type: string
+      const: binance
+  required:
+    - contract
+    - backend
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - network
+    - plugin.state.write
+  usage:
+    purpose: Binance Spot 标准执行适配 identity；保留精确账户环境、原生数量和真实回执。
+    inputs: Use the declared object schema; see INTERFACES.md for concrete examples.
+    outputs: Exact source observations and status, or an explicit operation error.
+    prerequisites:
+      - Binance shared configuration is present and authenticated.
+      - The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release.
+    limitations:
+      - No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions.
+  configurationRequirements:
+    - field: environment
+      optional: true
+      reason: Select production or Spot Testnet; default is testnet.
+    - field: api_key
+      reason: Binance private account or trading operation.
+    - field: api_secret
+      reason: HMAC signing for the selected Binance account.
+  binding:
+    type: native
+    name: binance_execution_identity

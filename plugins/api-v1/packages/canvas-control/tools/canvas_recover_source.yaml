@@ -1,0 +1,66 @@
+name: canvas_recover_source
+title: canvas_recover_source
+description: 显式恢复同一行情来源的新修订。宿主核验图表快照、来源digest/实例、品种、规格、日历、时钟及连接，再CAS更新；不自动迁移绘图。
+inputSchema:
+  type: object
+  additionalProperties: false
+  required:
+    - command_id
+    - expected_version
+    - chart_id
+    - expected_chart
+  properties:
+    command_id:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]{1,100}$
+      minLength: 16
+    expected_version:
+      type: integer
+      minimum: 1
+      maximum: 9007199254740991
+    chart_id:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]{1,100}$
+    expected_chart:
+      type: object
+      description: canvas_inspect中完整且未修改的原图表快照。
+    time_basis:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+      properties:
+        kind:
+          enum:
+            - utc
+            - wall
+        authority:
+          type: string
+          minLength: 1
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - view.write
+  usage:
+    purpose: 核验后恢复现有图表，不替换来源/品种或自动改写历史坐标。
+    inputs: 原图表完整快照与画布CAS版本；已知历史时钟可额外传入time_basis。
+    outputs: 当前画布；仅更新来源revision和generation。
+    prerequisites:
+      - 先canvas_inspect，确认用户请求恢复该图表。
+    limitations:
+      - 冲突、取消、身份不符都不重试或覆盖；绘图显式迁移是独立操作。
+  binding:
+    type: native
+    name: canvas_recover_source

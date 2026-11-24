@@ -1,0 +1,1696 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/qmt
+title: QMT 行情与股票账户
+description: 可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。
+version: 2.1.1
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  main_tool_names:
+    - qmt_environment
+    - qmt_configure
+    - qmt_download_history
+    - qmt_order
+    - qmt_cancel
+    - qmt_command
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - README.md
+    - requirements.txt
+    - TRADING.md
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/qmt_environment
+      - tool/qmt_configure
+      - tool/qmt_read
+      - tool/qmt_download_history
+      - tool/qmt_order
+      - tool/qmt_cancel
+      - tool/qmt_command
+      - tool/qmt_trading_context
+      - tool/qmt_trading_order
+      - tool/qmt_trading_cancel
+      - tool/qmt_trading_command
+      - id: market_bind
+        kind: function
+        consumers:
+          - host
+        description: QMT market bind from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+              required: []
+              additionalProperties: false
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 为宿主建立精确行情来源会话；不代表已取得报价。
+          inputs: "{binding:{}} 使用已保存 QMT 配置；也可带 inspect/公开查询返回的精确 connection:{id,revision}，不会枚举或切换另一账户。"
+          outputs: '{bindingId,connection:{id,revision},sourceId,health:"configured",limitations}；实际数据可用性以原生读取为准，不启动终端。'
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+        binding:
+          type: native
+          name: market_bind
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+      - id: market_unbind
+        kind: function
+        consumers:
+          - host
+        description: QMT market unbind from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 释放宿主创建的行情绑定。
+          inputs: '{binding:<bind返回的含bindingId对象>}；例 {binding:{bindingId:"host-owned-id"}}。'
+          outputs: "{closed:true}；释放该绑定与其分页状态。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 仅释放本次来源会话，不是平仓或停终端。
+        binding:
+          type: native
+          name: market_unbind
+      - id: market_searchInstruments
+        kind: function
+        consumers:
+          - host
+        description: QMT market searchInstruments from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                query:
+                  type: string
+                assetClasses:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                venues:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+              required: []
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 检索该明确来源的真实品种；返回 ref 是后续 instrument 的来源。
+          inputs: '{binding:<bind结果>,query:{query:"000001",assetClasses?,venues?},page:{limit:20,cursor?}}；limit≤200，cursor 仅沿用同一来源/过滤条件。'
+          outputs: "{items:[{ref:{sourceId,instrumentId},symbol,name,assetClass,venue?}],nextCursor?,metadata:{snapshotId?,consistency?,meta,connection?}}；空 items 仅是该次检索无匹配。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+            - 本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。
+        binding:
+          type: native
+          name: market_searchInstruments
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+          - field: sector
+            reason: Stock search uses the saved sector and preserves its existing 沪深京A股 default.
+            optional: true
+      - id: market_describeInstrument
+        kind: function
+        consumers:
+          - host
+        description: QMT market describeInstrument from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                instrument:
+                  type: object
+                  properties:
+                    sourceId:
+                      type: string
+                      minLength: 1
+                    instrumentId:
+                      type: string
+                      minLength: 1
+                  required:
+                    - sourceId
+                    - instrumentId
+                  additionalProperties: false
+              required:
+                - instrument
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取具体品种的价格/数量单位、时间基准和支持周期。
+          inputs: '{binding:<bind结果>,query:{instrument:{sourceId:"qmt:<configured connection_id>",instrumentId:"000001.SZ"}}}；实际 instrument 用 search 返回 ref。'
+          outputs: "{items:[{ref,symbol,name,assetClass,price,quantity,volume,timeBasis,calendar,features,native}],metadata:{meta,connection?}}；unknown/unsupported 字段保留，features 决定支持的 spec。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。
+        binding:
+          type: native
+          name: market_describeInstrument
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      - id: market_queryBars
+        kind: function
+        consumers:
+          - host
+        description: QMT market queryBars from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                instrument:
+                  type: object
+                  properties:
+                    sourceId:
+                      type: string
+                      minLength: 1
+                    instrumentId:
+                      type: string
+                      minLength: 1
+                  required:
+                    - sourceId
+                    - instrumentId
+                  additionalProperties: false
+                spec:
+                  type: object
+                  properties:
+                    timeframe:
+                      type: string
+                      minLength: 1
+                    priceBasis:
+                      enum:
+                        - bid
+                        - ask
+                        - mid
+                        - last
+                    adjustment:
+                      enum:
+                        - none
+                        - forward
+                        - backward
+                    session:
+                      type: string
+                      minLength: 1
+                    calendarRevision:
+                      type: object
+                      additionalProperties: true
+                  required:
+                    - timeframe
+                    - priceBasis
+                    - adjustment
+                    - session
+                    - calendarRevision
+                  additionalProperties: false
+                range:
+                  type: object
+                  properties:
+                    from:
+                      anyOf:
+                        - type: object
+                          properties:
+                            basis:
+                              const: utc
+                            unixMs:
+                              type: integer
+                          required:
+                            - basis
+                            - unixMs
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            basis:
+                              const: wall
+                            authority:
+                              type: string
+                              minLength: 1
+                            zone:
+                              type: string
+                              minLength: 1
+                            value:
+                              type: string
+                              minLength: 1
+                            fold:
+                              type: integer
+                          required:
+                            - basis
+                            - authority
+                            - value
+                          additionalProperties: false
+                    to:
+                      anyOf:
+                        - type: object
+                          properties:
+                            basis:
+                              const: utc
+                            unixMs:
+                              type: integer
+                          required:
+                            - basis
+                            - unixMs
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            basis:
+                              const: wall
+                            authority:
+                              type: string
+                              minLength: 1
+                            zone:
+                              type: string
+                              minLength: 1
+                            value:
+                              type: string
+                              minLength: 1
+                            fold:
+                              type: integer
+                          required:
+                            - basis
+                            - authority
+                            - value
+                          additionalProperties: false
+                  required:
+                    - from
+                    - to
+                  additionalProperties: false
+                includeForming:
+                  type: boolean
+                direction:
+                  enum:
+                    - forward
+                    - backward
+              required:
+                - instrument
+                - spec
+                - range
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取有界历史柱和真实覆盖证据，供宿主查询/冻结。
+          inputs: '{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,range:{from:<SourceTime>,to:<SourceTime>},includeForming:false,direction:"forward"},page:{limit:100,cursor?}}。仅 timeframe=1d、priceBasis=last、adjustment=none、session=regular|default、calendarRevision:{status:"unknown"}。range 为 UTC 或 Asia/Shanghai wall SourceTime，最多10年；只读本地历史。'
+          outputs: "{items:[{id,revision,openTime,endTime,open,high,low,close,volume,isClosed,closure}],nextCursor?,metadata:{seriesId,instrument,spec,coverage,snapshotId,consistency,meta,connection?}}；OHLC 是十进制字符串，volume 自带单位/未知状态；无 nextCursor 只说明本次快照分页结束。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
+            - 本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。
+        binding:
+          type: native
+          name: market_queryBars
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      - id: market_subscribeBars
+        kind: function
+        consumers:
+          - host
+        description: QMT market subscribeBars from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                instrument:
+                  type: object
+                  properties:
+                    sourceId:
+                      type: string
+                      minLength: 1
+                    instrumentId:
+                      type: string
+                      minLength: 1
+                  required:
+                    - sourceId
+                    - instrumentId
+                  additionalProperties: false
+                spec:
+                  type: object
+                  properties:
+                    timeframe:
+                      type: string
+                      minLength: 1
+                    priceBasis:
+                      enum:
+                        - bid
+                        - ask
+                        - mid
+                        - last
+                    adjustment:
+                      enum:
+                        - none
+                        - forward
+                        - backward
+                    session:
+                      type: string
+                      minLength: 1
+                    calendarRevision:
+                      type: object
+                      additionalProperties: true
+                  required:
+                    - timeframe
+                    - priceBasis
+                    - adjustment
+                    - session
+                    - calendarRevision
+                  additionalProperties: false
+                tailLimit:
+                  type: integer
+                  minimum: 1
+                  maximum: 2000
+                includeForming:
+                  type: boolean
+                resumeToken:
+                  type: string
+                  minLength: 1
+              required:
+                - instrument
+                - spec
+                - tailLimit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+          - plugin.session.write
+        usage:
+          purpose: 为宿主持续提供初始行情快照及增量。
+          inputs: '{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,tailLimit:100,includeForming:true}}；不传历史range或复用分页cursor，tailLimit正整数≤2000；恢复使用新快照。仅 timeframe=1d、priceBasis=last、adjustment=none、session=regular|default、calendarRevision:{status:"unknown"}。'
+          outputs: '{id,events:AsyncIterable,close}；首帧 {type:"snapshot",snapshot:{seriesId,instrument,spec,bars,coverage,meta?},position:{streamId,epoch,seq},consistency,recovery:"snapshot"}；后续 {streamId,epoch,seq,eventId,schemaVersion,observedAt,type,payload}，type 为 bars.upsert/bars.closed（按源能力）或 stream.gap。position/consistency/recovery 平铺在首帧，不嵌入 metadata。'
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 1秒目标轮询，受原生请求耗时影响；日柱不是分钟柱，报价保留原生时间。
+            - 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。
+            - coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
+        binding:
+          type: native
+          name: market_subscribeBars
+        transport: subscription
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      - id: market_subscribeQuotes
+        kind: function
+        consumers:
+          - host
+        description: QMT market subscribeQuotes from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                instruments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      sourceId:
+                        type: string
+                        minLength: 1
+                      instrumentId:
+                        type: string
+                        minLength: 1
+                    required:
+                      - sourceId
+                      - instrumentId
+                    additionalProperties: false
+                  minItems: 1
+                  maxItems: 5
+                resumeToken:
+                  type: string
+                  minLength: 1
+              required:
+                - instruments
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+          - plugin.session.write
+        usage:
+          purpose: 给宿主提供有来源时间和新鲜度边界的报价快照轮询。
+          inputs: '{binding:<bind结果>,query:{instruments:[{sourceId:"qmt:<configured connection_id>",instrumentId:"000001.SZ"}]}}；数量限制 1–50，不支持 resumeToken；实际引用来自 search。'
+          outputs: '{id,events:AsyncIterable,close}；首帧 {type:"snapshot",snapshot:{quotes,meta},position:{streamId,epoch,seq},consistency,recovery:"snapshot"}，随后 quotes.upsert 或 stream.gap；报价字段用 value/unknown 状态表达。'
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 1秒目标轮询，受原生请求耗时影响；日柱不是分钟柱，报价保留原生时间。
+            - 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。
+            - 本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。
+        binding:
+          type: native
+          name: market_subscribeQuotes
+        transport: subscription
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+      - id: account_bind
+        kind: function
+        consumers:
+          - host
+        description: QMT account bind from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+              required: []
+              additionalProperties: false
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 为宿主建立精确账户数据绑定。
+          inputs: "{binding:{}} 使用已保存 QMT 配置；也可带 inspect/公开查询返回的精确 connection:{id,revision}，不会枚举或切换另一账户。"
+          outputs: '{bindingId,connection:{id,revision},sourceId,health:"configured",limitations}；实际数据可用性以原生读取为准，不启动终端。'
+          prerequisites:
+            - 宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+        binding:
+          type: native
+          name: account_bind
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+      - id: account_unbind
+        kind: function
+        consumers:
+          - host
+        description: QMT account unbind from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 释放账户查询/订阅绑定。
+          inputs: "{binding:<bind返回的含bindingId对象>}。"
+          outputs: "{closed:true}。"
+          prerequisites:
+            - 宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 不撤单、不平仓、不停止交易终端。
+        binding:
+          type: native
+          name: account_unbind
+      - id: account_listAccounts
+        kind: function
+        consumers:
+          - host
+        description: QMT account listAccounts from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取绑定范围内的账户身份。
+          inputs: "{binding:<bind结果>,query:{},page:{limit:20,cursor?}}。"
+          outputs: "{items:[{ref:{connectionId,accountId},label?,currency,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；仅当前配置账户，不代表全机登录账户。"
+          prerequisites:
+            - 宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 无账户或读取失败不等于空账户；实际账号身份沿用返回ref。
+        binding:
+          type: native
+          name: account_listAccounts
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: account_id
+            reason: Account reads and commands target the explicitly configured STOCK account.
+          - field: userdata_directory
+            reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+          - field: broker
+            reason: The account display uses this optional broker label and keeps the existing fallback when absent.
+            optional: true
+      - id: account_snapshot
+        kind: function
+        consumers:
+          - host
+        description: QMT account snapshot from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                account:
+                  type: object
+                  additionalProperties: true
+              required:
+                - account
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取一个明确账户的资产快照。
+          inputs: "{binding:<bind结果>,query:{account:<listAccounts返回ref>}}。"
+          outputs: "{items:[<账户资产快照>],metadata:{meta,connection?,...}}；快照包含精确account、asOf/观察时间与各资产字段的value/unknown状态，不能把未知资金当0。"
+          prerequisites:
+            - 宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 只证明当前快照；不是全部历史账本，也不改变交易权限。
+        binding:
+          type: native
+          name: account_snapshot
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: account_id
+            reason: Account reads and commands target the explicitly configured STOCK account.
+          - field: userdata_directory
+            reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+          - field: broker
+            reason: The account display uses this optional broker label and keeps the existing fallback when absent.
+            optional: true
+      - id: account_queryPositions
+        kind: function
+        consumers:
+          - host
+        description: QMT account queryPositions from the configured native broker source.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              properties:
+                account:
+                  type: object
+                  additionalProperties: true
+                instruments:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+              required:
+                - account
+              additionalProperties: false
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取当前真实持仓的统一字段。
+          inputs: "{binding:<bind结果>,query:{account:<listAccounts.ref>,instruments?:[<search.ref>]},page:{limit:200,cursor?}}。"
+          outputs: "{items:[{id,revision,account,instrument,side,quantity,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；quantity保留单位，未知数量不归零。"
+          prerequisites:
+            - 宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。
+            - qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。
+          limitations:
+            - 只支持大陆STOCK账户股票持仓；可卖量与总量不同，T+1/原生单位不推测。
+        binding:
+          type: native
+          name: account_queryPositions
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable.
+          - field: account_id
+            reason: Account reads and commands target the explicitly configured STOCK account.
+          - field: userdata_directory
+            reason: Account access uses the existing broker MiniQMT userdata_mini directory.
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port.
+            optional: true
+      - id: qmt_dispose
+        kind: function
+        consumers:
+          - host
+        description: Close private plugin storage and owned resources.
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            closed:
+              const: true
+          required:
+            - closed
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - plugin.session.close
+        usage:
+          purpose: 关闭插件自有资源。
+          inputs: 宿主生命周期输入 {}。
+          outputs: "{closed:true}。"
+          prerequisites:
+            - 仅宿主卸载/关闭时调用。
+          limitations:
+            - 释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。
+        binding:
+          type: native
+          name: qmt_dispose
+      - id: positions_close
+        kind: function
+        consumers:
+          - host
+        description: Close confirmed native STOCK shares using a fresh best-bid limit and the native account/position/quote guard. Retain uncertain receipts before dispatch; never resend them.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    revision:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+                account:
+                  type: object
+                  properties:
+                    connectionId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    accountId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - connectionId
+                    - accountId
+                  additionalProperties: false
+              required:
+                - connection
+                - account
+              additionalProperties: false
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            quantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            expected:
+              type: object
+              properties:
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                instrument:
+                  type: object
+                  properties:
+                    sourceId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    instrumentId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - sourceId
+                    - instrumentId
+                  additionalProperties: false
+                side:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                quantity:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                      maxLength: 100
+                    unit:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - value
+                    - unit
+                  additionalProperties: false
+              required:
+                - revision
+                - instrument
+                - side
+                - quantity
+              additionalProperties: false
+          required:
+            - binding
+            - positionId
+            - operationId
+            - expected
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            status:
+              enum:
+                - submitted
+                - partially_filled
+                - filled
+                - closed
+                - rejected
+                - outcome_unknown
+            requestedQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            filledQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            remainingPositionQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            orderIds:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 300
+              maxItems: 100
+            observedAt:
+              type: integer
+              minimum: 0
+            error:
+              type: object
+              properties:
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+              required:
+                - code
+                - message
+              additionalProperties: false
+          required:
+            - operationId
+            - positionId
+            - status
+            - requestedQuantity
+            - observedAt
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - external-trading
+          - plugin.state.write
+        usage:
+          purpose: 执行账户页确认的手动平仓。
+          inputs: "{binding:{connection:{id,revision},account:{connectionId,accountId}},positionId,operationId,expected:{revision,instrument:{sourceId,instrumentId},side,quantity:{value,unit}},quantity?}；expected来自用户确认的账户页持仓，quantity省略表示确认数量。"
+          outputs: "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。"
+          prerequisites:
+            - 仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。
+          limitations:
+            - 提交真实减仓意图；同ID同输入仅取原回执，账户/数量变化会拒绝。
+            - submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。
+            - 只卖可卖股票，受T+1及新鲜bid限制；没有原生order_id不按持仓变化猜成交。
+        binding:
+          type: native
+          name: positions_close
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: account_id
+            reason: Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: userdata_directory
+            reason: Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+      - id: positions_read_receipt
+        kind: function
+        consumers:
+          - host
+        description: Read the retained close and exact current-day native order ID; verify fills and actual remaining positions without sending an order.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    revision:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+                account:
+                  type: object
+                  properties:
+                    connectionId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    accountId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - connectionId
+                    - accountId
+                  additionalProperties: false
+              required:
+                - connection
+                - account
+              additionalProperties: false
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+          required:
+            - binding
+            - operationId
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            status:
+              enum:
+                - submitted
+                - partially_filled
+                - filled
+                - closed
+                - rejected
+                - outcome_unknown
+            requestedQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            filledQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            remainingPositionQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            orderIds:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 300
+              maxItems: 100
+            observedAt:
+              type: integer
+              minimum: 0
+            error:
+              type: object
+              properties:
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+              required:
+                - code
+                - message
+              additionalProperties: false
+          required:
+            - operationId
+            - positionId
+            - status
+            - requestedQuantity
+            - observedAt
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - network
+          - plugin.state.write
+        usage:
+          purpose: 核对账户页平仓的已保留回执。
+          inputs: "{binding:{connection:{id,revision},account:{connectionId,accountId}},operationId:<已有平仓键>}。"
+          outputs: "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。"
+          prerequisites:
+            - 仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。
+          limitations:
+            - 读取可刷新原生证据，不发补单。
+            - submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。
+            - 只卖可卖股票，受T+1及新鲜bid限制；没有原生order_id不按持仓变化猜成交。
+        binding:
+          type: native
+          name: positions_read_receipt
+        configurationRequirements:
+          - field: python_path
+            reason: Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: account_id
+            reason: Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: userdata_directory
+            reason: Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+          - field: market_port
+            reason: Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.
+            optional: true
+      - id: configuration.read
+        kind: function
+        consumers:
+          - host
+        description: Read only the saved QMT configuration for the shared settings catalog. No path discovery, SDK probe, process, terminal or broker connection is performed.
+        inputSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - state.read
+        usage:
+          purpose: 统一配置入口读取现有 QMT 配置。
+          inputs: "{}"
+          outputs: "{configuration:{id,version,connection_id,python_path,userdata_directory,account_id,broker,market_port,sector}}"
+          prerequisites: []
+          limitations:
+            - 配置存在不代表 SDK、行情或账户已经连接；读取不会发现 Python 候选或执行健康探测。
+        binding:
+          type: native
+          name: configuration.read
+      - id: configuration.update
+        kind: function
+        consumers:
+          - host
+        description: Main-conversation immediate adapter for shared QMT settings. Maps command_id to the existing operation_id and preserves the original configuration CAS, validation and receipt authority.
+        inputSchema:
+          type: object
+          required:
+            - command_id
+            - expected_version
+            - changes
+          properties:
+            expected_version:
+              type: integer
+              minimum: 1
+            changes:
+              type: object
+              properties:
+                python_path:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                    - type: "null"
+                userdata_directory:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                    - type: "null"
+                account_id:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                    - type: "null"
+                broker:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                    - type: "null"
+                market_port:
+                  anyOf:
+                    - type: integer
+                      minimum: 1
+                      maximum: 65535
+                    - type: "null"
+                sector:
+                  type: string
+                  description: Existing native stock catalog sector; default 沪深京A股
+                  minLength: 1
+                  maxLength: 20000
+              additionalProperties: false
+            command_id:
+              type: string
+              minLength: 16
+              maxLength: 128
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Stable command identity, mapped unchanged to the existing QMT configuration operation ID
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.state.write
+        usage:
+          purpose: 统一配置入口沿用原 QMT 配置保存流程。
+          inputs: "{command_id,expected_version,changes}；changes 与 qmt_configure 相同。"
+          outputs: 原 qmt_configure 保存结果；相同 command_id 和输入复用原回执。
+          prerequisites:
+            - 主会话即时执行；使用当前配置版本和已存在的路径。
+          limitations:
+            - 不安装 SDK、不启动终端、不登录或下单；保存配置不构成交易授权。原 qmt_configure 与 qmt_environment 接口保持不变。
+        binding:
+          type: native
+          name: configuration.update
+      - tool/qmt_execution_identity
+      - tool/qmt_execution_snapshot
+      - tool/qmt_execution_prepare
+      - tool/qmt_execution_submit
+      - tool/qmt_execution_recover
+      - tool/qmt_execution_command
+      - tool/qmt_execution_cancel
+    sources:
+      - id: market
+        contract: sesame.market/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                revision:
+                  type: string
+                  minLength: 1
+              required:
+                - id
+                - revision
+              additionalProperties: false
+          required: []
+          additionalProperties: false
+        presentation:
+          limits:
+            minPollIntervalMs: 1000
+            maxPageSize: 200
+        operations:
+          bind: market_bind
+          unbind: market_unbind
+          searchInstruments: market_searchInstruments
+          describeInstrument: market_describeInstrument
+          queryBars: market_queryBars
+          subscribeBars: market_subscribeBars
+          subscribeQuotes: market_subscribeQuotes
+      - id: account
+        contract: sesame.account/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                revision:
+                  type: string
+                  minLength: 1
+              required:
+                - id
+                - revision
+              additionalProperties: false
+          required: []
+          additionalProperties: false
+        presentation:
+          limits:
+            minPollIntervalMs: 1000
+            maxPageSize: 200
+        operations:
+          bind: account_bind
+          unbind: account_unbind
+          listAccounts: account_listAccounts
+          snapshot: account_snapshot
+          queryPositions: account_queryPositions
+    views: []
+    services:
+      - id: positions
+        contract: sesame.positions/1
+        consumer: host
+        sourceId: account
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          close: positions_close
+          readReceipt: positions_read_receipt
+      - id: execution
+        contract: sesame.execution-adapter/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          identity: qmt_execution_identity
+          snapshot: qmt_execution_snapshot
+          prepare: qmt_execution_prepare
+          submit: qmt_execution_submit
+          recover: qmt_execution_recover
+          command: qmt_execution_command
+          cancel: qmt_execution_cancel
+    knowledge:
+      - id: documentation-0
+        path: instructions.md
+        description: "Documentation: prompt.md"
+        kind: prompt
+      - id: documentation-1
+        path: README.md
+        description: "Documentation: README.md"
+        kind: reference
+      - id: documentation-2
+        path: TRADING.md
+        description: "Documentation: TRADING.md"
+        kind: reference
+      - id: documentation-3
+        path: VALIDATION.md
+        description: "Documentation: VALIDATION.md"
+        kind: reference
+      - id: documentation-4
+        path: skills/qmt-readonly/SKILL.md
+        description: "Documentation: skills\\qmt-readonly\\SKILL.md"
+        kind: skill
+      - id: public-interface-contract
+        path: INTERFACES.md
+        consumers:
+          - agent
+          - host
+        description: "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries."
+        kind: reference
+    hooks:
+      - id: dispose
+        event: lifecycle.dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: qmt_dispose
+    stateCollections: []
+    artifactSchemas: []
+    configuration:
+      title: QMT 行情与股票账户
+      fields:
+        - id: python_path
+          title: Windows Python
+          description: 已有兼容 Windows Python 可执行文件的绝对路径；保存不会验证、安装或启动 Python。
+          schema:
+            type: string
+            minLength: 1
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/python_path
+            writePath: /changes/python_path
+            versionPath: /configuration/version
+            clearValue: null
+        - id: userdata_directory
+          title: MiniQMT 账户目录
+          description: 已有券商 userdata_mini 目录；仅账户读取与交易需要，行情可单独配置。
+          schema:
+            type: string
+            minLength: 1
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/userdata_directory
+            writePath: /changes/userdata_directory
+            versionPath: /configuration/version
+            clearValue: null
+        - id: account_id
+          title: 股票账户
+          description: 券商授权的 STOCK 账户标识，按原始字符串保留前导零；填写不代表交易授权。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/account_id
+            writePath: /changes/account_id
+            versionPath: /configuration/version
+            clearValue: null
+        - id: broker
+          title: 券商名称
+          description: 可选的账户展示名称；未填写时继续使用现有默认名称。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/broker
+            writePath: /changes/broker
+            versionPath: /configuration/version
+            clearValue: null
+        - id: market_port
+          title: MiniQMT 行情端口
+          description: 已有 MiniQMT 的实际 localhost 行情端口；保存不会启动或连接终端。
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 65535
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/market_port
+            writePath: /changes/market_port
+            versionPath: /configuration/version
+            clearValue: null
+        - id: sector
+          title: 股票目录板块
+          description: 股票搜索使用的已有本地板块，默认沪深京A股；原接口不允许清空。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+          binding:
+            type: capability
+            read: configuration.read
+            update: configuration.update
+            valuePath: /configuration/sector
+            writePath: /changes/sector
+            versionPath: /configuration/version

@@ -1,0 +1,616 @@
+name: historical_evidence_match
+title: historical_evidence_match
+description: 用调用方选定的特征/规则匹配固定历史情景；原始可知记录与显式历史回放分开，逐品种和条件组给计数、基线与反例，经验频率不是已校准概率。
+inputSchema:
+  type: object
+  properties:
+    as_of:
+      type: string
+      format: date-time
+    source_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            const: data
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 64
+    plan:
+      type: object
+      properties:
+        ref:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            revision:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: data
+            schemaVersion:
+              const: 1.0.0
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+        frozen_at:
+          type: string
+          format: date-time
+          description: Actual plan record timestamp supported by plan.ref, never invented or backfilled. Unknown prior selection must be exploratory.
+        target:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            horizon_seconds:
+              type: integer
+              minimum: 1
+              maximum: 316224000
+            description:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - id
+            - horizon_seconds
+            - description
+          additionalProperties: false
+        independence:
+          type: object
+          properties:
+            gap_seconds:
+              type: integer
+              minimum: 0
+              maximum: 316224000
+            assumption:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - gap_seconds
+            - assumption
+          additionalProperties: false
+        confidence_level:
+          enum:
+            - 0.8
+            - 0.9
+            - 0.95
+            - 0.99
+            - 0.999
+        conditions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        failure_conditions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        monitoring:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        regime_definition:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        mode:
+          enum:
+            - prospective
+            - exploratory
+        features:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              kind:
+                enum:
+                  - numeric
+                  - categorical
+              scale:
+                type: number
+                exclusiveMinimum: 0
+              weight:
+                type: number
+                exclusiveMinimum: 0
+              tolerance:
+                type: number
+                minimum: 0
+                description: Required for numeric rules matching. Optional and unused for distance matching; never substitutes for max_distance.
+              definition:
+                type: string
+                minLength: 1
+                maxLength: 2000
+            required:
+              - key
+              - kind
+              - weight
+              - definition
+            additionalProperties: false
+          minItems: 1
+          maxItems: 32
+        matching:
+          type: object
+          properties:
+            method:
+              enum:
+                - distance
+                - rules
+            max_distance:
+              type: number
+              minimum: 0
+            max_matches:
+              type: integer
+              minimum: 1
+              maximum: 5000
+          required:
+            - method
+            - max_distance
+            - max_matches
+          additionalProperties: false
+        cohorts:
+          type: object
+          properties:
+            recent_seconds:
+              type: integer
+              minimum: 1
+              maximum: 316224000
+            minimum_samples:
+              type: integer
+              minimum: 1
+              maximum: 5000
+            comparables:
+              type: array
+              items:
+                type: object
+                properties:
+                  instrument:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  condition:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  available_at:
+                    type: string
+                    format: date-time
+                required:
+                  - instrument
+                  - condition
+                  - available_at
+                additionalProperties: false
+              minItems: 0
+              maxItems: 128
+          required:
+            - recent_seconds
+            - minimum_samples
+            - comparables
+          additionalProperties: false
+      required:
+        - ref
+        - frozen_at
+        - target
+        - independence
+        - confidence_level
+        - conditions
+        - failure_conditions
+        - monitoring
+        - regime_definition
+        - mode
+        - features
+        - matching
+        - cohorts
+      additionalProperties: false
+    query:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        instrument:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        regime_id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        at:
+          type: string
+          format: date-time
+          description: "Decision cutoff: outcomes must already be mature and available at this time, even if as_of is later."
+        features:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              value:
+                type:
+                  - number
+                  - string
+                  - "null"
+              available_at:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+            required:
+              - value
+              - available_at
+            additionalProperties: false
+        regime_available_at:
+          type: string
+          format: date-time
+        replay:
+          type: object
+          properties:
+            feature_cutoff:
+              type: string
+              format: date-time
+          required:
+            - feature_cutoff
+          additionalProperties: false
+      required:
+        - id
+        - instrument
+        - regime_id
+        - at
+        - features
+        - regime_available_at
+      additionalProperties: false
+    cases:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          instrument:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          regime_id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          at:
+            type: string
+            format: date-time
+          features:
+            type: object
+            additionalProperties:
+              type: object
+              properties:
+                value:
+                  type:
+                    - number
+                    - string
+                    - "null"
+                available_at:
+                  anyOf:
+                    - type: string
+                      format: date-time
+                    - type: "null"
+              required:
+                - value
+                - available_at
+              additionalProperties: false
+          outcome:
+            anyOf:
+              - type: object
+                properties:
+                  target_id:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  horizon_seconds:
+                    type: integer
+                    minimum: 1
+                  end_at:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                      - type: "null"
+                  available_at:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                      - type: "null"
+                  label:
+                    enum:
+                      - 0
+                      - 1
+                      - null
+                required:
+                  - target_id
+                  - horizon_seconds
+                  - end_at
+                  - available_at
+                  - label
+                additionalProperties: false
+              - type: "null"
+          source_refs:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  const: data
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+            minItems: 1
+            maxItems: 64
+          regime_available_at:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+          replay:
+            type: object
+            properties:
+              feature_cutoff:
+                type: string
+                format: date-time
+              outcome_available_at:
+                type: string
+                format: date-time
+            required:
+              - feature_cutoff
+              - outcome_available_at
+            additionalProperties: false
+            description: Explicit virtual prefix and matured-outcome clocks; outcome.available_at retains actual observation time.
+        required:
+          - id
+          - instrument
+          - regime_id
+          - at
+          - features
+          - outcome
+          - regime_available_at
+        additionalProperties: false
+      minItems: 0
+      maxItems: 5000
+    origin:
+      enum:
+        - recorded_observation
+        - historical_replay
+      description: Omission keeps original observation chronology. Historical replay is explicit, exploratory and uses separate real and virtual clocks.
+    replay:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        observed_at:
+          type: string
+          format: date-time
+        code_ref:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            revision:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: data
+            schemaVersion:
+              const: 1.0.0
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+        data_refs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              revision:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                const: data
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+          minItems: 1
+          maxItems: 64
+        source_vintage:
+          const: current_snapshot_not_point_in_time
+      required:
+        - generated_at
+        - observed_at
+        - code_ref
+        - data_refs
+        - source_vintage
+      additionalProperties: false
+      description: Actual generation and latest observation of all fixed inputs; code/data refs are required direct dependencies at the fixed-ref entrypoint.
+  required:
+    - as_of
+    - source_refs
+    - plan
+    - query
+    - cases
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    schemaVersion:
+      const: 1.0.0
+    status:
+      enum:
+        - computed
+        - insufficient_data
+    input_digest:
+      type: string
+      pattern: "^sha256:"
+    source_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            const: data
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 512
+    decision_at:
+      type: string
+      format: date-time
+  required:
+    - type
+    - schemaVersion
+    - status
+    - input_digest
+    - source_refs
+    - decision_at
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 用调用方选定的特征/规则匹配固定历史情景，逐品种范围和条件组给出计数、基线、反例与经验频率。经验频率不是已校准概率。
+    inputs: 参数见已声明README.md、METHOD.md及examples中的完整算例；inline入口直接接收对应JSON对象，refs入口接收operation和固定input_ref。所有方法、阈值和适用条件由用户/Agent明确选择。 回看早于今天固定计划的历史query时，显式origin:historical_replay并按REPLAY.md提供真实生成/观察与虚拟cutoff；不要回填frozen_at或挪动query.at。
+    outputs: 完整JSON计算结果，含原计划、输入摘要、来源、样本筛选和缺失；match返回decision_at/cohorts/selection，经验频率不等于概率；calibrate返回groups/current_predictions/split/selection_status。今天选方法或原选择不明使用exploratory，只留回顾诊断，不给当前校准概率。没有通用研究合格判定或交易授权。
+    prerequisites: []
+    limitations:
+      - 只消费inline cases；source_refs与plan.ref只作来源标签，绝不读取。
+      - 按观察时点过滤特征available_at，并要求结果窗口已到期且可得。Prospective模式排除计划冻结前样本；exploratory不构成前瞻验证。
+      - 显式历史回放只限exploratory；核对双时钟和固定代码/输入引用，不认证当时数据版本，不产生实时预测概率。
+    references:
+      - title: "Probability calibration: disjoint fitting, Brier and reliability"
+        url: https://scikit-learn.org/stable/modules/calibration.html
+      - title: Wilson score interval
+        url: https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm
+  binding:
+    type: native
+    name: historical_evidence_match
+  researchDataAccess:
+    schemaVersion: 1
+    reads: input-only
+    writes: derived-artifacts-only

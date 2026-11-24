@@ -1,0 +1,11 @@
+goal: 计算验证能力：消费固定数据与已编写策略运行Cerebro回测或有界optstrategy原生优化，保留各次实际结果与引用；参数选择由工作流负责，不连接实盘。
+acceptance:
+  discovery:
+    case: backtrader-discovery
+    tools:
+      - backtrader_backtest
+      - backtrader_environment
+      - backtrader_operation
+      - backtrader_optimize
+      - backtrader_result
+    resource: skills/backtrader-fixed-research/SKILL.md

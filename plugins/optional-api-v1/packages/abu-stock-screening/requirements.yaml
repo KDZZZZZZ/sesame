@@ -1,0 +1,7 @@
+goal: 有界股票池的动量、价格、趋势和路径效率筛选。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-stock-screening-discovery
+    tools:
+      - abu_stock_screening_analyze
+    resource: skills/abu-stock-screening/SKILL.md

@@ -1,6 +1,6 @@
 # 因子研究接口 3.1
 
-Agent/Agent 工作流调度，插件执行明确步骤。宿主和 SDK 不变。公共工具以 capabilities.json 的闭合 schema 为准；旧总控工具已移除。
+Agent/Agent 工作流调度，插件执行明确步骤。宿主和 SDK 不变。公共工具以 plugin.yaml 的闭合 schema 为准；旧总控工具已移除。
 
 ## 公共输入与输出
 

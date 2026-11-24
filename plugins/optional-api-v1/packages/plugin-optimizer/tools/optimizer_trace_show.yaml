@@ -1,0 +1,37 @@
+name: optimizer_trace_show
+title: optimizer_trace_show
+description: 读取一个已授权的实见上下文及元素
+inputSchema:
+  type: object
+  properties:
+    digest:
+      type: string
+      minLength: 1
+  required:
+    - digest
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 读取一个已授权的实见上下文及元素
+    inputs: digest
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_trace_show

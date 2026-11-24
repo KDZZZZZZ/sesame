@@ -1,0 +1,148 @@
+name: mt5_trading_permissions
+title: mt5_trading_permissions
+description: 分层读取 MT5 真实交易权限，或按已有用户授权自动准备当前绑定终端的算法交易权限。可能正常重启空闲终端；回读验证后才成功，不下单、不重放旧交易。
+inputSchema:
+  type: object
+  anyOf:
+    - type: object
+      properties:
+        action:
+          const: read
+          type: string
+      required:
+        - action
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          const: enable
+          type: string
+        command_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+        expected_version:
+          type: integer
+          minimum: 1
+      required:
+        - action
+        - command_id
+        - expected_version
+      additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - application-configuration
+    - may-restart-terminal
+    - plugin.state.write
+  usage:
+    purpose: 把账户、MCP、终端算法交易和 Sesame 插件权限分开诊断，按已授权范围自行解决算法交易开关关闭。
+    inputs: '{action:"read"}；或 {action:"enable",command_id:"enable-algo-trading-01",expected_version:读回的configuration_version}。主Agent复用现有用户授权，无需另发确认问题。'
+    outputs: read返回checked_at、configuration_version、account、application.allow_trading及terminal.connected/experts_trade_allowed/mcp_trade_allowed；enable返回持久命令回执，result含before、after、restarted、verified。status=applied且verified=true才证明同一账户算法权限已生效。
+    prerequisites:
+      - 主会话、已连接的精确绑定账户；enable需要既有用户交易或权限配置授权，以及插件allow_trading、账户非只读和原生MCP交易许可。
+      - 需要重启时沿用现有空闲检查：无终端任务、持仓、挂单或已有EA；已启用直接核验，不重复重启。
+    limitations:
+      - 此入口自动准备终端算法交易权限；不修改券商权限、原生MCP授权或Python API禁用设置，不将这些缺项说成账户无法手动交易。
+      - 同command_id与输入只返回原回执；失败、running或unknown先read实际状态，不能换ID盲目重复。结果不证明行情时效、成交或策略就绪。原订单不自动重放。
+      - 配置/账户变动、忙碌或未生效均保留具体错误。使用插件选定的终端和原数据，临时启动配置不回显凭据；重启配置保持DLL关闭，不重启路径仅核验既有状态。
+  binding:
+    type: native
+    name: mt5_trading_permissions
+  configurationRequirements:
+    - field: terminal_token
+      reason: 读取当前绑定终端的真实权限并核验准备结果。
+    - field: account_login
+      reason: 权限操作必须核对已绑定的精确账户。
+    - field: account_server
+      reason: 权限操作必须核对已绑定的精确券商服务器。
+    - field: terminal_url
+      optional: true
+      reason: 沿用已选Terminal MCP连接，实际可用性由原生通道核验。
+    - field: terminal_enabled
+      optional: true
+      reason: 沿用已选Terminal MCP连接，实际可用性由原生通道核验。
+    - field: allow_trading
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: terminal_directory
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: data_directory
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: python
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: wine
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: wine_prefix
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。
+    - field: account_password
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            const: enable
+        required:
+          - action
+      reason: 算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。

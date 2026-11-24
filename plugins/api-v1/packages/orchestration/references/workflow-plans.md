@@ -5,10 +5,10 @@
 | 工作流 | 可调整内容与边界 |
 | --- | --- |
 | Investment Research | workflow.stages 选择成员、角色、阶段顺序及并行组，可增 custom 角色；synthesis 指向最后阶段唯一综合成员。start 省略时执行明确问题、取证、分析、报告四阶段，analyze 默认八成员；研究交付需绑定报告，由 synthesis 发布，内部成员不各自制作报告。 |
-| Auto Factor Mining | config.workflow 指定假设、实现、评审、反思和选择的成员，同一人可兼任；plan/review/reflection 可显式设 null 跳过，省略字段则沿用默认角色。真实 evaluator、候选资格、固定选择和独立留出验证仍需满足。 |
+| Auto Factor Mining | 没有内置总控工作流。factor_prepare、factor_search、factor_compute、factor_evaluate、factor_library 是各自独立的能力，由主 Agent 直接组织；步骤之间的产物依赖声明为工作流 `factor.development`，用流程导航开立计划并逐步上报（见 [流程导航参考](workflow-navigation.md)）。真实评价、候选选定后的独立留出验证仍需满足。 |
 | Trading Decision | plan.workflow.reviews 添加顺序复核；execute:false 只形成决策与报告。复核阻止时不能执行，复核成员无下单权限；原账户、授权和风险约束保持有效。 |
 
-计划随受理的 Run 冻结，暂停/恢复沿用同一计划与已完成成果。改变计划需创建新一轮并明确复用哪些固定证据；不要改运行中身份、重放已完成外部动作，或用未声明的输入伪装成流程调整。因子与策略研究指南可用于设计其他流程，ICT 等专业知识只回答其中的具体问题。
+计划随受理的 Run 冻结，暂停/恢复沿用同一计划与已完成成果。改变计划需创建新一轮并明确复用哪些固定证据；不要改运行中身份、重放已完成外部动作，或用未声明的输入伪装成流程调整。因子与策略研究指南可用于设计其他流程，ICT 等专业知识只回答其中的具体问题。流程导航的计划只记录步骤与产物，不改变上述任何工作流的执行合同；把这些入口用作计划中某一步的执行方式时，仍按各自的公开参数启动。
 
 ## 自定义协作与业务工作流的选择
 

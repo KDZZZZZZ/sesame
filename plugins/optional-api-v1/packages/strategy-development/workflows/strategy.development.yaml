@@ -1,0 +1,108 @@
+workflow: strategy.development
+goal: ValidatedStrategy
+title: 策略开发
+description: 复用产物前核对品种、周期、数据版本和评价证据。
+artifacts:
+  CodeCheck:
+    outcomes:
+    - pass
+    - fail
+  StrategyValidation:
+    outcomes:
+    - pass
+    - fail
+  StrategyFactorGap: {}
+steps:
+  mandate:
+    title: 投资约束
+    requires:
+    - UserRequest
+    uses:
+    - tool/strategy_development_plan
+    produces:
+    - InvestmentMandate
+  market:
+    title: 市场数据与成本
+    requires:
+    - InvestmentMandate
+    uses:
+    - sesame/data-access:tool/data_snapshot
+    - tool/strategy_development_plan
+    produces:
+    - MarketData
+    - TradingConstraints
+    - CostModel
+  factors:
+    title: 因子选择
+    requires:
+    - InvestmentMandate
+    uses:
+    - sesame/auto-factor-mining:tool/factor_library
+    produces:
+    - QualifiedFactorSet
+    fallback: sesame/auto-factor-mining:factor.development
+  design:
+    title: 策略设计
+    hint: 描述入场、出场、仓位、风控和资金管理。
+    requires:
+    - InvestmentMandate
+    - QualifiedFactorSet
+    - TradingConstraints
+    produces:
+    - StrategySpec
+  implement:
+    title: 实现策略
+    requires:
+    - StrategySpec
+    - MarketData
+    uses:
+    - tool/strategy_development_build
+    produces:
+    - StrategyCode
+  code_check:
+    title: 编译与测试
+    requires:
+    - StrategyCode
+    uses:
+    - tool/strategy_development_verify
+    produces:
+    - CodeCheck
+  backtest:
+    title: 策略回测
+    requires:
+    - StrategyCode
+    - CodeCheck:pass
+    - MarketData
+    - CostModel
+    uses:
+    - tool/strategy_development_backtest
+    produces:
+    - BacktestResult
+  validate:
+    title: 验证策略
+    requires:
+    - BacktestResult
+    - InvestmentMandate
+    - MarketData
+    uses:
+    - tool/strategy_development_compare
+    - tool/strategy_development_read
+    produces:
+    - StrategyValidation
+  deliver:
+    title: 交付策略
+    requires:
+    - StrategyCode
+    - BacktestResult
+    - StrategyValidation:pass
+    produces:
+    - ValidatedStrategy
+  report:
+    title: 生成报告
+    when: user_requests_report
+    requires:
+    - ValidatedStrategy
+    uses:
+    - sesame/reports:tool/components_show
+    produces:
+    - StrategyReport

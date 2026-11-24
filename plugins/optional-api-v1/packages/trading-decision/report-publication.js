@@ -7,7 +7,7 @@ import { artifactRef, checkedArtifact, checkedReportReceipt, uniqueRefs } from '
 export const REPORT_CAPABILITIES = Object.freeze({
   describe: 'host.reports.describe', publish: 'sesame/reports#components_show', inspect: 'sesame/reports#report_check', write: 'sesame/workspace#write',
 });
-export async function publishWorkflowReport(host, { operationId, title, summary, content, style, attachments = [], data = [], references = [], demo = false,
+export async function publishWorkflowReport(host, { operationId, title, summary, lead, highlights, content, style, attachments = [], data = [], references = [], demo = false,
   features = [], locale = 'zh-CN', publication, onPublication = () => {}, signal }) {
   let saved = publication;
   if (!saved) {
@@ -35,7 +35,7 @@ export async function publishWorkflowReport(host, { operationId, title, summary,
       await invokeValue(host, REPORT_CAPABILITIES.write, { path: source_path, content: file.content }, { signal });
       assets.push({ path: file.path, source_path, media_type: file.mediaType });
     }
-    const result = await invokeValue(host, REPORT_CAPABILITIES.publish, { target: 'report', operation_id: operationId, title, summary, content, ...(style === undefined ? {} : { style }), data, assets,
+    const result = await invokeValue(host, REPORT_CAPABILITIES.publish, { target: 'report', operation_id: operationId, title, summary, lead, highlights, content, ...(style === undefined ? {} : { style }), data, assets,
       related: [], references: refs, features, locale, provenance_kind: isDemo ? 'demo' : 'derived' }, { signal });
     check(artifactRef(result?.ref, 'report'), 'REPORT_PUBLICATION_UNKNOWN', 'Report publication did not return an exact report ArtifactRef; reconcile the original operation ID.');
     saved = { ref: result.ref, entry: 'index.html', attachments: attachments.map(({ path, mediaType }) => ({ path, mediaType })), state: 'published', renderStatus: 'not_checked' };

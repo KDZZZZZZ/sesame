@@ -1,0 +1,81 @@
+name: qmt_environment
+title: qmt_environment
+description: Inspect existing QMT configuration and Python paths without launching or downloading. verify imports the SDK explicitly; prepare first reuses an importable existing SDK and only then installs pinned wheels in a private Windows CPython 3.12 environment. Requires broker-authorized MiniQMT for later reads.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: inspect
+        - type: string
+          const: verify
+        - type: string
+          const: prepare
+    python_path:
+      type: string
+      description: Existing absolute Windows Python executable; prepare requires x64 CPython 3.12 if SDK is missing
+      minLength: 1
+      maxLength: 20000
+    operation_id:
+      type: string
+      description: Required for explicit preparation; retry the same request with the same key
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process-on-verify-or-prepare
+    - private-filesystem-on-prepare
+    - network-on-prepare
+  usage:
+    purpose: 检查已知 QMT 配置，验证或显式准备 SDK 依赖。
+    inputs: '{action:"inspect"} 无需SDK；{action:"verify",python_path:<现有绝对exe路径>} 真实导入验证；{action:"prepare",python_path:<现有x64 CPython3.12>,operation_id:<稳定ID>} 复用/私有安装。'
+    outputs: inspect:{platform,supported_platform,configuration,python_candidates,suggested_userdata_directory,private_directory,sdk_verified:false,terminal_started:false,missing,next}；verify 返回原生 {ok,result,sample}；prepare 返回 {reused?,python,...SDK安装/核验结果}。
+    prerequisites:
+      - 真实账户依赖券商已授权/登录的 MiniQMT；inspect 能在缺SDK时工作。
+    limitations:
+      - inspect 只列候选，verify 只证明SDK可导入，均不证明账户可读。prepare不下载MiniQMT、不启动终端、不自动登录；无Windows x64或必要路径时说明缺项。
+  binding:
+    type: native
+    name: qmt_environment
+  configurationRequirements:
+    - field: python_path
+      reason: The saved Python is an optional candidate; an explicit input, environment or managed candidate can be selected.
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - verify
+              - prepare
+        required:
+          - action
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

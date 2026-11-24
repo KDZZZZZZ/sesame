@@ -1,0 +1,222 @@
+id: investment-research-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/investment-research/README.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/investment-research
+  - step: 1
+    pointer: /tools/0/name
+    equals: investment_research_analyze
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        question:
+          type: string
+          minLength: 1
+          maxLength: 16000
+        subjects:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+          minItems: 1
+          uniqueItems: true
+        as_of:
+          type: string
+          minLength: 1
+          description: Evidence publication/observation cutoff, preferably UTC ISO; omitted uses workflow creation time. Current research may collect after starting and must record actual retrieval time separately. Historical backtests or point-in-time claims require the historical data version, not later revisions.
+        horizon:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Relevant investment horizon; not a trading schedule.
+        research:
+          type: object
+          properties:
+            plugins:
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+            tools:
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+              description: Exact declared capability IDs (pluginId#capabilityId preferred). Omitted selects delegatable research functions with no declared trading/configuration/process/workflow-control effects; [] loads knowledge only.
+          required:
+            - plugins
+          additionalProperties: false
+        model:
+          type: object
+          properties:
+            provider:
+              type: string
+              minLength: 1
+            id:
+              type: string
+              minLength: 1
+            configurationDigest:
+              type: string
+              minLength: 1
+          required:
+            - provider
+            - id
+          additionalProperties: false
+        agent_models:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              provider:
+                type: string
+                minLength: 1
+              id:
+                type: string
+                minLength: 1
+              configurationDigest:
+                type: string
+                minLength: 1
+            required:
+              - provider
+              - id
+            additionalProperties: false
+          maxProperties: 32
+        evidence_refs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              revision:
+                type: string
+                minLength: 1
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                const: data
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+          description: Existing fixed evidence to reuse. Account snapshots are optional evidence, never an execution binding.
+        start_from:
+          type: object
+          description: Rerun a completed research suffix. Inherits title/question/subjects/as_of/horizon/input evidence from result_ref, so do not repeat them. Retains only members and QA before role; uses the supplied research/model for new work. Original result and report remain unchanged.
+          properties:
+            result_ref:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                revision:
+                  type: string
+                  minLength: 1
+                digest:
+                  type: string
+                  pattern: ^sha256:[a-f0-9]{64}$
+                kind:
+                  const: data
+                schemaVersion:
+                  const: 1.0.0
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              additionalProperties: false
+              description: Exact complete result_ref produced by investment_research_analyze (one sesame.investment-research.result data row).
+            role:
+              type: string
+              pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+              description: First downstream member id to rerun; custom plans inherit the original workflow when workflow is omitted. Changed upstream members require a fresh run.
+          required:
+            - result_ref
+            - role
+          additionalProperties: false
+        workflow:
+          type: object
+          properties:
+            stages:
+              type: array
+              minItems: 1
+              maxItems: 32
+              items:
+                type: array
+                minItems: 1
+                maxItems: 32
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+                    role:
+                      enum:
+                        - market
+                        - fundamentals
+                        - news
+                        - sentiment
+                        - bull
+                        - bear
+                        - risk
+                        - manager
+                        - custom
+                    title:
+                      type: string
+                      minLength: 1
+                      maxLength: 120
+                    instructions:
+                      type: string
+                      maxLength: 6000
+                  required:
+                    - id
+                  additionalProperties: false
+            synthesis:
+              type: string
+              pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+          required:
+            - stages
+            - synthesis
+          additionalProperties: false
+          description: Optional executable task plan. Every member id occurs once; stages run in order and members within a stage run in parallel. The final stage contains only synthesis. Custom roles require instructions. Omit for the existing eight-member workflow; no duplicate task.collaboration is needed. Source permissions and immutable evidence rules remain enforced.
+      required:
+        - research
+        - model
+      additionalProperties: false
+      anyOf:
+        - required:
+            - title
+            - question
+            - subjects
+        - required:
+            - start_from
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Research 工作流"

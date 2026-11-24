@@ -1,0 +1,169 @@
+name: qmt_execution_submit
+title: qmt_execution_submit
+description: Guarded native execution adapter submit. Retains raw audit receipts; unknown outcomes never authorize resend.
+inputSchema:
+  type: object
+  properties:
+    observation:
+      type: object
+      properties:
+        backend:
+          const: qmt
+        account:
+          type: object
+          properties:
+            accountId:
+              type: string
+              minLength: 1
+            connectionId:
+              type: string
+              minLength: 1
+            revision:
+              type: string
+              minLength: 1
+          required:
+            - accountId
+            - connectionId
+            - revision
+          additionalProperties: false
+        symbol:
+          type: string
+          minLength: 1
+        spec:
+          type: object
+          additionalProperties: true
+        positions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        quote:
+          type: object
+          additionalProperties: true
+        expiresAt:
+          type: integer
+      required:
+        - backend
+        - account
+        - symbol
+        - spec
+        - positions
+        - quote
+        - expiresAt
+      additionalProperties: true
+    intent:
+      type: object
+      properties:
+        operation_id:
+          type: string
+          minLength: 1
+        user_authorized:
+          const: true
+          type: boolean
+        backendCommandId:
+          type: string
+          minLength: 1
+        remark:
+          type: string
+          minLength: 1
+        quantity:
+          type: string
+          minLength: 1
+        price_limit:
+          type: string
+          minLength: 1
+        side:
+          enum:
+            - buy
+            - sell
+        action:
+          enum:
+            - market
+            - limit
+            - close
+        limit_price:
+          type: string
+          minLength: 1
+        position_id:
+          type: string
+          minLength: 1
+        stop_loss:
+          type: string
+          minLength: 1
+        take_profit:
+          type: string
+          minLength: 1
+      required:
+        - operation_id
+        - user_authorized
+        - backendCommandId
+        - remark
+        - quantity
+        - price_limit
+        - side
+        - action
+      additionalProperties: true
+  required:
+    - observation
+    - intent
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    contract:
+      const: sesame.execution-adapter/1
+      type: string
+    backend:
+      const: qmt
+      type: string
+    status:
+      enum:
+        - submitted
+        - cancel_requested
+        - rejected
+        - partially_filled
+        - execution_reported
+        - outcome_unknown
+    submissionAttempted:
+      type:
+        - boolean
+        - "null"
+    raw:
+      type: object
+      additionalProperties: true
+    timing:
+      type: object
+      additionalProperties: true
+  required:
+    - contract
+    - backend
+    - status
+    - submissionAttempted
+    - raw
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - external-trading
+    - plugin.state.write
+  usage:
+    purpose: sesame.execution-adapter/1 submit; native SDK mechanics stay in this adapter.
+    inputs: Use the declared normalized operation input, exact account/revision and retained operation IDs.
+    outputs: Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.
+    prerequisites:
+      - Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain.
+    limitations:
+      - No broker acceptance is inferred from a declaration. Missing history never proves no submission.
+  binding:
+    type: native
+    name: qmt_execution_submit

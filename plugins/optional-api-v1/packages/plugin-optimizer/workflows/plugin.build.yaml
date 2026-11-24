@@ -1,0 +1,19 @@
+workflow: plugin.build
+title: 建立插件草稿
+goal: CheckedDraft
+steps:
+  scaffold:
+    title: 确认需求并建立草稿
+    uses:
+      - tool/optimizer_init
+    requires: []
+    produces:
+      - Draft
+  check:
+    title: 核对工作流和声明
+    uses:
+      - tool/optimizer_workflow_check
+    requires:
+      - Draft
+    produces:
+      - CheckedDraft

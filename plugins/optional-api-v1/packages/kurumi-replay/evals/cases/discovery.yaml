@@ -1,0 +1,47 @@
+id: kurumi-replay-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/kurumi-replay/skills/kurumi-replay/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/kurumi-replay
+  - step: 1
+    pointer: /tools/0/name
+    equals: kurumi_archive_terminal
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        command_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+        expected_version:
+          type: integer
+          minimum: 0
+        run_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+        - command_id
+        - expected_version
+        - run_id
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: kurumi-replay
+      description: 固定历史模拟、受限角色任务、原生观战与报告的公开能力和证据契约。
+      ---
+
+      目标是保留可核对的模拟账本、角色决定与显示证据。用

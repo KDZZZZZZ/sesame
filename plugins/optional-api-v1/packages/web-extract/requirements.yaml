@@ -1,0 +1,10 @@
+goal: 信息解析能力：从已有完整HTML提取标题、文本、绝对链接和元数据；接收冻结source_ref、inline内容或包内文件，不联网、不解释市场。source_ref输入自动保留来源引用。
+acceptance:
+  discovery:
+    case: web-extract-discovery
+    tools:
+      - extract_webpage
+    resource: skills/web-extract/SKILL.md
+  recordedCall:
+    tool: extract_webpage
+    case: web-extract-discovery

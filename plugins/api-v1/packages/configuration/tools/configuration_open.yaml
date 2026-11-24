@@ -1,0 +1,39 @@
+name: configuration_open
+title: configuration_open
+description: 按用户要求打开设置，或完成供应商要求的交互式 OAuth 登录。API Key、模型接口和插件环境凭据可由 configuration_update 直接保存，不需要打开设置。
+inputSchema:
+  type: object
+  required:
+    - dialog
+  properties:
+    dialog:
+      type: string
+      const: settings
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - presentation
+  usage:
+    purpose: 按用户要求打开设置，或完成供应商要求的交互式 OAuth 登录。API Key、模型接口和插件环境凭据可由 configuration_update 直接保存，不需要打开设置。
+    inputs: dialog="settings"；打开 Sesame 设置页，不接收凭据或平台连接参数。
+    outputs: 宿主 views.open 的界面打开回执；不表示用户完成认证或配置。
+    prerequisites:
+      - 主 Agent 会话。
+    limitations:
+      - 打开设置不证明已认证；API Key 配置直接使用 configuration_update，平台连接使用对应插件配置能力。
+  binding:
+    type: native
+    name: configuration_open

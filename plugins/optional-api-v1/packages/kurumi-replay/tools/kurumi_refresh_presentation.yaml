@@ -1,0 +1,51 @@
+name: kurumi_refresh_presentation
+title: kurumi_refresh_presentation
+description: 主会话显式刷新已消费行情的原作/实际成交标记和指标，尊重锁；真实客户端回执未核验时pending，不把工厂/fixture当屏幕通过。
+inputSchema:
+  type: object
+  properties:
+    chart_id:
+      type: string
+      minLength: 1
+  required:
+    - chart_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主会话显式刷新已消费行情的原作/实际成交标记和指标，尊重锁；真实客户端回执未核验时pending，不把工厂/fixture当屏幕通过。
+    inputs: "{chart_id:<existing native chart ID>}."
+    outputs: Presentation result with actual chart/marker/indicator references and available host/client receipts for the consumed-data frontier.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Current experiment presentation state and a real matching chart.
+    limitations:
+      - Respect layout locks. pending or runtime calculation success is not native pixels; no private UI ports or guessed selectors.
+  binding:
+    type: native
+    name: kurumi_refresh_presentation
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

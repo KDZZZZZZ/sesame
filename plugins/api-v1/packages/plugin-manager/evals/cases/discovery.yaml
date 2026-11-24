@@ -1,0 +1,36 @@
+id: plugin-manager-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/plugin-manager/skills/develop-plugins/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/plugin-manager
+  - step: 1
+    pointer: /tools/0/name
+    equals: plugin_catalog
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        plugin_id:
+          type: string
+          minLength: 1
+          maxLength: 160
+          description: 插件完整 ID
+        query:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 关键词
+      required: []
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 插件开发"

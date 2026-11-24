@@ -1,0 +1,14 @@
+goal: 发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。
+acceptance:
+  discovery:
+    case: data-access-discovery
+    tools:
+      - data_providers
+      - data_query
+      - data_read
+      - data_snapshot
+      - data_sources
+      - market_instruments
+      - market_read
+      - research_register
+    resource: skills/analyze-data/SKILL.md

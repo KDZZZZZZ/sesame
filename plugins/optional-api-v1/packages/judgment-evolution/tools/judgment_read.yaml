@@ -1,0 +1,108 @@
+name: judgment_read
+title: judgment_read
+description: 读取判断的事前口径、概率、来源、影子准则及不可改写的核验结果。
+inputSchema:
+  type: object
+  required:
+    - judgment_id
+  properties:
+    judgment_id:
+      type: string
+      description: 判断 ID
+      minLength: 1
+      maxLength: 2000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    claim:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    rationale:
+      type: string
+    probability:
+      type: number
+    baseline_probability:
+      type: number
+    due_at:
+      type: string
+    created_at:
+      type: string
+    conversation_id:
+      type: string
+    source_message_id:
+      type:
+        - string
+        - "null"
+    verification:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        properties: {}
+        required: []
+        additionalProperties: true
+    status:
+      enum:
+        - pending
+        - awaiting_evidence
+        - resolved
+    event_key:
+      type: string
+    next_review_at:
+      type: string
+    review_attempts:
+      type: integer
+    review:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    evidence_gap:
+      type: string
+    last_evidence_check_at:
+      type: string
+  required:
+    - id
+    - claim
+    - probability
+    - due_at
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 读取判断的事前口径、概率、来源、影子准则及不可改写的核验结果。
+    inputs: "{judgment_id:<ID returned by record/list/review_queue>}."
+    outputs: Full saved prediction with frozen verification, probabilities and review evidence/Brier scores when resolved.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Read does not resolve or modify the outcome.
+  binding:
+    type: native
+    name: judgment_read

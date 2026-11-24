@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -309,7 +310,7 @@ test('actual inline capability entrypoints do not touch host ports, do not mutat
   assert.equal(caps[1].execute(fixture('calibration')).status, 'computed');
   const controller = new AbortController(); controller.abort();
   assert.throws(() => caps[0].execute(input, controller.signal), /abort/i);
-  const declaration = JSON.parse(readFileSync(new URL('../capabilities.json', import.meta.url)));
+  const declaration = readPackageDirectory(new URL('../', import.meta.url)).capabilities;
   assert.deepEqual(declaration.capabilities.slice(0, 2).map(cap => cap.effects), [[], []]);
   assert.ok(declaration.capabilities.slice(0, 2).every(cap => cap.researchDataAccess.reads === 'input-only'));
   assert.deepEqual(declaration.capabilities[2].effects, ['resources.read', 'resources.create', 'resources.publish']);

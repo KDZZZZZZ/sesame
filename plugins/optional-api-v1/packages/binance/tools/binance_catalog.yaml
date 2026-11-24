@@ -1,0 +1,37 @@
+name: binance_catalog
+title: binance_catalog
+description: 发现币安 Spot 的生产/测试网来源、当前配置状态、周期及执行入口；不联网、不显示密钥。
+inputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+  usage:
+    purpose: 发现币安 Spot 的生产/测试网来源、当前配置状态、周期及执行入口；不联网、不显示密钥。
+    inputs: Use the declared object schema; see INTERFACES.md for concrete examples.
+    outputs: "{configuredEnvironment,credentials:{apiKey,apiSecret},connections,timeframes,trading,portfolioExecutionSupported:false}。"
+    prerequisites:
+      - Public market operations do not require an API key.
+    limitations:
+      - Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter.
+  binding:
+    type: native
+    name: binance_catalog

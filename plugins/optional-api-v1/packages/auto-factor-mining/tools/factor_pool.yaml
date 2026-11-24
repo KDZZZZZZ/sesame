@@ -1,0 +1,261 @@
+name: factor_pool
+title: factor_pool
+description: Apply an explicit external strategy decision to its factor pool or attach application evidence.
+inputSchema:
+  type: object
+  oneOf:
+    - type: object
+      properties:
+        action:
+          type: string
+          const: read
+        poolId:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+        - action
+        - poolId
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: decide
+        change:
+          $ref: "#/$defs/PoolChange"
+      required:
+        - action
+        - change
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: feedback
+        poolId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        strategyVersion:
+          type: string
+          minLength: 1
+          maxLength: 128
+        poolVersion:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        applicationEvidence:
+          type: array
+          items:
+            $ref: "#/$defs/Ref"
+          minItems: 0
+          maxItems: 32
+        note:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        operationId:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+        - action
+        - poolId
+        - strategyVersion
+        - poolVersion
+        - applicationEvidence
+        - note
+        - operationId
+      additionalProperties: false
+  $defs:
+    PoolChange:
+      type: object
+      properties:
+        operationId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        poolId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        strategyId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        decision:
+          type: string
+          enum:
+            - add
+            - replace
+            - remove
+        factorIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+          minItems: 0
+          maxItems: 256
+        replaces:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+          minItems: 0
+          maxItems: 256
+        purpose:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        strategyVersion:
+          type: string
+          minLength: 1
+          maxLength: 128
+        applicationEvidence:
+          type: array
+          items:
+            $ref: "#/$defs/Ref"
+          minItems: 0
+          maxItems: 32
+      required:
+        - operationId
+        - poolId
+        - strategyId
+        - expectedVersion
+        - decision
+        - factorIds
+        - replaces
+        - purpose
+        - reason
+        - strategyVersion
+        - applicationEvidence
+      additionalProperties: false
+    Ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 256
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 256
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          minLength: 1
+          maxLength: 256
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+outputSchema:
+  type: object
+  oneOf:
+    - $ref: "#/$defs/Pool"
+    - $ref: "#/$defs/Ref"
+  $defs:
+    Pool:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        strategyId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        version:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        factorIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+          minItems: 0
+          maxItems: 256
+        history:
+          $ref: "#/$defs/Ref"
+      required:
+        - id
+        - strategyId
+        - version
+        - factorIds
+        - history
+      additionalProperties: false
+    Ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 256
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 256
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          minLength: 1
+          maxLength: 256
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+  usage:
+    purpose: Apply an explicit external strategy decision to its factor pool or attach application evidence.
+    inputs: 'Read: {action:"read",poolId}. Decide: {action:"decide",change:{operationId,poolId,strategyId,expectedVersion,decision,factorIds,replaces,purpose,reason,strategyVersion,applicationEvidence}}. Feedback supplies observed strategy/pool versions and refs.'
+    outputs: Pool or a fixed feedback reference. Mining never changes pool membership; the caller owns the strategy decision.
+    prerequisites: []
+    limitations:
+      - All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions.
+  binding:
+    type: native
+    name: factor_pool

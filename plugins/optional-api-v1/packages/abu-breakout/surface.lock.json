@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-breakout:instructions#preamble": "9f8dcdac35246e4119a0731365e6170afa367962e7c58d8e166de513d234aae4",
+    "sesame/abu-breakout:plugin.description": "66deb1a02122e2e6e699dbb3615b585fafe21dac088bf2c44c2742292b5b166c",
+    "sesame/abu-breakout:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-breakout:resource/PROVENANCE.md": "0fc6ac7204fd844697d4ac258a9f040c889702d448a175d505ebcb6eed1cbf96",
+    "sesame/abu-breakout:resource/README.md": "fff84e6b61d160e9818d30ed5963be5b956f4f33a147b6c0b45e978696c6c4bc",
+    "sesame/abu-breakout:resource/examples/input.json": "cac4700a1730f1a9c6d1861fdc9b40b6f41b90da522d53f8a63e4818754fb982",
+    "sesame/abu-breakout:resource/references/method.md": "543b0b045bb7fa4c07858725062df2093c6fa9568f0421a0a7ec6f2177b89229",
+    "sesame/abu-breakout:resource/scripts/baseline.mjs": "34a91129db3040b9afeeafa7e6572b15887527eab7ebcdf728f47008e200f437",
+    "sesame/abu-breakout:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-breakout:skill/abu-breakout.body": "7e09295d016f1d67d3739799ef6046e9537e42ee98e2b8e784963c705a3049cd",
+    "sesame/abu-breakout:skill/abu-breakout.description": "5fc8e7806863e9eca27f073bd891a85c430902af71ccf302b5a25380bdef3236",
+    "sesame/abu-breakout:tool/abu_breakout_analyze.description": "ad5bc6dc030eff2fdd2a92cb6c667b09867a0ae83522eb8265948fec8390021d",
+    "sesame/abu-breakout:tool/abu_breakout_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-breakout:tool/abu_breakout_analyze.input": "a3466144c0be1cd1af91de7a45c6cf60f035846d9f975e2387203c07735ea659",
+    "sesame/abu-breakout:tool/abu_breakout_analyze.output": "b62e4cb2ead66cf6be519c609e6ce9ec6979782bfcd3b0330661b2e8b49b5b41"
+  },
+  "digest": "678f3a0e90b0f82c9807ce8110bb3c03023344c4bf80700ae16a5d1810a5512c"
+}

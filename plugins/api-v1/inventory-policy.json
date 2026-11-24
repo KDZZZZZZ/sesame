@@ -62,15 +62,20 @@
   "deep-reasoning": {
     "category": "research",
     "functionalCategory": "business",
-    "implementationKinds": ["knowledge"],
-    "title": {"en":"Deep reasoning","zh":"深度推理"},
+    "implementationKinds": [
+      "knowledge"
+    ],
+    "title": {
+      "en": "Deep reasoning",
+      "zh": "深度推理"
+    },
     "summary": {
-      "en":"Explain causes and evolution through independent historical, contradiction and game-theoretic analysis, targeted reconciliation and evidence-based synthesis.",
-      "zh":"独立开展历史类比、矛盾分析与博弈分析，定向复核分歧，形成有证据和可检验条件的整体解释。"
+      "en": "Explain causes and evolution through independent historical, contradiction and game-theoretic analysis, targeted reconciliation and evidence-based synthesis.",
+      "zh": "独立开展历史类比、矛盾分析与博弈分析，定向复核分歧，形成有证据和可检验条件的整体解释。"
     },
     "dependencies": {
-      "en":"No keys or external runtime. Agents use existing host orchestration and selected evidence/report capabilities; loading the method starts no background work.",
-      "zh":"无需密钥或额外运行环境；Agent 使用现有宿主编排及按任务选择的证据、报告能力。加载方法不会自行启动后台工作。"
+      "en": "No keys or external runtime. Agents use existing host orchestration and selected evidence/report capabilities; loading the method starts no background work.",
+      "zh": "无需密钥或额外运行环境；Agent 使用现有宿主编排及按任务选择的证据、报告能力。加载方法不会自行启动后台工作。"
     }
   },
   "memory": {
@@ -96,19 +101,19 @@
     "category": "workspace",
     "functionalCategory": "platform",
     "implementationKinds": [
-      "knowledge"
+      "function"
     ],
     "title": {
       "en": "Agent and workflow coordination",
       "zh": "Agent 与工作流编排"
     },
     "summary": {
-      "en": "Organize research stages, workflows and agents, pass evidence and capabilities, and verify deliverables through host-owned Runs.",
-      "zh": "组织研究阶段、工作流和子 Agent，传递证据与能力，并通过宿主 Run 核验成果。"
+      "en": "Record a main-agent workflow plan, show which steps are ready, and leave Agent execution and Run control to the host.",
+      "zh": "为主 Agent 记录流程计划并指出就绪步骤；步骤执行和 Run 控制仍由宿主负责。"
     },
     "dependencies": {
-      "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
-      "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
+      "en": "Navigation state stays in the host. Starting an Agent or Run still uses the host.",
+      "zh": "计划状态保存在宿主中。启动 Agent 或 Run 仍使用宿主。"
     }
   },
   "user-guide": {
@@ -171,8 +176,13 @@
   "research": {
     "category": "research",
     "functionalCategory": "business",
-    "implementationKinds": ["function"],
-    "title": { "en": "Research methods", "zh": "研究方法" },
+    "implementationKinds": [
+      "function"
+    ],
+    "title": {
+      "en": "Research methods",
+      "zh": "研究方法"
+    },
     "summary": {
       "en": "Find financial investigation methods and question-specific answer structures; adapt them to new questions and review evidence.",
       "zh": "发现金融调查方法与问题专属回答结构，适配新问题并复核研究证据。"
@@ -185,10 +195,21 @@
   "strategy-development": {
     "category": "strategy",
     "functionalCategory": "business",
-    "implementationKinds": ["workflow"],
-    "title": { "en": "Strategy development", "zh": "策略开发" },
-    "summary": { "en": "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate.", "zh": "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。" },
-    "dependencies": { "en": "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional.", "zh": "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。" }
+    "implementationKinds": [
+      "workflow"
+    ],
+    "title": {
+      "en": "Strategy development",
+      "zh": "策略开发"
+    },
+    "summary": {
+      "en": "Assemble a versioned research mandate, replace strategy components, compare native parameter experiments and confirm a frozen candidate.",
+      "zh": "从上下文建立投资委托，组合和替换策略模块，运行原生参数实验、独立确认和归因修订。"
+    },
+    "dependencies": {
+      "en": "Core SVL authoring and workspace. Native optimization uses an authored Python strategy and Backtrader. Factor research is optional.",
+      "zh": "复用基础 SVL 与工作区。原生寻优使用已编写的 Python 策略与 Backtrader。按需使用因子研究。"
+    }
   },
   "strategy-authoring": {
     "category": "strategy",
@@ -1106,6 +1127,25 @@
     "dependencies": {
       "en": "Configured model, memory, data-access and an exact execution binding. Research is supplied as fixed evidence; no embedded analyst team.",
       "zh": "需要已配置模型、memory 风险记忆、data-access 和精确执行绑定。研究通过固定成果引用输入，不再内嵌分析师团队。"
+    }
+  },
+  "plugin-optimizer": {
+    "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "function"
+    ],
+    "title": {
+      "en": "Plugin optimizer",
+      "zh": "插件优化器"
+    },
+    "summary": {
+      "en": "Evaluate draft plugin surfaces against fixed cases and review changes.",
+      "zh": "用固定案例验证插件草稿，记录归因和变更。"
+    },
+    "dependencies": {
+      "en": "Local drafts and session-authorized evidence.",
+      "zh": "本地草稿和当前会话授权的证据。"
     }
   }
 }

@@ -5,6 +5,7 @@ description: 发布、修订、检查和按需导出一个已组成的报告。
 
 1. 用户指定位置时实际发布报告到该位置；只登记数据或在回复贴引用不算生成报告。单文件不另包同名文件夹。
 2. 先按 visual-compose 完成统一图文编辑，再一次 components_show 提交 title、lead、highlights 和有内容的正文。长输入可写完整 UTF-8 JSON，再 report_prepare 返回固定输入，避免重抄；lead 和 highlights 位于宿主发布请求的 input 内。
+   提交前把桌面端初次打开时整页可见的文字控制在约 1500 单位，上限 3000。滚动后才看到的正文和表格也计入。保留结论、关键数字和影响判断的条件；把仍需查阅的明细放进默认收起的 details 块（title、blocks），长表用 page_size 分页。超限时按 report_check 给出的目标缩减量一次调整，再检查新修订。
 3. 修订用原 artifact_id、当前 expected_revision 与新 operation_id，保留固定数据和附件身份。
 4. 对返回的完整 ref 调用 report_check，核对当前修订的渲染与统一视觉；有变化才重做受影响检查。需导出时另执行宿主导出并确认文件。
 

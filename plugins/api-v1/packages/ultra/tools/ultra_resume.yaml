@@ -1,0 +1,45 @@
+name: ultra_resume
+title: ultra_resume
+description: 明确恢复本 Ultra 已保留的中断 Run 与继续状态，不重做完成操作或自动重放结果未知的交易。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    response:
+      type: object
+      additionalProperties: true
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - execution
+  usage:
+    purpose: 明确恢复本 Ultra 已保留的中断 Run 与继续状态，不重做完成操作或自动重放结果未知的交易。
+    inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_resume

@@ -1,0 +1,49 @@
+name: write
+title: write
+description: 写入UTF-8工作区文件，创建父目录；可用expected_sha256防止覆盖变化的原文件。
+inputSchema:
+  type: object
+  required:
+    - path
+    - content
+  properties:
+    path:
+      type: string
+      description: 工作区路径
+      minLength: 1
+      maxLength: 20000
+    content:
+      type: string
+      maxLength: 12582912
+    overwrite:
+      type: boolean
+    expected_sha256:
+      type: string
+      pattern: ^(sha256:)?[a-f0-9]{64}$
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 写入UTF-8工作区文件，创建父目录；可用expected_sha256防止覆盖变化的原文件。
+    inputs: path 限当前工作区，content 为UTF-8文本；默认 overwrite=true，可传 false 防覆盖；expected_sha256 可锁定 read.digest。自动创建父目录，≤8MiB。
+    outputs: '{path,size,sha256,execution:"host"}，是实际写入的文件与完整哈希。'
+    prerequisites: []
+    limitations:
+      - 覆盖冲突重读文件后合并；不会自动验证文件内容。外部路径用 host_files_write。
+  binding:
+    type: native
+    name: write

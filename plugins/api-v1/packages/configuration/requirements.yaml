@@ -1,0 +1,13 @@
+goal: 主 Agent 直接保存模型认证、兼容接口、插件环境凭据和应用偏好；私有持久保存并返回脱敏状态，无需手工导入。
+acceptance:
+  discovery:
+    case: configuration-discovery
+    tools:
+      - configuration_integration_apply
+      - configuration_integration_catalog
+      - configuration_integration_check
+      - configuration_integration_open
+      - configuration_open
+      - configuration_read
+      - configuration_update
+    resource: skills/configure-application/SKILL.md

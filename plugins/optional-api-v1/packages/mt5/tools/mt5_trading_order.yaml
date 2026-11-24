@@ -1,0 +1,96 @@
+name: mt5_trading_order
+title: mt5_trading_order
+description: Submit one exact-account guarded order from a host-proven workflow-to-execution call chain, or a legacy runtime-signed intent. Direct delegated model calls have no execution authority; stable command ID retains the parent-owner receipt.
+inputSchema:
+  type: object
+  required:
+    - server
+    - tool
+    - arguments
+    - command_id
+  properties:
+    server:
+      type: string
+      const: python
+    tool:
+      type: string
+      const: order_send
+    arguments:
+      type: object
+      properties: {}
+      additionalProperties: true
+    command_id:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]{16,128}$
+    authorization:
+      type: object
+      required:
+        - expiresAt
+        - signature
+      properties:
+        expiresAt:
+          type: integer
+          minimum: 1
+        signature:
+          type: string
+          minLength: 88
+          maxLength: 88
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - external-trading
+    - plugin.state.write
+  usage:
+    purpose: 执行宿主可证明来源的单次原生交易意图。
+    inputs: '{server:"python",tool:"order_send",arguments:<原生request与execution_guard或cancellation_guard>,command_id:<稳定16–128字符>}；request参数来自已声明TRADING.md和catalog；工作流执行guard.expected_positions包含该品种全部{ticket,type,volume}，空仓为[]。'
+    outputs: "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。"
+    prerequisites:
+      - 主会话明确用户交易意图；委派由portfolio/workflow公开入口建立宿主实时调用链，不能靠填写authorization或任务字段取得权限。
+    limitations:
+      - 会发生真实交易；returned还须读retcode/真实订单成交。unknown用mt5_trading_command和原生订单核对，不能换ID重报。
+  binding:
+    type: native
+    name: mt5_trading_order
+  configurationRequirements:
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: python
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: allow_trading
+      reason: 提交原生交易前由已有交易权限策略检查。
+      optional: true
+    - field: account_login
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true
+    - field: account_server
+      reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+      optional: true

@@ -1,0 +1,47 @@
+name: financial_research_read
+title: financial_research_read
+description: Read a saved research evidence dataset without contacting the source again. Supports both normalized and raw evidence dataset IDs returned by financial_research_query; source text remains untrusted data.
+inputSchema:
+  type: object
+  required:
+    - dataset_id
+  properties:
+    dataset_id:
+      type: string
+      pattern: ^financial-research-[a-f0-9-]+(?:-raw)?$
+      maxLength: 100
+    offset:
+      type: integer
+      minimum: 0
+      maximum: 10000
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 复用已有固定证据，保留原来源和可见时间，供不同方法分析而不重新抓取。
+    inputs: "{dataset_id:<query/status返回的ID>,offset:0,limit:20}；limit1–100、offset0–10000，按next_offset读后页。"
+    outputs: '{status:"saved_evidence",dataset_id,ref,evidence,provenance,series?,rows,total,offset,next_offset,presentation_truncated,warnings}；可读标准化及 -raw 数据集。'
+    prerequisites:
+      - 已有该插件保存的dataset_id；不得当成host#datasets ID。
+    limitations:
+      - 只读原快照，不联网更新；行过大时预览会缩短，完整固定数据可用ref或evidence源读。
+  binding:
+    type: native
+    name: financial_research_read

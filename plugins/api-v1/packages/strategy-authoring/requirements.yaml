@@ -1,0 +1,14 @@
+goal: 编写、可视化与重放 SVL 策略；提供指标函数、动态品种池、组合分配、风险与执行账本，以及隔离的 Agent 判断和冻结时间线。原生回测与交易由目标插件提供。
+acceptance:
+  discovery:
+    case: strategy-authoring-discovery
+    tools:
+      - strategy_decision
+      - strategy_functions
+      - strategy_graph
+      - strategy_pipeline
+      - strategy_publish
+      - strategy_replay
+      - strategy_validate
+      - strategy_workflow
+    resource: skills/strategy-authoring/SKILL.md

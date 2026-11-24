@@ -1,0 +1,76 @@
+name: ultra_start
+title: ultra_start
+description: 开始持续协作目标并创建真实规划工作流。默认复用当前目标；用户切换目标时用 replace 在一次调用内关闭旧目标并启动新目标。
+inputSchema:
+  type: object
+  properties:
+    objective:
+      type: string
+      minLength: 1
+      maxLength: 16000
+    context:
+      type: string
+      maxLength: 60000
+    replace:
+      type: boolean
+      description: 用户已切换目标时设为 true，传入新的 objective、mode 和 success_criteria；已受理的分支仍归旧目标。
+    mode:
+      enum:
+        - auto
+        - research
+        - monitor
+        - trade
+        - trading
+    max_parallel:
+      type: integer
+      minimum: 1
+      maximum: 16
+    plugins:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 256
+      maxItems: 64
+      uniqueItems: true
+    success_criteria:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 2000
+      maxItems: 32
+      uniqueItems: true
+  required:
+    - objective
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+    - start:workflow
+  usage:
+    purpose: 开始持续协作目标；用户切换目标或模式时，可一次性替换旧目标并启动新规划。
+    inputs: Use the current user's accepted objective and scope. Set replace only when the user changes the active goal. Keep context to conclusions and fixed references within 4000 characters.
+    outputs: Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_start

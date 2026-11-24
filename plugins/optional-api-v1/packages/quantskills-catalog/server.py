@@ -1,19 +1,23 @@
 import os
 """Offline references and deduplicated Sesame workflows (Python standard library)."""
 import json
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 import sys
 
 PLUGIN_ROOT = Path(__file__).resolve().parent
-VERSION = json.loads((PLUGIN_ROOT / "plugin.json").read_text(encoding="utf-8"))["version"]
+SNAPSHOT = json.loads(subprocess.check_output(
+    [os.environ.get("SESAME_MCP_NODE", "node"), str(PLUGIN_ROOT / "snapshot.mjs")],
+    env={**os.environ, "ELECTRON_RUN_AS_NODE": "1"}, encoding="utf-8"
+))
+VERSION = SNAPSHOT["version"]
 CATALOG = json.loads((PLUGIN_ROOT / "catalog.json").read_text(encoding="utf-8"))
 ITEMS = CATALOG["items"]
 CATEGORIES = CATALOG["categories"]
-with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
-    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
-TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
-
+DECLARED_CAPABILITIES = SNAPSHOT["capabilities"]
+TOOLS = [{key: value for key, value in tool.items() if key != "errors"} for tool in SNAPSHOT["tools"]]
+RESOURCES = {item["uri"]: item for item in SNAPSHOT["resources"]}
 
 ROUTES = json.loads((PLUGIN_ROOT / "workflows.json").read_text(encoding="utf-8"))["workflows"]
 
@@ -100,14 +104,30 @@ def dispatch(req):
     if "id" not in req:
         return None
     method = req.get("method")
-    if method in ("initialize", "server/discover"):
-        result = {"serverInfo": {"name": "quantskills-catalog", "version": VERSION}, "capabilities": {"tools": {}}}
-        if method == "initialize":
-            result["protocolVersion"] = "2025-11-25"
-        else:
-            result.update(ttlMs=0, cacheScope="private")
-    elif method == "tools/list":
-        result = {"tools": TOOLS, "ttlMs": 0, "cacheScope": "private"}
+    params = req.get("params", {})
+    if not isinstance(params, dict):
+        raise ValueError("params must be an object")
+    if method == "server/discover":
+        result = {"serverInfo": {"name": SNAPSHOT["id"], "version": VERSION},
+                  "supportedVersions": [SNAPSHOT["protocol"]], "capabilities": {"tools": {}, "resources": {}},
+                  "ttlMs": 0, "cacheScope": "private"}
+        if SNAPSHOT["instructions"]:
+            result["instructions"] = SNAPSHOT["instructions"]
+    elif method in ("tools/list", "resources/list"):
+        kind = method.split("/")[0]
+        items = TOOLS if kind == "tools" else [{k: v for k, v in item.items() if k != "text"} for item in RESOURCES.values()]
+        cursor = params.get("cursor", "0")
+        if not isinstance(cursor, str) or not cursor.isascii() or not cursor.isdecimal() or int(cursor) > len(items):
+            raise ValueError("Invalid cursor")
+        offset = int(cursor)
+        result = {kind: items[offset:offset + 50], "ttlMs": 0, "cacheScope": "private"}
+        if offset + 50 < len(items):
+            result["nextCursor"] = str(offset + 50)
+    elif method == "resources/read":
+        resource = RESOURCES.get(params.get("uri"))
+        if not resource:
+            raise ValueError("Unknown resource")
+        result = {"contents": [{k: resource[k] for k in ("uri", "mimeType", "text")}], "ttlMs": 0, "cacheScope": "private"}
     elif method == "tools/call":
         params = req.get("params", {})
         if not isinstance(params, dict):
@@ -118,7 +138,12 @@ def dispatch(req):
         args = params.get("arguments", {})
         if not isinstance(args, dict):
             raise ValueError("arguments must be an object")
-        data = handler(args)
+        try:
+            data = handler(args)
+        except ValueError as error:
+            failure = {"code": "invalid_input", "message": str(error), "recovery": "Correct the indicated arguments and retry."}
+            return {"jsonrpc": "2.0", "id": req["id"], "result": {"resultType": "complete", "isError": True,
+                    "structuredContent": {"error": failure}, "content": [{"type": "text", "text": json.dumps(failure)}]}}
         result = {"content": [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}],
                   "structuredContent": data, "isError": False}
     else:

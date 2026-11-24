@@ -1,0 +1,360 @@
+id: strategy-development-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/strategy-development/README.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/strategy-development
+  - step: 1
+    pointer: /tools/0/name
+    equals: strategy_development_backtest
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        operation_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Stable operation key for this exact input. Choose a new key for a revision or a changed experiment.
+        project_ref:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            revision:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: resource
+            schemaVersion:
+              const: 1.0.0
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+        experiment:
+          anyOf:
+            - type: object
+              properties:
+                backend:
+                  const: backtrader
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 180
+                class_name:
+                  type: string
+                  pattern: ^[A-Za-z_][A-Za-z0-9_]*$
+                development:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      const: data
+                    schemaVersion:
+                      const: 1.0.0
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  additionalProperties: false
+                holdout:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      const: data
+                    schemaVersion:
+                      const: 1.0.0
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  additionalProperties: false
+                python_path:
+                  type: string
+                  minLength: 1
+                config:
+                  type: object
+                  properties:
+                    capital:
+                      type: string
+                      pattern: ^(0|[1-9][0-9]*)(\.[0-9]+)?$
+                    commission:
+                      type: string
+                      pattern: ^(0|[1-9][0-9]*)(\.[0-9]+)?$
+                    slippage:
+                      type: string
+                      pattern: ^(0|[1-9][0-9]*)(\.[0-9]+)?$
+                    feed:
+                      type: object
+                      properties:
+                        timeframe:
+                          type: string
+                          enum:
+                            - minutes
+                            - days
+                            - weeks
+                            - months
+                        compression:
+                          type: integer
+                          minimum: 1
+                          maximum: 100000
+                      required:
+                        - timeframe
+                        - compression
+                      additionalProperties: false
+                  required:
+                    - feed
+                  additionalProperties: false
+                columns:
+                  type: object
+                  properties:
+                    datetime:
+                      type: string
+                      minLength: 1
+                    open:
+                      type: string
+                      minLength: 1
+                    high:
+                      type: string
+                      minLength: 1
+                    low:
+                      type: string
+                      minLength: 1
+                    close:
+                      type: string
+                      minLength: 1
+                    volume:
+                      type: string
+                      minLength: 1
+                  required: []
+                  additionalProperties: false
+                parameters:
+                  type: object
+                  additionalProperties:
+                    anyOf:
+                      - type: number
+                      - type: boolean
+                      - type: string
+                        maxLength: 1000
+                parameter_space:
+                  type: object
+                  maxProperties: 12
+                  description: An empty object with max_trials:1 executes one native baseline using fixed or default parameters.
+                  additionalProperties:
+                    type: array
+                    minItems: 1
+                    maxItems: 8192
+                    uniqueItems: true
+                    items:
+                      anyOf:
+                        - type: number
+                        - type: boolean
+                        - type: string
+                          maxLength: 1000
+                max_trials:
+                  type: integer
+                  minimum: 1
+                  maximum: 8192
+                objective:
+                  type: object
+                  properties:
+                    metric:
+                      type: string
+                      enum:
+                        - netReturn
+                        - maxDrawdown
+                        - finalEquity
+                        - closedTrades
+                    direction:
+                      type: string
+                      enum:
+                        - maximize
+                        - minimize
+                  required:
+                    - metric
+                    - direction
+                  additionalProperties: false
+                selection:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - method
+                  properties:
+                    method:
+                      type: string
+                      enum:
+                        - point_best
+                        - neighborhood_worst
+                      description: Declare before development. neighborhood_worst ranks fully supported numeric interiors by their worst feasible measured score.
+                    max_step:
+                      type: object
+                      maxProperties: 12
+                      additionalProperties:
+                        type: number
+                        exclusiveMinimum: 0
+                      description: Override the inclusive maximum distance to an adjacent level. Each varying numeric axis defaults to its smallest declared grid spacing.
+                    categorical_axes:
+                      type: array
+                      maxItems: 12
+                      uniqueItems: true
+                      items:
+                        type: string
+                        minLength: 1
+                      description: Hold these axes fixed during perturbation, including numeric codes for categories. String and Boolean axes are categorical by default.
+                constraints:
+                  type: array
+                  maxItems: 16
+                  items:
+                    type: object
+                    properties:
+                      metric:
+                        type: string
+                        enum:
+                          - netReturn
+                          - maxDrawdown
+                          - finalEquity
+                          - closedTrades
+                      op:
+                        type: string
+                        enum:
+                          - <=
+                          - ">="
+                      value:
+                        type: number
+                    required:
+                      - metric
+                      - op
+                      - value
+                    additionalProperties: false
+              required:
+                - backend
+                - development
+                - config
+                - parameter_space
+                - max_trials
+              additionalProperties: false
+            - type: object
+              properties:
+                backend:
+                  const: backtrader
+                selection_ref:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      const: resource
+                    schemaVersion:
+                      const: 1.0.0
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  additionalProperties: false
+                holdout:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    revision:
+                      type: string
+                      minLength: 1
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      const: data
+                    schemaVersion:
+                      const: 1.0.0
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  additionalProperties: false
+                python_path:
+                  type: string
+                  minLength: 1
+              required:
+                - backend
+                - selection_ref
+                - holdout
+              additionalProperties: false
+            - type: object
+              properties:
+                backend:
+                  const: mt5
+              required:
+                - backend
+              additionalProperties: false
+            - type: object
+              properties:
+                backend:
+                  const: backtrader
+                planned_trial:
+                  const: true
+                python_path:
+                  type: string
+                  minLength: 1
+              required:
+                - backend
+                - planned_trial
+              additionalProperties: false
+      required:
+        - operation_id
+        - project_ref
+        - experiment
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# Sesame 策略开发"

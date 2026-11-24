@@ -1,0 +1,58 @@
+name: backtrader_result
+title: backtrader_result
+description: Read fixed result and report DataRefs without rerunning native code.
+inputSchema:
+  type: object
+  required:
+    - ref
+  properties:
+    ref:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+        revision:
+          type: string
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          const: strategy.result
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 复用已冻结原生回测结果与输入/撮合假设；读取不重跑，也不自动另开报告。
+    inputs: "{ref:<backtest返回的完整strategy.result引用>}；不传operation_id或工作区文件路径。"
+    outputs: "{ref,manifest}；manifest.content 含 status,title,engine,environment,assumptions,inputs,nativeSource,rawResult,data,statistics,limitations,provenance；表中ref可交data_read。"
+    prerequisites:
+      - 已有固定strategy.result；此读取不需要Python/终端。
+    limitations:
+      - 读取不重跑回测；统计与输入范围、成本和demo标签一同解释。
+  binding:
+    type: native
+    name: backtrader_result

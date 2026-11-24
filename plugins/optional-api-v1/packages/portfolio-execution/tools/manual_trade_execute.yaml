@@ -1,0 +1,153 @@
+name: manual_trade_execute
+title: manual_trade_execute
+description: Submit one explicitly user-authorized order. Supply either observation_id or backend + symbol; the latter prepares and executes in one call with no model round trip. M5+ only. Exact account, positions, source quote freshness and price guards still apply at native dispatch. Same operation_id and original input returns the stored receipt; query unknown outcomes, never resend.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - user_authorized
+    - action
+    - side
+    - quantity
+    - price_limit
+  properties:
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,100}$
+    observation_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: An unused ID from manual_trade_observe or manual_trade_prepare; cannot be combined with backend or symbol
+    user_authorized:
+      type: boolean
+      const: true
+    timeframe:
+      anyOf:
+        - type: string
+          const: 5m
+        - type: string
+          const: 15m
+        - type: string
+          const: 30m
+        - type: string
+          const: 1h
+        - type: string
+          const: 4h
+        - type: string
+          const: 1d
+    action:
+      anyOf:
+        - type: string
+          const: market
+        - type: string
+          const: limit
+        - type: string
+          const: close
+    side:
+      anyOf:
+        - type: string
+          const: buy
+        - type: string
+          const: sell
+    quantity:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      maxLength: 40
+      description: MT5 lots or QMT integer shares, based on the user intent
+    price_limit:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      maxLength: 40
+      description: Maximum buy/minimum sell executable quote. A market fill can still slip; use a limit order for a hard order-price limit
+    limit_price:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      maxLength: 40
+      description: Required only for limit orders
+    position_id:
+      type: string
+      pattern: ^[1-9]\d*$
+      description: Required MT5 position ticket for close
+    stop_loss:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      maxLength: 40
+      description: Optional MT5 stop loss
+    take_profit:
+      type: string
+      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+      maxLength: 40
+      description: Optional MT5 take profit
+    backend:
+      anyOf:
+        - type: string
+          const: mt5
+        - type: string
+          const: qmt
+    symbol:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Exact broker symbol
+  additionalProperties: false
+  oneOf:
+    - required:
+        - observation_id
+      not:
+        anyOf:
+          - required:
+              - backend
+          - required:
+              - symbol
+    - required:
+        - backend
+        - symbol
+      not:
+        required:
+          - observation_id
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - broker.write
+    - backend.read
+    - backend.write
+    - state.write
+  usage:
+    purpose: Submit one explicitly user-authorized order. Supply either observation_id or backend + symbol; the latter prepares and executes in one call with no model round trip. M5+ only. Exact account, positions, source quote freshness and price guards still apply at native dispatch. Same operation_id and original input returns the stored receipt; query unknown outcomes, never resend.
+    inputs: '{operation_id,observation_id OR (backend,symbol),user_authorized:true,action:"market"|"limit"|"close",side,quantity,price_limit,timeframe?,limit_price?,position_id?,stop_loss?,take_profit?}. Exact original order intent is required in either mode; never infer quantity, side or price bounds. limit requires limit_price; MT5 close requires position_id. timeframe defaults5m; 1h does not schedule repetition.'
+    outputs: Run output is one durable command record {id,status,submission_attempted,receipt?,evidence?,intent,preparation?,timing,error?}. Rejected preflight explicitly reports submission_attempted:false with the original error reason. Fast mode records preparation timing and model_round_trip_ms:0. Native acceptance and observed fills are different; query manual_trade_status(refresh:true) for recovery.
+    prerequisites:
+      - Main conversation only. Backend + symbol preparation cannot be used by workflow/executor delegation.
+      - An existing explicit, complete user order intent. Either a recent unused observation or an already configured account with MT5 2.1.7+ mt5_trading_prepare / existing QMT connection.
+    limitations:
+      - Stable operation_id + identical original input prevents duplicate preparation and sends. An operation ID cannot be reused with a different intent or observation. Fast mode does not guess an order from the returned quote.
+      - price_limit bounds the executable quote, not a guaranteed market fill. Use a limit order for a hard order-price bound. Final native account, positions, price and freshness guards remain enforced.
+      - Preparation is bounded separately from final execution. An unknown dispatched command must be reconciled under its original ID; neither a timeout nor an absent order authorizes a replacement.
+  binding:
+    type: native
+    name: manual_trade_execute
+  finalOutputSchema:
+    type: object

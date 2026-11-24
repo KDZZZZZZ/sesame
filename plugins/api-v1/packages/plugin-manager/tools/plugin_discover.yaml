@@ -1,0 +1,54 @@
+name: plugin_discover
+title: plugin_discover
+description: 按插件 ID、标题或描述分页检索已安装插件，返回状态与能力摘要。
+inputSchema:
+  type: object
+  properties:
+    query:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 关键词
+    ids:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 160
+        description: 插件完整 ID
+      maxItems: 100
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 上一页返回的游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 按插件 ID、标题或描述分页检索已安装插件，返回状态与能力摘要。
+    inputs: query 对插件 id/title/description 做不区分大小写的子串匹配，不搜索能力 ID 或能力描述；ids 可选精确插件 ID，cursor/limit 用于分页。空输入列出当前可发现的已安装插件。
+    outputs: "{items,nextCursor?}，含已安装插件状态和能力摘要；不联网安装。"
+    prerequisites: []
+    limitations:
+      - 已安装且可发现的包可用 plugin_load 加入当前会话；工作区 disabled 需先按任务启用，运行失败先查 plugin_inspect。本机没有的包再查 plugin_catalog 或准备本地包。
+  binding:
+    type: native
+    name: plugin_discover

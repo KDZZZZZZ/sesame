@@ -1,0 +1,37 @@
+name: optimizer_change_verify
+title: optimizer_change_verify
+description: 重新核验已登记变更和候选摘要
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+  required:
+    - id
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: 重新核验已登记变更和候选摘要
+    inputs: id
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_change_verify

@@ -1,0 +1,73 @@
+name: manual_trade_prepare
+title: manual_trade_prepare
+description: "Prepare an explicitly authorized manual trade in one call: bind the selected account, establish supported MT5 permissions/Python readiness, then read symbol rules, positions, pending orders and the last native quote. Returns an observation_id and preparation summary; never places an order. QMT uses its existing read-only snapshot."
+inputSchema:
+  type: object
+  required:
+    - backend
+    - symbol
+    - operation_id
+    - user_authorized
+  properties:
+    backend:
+      anyOf:
+        - type: string
+          const: mt5
+        - type: string
+          const: qmt
+    symbol:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Exact broker symbol
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,100}$
+    user_authorized:
+      type: boolean
+      const: true
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - backend.read
+    - backend.write
+    - state.write
+  usage:
+    purpose: Start preparation immediately when the user requests manual trading, while organizing their independent order intent. Use fast manual_trade_execute directly when the complete intent is already known.
+    inputs: '{backend:"mt5"|"qmt",symbol:<exact native symbol>,operation_id:<stable preparation ID>,user_authorized:true}.'
+    outputs: Run output is {status:"prepared",observation_id,backend,symbol,account,accountSummary,quote,positions,orders?,spec,preparation,capturedAt,expiresAt,timing,submission_attempted:false,...}; or {status:"rejected",error:{code,message,details},submission_attempted:false,...}. Original raw source quote time and receive time are retained; preparation time is separate from the quote age.
+    prerequisites:
+      - Main conversation only, with an existing explicit user trading instruction. Workflow/executor delegation cannot use this authorization path.
+      - MT5 2.1.7+ with mt5_trading_prepare, verified quote_clock metadata and an already configured account. QMT requires its existing configured native connection.
+    limitations:
+      - MT5 may enable its trading gate, prepare algorithmic/Python permissions or normally restart its configured terminal; it must retain the same account. Preparation has a separate 180-second bound. QMT never changes permissions or connections.
+      - Same operation_id and same input returns the stored result without repeating preparation. Stale/future source quotes reject with measured age; timestamps are never replaced. Preparing is not prepared, order authorization or a submitted order.
+      - Unknown prior account orders block preparation. No research/team/deployment/history preflight is required for this manual path; native permission and SDK recovery steps have ordering constraints, not guaranteed parallel execution.
+  binding:
+    type: native
+    name: manual_trade_prepare
+  finalOutputSchema:
+    type: object

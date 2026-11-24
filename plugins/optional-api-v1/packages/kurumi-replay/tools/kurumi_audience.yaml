@@ -1,0 +1,65 @@
+name: kurumi_audience
+title: kurumi_audience
+description: main-only持久真实H1源bootstrap、绑定configure、pump/resume刷新markers并消费report/PK待办，UTC native opened+normal main ack后release；无猜测UI/private端口，明确public契约。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - bootstrap
+        - configure
+        - pump
+        - resume
+        - release
+    chart_id:
+      type: string
+    native_report_bridge:
+      type: object
+      additionalProperties: true
+    client_receipt_contract:
+      type: object
+      additionalProperties: true
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: main-only持久真实H1源bootstrap、绑定configure、pump/resume刷新markers并消费report/PK待办，UTC native opened+normal main ack后release；无猜测UI/private端口，明确public契约。
+    inputs: action=status/bootstrap/configure/pump/resume/release; configure uses chart_id for an existing native chart. Public native_report_bridge/client_receipt_contract fields are optional legacy input; actual receipt contracts govern visibility.
+    outputs: Audience checkpoint/control result with pending work, native chart/report receipts and main-narration state for the current consumed cutoff.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Current bounded experiment, prepared real preheat and declared native chart/source interfaces.
+    limitations:
+      - Pump does not create trading authority; release a hold only when exact report/client and main-chat evidence meet it. Missing public receipt is pending, not inferred from fixture or private UI.
+  binding:
+    type: native
+    name: kurumi_audience
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

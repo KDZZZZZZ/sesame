@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { records, closeRecords } from './records.js';
 import { readFileSync } from 'node:fs';
 import { ReplayService, getService, setService, removeService, assert } from './service.js';
@@ -6,7 +7,7 @@ import { execute as executeNative } from './runtime-adapter.js';
 import { publishReport, exportReplay } from './report.js';
 import { publishMarkers } from './markers.js';
 import { disposeNative } from './native-engine.js';
-const definitions=JSON.parse(readFileSync(new URL('./capabilities.json',import.meta.url),'utf8')).capabilities.filter(item=>item.id.startsWith('kurumi_'));
+const definitions=readPackageDirectory(new URL('.',import.meta.url)).capabilities.capabilities.filter(item=>item.id.startsWith('kurumi_'));
 const playerNames = new Set(['kurumi_observe','kurumi_decide']);
 
 async function initialize(host) {

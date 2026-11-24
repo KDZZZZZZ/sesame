@@ -1,11 +1,12 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createCapabilities } from '../index.js';
 
 test('Kurumi main-only declarations match executable audience guards while player capabilities remain delegatable', async () => {
-  const manifest = JSON.parse(readFileSync(new URL('../plugin.json', import.meta.url), 'utf8'));
-  const declarations = JSON.parse(readFileSync(new URL('../capabilities.json', import.meta.url), 'utf8')).capabilities;
+  const manifest = readPackageDirectory(new URL('../', import.meta.url)).manifest;
+  const declarations = readPackageDirectory(new URL('../', import.meta.url)).capabilities.capabilities;
   const players = ['kurumi_observe', 'kurumi_decide'];
   const mainOnly = declarations.filter(item => item.id.startsWith('kurumi_') && !players.includes(item.id)).map(item => item.id);
   assert.equal(manifest.agent_scope, 'all');

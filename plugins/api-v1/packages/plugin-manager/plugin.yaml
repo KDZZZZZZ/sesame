@@ -1,0 +1,138 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/plugin-manager
+title: 插件管理
+description: 发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。
+version: 3.1.8
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  default_state: mounted
+  execution: native
+  main_tool_names:
+    - plugin_create
+    - plugin_install
+    - plugin_install_catalog
+    - plugin_update
+    - plugin_uninstall
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - README.md
+    - scaffold.js
+    - scripts/create-plugin.mjs
+    - references/authoring.md
+    - references/host-api.md
+    - references/recovery.md
+    - references/operations.md
+  permissions:
+    scopes:
+      - plugins.manage
+    calls: []
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/plugin_discover
+      - tool/plugin_load
+      - tool/plugin_catalog
+      - tool/plugin_install_catalog
+      - tool/plugin_read
+      - tool/plugin_inspect
+      - tool/plugin_create
+      - tool/plugin_install
+      - tool/plugin_set_state
+      - tool/plugin_update
+      - tool/plugin_uninstall
+    sources: []
+    views: []
+    services:
+      - id: management
+        contract: sesame.plugin-management/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          catalog: plugin_catalog
+          install_catalog: plugin_install_catalog
+          create: plugin_create
+          inspect: plugin_inspect
+          install: plugin_install
+          update: plugin_update
+          uninstall: plugin_uninstall
+          set_state: plugin_set_state
+    knowledge:
+      - id: resource.1
+        path: instructions.md
+        description: 按已声明的用途与前提发现、读取、安装和管理API2插件；区分知识选择与工具授权。
+        kind: prompt
+      - id: resource.2
+        path: README.md
+        description: 插件管理流程、脚手架和固定目录发行规则。
+        kind: reference
+      - id: resource.3
+        path: scaffold.js
+        description: 脚手架实际实现；核对模板生成和安装草稿行为。
+        kind: reference
+      - id: resource.4
+        path: scripts/create-plugin.mjs
+        description: 独立创建插件草稿的 CLI 实现与参数。
+        kind: reference
+      - id: resource.5
+        path: skills/develop-plugins/SKILL.md
+        description: 开发显式声明的API2能力与知识包：界定分层职责、输入输出和配置，并验证真实宿主调用。
+        kind: skill
+      - id: resource.6
+        path: references/authoring.md
+        description: 插件职责、显式声明、权限、配置依赖、知识分层和验证要求。
+        kind: reference
+      - id: resource.7
+        path: references/host-api.md
+        description: 八个宿主端口、能力与 Run、资源和入站消息的真实调用约定。
+        kind: reference
+      - id: resource.8
+        path: references/recovery.md
+        description: 安装失败、摘要冲突、未知结果及草稿恢复。
+        kind: reference
+      - id: manage-plugins
+        path: skills/manage-plugins/SKILL.md
+        kind: skill
+        description: 发现、读取、加载、安装、更新和验收已有插件，区分状态、配置与业务成功。
+      - id: management-operations
+        path: references/operations.md
+        kind: reference
+        description: 11 个插件管理工具的参数、版本字段、三态、配置入口和安装检查范围。
+    hooks: []
+    stateCollections:
+      - name: operations
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            fingerprint:
+              type: string
+              minLength: 1
+              maxLength: 128
+              description: 输入摘要
+            status:
+              enum:
+                - running
+                - completed
+            result:
+              type: object
+          required:
+            - fingerprint
+            - status
+          additionalProperties: false
+    artifactSchemas: []

@@ -1,0 +1,46 @@
+name: host_files_move
+title: host_files_move
+description: 在同一文件系统移动一个宿主普通文件到不存在的目标；不覆盖已有目标，跨文件系统需明确复制并核验。
+inputSchema:
+  type: object
+  required:
+    - path
+    - destination
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+    destination:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 在同一文件系统移动一个宿主普通文件到不存在的目标；不覆盖已有目标，跨文件系统需明确复制并核验。
+    inputs: path/destination 是宿主绝对路径；源为普通文件，目标必须不存在。
+    outputs: '{path,destination,execution:"host"}；完成后源消失、目标含原字节。'
+    prerequisites: []
+    limitations:
+      - 不能跨文件系统；需要跨盘时复制并核验后按用户意图移除源，不把失败当已移动。
+  binding:
+    type: native
+    name: host_files_move

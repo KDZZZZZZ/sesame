@@ -1,0 +1,83 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/plugin-optimizer
+title: 插件优化器
+description: 在本地授权的插件草稿中定位反馈、冻结案例、配对比较和验证变更。
+version: 1.0.0
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame contributors
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  execution: native
+  agent_scope: main
+  skills:
+    - skills
+  prompts:
+    - instructions.md
+  permissions:
+    scopes: []
+    calls:
+      - host.traces.query
+      - host.findings.query
+  contributions:
+    capabilities:
+      - tool/optimizer_init
+      - tool/optimizer_surface_ls
+      - tool/optimizer_surface_show
+      - tool/optimizer_surface_diff
+      - tool/optimizer_surface_lock
+      - tool/optimizer_surface_add
+      - tool/optimizer_surface_set
+      - tool/optimizer_surface_rm
+      - tool/optimizer_workflow_check
+      - tool/optimizer_workflow_graph
+      - tool/optimizer_trace_ls
+      - tool/optimizer_trace_show
+      - tool/optimizer_trace_export
+      - tool/optimizer_findings_inbox
+      - tool/optimizer_findings_ls
+      - tool/optimizer_findings_add
+      - tool/optimizer_findings_triage
+      - tool/optimizer_case_new
+      - tool/optimizer_case_run
+      - tool/optimizer_eval_run
+      - tool/optimizer_change_new
+      - tool/optimizer_change_verify
+    configSchema:
+      type: object
+      additionalProperties: false
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: elicit-requirements
+        kind: skill
+        path: skills/elicit-requirements/SKILL.md
+        description: 写下用户的可观测目标、约束和可复核的验收条件。把没有证据的偏好交回用户确认。
+      - id: scaffold-plugin
+        kind: skill
+        path: skills/scaffold-plugin/SKILL.md
+        description: 固定插件 ID、版本和授权范围。生成需求、接口声明和第一个可重跑的行为案例。
+      - id: evaluate-step
+        kind: skill
+        path: skills/evaluate-step/SKILL.md
+        description: 读取实际工具回执及步骤引用，再记录错误数、重做数和可观测结果。保留样本数和原始记录。
+      - id: attribute-finding
+        kind: skill
+        path: skills/attribute-finding/SKILL.md
+        description: 从需求、宿主投影、实现、接口元素到模型逐项核对。选一个有证据的主要对象，并记录排除其他来源的依据。
+      - id: build-case
+        kind: skill
+        path: skills/build-case/SKILL.md
+        description: 固定初始输入、工具回执和独立断言。在修改前跑出失败，注册不可变的案例摘要。
+      - id: propose-change
+        kind: skill
+        path: skills/propose-change/SKILL.md
+        description: 冻结实验的案例、重复次数和基线。每次调整一个可定位的元素或实现，逐项核对目标改善和回归。由使用者确认采用摘要。
+    hooks: []
+    stateCollections: []
+    artifactSchemas: []

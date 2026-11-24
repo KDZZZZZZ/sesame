@@ -1,0 +1,60 @@
+name: trading_decision_apply
+title: trading_decision_apply
+description: Pass the fixed target to the explicitly selected execution capability for this registered executor task and preserve its actual receipt. That capability enforces account, native order and strategy controls. Never infer fills or profit from targets.
+inputSchema:
+  type: object
+  required:
+    - run_id
+  properties:
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Persisted trading decision run ID from this task input
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    status:
+      type: string
+    orders:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    pauses:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+  required:
+    - status
+    - orders
+    - pauses
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - invoke:selected-execution
+    - write:execution-receipt
+  binding:
+    type: native
+    name: trading_decision_apply
+  usage:
+    purpose: Pass the fixed target to the explicitly selected execution capability for this registered executor task and preserve its actual receipt. That capability enforces account, native order and strategy controls. Never infer fills or profit from targets.
+    inputs: "{run_id:<current business runId>}; no raw native order fields."
+    outputs: "Actual execution receipt from the frozen implementation, retained on the run: inspect status, orders, after and targetReached rather than inferring success from the target."
+    prerequisites:
+      - Current registered executor task; a saved decision and frozen execution binding are required.
+    limitations:
+      - The model calls this workflow capability; it must not call portfolio_execution_apply directly. Unknown/partial results remain evidence, never replacement orders.

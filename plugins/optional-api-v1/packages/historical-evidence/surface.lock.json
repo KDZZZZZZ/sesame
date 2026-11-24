@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/historical-evidence:instructions#preamble": "eecceaad12895364535bcac9df843abca26800b9faba951ea4b4008dbb5c9b55",
+    "sesame/historical-evidence:plugin.description": "5d180a4c2a6f2ec4f08ab6f50a4ef198a100db97653ad9e01d7f0e682fd2e666",
+    "sesame/historical-evidence:resource/METHOD.md": "fc660c05f378f567c405aa4607adf147f9eaea5c49e57a04ed1421f0b0316a87",
+    "sesame/historical-evidence:resource/PROVENANCE.md": "98e1ba1f7787e7416e7ef99e4ee40398399c8105ee71634bbc4139b6cad13d2f",
+    "sesame/historical-evidence:resource/README.md": "635da5f3b2eae34623de3f639585381cc339cde12addfb98f19d486dc1919991",
+    "sesame/historical-evidence:resource/REPLAY.md": "c6a69c314cecbedef06d2fc26e3613d45194c0b26751e0668b9432806b4b7438",
+    "sesame/historical-evidence:resource/examples/calibration-replay.json": "fa7ede8e4d2dde0cc7ff59da156341282b294acea3b26caa56c9bb8250d56cfc",
+    "sesame/historical-evidence:resource/examples/calibration.json": "a0b009237ff89790cd4fd05ed4e199a94b21320abf6e945c232464647c54987f",
+    "sesame/historical-evidence:resource/examples/match-replay.json": "a56c3a8e9559136d85fe9477dbc4501a2baceb927eaacc757bf8390cc869b1de",
+    "sesame/historical-evidence:resource/examples/match.json": "aed6f588d482bfac3bfe2a5d5784f9a068b49be25edfb1393f4cfdd1e21a01d4",
+    "sesame/historical-evidence:tool/historical_evidence_calibrate.description": "179602de9b6c6a5594bd45fcff20ceedd6a9a8736182f439aea710c8d3ded3b2",
+    "sesame/historical-evidence:tool/historical_evidence_calibrate.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/historical-evidence:tool/historical_evidence_calibrate.input": "fc9342acae59c04e49a0080c0d3c5b4c8b04240f2588eb993bd83ff9bd655f88",
+    "sesame/historical-evidence:tool/historical_evidence_calibrate.output": "505f4738997325ca0fdbae593fde5289e2fb02ffe6725416ea33f406716f63ab",
+    "sesame/historical-evidence:tool/historical_evidence_from_ref.description": "1f7cc4f9d377a4f20331dcd8030768b5c91d909728bca5669f33e9596c182dc5",
+    "sesame/historical-evidence:tool/historical_evidence_from_ref.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/historical-evidence:tool/historical_evidence_from_ref.input": "68e7fbf1994676f040e3b4a0fec5a4b084cd59fb6d6f0dc62b13d429f5f5e386",
+    "sesame/historical-evidence:tool/historical_evidence_from_ref.output": "3323f0519e10495f0b6d08bf0b50028ef89a20ed0c4ae3b52d19583e90b671d5",
+    "sesame/historical-evidence:tool/historical_evidence_match.description": "2a3730b04b7dfe2454e4b26ed87d6d2c2ed53091238b09b3e514be5ad7197568",
+    "sesame/historical-evidence:tool/historical_evidence_match.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/historical-evidence:tool/historical_evidence_match.input": "41265248c255dec1a6d40a0d971b1bb59dab4302acec06dd12e1384de7cbc9a1",
+    "sesame/historical-evidence:tool/historical_evidence_match.output": "2c7a0f579b93bf58835985d5f92ea5c69cf9b14d87d4db2949d1a524fddeafe4"
+  },
+  "digest": "b3bbd852edd69df935ba5247a593955288c4898f7c6001f756632a7f43a13f51"
+}

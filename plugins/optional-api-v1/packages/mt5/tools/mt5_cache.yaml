@@ -1,0 +1,122 @@
+name: mt5_cache
+title: mt5_cache
+description: 管理与交易面板共用的本地 MT5 行情库。bars/trades 只读本地；sync/sync_trades 从当前已验证账户下载并去重保存；时间是券商墙上时间的秒值，不代表 UTC。大结果使用 save_as。remove 只清理指定品种周期的行情。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: symbols
+        - type: string
+          const: inventory
+        - type: string
+          const: bars
+        - type: string
+          const: sync
+        - type: string
+          const: trades
+        - type: string
+          const: sync_trades
+        - type: string
+          const: remove
+    symbol:
+      type: string
+      description: 精确品种
+      minLength: 1
+      maxLength: 20000
+    period:
+      type: string
+      description: MT5 周期，如 H1
+      minLength: 1
+      maxLength: 20000
+    from:
+      type: integer
+      description: 券商服务器墙钟 Unix 秒，范围起点，包含；不是 UTC epoch
+    to:
+      type: integer
+      description: 券商服务器墙钟 Unix 秒，范围终点，排除；不是 UTC epoch
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 20000
+    save_as:
+      type: string
+      description: 完整 JSON 的工作区路径
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - cache.write-on-symbol-refresh-or-sync-or-remove
+    - network-on-symbol-refresh-or-sync
+    - filesystem-on-save_as
+  usage:
+    purpose: 查询或显式同步本地MT5历史缓存。
+    inputs: symbols/inventory 用 {action}；bars/sync 用 {action,symbol,period,from,to}，范围为券商墙时秒整数[from,to)，bars可加limit(1–20000)；trades用symbol/from/to；sync_trades用from/to。remove只用symbol/period并删除当前服务器该整条序列，不按from/to范围删除。save_as可保存完整JSON到工作区。例{action:"inventory"}；bars返回next_before时，可令下一页to=next_before继续向历史读取。
+    outputs: symbols:{server,items:[{symbol,description,digits,point,selected,currency}],updated_at,cached,warning?}；inventory/remove:{items:[{server,symbol,period,bar_count,first_time,last_time,updated_at}],bytes,max_bytes,typed_cache:{bar_count,payload_bytes},time_basis}；bars:{server,symbol,period,bars:[{time,open,high,low,close,volume}],has_more,next_before,updated_at,time_basis}；sync:{server,symbol,period,downloaded,reused_chunks,updated_at,time_basis}；trades:{items:[原生成交记录],sync:{updated_at,start,end}|null,time_basis}；sync_trades:{downloaded,updated_at}。save_as分支仅返回{saved_to}。
+    prerequisites:
+      - inventory可读所有本地缓存；其他分支需要已配置账户范围。bars/trades不依赖实时连接；symbols优先使用24小时目录缓存，未命中/过期会访问当前终端并可在失败时返回旧缓存和warning。sync/sync_trades需要终端与券商账户核验。统一研究历史入口是market_read。
+    limitations:
+      - 本地bars/trades和symbols.cached:true不能证明实时行情；time_basis保留券商墙时，不当UTC epoch。sync每次最多200000根。
+      - remove删除精确server/symbol/period的全部行情缓存与覆盖记录；from/to不缩小删除范围。成交与冻结研究证据不受影响；不能把清理缓存描述为清理日报。
+      - symbols的warning说明本次刷新失败；cached:true与updated_at是旧数据证据。sync.downloaded只说明写入数量，不能替代标准coverage证据。
+  binding:
+    type: native
+    name: mt5_cache
+  configurationRequirements:
+    - field: terminal_url
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - sync
+              - sync_trades
+        required:
+          - action
+    - field: terminal_enabled
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - sync
+              - sync_trades
+        required:
+          - action
+    - field: terminal_token
+      reason: 实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。
+      optional: true
+      when:
+        type: object
+        properties:
+          action:
+            enum:
+              - sync
+              - sync_trades
+        required:
+          - action

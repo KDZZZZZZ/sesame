@@ -56,10 +56,28 @@ export function deriveImplementationKinds(manifest, declaration, files, reviewed
   return [...expected];
 }
 
-export function validateInventoryPolicy(policy, packageNames) {
+function bilingual(name, field, value) {
+  fail(object(value) && Object.keys(value).sort().join(',') === 'en,zh' && ['en', 'zh'].every(locale => typeof value[locale] === 'string' && value[locale].trim() && value[locale].length <= 2000), `${name}: ${field} requires explicit English and Chinese descriptions`);
+}
+
+/** Catalog facts are descriptive. Only the fixed allowlist can reach the inventory. */
+export function packageCatalog(manifest, declaration, paths) {
+  if (!Object.hasOwn(manifest, 'catalog')) return undefined;
+  const entry = manifest.catalog, name = manifest.id;
+  fail(object(entry) && Object.keys(entry).every(key => fields.has(key)), `${name}: unknown x-sesame.catalog field`);
+  fail(functionalCategories.has(entry.functionalCategory), `${name}: invalid functional category`);
+  for (const field of ['title', 'summary']) bilingual(name, field, entry[field]);
+  if (Object.hasOwn(entry, 'dependencies')) bilingual(name, 'dependencies', entry.dependencies);
+  if (Object.hasOwn(entry, 'category')) fail(legacyCategories.has(entry.category), `${name}: invalid legacy category`);
+  fail(!Object.hasOwn(entry, 'implementationReason') || Object.hasOwn(entry, 'implementationKinds'), `${name}: implementationReason needs implementationKinds`);
+  const kinds = deriveImplementationKinds(manifest, declaration, paths, Object.hasOwn(entry, 'implementationKinds') ? entry : undefined);
+  return { ...entry, implementationKinds: kinds };
+}
+
+export function validateInventoryPolicy(policy, packageNames, requiredNames = packageNames) {
   fail(object(policy), 'Inventory policy must be an object');
   fail(new Set(packageNames).size === packageNames.length, 'Duplicate package identity across distributions');
-  for (const name of packageNames) fail(Object.hasOwn(policy, name), `Missing reviewed package explanation: sesame/${name}`);
+  for (const name of requiredNames) fail(Object.hasOwn(policy, name), `Missing reviewed package explanation: sesame/${name}. Declare x-sesame.catalog in plugin.yaml`);
   const names = new Set(packageNames);
   fail(Object.keys(policy).every(name => names.has(name)), 'Inventory policy contains absent packages');
   // Existing releases have exactly four descriptive fields. A taxonomy policy
@@ -80,7 +98,7 @@ export function validateInventoryPolicy(policy, packageNames) {
       fail(entry.implementationReason === undefined || typeof entry.implementationReason === 'string' && entry.implementationReason.trim().length >= 20, `${name}: implementationReason must explain the curated exception`);
     }
     for (const field of ['title', 'summary', 'dependencies']) {
-      fail(object(entry[field]) && Object.keys(entry[field]).sort().join(',') === 'en,zh' && ['en', 'zh'].every(locale => typeof entry[field][locale] === 'string' && entry[field][locale].trim() && entry[field][locale].length <= 2000), `${name}: ${field} requires explicit English and Chinese descriptions`);
+      bilingual(name, field, entry[field]);
     }
   }
   return format ?? 'legacy';

@@ -1,0 +1,128 @@
+name: mt5_start_terminal
+title: mt5_start_terminal
+description: 打开插件已选的本机 MT5 终端，保持原数据目录模式；不需要 MCP 密钥、Python 或 catalog。仅主 Agent，参数只需稳定 command_id。复用原 profile，可能恢复已有 EA，沿用现有启动权限；不传新账户或自定义 INI。returned/result.status=spawned 只说明系统接收启动请求，连接另用 mt5_connect(start_if_needed:false) 核验；unknown 先查原回执与实际状态，不能换 ID 重启。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+      description: 本次打开终端动作的稳定 ID；同一动作重试沿用，例如 open-selected-terminal-01
+  required:
+    - command_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    conversation_id:
+      type:
+        - string
+        - "null"
+    server:
+      const: launcher
+      type: string
+    tool:
+      const: start_terminal
+      type: string
+    operation_class:
+      const: trading
+      type: string
+    status:
+      enum:
+        - running
+        - returned
+        - failed
+        - unknown
+      type: string
+    result:
+      type:
+        - object
+        - "null"
+      properties:
+        pid:
+          type: integer
+          minimum: 0
+        unit:
+          type: string
+        status:
+          const: spawned
+          type: string
+        message:
+          type: string
+      additionalProperties: false
+    dataset_id:
+      type: "null"
+    error:
+      type:
+        - string
+        - "null"
+    created_at:
+      type: string
+    completed_at:
+      type:
+        - string
+        - "null"
+  required:
+    - id
+    - conversation_id
+    - server
+    - tool
+    - operation_class
+    - status
+    - result
+    - dataset_id
+    - error
+    - created_at
+    - completed_at
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - native-process-start
+    - may-resume-existing-terminal-profile
+    - plugin.state.write
+  usage:
+    purpose: 按用户要求打开已选的本机 MT5，适用于尚未配置 MCP 的首次设置以及再次打开终端。
+    inputs: '{command_id:<稳定16–128字符，只含字母数字下划线或连字符>}；完整例 {command_id:"open-selected-terminal-01"}。没有 path、account、profile、INI 或密钥参数，也无需先读 catalog；目标是插件已选安装。'
+    outputs: 原生命令回执 {id,conversation_id,server:"launcher",tool:"start_terminal",operation_class:"trading",status,result,dataset_id:null,error,created_at,completed_at}；成功请求 status=returned 且 result={status:"spawned",pid,message,unit?}，仅证明系统接收请求，PID 不证明界面、MCP、券商或 Python IPC 已就绪。
+    prerequisites:
+      - 主会话；已有明确打开终端的任务，插件已发现并选定本机 MT5 安装。mt5_settings.environment 与 mt5_dependencies({action:"inspect"}) 可解释缺项；不要求已配置 MCP 凭据或 Python。
+      - 原终端 profile 可能恢复已有 EA，故复用 launcher.start_terminal 的现有 allow_trading 启动权限；拒绝时不自动修改权限。
+    limitations:
+      - 只打开已选安装，保持原 portable/数据目录模式；不强制关闭或重启已有实例，不传新账户/profile，不执行 Sesame 保存的自定义 startup_ini。
+      - 需要连接证明时调用 mt5_connect({command_id:"verify-started-terminal-01",start_if_needed:false})；缺 MCP 凭据时可先打开终端；用户已提供的连接配置由mt5_update_configuration直接保存，已有安全引用也可使用。
+      - 同一动作沿用 command_id，原 returned/unknown 回执会复用。unknown 用 mt5_command({command_id:<原ID>}) 及实际进程/连接状态核对，不换 ID 自动重放。
+      - PREREQUISITE_REQUIRED 表示未派发，按 mt5_dependencies inspect 返回的缺项处理；mt5_permission_denied 表示当前启动权限拒绝；submission_attempted:false 才能确认未派发。配置变化后旧 ID 会 idempotency_conflict，应先核对旧动作，而非盲目换 ID。
+  binding:
+    type: native
+    name: mt5_start_terminal
+  configurationRequirements:
+    - field: terminal_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: data_directory
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: wine_prefix
+      reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+      optional: true
+    - field: allow_trading
+      reason: 启动终端时由已有交易及程序启动权限策略检查。
+      optional: true

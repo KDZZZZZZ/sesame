@@ -1,0 +1,48 @@
+name: plugin_install
+title: plugin_install
+description: 由宿主校验、测试并安装指定 API 2 包，一次返回完整诊断或安装结果。
+inputSchema:
+  type: object
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 实际包目录
+    digest:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+    operationId:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 稳定操作 ID，重试保持不变
+  required:
+    - path
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.install
+  usage:
+    purpose: 由宿主检查并安装指定 API 2 包，一次返回完整诊断或安装结果。
+    inputs: path 为完成的工作区 API2 包；digest 可固定已知包摘要，operationId 可标识同一次安装。
+    outputs: "{plugin,...} 安装回执；宿主检查静态声明、语法和实际绑定，MCP 核对工具目录及适用的声明安装测试；失败带 diagnostics。原生包内业务测试需作者另行执行。"
+    prerequisites:
+      - 主 Agent；完整 plugin.json/capabilities.json 及实现资源。
+    limitations:
+      - 已有同 ID 用 plugin_update；根据具体 diagnostics 修包再试，无需手动重复 validate/test/install 三段链。
+  binding:
+    type: native
+    name: plugin_install

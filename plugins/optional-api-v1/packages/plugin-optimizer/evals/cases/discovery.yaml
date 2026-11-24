@@ -1,0 +1,13 @@
+id: plugin-optimizer-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/plugin-optimizer
+  - step: 1
+    pointer: /tools/0/name
+    equals: optimizer_case_new

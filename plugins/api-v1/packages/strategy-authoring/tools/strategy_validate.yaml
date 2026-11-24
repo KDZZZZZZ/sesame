@@ -1,0 +1,40 @@
+name: strategy_validate
+title: strategy_validate
+description: Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.
+inputSchema:
+  type: object
+  required:
+    - source_path
+  properties:
+    source_path:
+      type: string
+      description: Workspace path to the authored SVL JSON file
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read:resource
+  usage:
+    purpose: Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.
+    inputs: source_path 是工作区 SVL JSON。语言与合法示例从本插件 references/language.md、examples/close-threshold.svl.json 读取。
+    outputs: '{sourceDigest,operators,diagnostics,graph,validationScope:"svl-source-only"}，对应实际解析与静态语义。'
+    prerequisites:
+      - sesame/workspace 可读；源≤1MiB。
+    limitations:
+      - 字段/引用错误按 diagnostics 修源；不猜原语或仅改版本号。通过不代表原生回测或交易正确。
+  binding:
+    type: native
+    name: strategy_validate

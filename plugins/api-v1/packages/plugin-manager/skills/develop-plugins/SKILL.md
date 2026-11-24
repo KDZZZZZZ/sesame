@@ -17,9 +17,9 @@ plugin_create 可生成 knowledge、function、adapter、workflow、service 草�
 
 ## 3. 声明配置与知识
 
-配置与密钥使用统一入口；声明可管理字段后，以 configurationRequirements 绑定真正依赖该字段的能力，按需用 when 限定输入分支。不要给整个插件或无配置依赖的操作附加无关密钥要求。跨能力调用还需在 plugin.json.permissions 声明对应调用；配置字段、根权限、成员 allowedCalls 各司其职，互不替代。具体声明见 references/authoring.md。
+配置与密钥使用统一入口；声明可管理字段后，以 configurationRequirements 绑定真正依赖该字段的能力，按需用 when 限定输入分支。不要给整个插件或无配置依赖的操作附加无关密钥要求。跨能力调用还需在 plugin.yaml.permissions 声明对应调用；配置字段、根权限、成员 allowedCalls 各司其职，互不替代。具体声明见 references/authoring.md。
 
-prompt.md 保留职责与原则，SKILL.md 写适用场景和操作方法，长参数表与示例放已声明 reference。默认挂载或会话加载会注入 prompt 和技能入口正文，reference 按需读取；不要复制同一份长说明到三个位置。
+instructions.md 保留职责与原则，SKILL.md 写适用场景和操作方法，长参数表与示例放已声明 reference。默认挂载或会话加载会注入指引和技能名称、说明，激活后读取正文，reference 按需读取；不要复制同一份长说明到三个位置。
 
 ## 4. 测试、安装与验收
 

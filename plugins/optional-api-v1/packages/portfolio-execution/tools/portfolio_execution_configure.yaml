@@ -1,0 +1,48 @@
+name: portfolio_execution_configure
+title: portfolio_execution_configure
+description: Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order.
+inputSchema:
+  type: object
+  required:
+    - backend
+  properties:
+    id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,100}$
+    backend:
+      anyOf:
+        - type: string
+          const: mt5
+        - type: string
+          const: qmt
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - state.write
+  usage:
+    purpose: Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order.
+    inputs: '{backend:"mt5"|"qmt",id?:<stable binding ID>}; e.g. {backend:"mt5",id:"my-account"}. The backend must already be configured; this does not accept login credentials.'
+    outputs: '{plugin_id:"sesame/portfolio-execution",context_tool:"portfolio_execution_context",apply_tool:"portfolio_execution_apply",arguments:{binding_id}}; pass this entire object as a workflow execution reference.'
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+      - Declared sesame.execution-adapter/1 read/write operations plus historical delegated safety floors MT5 >=2.1.0 / QMT >=1.4.0. Manual execution uses MT5 >=2.1.7 / QMT >=1.2.0; version alone never proves a final-mile guard or readiness.
+      - "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
+    limitations:
+      - Binding ID is immutable for its owner/account/revision. After account/config change create a new binding instead of replacing the old identity.
+  binding:
+    type: native
+    name: portfolio_execution_configure

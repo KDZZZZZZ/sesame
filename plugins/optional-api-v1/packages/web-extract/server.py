@@ -3,7 +3,7 @@ from html.parser import HTMLParser
 from urllib.parse import urljoin, urlsplit
 
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-with open(os.path.join(PLUGIN_ROOT, "plugin.json"), encoding="utf-8") as manifest:
+with open(os.path.join(PLUGIN_ROOT, "package.json"), encoding="utf-8") as manifest:
     VERSION = json.load(manifest)["version"]
 
 def resolve_path(p):

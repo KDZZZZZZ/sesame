@@ -1,0 +1,51 @@
+name: data_sources
+title: data_sources
+description: 分页发现静态声明的真实来源和固定SourceRef。
+inputSchema:
+  type: object
+  properties:
+    contract:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 契约，如sesame.market/1
+    providerId:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 精确来源ID
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主页游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 分页发现静态声明的真实来源和固定SourceRef。
+    inputs: contract 可精确筛选，例如 sesame.market/1；providerId 为 pluginId#sourceId；limit 默认 50、1–200，cursor 延续上一页。
+    outputs: "{items,nextCursor?}；每项有 ref={providerId,revision}、contract、operations、configSchema、available。"
+    prerequisites: []
+    limitations:
+      - available 表示来源插件未禁用且未运行失败，不等于会话已加载或外部已连通；false 时用 plugin_inspect 按实际状态处理。全部来源用 data_sources，缓存和数据集可另有适配器专用入口。
+  binding:
+    type: native
+    name: data_sources

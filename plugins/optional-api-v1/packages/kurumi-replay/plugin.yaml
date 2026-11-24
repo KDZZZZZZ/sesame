@@ -1,0 +1,1060 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/kurumi-replay
+title: 久留美 · 三章连续挑战
+description: 非官方久留美三章连续模拟挑战，真实历史、真实角色Agent、只读行情与模拟账户观战；4小时决策与完整素材归档模式。
+version: 0.1.3-dev.3.9
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+author:
+  name: Sesame contributors (internal Agent implementation)
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  agent_scope: all
+  main_tool_names:
+    - kurumi_prepare
+    - kurumi_status
+    - kurumi_configure
+    - kurumi_start
+    - kurumi_continue
+    - kurumi_step
+    - kurumi_pause
+    - kurumi_reconcile
+    - kurumi_display
+    - kurumi_export
+    - kurumi_report
+    - kurumi_recover
+    - kurumi_repair_checkpoint_text
+    - kurumi_import_fx_supplement
+    - kurumi_archive_terminal
+    - kurumi_new_experiment
+    - kurumi_experiment_history
+    - kurumi_retry_committed_hooks
+    - kurumi_bind_experiment_fx
+    - kurumi_refresh_presentation
+    - kurumi_weekly
+    - kurumi_recording
+    - kurumi_experience
+    - kurumi_method_workflow
+    - kurumi_narration
+    - kurumi_audience
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - README.md
+    - RULES.md
+    - DATA.md
+    - PROVENANCE.md
+    - data-windows.json
+    - native-dependencies.json
+    - CORE-HANDOFF.md
+    - CORE-HANDOFF-INTEGRATION.md
+    - ROUND2-CORE.md
+    - ROUND2-PRESENTATION.md
+    - CORE-BOUNDED-HANDOFF.md
+    - PORTABLE-EXPERIENCE.md
+    - CORE-FORMING-HANDOFF.md
+    - CORE-CLOCK-HANDOFF.md
+    - CORE-ORDER-CHAT-HANDOFF.md
+    - FORMING-FIX-HANDOFF.md
+    - PRESTEP-JSON-FIX-HANDOFF.md
+    - COMMITTED-PROOF-FIX-HANDOFF.md
+    - UNSIGNED-REVISION-FIX-HANDOFF.md
+    - PLOT-TIME-FIX-HANDOFF.md
+    - COMPACT-LABELS-HANDOFF.md
+    - VALIDATION.md
+  permissions:
+    scopes:
+      - plugins.manage
+      - workspace.messages.read
+    calls:
+      - host.agent.run
+      - host.runs.read
+      - host.runs.wait
+      - host.runs.interrupt
+      - host.resources.read
+      - host.model.complete
+      - host.sessions.query
+      - host.messages.query
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/kurumi_prepare
+      - tool/kurumi_status
+      - tool/kurumi_configure
+      - tool/kurumi_start
+      - tool/kurumi_continue
+      - tool/kurumi_step
+      - tool/kurumi_pause
+      - tool/kurumi_reconcile
+      - tool/kurumi_display
+      - tool/kurumi_export
+      - tool/kurumi_report
+      - tool/kurumi_observe
+      - tool/kurumi_decide
+      - tool/kurumi_recover
+      - tool/kurumi_repair_checkpoint_text
+      - tool/kurumi_import_fx_supplement
+      - tool/kurumi_archive_terminal
+      - tool/kurumi_new_experiment
+      - tool/kurumi_experiment_history
+      - tool/kurumi_retry_committed_hooks
+      - tool/kurumi_bind_experiment_fx
+      - tool/kurumi_refresh_presentation
+      - tool/kurumi_weekly
+      - tool/kurumi_recording
+      - tool/kurumi_experience
+      - tool/kurumi_method_workflow
+      - tool/kurumi_narration
+      - tool/kurumi_audience
+      - id: market_bind
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market bind
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: bind."
+          inputs: "{binding:<host source connection/configuration>}; the host creates and owns this binding."
+          outputs: "{bindingId,...source capabilities}; opaque binding retained by host."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_bind
+      - id: market_unbind
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market unbind
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: unbind."
+          inputs: "{binding:<the retained host binding including bindingId>}."
+          outputs: "{released:true}."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_unbind
+      - id: market_searchInstruments
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market searchInstruments
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: searchInstruments."
+          inputs: "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Instrument descriptors for revealed replay symbols; items carry exact instrument references for describe/query."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_searchInstruments
+      - id: market_describeInstrument
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market describeInstrument
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: describeInstrument."
+          inputs: "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; One instrument descriptor with exact symbol/ref/calendar, tick/quantity units and supported replay bar specifications."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_describeInstrument
+      - id: market_queryBars
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market queryBars
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: queryBars."
+          inputs: "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Only revealed simulation bars in items; metadata carries source, snapshot/consistency and coverage; nextCursor continues the same query snapshot."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_queryBars
+      - id: market_subscribeBars
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation market subscribeBars
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only market source adapter: subscribeBars."
+          inputs: "{binding:<retained host binding>,query:<market operation fields>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: Host stream handle {id,events,close}; first snapshot and subsequent ordered updates include position/consistency. On RESYNC_REQUIRED close and obtain a new snapshot.
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: market_subscribeBars
+        transport: subscription
+      - id: account_bind
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account bind
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: bind."
+          inputs: "{binding:<host source connection/configuration>}; the host creates and owns this binding."
+          outputs: "{bindingId,...source capabilities}; opaque binding retained by host."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_bind
+      - id: account_unbind
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account unbind
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: unbind."
+          inputs: "{binding:<the retained host binding including bindingId>}."
+          outputs: "{released:true}."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_unbind
+      - id: account_listAccounts
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account listAccounts
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: listAccounts."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Simulated account descriptors in items, with the actual current replay run as accountId."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_listAccounts
+      - id: account_snapshot
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account snapshot
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: snapshot."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; One current simulation account snapshot in items, including balance/equity and source metadata."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_snapshot
+      - id: account_queryPositions
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account queryPositions
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: queryPositions."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Current simulated positions in items; flat state legitimately returns an empty list."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_queryPositions
+      - id: account_queryOrders
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account queryOrders
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: queryOrders."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Retained simulation order evidence in items; legacy unknown order coverage is explicit, not inferred from fills."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_queryOrders
+      - id: account_queryFills
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account queryFills
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: queryFills."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Actual committed simulated fills in items with native time/quantity/price/cost fields; no target-derived fills."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_queryFills
+      - id: account_queryHistory
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account queryHistory
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                cursor:
+                  type: string
+                  minLength: 1
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+            - page
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: queryHistory."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: "{items,nextCursor?,metadata}; Retained account history in items with point times, snapshot and coverage metadata."
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_queryHistory
+      - id: account_subscribeAccount
+        kind: function
+        consumers:
+          - host
+        description: Read revealed simulation account subscribeAccount
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: "Host-only account source adapter: subscribeAccount."
+          inputs: "{binding:<retained host binding>,query:<account operation fields>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly."
+          outputs: Host stream handle {id,events,close}; first snapshot and subsequent ordered updates include position/consistency. On RESYNC_REQUIRED close and obtain a new snapshot.
+          prerequisites:
+            - Host source dispatch and an initialized replay service; query/subscribe requires its existing binding.
+          limitations:
+            - Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage.
+        binding:
+          type: native
+          name: account_subscribeAccount
+        transport: subscription
+      - id: activate
+        kind: function
+        consumers:
+          - host
+        description: Replay lifecycle activate
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: Replay lifecycle activate
+          inputs: Host lifecycle activation payload.
+          outputs: "{active:true}; reload service and register declared sources."
+          prerequisites:
+            - Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool.
+          limitations:
+            - Activation does not start a paid role.
+        binding:
+          type: native
+          name: activate
+      - id: before_deactivate
+        kind: function
+        consumers:
+          - host
+        description: Replay lifecycle beforeDeactivate
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: Replay lifecycle beforeDeactivate
+          inputs: Host lifecycle before-deactivation payload.
+          outputs: "{accepted:true} only when no active role reservation blocks safe unload."
+          prerequisites:
+            - Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool.
+          limitations:
+            - RUN_ACTIVE requires pause/reconciliation; disabling is not permission to lose role evidence.
+        binding:
+          type: native
+          name: before_deactivate
+      - id: before_run_release
+        kind: function
+        consumers:
+          - host
+        description: Replay lifecycle beforeRunRelease
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: Replay lifecycle beforeRunRelease
+          inputs: "{runId:<host role Run being released>}."
+          outputs: Protected artifact/resource references after full role evidence sealing and cleanup checks.
+          prerequisites:
+            - Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool.
+          limitations:
+            - Archive failure blocks cleanup; it does not discard the only task evidence.
+        binding:
+          type: native
+          name: before_run_release
+      - id: dispose
+        kind: function
+        consumers:
+          - host
+        description: Replay lifecycle dispose
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: Replay lifecycle dispose
+          inputs: Host lifecycle disposal payload.
+          outputs: "{disposed:true}; service/source/native worker cleanup."
+          prerequisites:
+            - Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool.
+          limitations:
+            - Does not erase durable ledger or reverse a committed simulation fill.
+        binding:
+          type: native
+          name: dispose
+      - id: native_run
+        kind: function
+        consumers:
+          - host
+        description: Run the explicitly requested fixed native replay operation.
+        inputSchema:
+          type: object
+          properties:
+            action:
+              enum:
+                - status
+                - prepare
+                - advance
+            state:
+              type: object
+              additionalProperties: true
+            decision:
+              type: object
+              additionalProperties: true
+            data:
+              type: object
+              additionalProperties: true
+          required:
+            - action
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: run
+        effects: []
+        usage:
+          purpose: Run the explicitly requested fixed native replay operation.
+          inputs: '{action:"status"|"prepare"|"advance",state?,decision?,data?}; owned plugin supplies fixed data/state.'
+          outputs: Actual isolated native environment/prepare/advance result with execution evidence or a diagnostic failure.
+          prerequisites:
+            - Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool.
+          limitations:
+            - Only nested calls from this owning plugin; no arbitrary shell/code or model-authored source substitution.
+        binding:
+          type: native
+          name: native_run
+    sources:
+      - id: market
+        contract: sesame.market/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                revision:
+                  type: string
+                  minLength: 1
+              required:
+                - id
+                - revision
+              additionalProperties: false
+            configuration:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: false
+          required: []
+          additionalProperties: false
+        operations:
+          bind: market_bind
+          unbind: market_unbind
+          searchInstruments: market_searchInstruments
+          describeInstrument: market_describeInstrument
+          queryBars: market_queryBars
+          subscribeBars: market_subscribeBars
+        presentation:
+          connection:
+            required: false
+      - id: account
+        contract: sesame.account/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                revision:
+                  type: string
+                  minLength: 1
+              required:
+                - id
+                - revision
+              additionalProperties: false
+            configuration:
+              type: object
+              properties: {}
+              required: []
+              additionalProperties: false
+          required: []
+          additionalProperties: false
+        operations:
+          bind: account_bind
+          unbind: account_unbind
+          listAccounts: account_listAccounts
+          snapshot: account_snapshot
+          queryPositions: account_queryPositions
+          queryOrders: account_queryOrders
+          queryFills: account_queryFills
+          queryHistory: account_queryHistory
+          subscribeAccount: account_subscribeAccount
+        presentation:
+          connection:
+            required: false
+          liveTopics:
+            - snapshot
+            - positions
+            - orders
+            - fills
+            - history
+    views: []
+    services: []
+    knowledge:
+      - id: replay-guide
+        path: instructions.md
+        description: 真实历史模拟的操作边界、Agent 决策与归档证据规则。
+        kind: prompt
+      - id: replay-public-guide
+        path: skills/kurumi-replay/SKILL.md
+        kind: skill
+        description: Public replay controls, role boundaries, recovery and evidence interpretation.
+    hooks:
+      - id: activate
+        contract: sesame.lifecycle/1
+        event: lifecycle.activate
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: activate
+      - id: before_deactivate
+        contract: sesame.lifecycle/1
+        event: lifecycle.beforeDeactivate
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: before_deactivate
+      - id: before_run_release
+        contract: sesame.lifecycle/1
+        event: lifecycle.beforeRunRelease
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: before_run_release
+      - id: dispose
+        contract: sesame.lifecycle/1
+        event: lifecycle.dispose
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          handle: dispose
+    stateCollections: []
+    artifactSchemas:
+      - id: replay-resource
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - path
+          additionalProperties: true
+      - id: replay-data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+          additionalProperties: true
+      - id: replay-indicator
+        kind: indicator
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - schemaVersion
+            - title
+            - parameters
+            - inputs
+            - panes
+            - series
+            - implementation
+          additionalProperties: true
+      - id: replay-report
+        kind: report
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - title
+            - entry
+            - runtime
+            - data
+          additionalProperties: true

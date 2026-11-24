@@ -1,0 +1,86 @@
+name: data_read
+title: data_read
+description: 将固定DataRef或宿主登记数据的完整JSON复制到执行目录inputs，或分页列出登记数据。
+inputSchema:
+  type: object
+  properties:
+    datasetId:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主数据ID
+    ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 成果ID
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 精确修订
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: 成果类型
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    directory:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 工作区执行目录，默认当前目录
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主页游标
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - data.query
+    - resource.read
+    - filesystem.write
+  usage:
+    purpose: 将固定DataRef或宿主登记数据的完整JSON复制到执行目录inputs，或分页列出登记数据。
+    inputs: 无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot 或 market_read，可直接供报告绑定，无需再次冻结。
+    outputs: 列表为 {items,nextCursor?}；读取为 {datasetId或ref,path,rowCount,sample,provenance}，path 是实际落盘位置。
+    prerequisites:
+      - 读取并落盘需要 sesame/workspace 的 write 能力；最多 8MiB。
+    limitations:
+      - 文件复制不改变来源或证明计算。datasetId 是登记数据 ID，ArtifactRef 是固定成果，两者不能混用。
+  binding:
+    type: native
+    name: data_read

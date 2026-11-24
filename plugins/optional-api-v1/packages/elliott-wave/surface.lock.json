@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/elliott-wave:instructions#preamble": "8d9b40d1720c2ae0c6f5651b72242173a6e44aa1acb5de8895ddc9c8512a3c8d",
+    "sesame/elliott-wave:plugin.description": "db86a4d5a86ad8dd4eb2cf60727e492ac1711998985b7b938abd0007e2a400d2",
+    "sesame/elliott-wave:resource/LICENSE": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+    "sesame/elliott-wave:resource/PROVENANCE.md": "4553d2a6bf55a6b2f0c2ffb8347010100a347cfbf255e1fc81b8f6f100f007bf",
+    "sesame/elliott-wave:resource/README.md": "44a5b6d3faddab401a20e070fa9d2d28758db740ecf5499827070feef1964ae2",
+    "sesame/elliott-wave:resource/examples/case.json": "5147be9842a8220271c1cb26e0c1f5993f960eeb6ffd066f3c3a086189e53a09",
+    "sesame/elliott-wave:resource/examples/expected.md": "c671719127f641f1ae9afa9cfe3b695d72fd7f6bc1931062f9bbef9b21725f69",
+    "sesame/elliott-wave:resource/references/method.md": "6142004ebf90a2eb9f1e8e7a0eebb6b7a9168c6ea02a88d1bf67fa5758519090",
+    "sesame/elliott-wave:resource/references/validation.md": "d4dbd236c4e01a074b148d9f85e912a803d12166ef67c3fdea81ee648e064f97",
+    "sesame/elliott-wave:skill/elliott-wave.body": "de1e08f82b93ff9c5d51b01f3ce97daa69b36b06cbcdbd653695bacad437b2ee",
+    "sesame/elliott-wave:skill/elliott-wave.description": "cafc045f3947e64ec94ad868580dfdaab8c8833867735d9f74fb579c0c216365"
+  },
+  "digest": "342d8fb3bfae1adc8c617fd2934792c03d95f0f157f6e32c428c146759933dd1"
+}

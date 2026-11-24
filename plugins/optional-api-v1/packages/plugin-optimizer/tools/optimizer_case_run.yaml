@@ -1,0 +1,43 @@
+name: optimizer_case_run
+title: optimizer_case_run
+description: 对指定草稿运行固定案例
+inputSchema:
+  type: object
+  properties:
+    draft:
+      type: string
+      minLength: 1
+    path:
+      type: string
+      minLength: 1
+    case:
+      type: string
+      minLength: 1
+  required:
+    - draft
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 对指定草稿运行固定案例
+    inputs: draft, path, case
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_case_run

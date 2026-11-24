@@ -1,0 +1,49 @@
+name: mt5_report_data
+title: mt5_report_data
+description: 从实际已结束的 MT5 Tester 任务发布可供通用报告引用的数据集。保留失败/取消状态、券商时间、费用和原生 trace 局限；不会启动回测。
+inputSchema:
+  type: object
+  required:
+    - backtest_ids
+  properties:
+    backtest_ids:
+      type: array
+      items:
+        type: string
+        description: 真实回测任务 ID
+        minLength: 1
+        maxLength: 20000
+      minItems: 1
+      maxItems: 32
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+  usage:
+    purpose: 构建真实Tester报告的数据源与组件绑定。
+    inputs: "{backtest_ids:[<真实任务id>]}，1–32唯一ID。"
+    outputs: '{sources:[{id,sourceRef:{providerId:"sesame/mt5#datasets",revision},query:{datasetId},title,description,parameters_schema,row_schema,provenance}],component:{id:"backtest",type:"strategy_backtest",bindings}}；角色grid/optimization/passes/pass/trades。'
+    prerequisites:
+      - 任务均已终止且至少一个pass真正succeeded；来源查询/冻结经data-access，报告由reports能力发布。
+    limitations:
+      - 只建立基于真实Tester的报告数据，不直接发布/渲染报告；失败/取消任务不伪造最佳参数，equity采样和截断保留。
+  binding:
+    type: native
+    name: mt5_report_data

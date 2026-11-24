@@ -89,8 +89,21 @@ export class TradingRuntime {
       return { available: false, reason: error.message, details: { runId: id, readinessScope: 'frozen-declarations-and-local-state', liveObservation: 'not-probed', cause: cleanError(error), ...(error.details ? { causeDetails: clone(error.details) } : {}) } };
     }
   }
-  async executionSnapshot(host, run, signal) {
-    const snapshot = await executionCall(host, run.plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
+  async executionSnapshot(host, run, signal, { controller = false } = {}) {
+    const execution = run.plan.execution;
+    const args = { action: 'snapshot', history_days: 30 };
+    if (controller) {
+      const id = execution.pluginId + '#' + execution.contextTool;
+      const { items } = await host.capabilities.list({ ids: [id], limit: 1 });
+      if (items.find(tool => tool.id === id)?.inputSchema?.properties?.frozen_context) {
+        check(run.plan.ownerConversationId === host.context.ownerSessionId && execution.context?.account
+          && canonical(execution.context.account) === canonical(run.plan.account)
+          && canonical(execution.account) === canonical(run.plan.account),
+        'ACCOUNT_MISMATCH', 'Workflow snapshot account differs from the saved plan');
+        args.frozen_context = execution.context;
+      }
+    }
+    const snapshot = await executionCall(host, execution, 'context', args, signal);
     return validateSnapshot(snapshot, run.plan.account);
   }
   activity(id, type, data) { return this.save(this.run(id), [{ type, at: this.now(), ...data }]); }
@@ -141,6 +154,8 @@ export class TradingRuntime {
   async start() {
     check(this.host.capabilities && this.host.runs, 'PREREQUISITE_REQUIRED', 'Trading decisions require declared Agent capabilities and Runs');
     for (const run of records(this.host).list('runs')) {
+      // A paused host workflow already owns its checkpoint and the reason for resumption.
+      if (run.workflow && run.status === 'interrupted') continue;
       if (run.workflow && !TERMINAL.has(run.status)) {
         // The host owns recovery of accepted Runs. Keep their identities and
         // receipts; never cancel/recreate them during plugin activation.
@@ -255,7 +270,7 @@ export class TradingRuntime {
       const current = this.run(id), steps = stages(current.plan), workflow = tradingPlan(current.plan.workflow);
       const canExecute = workflow.execute && !workflow.reviews.some(member => current.reviewChecks?.[member.id]?.verdict === 'block');
       if (!current.execution && ((current.stageIndex ?? 0) < steps.length || canExecute)) {
-        const observed = await this.executionSnapshot(host, current, signal);
+        const observed = await this.executionSnapshot(host, current, signal, { controller: true });
         if (current.decision && canExecute) requireExecutionEvidence(observed, current.decision);
       }
       // A report-only retry retains the original decision/receipt and does not
@@ -280,7 +295,10 @@ export class TradingRuntime {
       const control = interruption(error, signal);
       if (control || !signal.aborted) {
         interrupted = true; this.update(id, { status: 'interrupted', reportPending: false, error: cleanError(control ?? error) });
-        if (!control || control.code === 'DEPENDENCY_UNAVAILABLE') await execution.interrupt({ reason: (control ?? error).message, requirements: control?.details?.requirements, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
+        // A child pause is local to that Run. Checkpoint this workflow explicitly
+        // before leaving its executor so the decision and accepted task IDs survive.
+        const childPaused = !signal.aborted && control?.code === 'RUN_INTERRUPTED' && control.details?.childRunId;
+        if (!control || control.code === 'DEPENDENCY_UNAVAILABLE' || childPaused) await execution.interrupt({ reason: (control ?? error).message, requirements: control?.details?.requirements, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
         throw control ?? error;
       }
       await Promise.allSettled(stageTasks);
@@ -366,7 +384,7 @@ export class TradingRuntime {
     if (run.decision) { check(canonical(run.decision) === canonical(value), 'DECISION_FROZEN', 'This run already has a different frozen target'); return run.decision; }
     // Research artifacts already freeze their complete results and source graph.
     // Retain their exact identity instead of copying that graph into this trade.
-    await validateResearchRefs(host, value.research_refs, signal);
+    await validateResearchRefs(host, value.research_refs, signal, run.plan.researchArtifacts);
     const references = [...value.evidence_dataset_ids, ...value.evidence_sources, ...value.evidence_artifacts];
     const snapshots = await datasetSnapshot(host, references, signal);
     const evidence = [...new Set(references.map(ref => typeof ref === 'string' ? ref : ref.datasetId ?? ref.id))].map(datasetId => {

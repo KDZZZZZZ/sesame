@@ -1,0 +1,103 @@
+name: judgment_review_due
+title: judgment_review_due
+description: 主 Agent 决定复盘后，按事前冻结口径检查最多 12 条到期判断的已有真实数据集；返回核验结果及缺失证据。不会调用模型、抓取外部数据或发送聊天。核验后仍需 judgment_reflect 完成归因。
+inputSchema:
+  type: object
+  properties:
+    evidence:
+      type: array
+      items:
+        oneOf:
+          - type: object
+            properties:
+              datasetId:
+                type: string
+                minLength: 1
+                maxLength: 200
+              source:
+                type: object
+                properties:
+                  providerId:
+                    type: string
+                    minLength: 1
+                  revision:
+                    type: string
+                    minLength: 1
+                  binding:
+                    type: object
+                required:
+                  - providerId
+                  - revision
+                additionalProperties: false
+              query:
+                type: object
+            required:
+              - datasetId
+              - source
+              - query
+            additionalProperties: false
+          - type: object
+            properties:
+              datasetId:
+                type: string
+                minLength: 1
+              artifact:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                  revision:
+                    type: string
+                    minLength: 1
+                  digest:
+                    type: string
+                    pattern: ^sha256:[a-f0-9]{64}$
+                  kind:
+                    const: data
+                  schemaVersion:
+                    const: 1.0.0
+                required:
+                  - id
+                  - revision
+                  - digest
+                  - kind
+                  - schemaVersion
+                additionalProperties: false
+            required:
+              - datasetId
+              - artifact
+            additionalProperties: false
+      maxItems: 30
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties: {}
+  required: []
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 主 Agent 决定复盘后，按事前冻结口径检查最多 12 条到期判断的已有真实数据集；返回核验结果及缺失证据。不会调用模型、抓取外部数据或发送聊天。核验后仍需 judgment_reflect 完成归因。
+    inputs: "{evidence?:[{datasetId,source,query}|{datasetId,artifact}]}; omit evidence to use saved host datasets; explicit references load producer-returned source/artifact observations before review."
+    outputs: "{checked,resolved:[judgment IDs],awaiting_evidence:[{judgment_id,reason}],statistics}; checks at most 12 due judgments against available evidence."
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Does not fetch unspecified sources or request a model. An automatic score still needs reflect for semantic review.
+  binding:
+    type: native
+    name: judgment_review_due

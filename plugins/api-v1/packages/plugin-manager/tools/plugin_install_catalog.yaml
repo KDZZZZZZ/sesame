@@ -1,0 +1,75 @@
+name: plugin_install_catalog
+title: plugin_install_catalog
+description: 下载核对固定目录包后由宿主一次完成检查与安装或显式更新。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      description: 16–128 位字母、数字、下划线或连字符；同一请求重试保持不变
+      pattern: ^[A-Za-z0-9_-]+$
+    plugin_id:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    catalog_digest:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+    action:
+      enum:
+        - install
+        - update
+    expected_digest:
+      type: string
+      pattern: ^sha256:[a-f0-9]{64}$
+  required:
+    - command_id
+    - plugin_id
+    - catalog_digest
+  additionalProperties: false
+  anyOf:
+    - properties:
+        action:
+          const: update
+      required:
+        - action
+        - expected_digest
+    - properties:
+        action:
+          const: install
+      not:
+        required:
+          - expected_digest
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - network.read
+    - filesystem.write
+    - plugin.install
+    - state.write
+  usage:
+    purpose: 下载核对固定目录包后由宿主一次完成检查与安装或显式更新。
+    inputs: plugin_id/catalog_digest 取自同一次 plugin_catalog；command_id 为 16–128 位字母、数字、下划线或连字符，固定此次请求。action 默认 install 且不传 expected_digest；更新用 update 并传 plugin_inspect.digest 为 expected_digest。
+    outputs: 安装/更新或 already-installed 回执，含真实插件状态；关闭的插件不自动启用。
+    prerequisites:
+      - 主 Agent；确切目录版本仍可用。
+    limitations:
+      - CATALOG_CHANGED 重查目录；CATALOG_INSTALLED_CHANGED 重读安装摘要。下载、摘要或测试失败不绕过校验，不重复创建新安装命令掩盖失败。
+  binding:
+    type: native
+    name: plugin_install_catalog

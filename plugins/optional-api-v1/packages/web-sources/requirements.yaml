@@ -1,0 +1,8 @@
+goal: 搜索与来源：免Key关键词搜索、站点筛选，抓取选定HTTP/HTTPS原文并保存固定引用；与RSS、正文解析和金融来源独立协作。
+acceptance:
+  discovery:
+    case: web-sources-discovery
+    tools:
+      - sources_fetch
+      - sources_search
+    resource: INTERFACES.md

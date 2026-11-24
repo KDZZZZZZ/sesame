@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/backtrader:instructions#preamble": "5ef0d0859ff49bba0c4f806015eb95c35952dd26c6ae014f25e7841b84c53c81",
+    "sesame/backtrader:plugin.description": "238f5c661a7ceccea1b9a380ec4f0dd1ddeca4e553caadcd2efbd1cc380f2786",
+    "sesame/backtrader:resource/INTERFACES.md": "5fd345e94fd42bb04a281892d65c0615aaac8004a796ddac7e4b5a81f76e25f8",
+    "sesame/backtrader:resource/PROVENANCE.md": "4394d0973d5b2a0cb1f6df646f9b611700cfcc95fc94fee0912c54bcaea1cc5b",
+    "sesame/backtrader:resource/README.md": "53a7dff2fe31b4634c2803c68f2742dd03eb67f243b8f25756be69efa2589bc6",
+    "sesame/backtrader:skill/backtrader-fixed-research.body": "6619ec6dcbd556174f25a10ecdb11fbdceedcf33dab4f0413b338ae5a753af9a",
+    "sesame/backtrader:skill/backtrader-fixed-research.description": "15c1c270a49fc5262621f0f843076937715175404dd3ba1fd173651e9fd310f5",
+    "sesame/backtrader:tool/backtrader_backtest.description": "6b44c1a3f01b04d8c73d06721798aeea3dc2694bffd87fffb217575eec72c660",
+    "sesame/backtrader:tool/backtrader_backtest.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/backtrader:tool/backtrader_backtest.input": "421600e77f6b229770737b0e3d7020731f811849631258696465a3a0d2123bbe",
+    "sesame/backtrader:tool/backtrader_backtest.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
+    "sesame/backtrader:tool/backtrader_environment.description": "22dd01535f7f7b416820f02d968d0ad40e771e1e46940a8e46f772a4c7984139",
+    "sesame/backtrader:tool/backtrader_environment.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/backtrader:tool/backtrader_environment.input": "2da6dc1b36afc40e7464ec2d2d9404f20991cf0acd960f92192b631a6c58c2ab",
+    "sesame/backtrader:tool/backtrader_environment.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
+    "sesame/backtrader:tool/backtrader_operation.description": "0ba1350ed9afc8db5079235d46db638d78afcd1f92a20d7e6c5bba9dc5cc1e92",
+    "sesame/backtrader:tool/backtrader_operation.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/backtrader:tool/backtrader_operation.input": "c380b09c9997cb9ff4033b5436707f9c9cea06d15dcbb81ddd3017bc2844f435",
+    "sesame/backtrader:tool/backtrader_operation.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842",
+    "sesame/backtrader:tool/backtrader_optimize.description": "ea8c9669f953d76e6bcb31e365120d815d124f2751b381a8b4ad23fe8724d981",
+    "sesame/backtrader:tool/backtrader_optimize.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/backtrader:tool/backtrader_optimize.input": "f80d3477d1d72f01db87d5b387bac9ab5eb7cbb3352beb947e27bf5cdf04bf04",
+    "sesame/backtrader:tool/backtrader_optimize.output": "95c9e4fefaf439f58570be092aaed179722296bac585e12a08458ecdad704b6d",
+    "sesame/backtrader:tool/backtrader_result.description": "bd3490543ca7ff46f416d3dbe07dad4d24252d22d2e092153019cbfc129497d9",
+    "sesame/backtrader:tool/backtrader_result.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/backtrader:tool/backtrader_result.input": "23e883c0c0098e0cd55cf15fb5659804a9871df6d1f32c6362ecb69bd0c9f05c",
+    "sesame/backtrader:tool/backtrader_result.output": "3f7418b579fb7b75dc5a0dd6b85f046a8d61d5de8a685ddcd75a9c2aae2a8842"
+  },
+  "digest": "dc50680b787a3aa6a6eac9e37eb92cb064974ad4b2dc5123ab607f7b951f74b3"
+}

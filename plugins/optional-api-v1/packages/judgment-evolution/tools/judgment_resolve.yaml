@@ -1,0 +1,173 @@
+name: judgment_resolve
+title: judgment_resolve
+description: 使用真实数据集按事前冻结条件核验到期判断。服务读取数据字段并计算结果与 Brier 分数，不接受手填命中、结果值或分数。数据缺失时使用 judgment_defer。
+inputSchema:
+  type: object
+  required:
+    - judgment_id
+    - dataset_id
+  properties:
+    judgment_id:
+      type: string
+      description: 判断 ID
+      minLength: 1
+      maxLength: 2000
+    dataset_id:
+      type: string
+      description: 符合冻结来源、对象、字段、时间窗口的已登记真实数据集
+      minLength: 1
+      maxLength: 2000
+    reflection:
+      type: string
+      description: 基于证据的复盘摘要、错误原因与应继续验证的假设
+      minLength: 1
+      maxLength: 4000
+    source:
+      type: object
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+        binding:
+          type: object
+      required:
+        - providerId
+        - revision
+      additionalProperties: false
+    query:
+      type: object
+    artifact:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+          minLength: 1
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: data
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+  additionalProperties: false
+  dependentRequired:
+    source:
+      - query
+    query:
+      - source
+  allOf:
+    - not:
+        required:
+          - artifact
+          - source
+    - not:
+        required:
+          - artifact
+          - query
+outputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+    version:
+      type: integer
+    claim:
+      type: string
+    topic:
+      type: string
+    regime:
+      type: string
+    rationale:
+      type: string
+    probability:
+      type: number
+    baseline_probability:
+      type: number
+    due_at:
+      type: string
+    created_at:
+      type: string
+    conversation_id:
+      type: string
+    source_message_id:
+      type:
+        - string
+        - "null"
+    verification:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    rule_predictions:
+      type: array
+      items:
+        type: object
+        properties: {}
+        required: []
+        additionalProperties: true
+    status:
+      enum:
+        - pending
+        - awaiting_evidence
+        - resolved
+    event_key:
+      type: string
+    next_review_at:
+      type: string
+    review_attempts:
+      type: integer
+    review:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: true
+    evidence_gap:
+      type: string
+    last_evidence_check_at:
+      type: string
+  required:
+    - id
+    - claim
+    - probability
+    - due_at
+    - status
+  additionalProperties: false
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - Read saved workspace evidence
+    - Read and update the private judgment ledger
+  usage:
+    purpose: 使用真实数据集按事前冻结条件核验到期判断。服务读取数据字段并计算结果与 Brier 分数，不接受手填命中、结果值或分数。数据缺失时使用 judgment_defer。
+    inputs: "{judgment_id,dataset_id,source?,query?,artifact?,reflection?}; source/query must be producer-returned public evidence descriptors, or artifact an exact published data reference. Reuse matching frozen observations from the selected source; ask the source layer only for missing observations. A method interpretation, vote or report is not a replacement for the required observed field."
+    outputs: Updated prediction status=resolved with review.evidence, observed value/time, row/hash/source chain, brier and baseline_brier computed by the service.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+    limitations:
+      - Only after due_at and only real external evidence matching frozen source/object/window. No manually supplied outcome or score; missing evidence belongs in defer.
+  binding:
+    type: native
+    name: judgment_resolve

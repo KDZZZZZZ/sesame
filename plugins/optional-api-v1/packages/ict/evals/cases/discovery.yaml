@@ -1,0 +1,19 @@
+id: ict-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/ict/skills/ict/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/ict
+  - step: 1
+    pointer: /tools
+    equals: []
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# ICT 价格结构研究"

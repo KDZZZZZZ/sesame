@@ -1,0 +1,38 @@
+name: mt5_target
+title: mt5_target
+description: 读取并冻结 MQL5 目标 profile、数值/事件/恢复限制及包内翻译说明。先保存 SVL 并由宿主从源生成图，再依目标翻译；本工具不编译、不回测、不交易。
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.publish
+  usage:
+    purpose: 发布当前MQL5目标能力说明及SDK参考。
+    inputs: "{}。"
+    outputs: 直接返回固定 ArtifactRef {id,revision,digest,kind:"strategy.target",schemaVersion:"1.0.0"}；资源manifest含modes、language、svl/execution、semantics、verification、resources和工具入口。
+    prerequisites:
+      - 目标信息可通过宿主resources.read或已声明公开资源读取，无需运行终端。
+    limitations:
+      - 这是支持范围/限制声明，不是某次翻译的等价证据。
+  binding:
+    type: native
+    name: mt5_target

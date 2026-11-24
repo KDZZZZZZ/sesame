@@ -1,0 +1,3081 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/mt5
+title: MetaTrader 5
+description: MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。
+version: 2.2.5
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+x-sesame:
+  default_state: discoverable
+  prompts:
+    - instructions.md
+    - tools/official/prompt.md
+    - tools/charts/prompt.md
+    - tools/editor/prompt.md
+    - tools/python/prompt.md
+    - tools/system/prompt.md
+    - tools/tester/prompt.md
+    - tools/trading/prompt.md
+    - tools/deployment/prompt.md
+    - tools/authoring/prompt.md
+  skills:
+    - skills
+  resources:
+    - README.md
+    - references/language.md
+    - target/README.md
+    - target/translation-file.md
+    - target/sdk-integration.md
+    - target/examples/Strategy.mq5
+    - backend/sdk/Expert.mqh
+    - backend/sdk/Results.mqh
+    - backend/sdk/Risk.mqh
+    - backend/sdk/Telemetry.mqh
+    - backend/sdk/Trade.mqh
+    - backend/sdk/Visual.mqh
+    - scripts/install-mt5-python.py
+    - scripts/install-mt5-macos.sh
+    - scripts/README.md
+    - TRADING.md
+    - target/conformance.md
+    - backend/sdk/Conformance.mqh
+    - backend/sdk/FrozenInputs.mqh
+    - target/examples/FrozenTimeline.mq5
+  main_tool_names:
+    - mt5_deployment
+    - mt5_update_configuration
+    - mt5_import_configuration
+    - mt5_start_terminal
+    - mt5_connect
+    - mt5_trading_permissions
+    - mt5_trading_prepare
+    - mt5_dependencies
+  permissions:
+    scopes:
+      - workspace.messages.read
+    calls:
+      - host.messages.query
+  contributions:
+    configSchema:
+      type: object
+      properties:
+        disabled:
+          type: boolean
+        autoConnect:
+          type: boolean
+        directory:
+          type: string
+      additionalProperties: false
+    capabilities:
+      - tool/mt5_catalog
+      - tool/mt5_call
+      - tool/mt5_cache
+      - tool/mt5_command
+      - tool/mt5_chart
+      - tool/mt5_edit
+      - tool/mt5_python
+      - tool/mt5_system
+      - tool/mt5_test
+      - tool/mt5_backtest
+      - tool/mt5_trade
+      - tool/mt5_deployment
+      - tool/mt5_project
+      - tool/mt5_inspect
+      - tool/mt5_compile
+      - id: configuration.read
+        kind: function
+        consumers:
+          - host
+        description: Read only the declared public MT5 settings and credential presence for host configuration and capability readiness; available to service and task contexts without changing main-session configuration permissions.
+        inputSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            settings:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                allow_trading:
+                  type: boolean
+                allow_host_operations:
+                  type: boolean
+                servers:
+                  type: object
+                  properties:
+                    terminal:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        enabled:
+                          type: boolean
+                        authenticated:
+                          type: boolean
+                      required:
+                        - url
+                        - enabled
+                        - authenticated
+                      additionalProperties: false
+                    metaeditor:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        enabled:
+                          type: boolean
+                        authenticated:
+                          type: boolean
+                      required:
+                        - url
+                        - enabled
+                        - authenticated
+                      additionalProperties: false
+                    marketdata:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        enabled:
+                          type: boolean
+                        authenticated:
+                          type: boolean
+                      required:
+                        - url
+                        - enabled
+                        - authenticated
+                      additionalProperties: false
+                  required:
+                    - terminal
+                    - metaeditor
+                    - marketdata
+                  additionalProperties: false
+                account:
+                  type: object
+                  properties:
+                    login:
+                      type: string
+                    server:
+                      type: string
+                    password_configured:
+                      type: boolean
+                      writeOnly: false
+                  required:
+                    - login
+                    - server
+                    - password_configured
+                  additionalProperties: false
+                tester_agent:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    port:
+                      type: integer
+                    password_configured:
+                      type: boolean
+                      writeOnly: false
+                  required:
+                    - address
+                    - port
+                    - password_configured
+                  additionalProperties: false
+              required:
+                - version
+                - allow_trading
+                - allow_host_operations
+                - servers
+                - account
+                - tester_agent
+              additionalProperties: false
+          required:
+            - settings
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - read-only
+        usage:
+          purpose: Provide a public configuration projection to the host without pending imports or diagnostic content.
+          inputs: Empty object {}.
+          outputs: "{settings:{version,servers,account,tester_agent,allow_trading,allow_host_operations}}; credentials are represented only by booleans."
+          prerequisites: []
+          limitations:
+            - Presence does not verify remote authentication or connectivity; configuration writes and the existing mt5_settings tool retain main-conversation permissions.
+        binding:
+          type: native
+          name: configuration.read
+      - tool/mt5_settings
+      - tool/mt5_update_configuration
+      - tool/mt5_import_configuration
+      - tool/mt5_start_terminal
+      - tool/mt5_connect
+      - tool/mt5_trading_prepare
+      - tool/mt5_trading_permissions
+      - tool/mt5_report_data
+      - tool/mt5_trade_detail
+      - tool/mt5_target
+      - tool/mt5_translation
+      - tool/mt5_translation_file
+      - tool/mt5_dependencies
+      - tool/mt5_conformance
+      - tool/mt5_trading_context
+      - tool/mt5_trading_pause
+      - tool/mt5_trading_order
+      - tool/mt5_trading_command
+      - id: activate
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle activate: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          properties:
+            config:
+              type: object
+              properties:
+                disabled:
+                  type: boolean
+                autoConnect:
+                  type: boolean
+                directory:
+                  type: string
+              additionalProperties: false
+          required:
+            - config
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.state.write
+          - native-observation
+        usage:
+          purpose: 执行MT5 activate 生命周期职责。
+          inputs: "{config:{disabled?,autoConnect?,directory?}}；例{config:{autoConnect:false}}。"
+          outputs: "{ready:true}；初始化私有存储、providers、观察器，默认可启动连接监视。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - disabled/autoConnect:false可用于隔离；激活不证明券商可用。
+        binding:
+          type: native
+          name: activate
+      - id: dispose
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle dispose: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.close
+        usage:
+          purpose: 执行MT5 dispose 生命周期职责。
+          inputs: "{}。"
+          outputs: "{closed:true}；关闭监视器、数据provider、自有进程与存储。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 不是平仓操作。
+        binding:
+          type: native
+          name: dispose
+      - id: beforeAgentTurn
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle beforeAgentTurn: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          properties:
+            messageId:
+              type: string
+            conversation:
+              type: object
+              additionalProperties: true
+            parts:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            source: {}
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - messageId
+            - conversation
+            - parts
+          additionalProperties: true
+        outputSchema:
+          type: object
+          properties:
+            parts:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+          required:
+            - parts
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - plugin.state.write
+        usage:
+          purpose: 执行MT5 beforeAgentTurn 生命周期职责。
+          inputs: "{messageId,conversation,parts,source?,metadata?}。"
+          outputs: "{parts:<处理后消息部分>}；原生配置敏感内容转换为安全待导入引用。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 仅宿主入站钩子；Agent使用mt5_settings/pendingImports，不读取原密钥。
+        binding:
+          type: native
+          name: beforeAgentTurn
+      - id: beforeConfigChange
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle beforeConfiguration: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: 执行MT5 beforeConfigChange 生命周期职责。
+          inputs: "{}。"
+          outputs: "{}；Tester在途时抛mt5_busy。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 等待实际任务结束，不用改ID/关插件绕过。
+        binding:
+          type: native
+          name: beforeConfigChange
+      - id: beforeDeactivate
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle beforeDeactivate: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects: []
+        usage:
+          purpose: 执行MT5 beforeDeactivate 生命周期职责。
+          inputs: "{}。"
+          outputs: "{}；仍有preparing/attaching/running/unknown挂载时抛ACTIVE_RUNS。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 保留原生运行观察通道；不可将卸载当停止EA。
+        binding:
+          type: native
+          name: beforeDeactivate
+      - id: configChanged
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle configurationChanged: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 执行MT5 configChanged 生命周期职责。
+          inputs: "{}。"
+          outputs: "{}；通知连接监视器settingsChanged。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 不表示重连已成功。
+        binding:
+          type: native
+          name: configChanged
+      - id: beforeRunRelease
+        kind: function
+        consumers:
+          - host
+        description: "MT5 lifecycle protectArtifacts: preserve credentials, native state and cleanup evidence."
+        inputSchema:
+          type: object
+          properties:
+            runId:
+              type: string
+          required:
+            - runId
+          additionalProperties: true
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - process.cancel
+          - resources.publish
+          - private-filesystem
+        usage:
+          purpose: 执行MT5 beforeRunRelease 生命周期职责。
+          inputs: "{runId:<宿主运行ID>}。"
+          outputs: "{artifacts:[<封存成果Ref>],resources:[{id,path,digest,reason}]}；取消/等待自有编译Tester、封存证据、清理安全的任务暂存。"
+          prerequisites:
+            - 仅宿主生命周期调用；Agent无需按步骤调用这些钩子。
+          limitations:
+            - 原生进程清理不确定则抛runtime_cleanup_failed并保留现场；不停止独立实盘挂载。
+        binding:
+          type: native
+          name: beforeRunRelease
+      - id: market.bind
+        kind: function
+        consumers:
+          - host
+        description: MT5 market bind; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 为宿主建立精确行情来源会话；不代表已取得报价。
+          inputs: '{binding:{}} 使用插件当前终端连接；也可带公开查询返回的精确 connection:{id:"mt5-terminal",revision:<当前配置版本字符串>}。不接受猜测的端口/登录身份。'
+          outputs: "{bindingId,connection,sourceIds,accounts,health,timeBasis}；MT5 broker 时间保留其 wall authority，未提供时区就不转换 UTC。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+        binding:
+          type: native
+          name: market.bind
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+      - id: market.unbind
+        kind: function
+        consumers:
+          - host
+        description: MT5 market unbind; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 释放宿主创建的行情绑定。
+          inputs: '{binding:<bind返回的含bindingId对象>}；例 {binding:{bindingId:"host-owned-id"}}。'
+          outputs: "{closed:true}；释放该绑定与其分页状态。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 仅释放本次来源会话，不是平仓或停终端。
+        binding:
+          type: native
+          name: market.unbind
+      - id: market.searchInstruments
+        kind: function
+        consumers:
+          - host
+        description: MT5 market searchInstruments; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 检索该明确来源的真实品种；返回 ref 是后续 instrument 的来源。
+          inputs: '{binding:<bind结果>,query:{query:"EURUSD",assetClasses?,venues?},page:{limit:20,cursor?}}；limit≤1000，cursor 仅沿用同一来源/过滤条件。'
+          outputs: "{items:[{ref:{sourceId,instrumentId},symbol,name,assetClass,venue?}],nextCursor?,metadata:{snapshotId?,consistency?,meta,connection?}}；空 items 仅是该次检索无匹配。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+            - 历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。
+        binding:
+          type: native
+          name: market.searchInstruments
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: market.describeInstrument
+        kind: function
+        consumers:
+          - host
+        description: MT5 market describeInstrument; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取具体品种的价格/数量单位、时间基准和支持周期。
+          inputs: "{binding:<bind结果>,query:{instrument:{sourceId:<search返回的sourceId>,instrumentId:<券商精确symbol>}}}；实际 instrument 用 search 返回 ref。"
+          outputs: "{items:[{ref,symbol,name,assetClass,price,quantity,volume,timeBasis,calendar,features,native}],metadata:{meta,connection?}}；unknown/unsupported 字段保留，features 决定支持的 spec。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。
+        binding:
+          type: native
+          name: market.describeInstrument
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: market.queryBars
+        kind: function
+        consumers:
+          - host
+        description: MT5 market queryBars; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取有界历史柱和真实覆盖证据，供宿主查询/冻结。
+          inputs: '{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,range:{from:<SourceTime>,to:<SourceTime>},includeForming:false,direction:"forward"},page:{limit:100,cursor?}}。timeframe 使用 describeInstrument.features.timeframes 的值（如15m），priceBasis=bid、adjustment=none、session=all，calendarRevision:{status:"unknown"}。range 保留源 SourceTime，区间 [from,to)。'
+          outputs: "{items:[{id,revision,openTime,endTime,open,high,low,close,volume,isClosed,closure}],nextCursor?,metadata:{seriesId,instrument,spec,coverage,snapshotId,consistency,meta,connection?}}；OHLC 是十进制字符串，volume 自带单位/未知状态；无 nextCursor 只说明本次快照分页结束。"
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
+            - 历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。
+        binding:
+          type: native
+          name: market.queryBars
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+      - id: market.subscribeBars
+        kind: function
+        consumers:
+          - host
+        description: MT5 market subscribeBars; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            type:
+              type: string
+          required:
+            - type
+          additionalProperties: true
+        execution: immediate
+        transport: subscription
+        effects:
+          - process
+          - network
+          - plugin.session.write
+        usage:
+          purpose: 为宿主持续提供初始行情快照及增量。
+          inputs: '{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,tailLimit:100,includeForming:true}}；不传历史range或复用分页cursor，tailLimit正整数≤2000；恢复使用新快照。timeframe 使用 describeInstrument.features.timeframes 的值（如15m），priceBasis=bid、adjustment=none、session=all，calendarRevision:{status:"unknown"}。'
+          outputs: '{id,events:AsyncIterable,close}；首帧 {type:"snapshot",snapshot:{seriesId,instrument,spec,bars,coverage,meta?},position:{streamId,epoch,seq},consistency,recovery:"snapshot"}；后续 {streamId,epoch,seq,eventId,schemaVersion,observedAt,type,payload}，type 为 bars.upsert/bars.closed（按源能力）或 stream.gap。position/consistency/recovery 平铺在首帧，不嵌入 metadata。'
+          prerequisites:
+            - Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 终端约1秒目标轮询；实时尾部读取失败会传播，不用旧缓存伪造实时。
+            - 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。
+            - coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
+        binding:
+          type: native
+          name: market.subscribeBars
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.bind
+        kind: function
+        consumers:
+          - host
+        description: MT5 account bind; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 为宿主建立精确账户数据绑定。
+          inputs: '{binding:{}} 使用插件当前终端连接；也可带公开查询返回的精确 connection:{id:"mt5-terminal",revision:<当前配置版本字符串>}。不接受猜测的端口/登录身份。'
+          outputs: "{bindingId,connection,sourceIds,accounts,health,timeBasis}；MT5 broker 时间保留其 wall authority，未提供时区就不转换 UTC。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。
+        binding:
+          type: native
+          name: account.bind
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+      - id: account.unbind
+        kind: function
+        consumers:
+          - host
+        description: MT5 account unbind; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+          required:
+            - binding
+          additionalProperties: false
+        outputSchema:
+          type: object
+          additionalProperties: true
+        execution: immediate
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 释放账户查询/订阅绑定。
+          inputs: "{binding:<bind返回的含bindingId对象>}。"
+          outputs: "{closed:true}。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 不撤单、不平仓、不停止交易终端。
+        binding:
+          type: native
+          name: account.unbind
+      - id: account.listAccounts
+        kind: function
+        consumers:
+          - host
+        description: MT5 account listAccounts; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取绑定范围内的账户身份。
+          inputs: "{binding:<bind结果>,query:{},page:{limit:20,cursor?}}。"
+          outputs: "{items:[{ref:{connectionId,accountId},label?,currency,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；仅当前配置账户，不代表全机登录账户。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 无账户或读取失败不等于空账户；实际账号身份沿用返回ref。
+        binding:
+          type: native
+          name: account.listAccounts
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.snapshot
+        kind: function
+        consumers:
+          - host
+        description: MT5 account snapshot; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取一个明确账户的资产快照。
+          inputs: "{binding:<bind结果>,query:{account:<listAccounts返回ref>}}。"
+          outputs: "{items:[<账户资产快照>],metadata:{meta,connection?,...}}；快照包含精确account、asOf/观察时间与各资产字段的value/unknown状态，不能把未知资金当0。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 只证明当前快照；不是全部历史账本，也不改变交易权限。
+        binding:
+          type: native
+          name: account.snapshot
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.queryPositions
+        kind: function
+        consumers:
+          - host
+        description: MT5 account queryPositions; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取当前真实持仓的统一字段。
+          inputs: "{binding:<bind结果>,query:{account:<listAccounts.ref>,instruments?:[<search.ref>]},page:{limit:100,cursor?}}。"
+          outputs: "{items:[{id,revision,account,instrument,side,quantity,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；quantity保留单位，未知数量不归零。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 持仓票据和策略归属按原生证据；不按magic/comment隐藏全账户风险。
+        binding:
+          type: native
+          name: account.queryPositions
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.queryOrders
+        kind: function
+        consumers:
+          - host
+        description: MT5 account queryOrders; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取明确scope的活动/历史订单。
+          inputs: '{binding:<bind结果>,query:{account:<账户ref>,scope:"working"|"history"|"all",range?:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}；history/all需要明确历史范围。'
+          outputs: "{items:[<原生映射订单>],nextCursor?,metadata:{snapshotId,consistency,meta,coverage?}}；working活动订单与历史订单按scope区分。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - coverage不证明全历史；来源时间保留券商authority。
+        binding:
+          type: native
+          name: account.queryOrders
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.queryFills
+        kind: function
+        consumers:
+          - host
+        description: MT5 account queryFills; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取有界原生成交。
+          inputs: "{binding:<bind结果>,query:{account:<账户ref>,range:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}。"
+          outputs: "{items:[统一成交记录],nextCursor?,metadata:{snapshotId,consistency,meta,coverage}}；从券商保留历史映射，不捏造缺失关系/字段。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 只有请求范围内可见数据；分页完成不代表完整历史，保留coverage与unknown状态。
+        binding:
+          type: native
+          name: account.queryFills
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.queryHistory
+        kind: function
+        consumers:
+          - host
+        description: MT5 account queryHistory; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - process
+          - network
+        usage:
+          purpose: 读取有界账户历史事件。
+          inputs: "{binding:<bind结果>,query:{account:<账户ref>,range:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}。"
+          outputs: "{items:[账户历史事件记录],nextCursor?,metadata:{snapshotId,consistency,meta,coverage}}；从券商保留历史映射，不捏造缺失关系/字段。"
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 只有请求范围内可见数据；分页完成不代表完整历史，保留coverage与unknown状态。
+        binding:
+          type: native
+          name: account.queryHistory
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: account.subscribeAccount
+        kind: function
+        consumers:
+          - host
+        description: MT5 account subscribeAccount; typed native data retains exact account binding, broker wall time, coverage and actual availability.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            type:
+              type: string
+          required:
+            - type
+          additionalProperties: true
+        execution: immediate
+        transport: subscription
+        effects:
+          - process
+          - network
+          - plugin.session.write
+        usage:
+          purpose: 向宿主提供账户观察快照与增量。
+          inputs: '{binding:<bind结果>,query:{account:<账户ref>,topics:["snapshot","positions","orders"]}}；可选非空子集，不支持fills/history订阅或resumeToken。'
+          outputs: '{id,events:AsyncIterable,close}；首帧 {type:"snapshot",snapshot:{account,coverage,snapshot?,positions?,orders?},position:{streamId,epoch,seq},consistency,recovery:"snapshot"}；后续 account.snapshot、positions.upsert、orders.upsert 或 stream.gap。position等字段平铺。'
+          prerequisites:
+            - 宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。
+            - mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。
+          limitations:
+            - 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。
+            - 持仓/订单消失需新快照，不能仅凭upsert推断删除。约1秒轮询不等于交易所事件流。
+        binding:
+          type: native
+          name: account.subscribeAccount
+        configurationRequirements:
+          - field: account_login
+            reason: 使用已绑定的券商账户身份。
+          - field: account_server
+            reason: 使用已绑定的券商服务器身份。
+          - field: terminal_token
+            reason: 通过已配置的 Terminal MCP 读取当前券商数据。
+          - field: terminal_url
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+          - field: terminal_enabled
+            reason: 所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。
+            optional: true
+      - id: datasets.query
+        kind: function
+        consumers:
+          - host
+        description: Read MT5 datasets through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects: []
+        usage:
+          purpose: 读取MT5私有已保存证据的公开数据出口。
+          inputs: 宿主 {binding:{},query:{datasetId?,parameters?},page:{limit:100,cursor?}}；省略datasetId列目录；ID来自mt5_report_data.sources或原生命令dataset_id，parameters按该source返回的参数名。
+          outputs: "{items,nextCursor?,metadata?}；目录行无rows但有rowCount；指定datasetId返回原固定行与其metadata/provenance。"
+          prerequisites:
+            - 宿主 sesame/mt5#datasets 专用；Agent通过data_query({source,input:query})读取，source用公开data_providers返回ref。
+          limitations:
+            - 普通datasetId不等于host数据集；strategy角色过滤只接受原声明optimization_id/pass_id。
+            - 明确datasetId不存在时返回NOT_FOUND，不改为目录或空数据；使用mt5_report_data或无datasetId目录返回的真实ID。
+        binding:
+          type: native
+          name: datasets.query
+      - id: bars.query
+        kind: function
+        consumers:
+          - host
+        description: Read MT5 bars through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - cache.read
+          - network-when-history-required
+        usage:
+          purpose: 向宿主提供MT5历史缓存行查询。
+          inputs: 宿主 {binding:{},query:{symbol,period,from,to,...},page:{limit:100,cursor?}}；query沿用mt5本地历史接口，来源时间是券商墙时。
+          outputs: "{items:<历史bars>,nextCursor?,metadata:<缓存查询的来源/覆盖>}。"
+          prerequisites:
+            - 宿主 sesame/mt5#bars；Agent优先 market_read 统一市场接口，不自行组装私有来源。
+          limitations:
+            - 不是实时订阅；分页使用返回cursor，不证明历史完整。
+        binding:
+          type: native
+          name: bars.query
+      - id: runs.query
+        kind: function
+        consumers:
+          - host
+        description: Read MT5 runs through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              items: {}
+            nextCursor:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+            - items
+          additionalProperties: false
+        execution: immediate
+        effects: []
+        usage:
+          purpose: 查询已保存的原生运行观察记录。
+          inputs: 宿主 {binding:{},query:{id?,status?},page:{limit:100,cursor?}}。
+          outputs: "{items:[<native_run_record记录，含body.status和固定引用>],nextCursor?}。"
+          prerequisites:
+            - 宿主 sesame/mt5#runs；Agent观察具体任务用mt5_backtest/mt5_deployment公开工具。
+          limitations:
+            - 是原生运行观察记录，不是启动Agent，也不自动执行/停止原生程序。
+        binding:
+          type: native
+          name: runs.query
+      - id: runs.watch
+        kind: function
+        consumers:
+          - host
+        description: Read MT5 runs through explicit watch; input query filters by datasetId/parameters, native bars query, or native run id/status.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              additionalProperties: true
+            query:
+              type: object
+              additionalProperties: true
+            page:
+              type: object
+              properties:
+                cursor:
+                  type: string
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+              required:
+                - limit
+              additionalProperties: false
+          required:
+            - binding
+            - query
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            type:
+              const: snapshot
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            nextCursor:
+              type: string
+          required:
+            - type
+            - items
+          additionalProperties: false
+        execution: immediate
+        transport: subscription
+        effects:
+          - plugin.session.write
+        usage:
+          purpose: 观察原生运行记录的已知变化。
+          inputs: 宿主 {binding:{},query:{id?,status?}}。
+          outputs: '{id,events:AsyncIterable,close}；约1秒检查，变化时事件为{type:"snapshot",items,nextCursor?}，最多1000条；这是rows源快照，不是market/account的position流协议。'
+          prerequisites:
+            - 宿主 sesame/mt5#runs watch调用。
+          limitations:
+            - 关闭仅停止观察，不停止EA/Tester；原生记录未知状态不自动转成功。
+        binding:
+          type: native
+          name: runs.watch
+      - id: positions_close
+        kind: function
+        consumers:
+          - host
+        description: Close the confirmed MT5 position ticket through the existing guarded Python order_send and durable native command journal. Retain uncertain outcomes; never resend.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    revision:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+                account:
+                  type: object
+                  properties:
+                    connectionId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    accountId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - connectionId
+                    - accountId
+                  additionalProperties: false
+              required:
+                - connection
+                - account
+              additionalProperties: false
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            quantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            expected:
+              type: object
+              properties:
+                revision:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                instrument:
+                  type: object
+                  properties:
+                    sourceId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    instrumentId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - sourceId
+                    - instrumentId
+                  additionalProperties: false
+                side:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                quantity:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                      pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                      maxLength: 100
+                    unit:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - value
+                    - unit
+                  additionalProperties: false
+              required:
+                - revision
+                - instrument
+                - side
+                - quantity
+              additionalProperties: false
+          required:
+            - binding
+            - positionId
+            - operationId
+            - expected
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            status:
+              enum:
+                - submitted
+                - partially_filled
+                - filled
+                - closed
+                - rejected
+                - outcome_unknown
+            requestedQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            filledQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            remainingPositionQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            orderIds:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 300
+              maxItems: 100
+            observedAt:
+              type: integer
+              minimum: 0
+            error:
+              type: object
+              properties:
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+              required:
+                - code
+                - message
+              additionalProperties: false
+          required:
+            - operationId
+            - positionId
+            - status
+            - requestedQuantity
+            - observedAt
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - external-trading
+          - plugin.state.write
+        usage:
+          purpose: 执行账户页确认的手动平仓。
+          inputs: "{binding:{connection:{id,revision},account:{connectionId,accountId}},positionId,operationId,expected:{revision,instrument:{sourceId,instrumentId},side,quantity:{value,unit}},quantity?}；expected来自用户确认的账户页持仓，quantity省略表示确认数量。"
+          outputs: "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。"
+          prerequisites:
+            - 仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。
+          limitations:
+            - 提交真实减仓意图；同ID同输入仅取原回执，账户/数量变化会拒绝。
+            - submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。
+            - 对精确票据执行对应方向平仓，保留券商真实retcode与成交证据。
+        binding:
+          type: native
+          name: positions_close
+        configurationRequirements:
+          - field: terminal_directory
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: data_directory
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: python
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: wine
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: wine_prefix
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: allow_trading
+            reason: 提交原生交易前由已有交易权限策略检查。
+            optional: true
+          - field: account_login
+            reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+            optional: true
+          - field: account_server
+            reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+            optional: true
+      - id: positions_read_receipt
+        kind: function
+        consumers:
+          - host
+        description: Read a retained close using exact native order/deal IDs and current positions; never dispatch or infer fills from a missing position.
+        inputSchema:
+          type: object
+          properties:
+            binding:
+              type: object
+              properties:
+                connection:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    revision:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - id
+                    - revision
+                  additionalProperties: false
+                account:
+                  type: object
+                  properties:
+                    connectionId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                    accountId:
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                  required:
+                    - connectionId
+                    - accountId
+                  additionalProperties: false
+              required:
+                - connection
+                - account
+              additionalProperties: false
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+          required:
+            - binding
+            - operationId
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            operationId:
+              type: string
+              pattern: ^[A-Za-z0-9_-]{1,100}$
+            positionId:
+              type: string
+              minLength: 1
+              maxLength: 300
+            status:
+              enum:
+                - submitted
+                - partially_filled
+                - filled
+                - closed
+                - rejected
+                - outcome_unknown
+            requestedQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            filledQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            remainingPositionQuantity:
+              type: object
+              properties:
+                value:
+                  type: string
+                  pattern: ^(0|[1-9]\d*)(\.\d+)?$
+                  maxLength: 100
+                unit:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+              required:
+                - value
+                - unit
+              additionalProperties: false
+            orderIds:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 300
+              maxItems: 100
+            observedAt:
+              type: integer
+              minimum: 0
+            error:
+              type: object
+              properties:
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+              required:
+                - code
+                - message
+              additionalProperties: false
+          required:
+            - operationId
+            - positionId
+            - status
+            - requestedQuantity
+            - observedAt
+          additionalProperties: false
+        execution: immediate
+        effects:
+          - network
+          - plugin.state.write
+        usage:
+          purpose: 核对账户页平仓的已保留回执。
+          inputs: "{binding:{connection:{id,revision},account:{connectionId,accountId}},operationId:<已有平仓键>}。"
+          outputs: "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。"
+          prerequisites:
+            - 仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。
+          limitations:
+            - 读取可刷新原生证据，不发补单。
+            - submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。
+            - 对精确票据执行对应方向平仓，保留券商真实retcode与成交证据。
+        binding:
+          type: native
+          name: positions_read_receipt
+        configurationRequirements:
+          - field: terminal_directory
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: data_directory
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: python
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: wine
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: wine_prefix
+            reason: 本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。
+            optional: true
+          - field: account_login
+            reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+            optional: true
+          - field: account_server
+            reason: 保留原操作的账户身份及历史回执边界，执行时核验当前账户。
+            optional: true
+      - kind: function
+        consumers:
+          - host
+        execution: immediate
+        id: dependencies.read
+        description: Read the persisted optional MT5 native path overrides and their original dependency version without discovery, process probes or credential access.
+        inputSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        outputSchema:
+          type: object
+          properties:
+            version:
+              type: integer
+              minimum: 1
+            settings:
+              type: object
+              properties:
+                terminal_directory:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                data_directory:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                python:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                wine:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                wine_prefix:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+              required:
+                - terminal_directory
+                - data_directory
+                - python
+                - wine
+                - wine_prefix
+              additionalProperties: false
+          required:
+            - version
+            - settings
+          additionalProperties: false
+        effects:
+          - read-only
+        usage:
+          purpose: Expose the original dependency configuration authority to the shared settings catalog.
+          inputs: Empty object {}.
+          outputs: "{version,settings:{terminal_directory,data_directory,python,wine,wine_prefix}}; null retains automatic discovery."
+          prerequisites: []
+          limitations:
+            - Path presence does not verify native readiness. This read does not probe, download or start a native process.
+        binding:
+          type: native
+          name: dependencies.read
+      - kind: function
+        consumers:
+          - host
+        execution: immediate
+        id: dependencies.configure
+        description: Update optional MT5 native paths through the existing dependency command, concurrency and validation path; main conversation only.
+        inputSchema:
+          type: object
+          properties:
+            command_id:
+              type: string
+              minLength: 16
+              maxLength: 128
+              pattern: ^[A-Za-z0-9_-]+$
+            expected_version:
+              type: integer
+              minimum: 1
+            changes:
+              type: object
+              properties:
+                terminal_directory:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                data_directory:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                python:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                wine:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+                wine_prefix:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 4096
+                      pattern: ^[^\r\n\u0000]*$
+                    - type: "null"
+              additionalProperties: false
+              minProperties: 1
+          required:
+            - command_id
+            - expected_version
+            - changes
+          additionalProperties: false
+        outputSchema:
+          type: object
+          description: Saved public native-dependency paths and the resulting version. This receipt contains no connection credentials.
+          properties:
+            id:
+              type: string
+            version:
+              type: integer
+              minimum: 1
+            terminal_directory:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 4096
+                  pattern: ^[^\r\n\u0000]*$
+                - type: "null"
+            data_directory:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 4096
+                  pattern: ^[^\r\n\u0000]*$
+                - type: "null"
+            python:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 4096
+                  pattern: ^[^\r\n\u0000]*$
+                - type: "null"
+            wine:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 4096
+                  pattern: ^[^\r\n\u0000]*$
+                - type: "null"
+            wine_prefix:
+              anyOf:
+                - type: string
+                  minLength: 1
+                  maxLength: 4096
+                  pattern: ^[^\r\n\u0000]*$
+                - type: "null"
+          required:
+            - id
+            - version
+            - terminal_directory
+            - data_directory
+            - python
+            - wine
+            - wine_prefix
+          additionalProperties: false
+        effects:
+          - plugin.state.write
+          - application-configuration
+        usage:
+          purpose: Forward shared configuration edits to the existing MT5 dependency authority.
+          inputs: "{command_id,expected_version,changes:{terminal_directory?,data_directory?,python?,wine?,wine_prefix?}}; null clears an override."
+          outputs: The original dependency settings and version, with the existing command receipt preserved.
+          prerequisites:
+            - Main conversation; the expected_version comes from dependencies.read or mt5_dependencies inspect.
+          limitations:
+            - Reuses the existing idempotency receipts and busy/path validation. Saving does not download dependencies or launch a terminal.
+        binding:
+          type: native
+          name: dependencies.configure
+      - tool/mt5_execution_identity
+      - tool/mt5_execution_snapshot
+      - tool/mt5_execution_prepare
+      - tool/mt5_execution_submit
+      - tool/mt5_execution_recover
+      - tool/mt5_execution_command
+      - tool/mt5_execution_cancel
+      - tool/mt5_backtest_operation
+    sources:
+      - id: market
+        contract: sesame.market/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                revision:
+                  type: string
+              required:
+                - id
+                - revision
+              additionalProperties: false
+          additionalProperties: false
+        operations:
+          bind: market.bind
+          unbind: market.unbind
+          searchInstruments: market.searchInstruments
+          describeInstrument: market.describeInstrument
+          queryBars: market.queryBars
+          subscribeBars: market.subscribeBars
+        presentation:
+          transportMode: poll
+          minPollIntervalMs: 1000
+          priceBases:
+            - bid
+          adjustments:
+            - none
+          sessions:
+            - all
+          capabilities:
+            - instruments.search
+            - instruments.describe
+            - bars.history
+            - bars.subscribe
+      - id: account
+        contract: sesame.account/1
+        consumer: host
+        configSchema:
+          type: object
+          properties:
+            connection:
+              type: object
+              properties:
+                id:
+                  type: string
+                revision:
+                  type: string
+              required:
+                - id
+                - revision
+              additionalProperties: false
+          additionalProperties: false
+        operations:
+          bind: account.bind
+          unbind: account.unbind
+          listAccounts: account.listAccounts
+          snapshot: account.snapshot
+          queryPositions: account.queryPositions
+          queryOrders: account.queryOrders
+          queryFills: account.queryFills
+          queryHistory: account.queryHistory
+          subscribeAccount: account.subscribeAccount
+        presentation:
+          transportMode: poll
+          minPollIntervalMs: 2000
+          liveTopics:
+            - snapshot
+            - positions
+            - orders
+          capabilities:
+            - accounts.list
+            - account.snapshot
+            - positions.query
+            - orders.query
+            - fills.query
+            - history.query
+            - account.subscribe
+      - id: datasets
+        contract: sesame.datasets/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          query: datasets.query
+      - id: bars
+        contract: sesame.native-bars/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          query: bars.query
+      - id: runs
+        contract: sesame.strategy-run/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          query: runs.query
+          watch: runs.watch
+    views: []
+    services:
+      - id: positions
+        contract: sesame.positions/1
+        consumer: host
+        sourceId: account
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          close: positions_close
+          readReceipt: positions_read_receipt
+      - id: execution
+        contract: sesame.execution-adapter/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          required: []
+          additionalProperties: false
+        operations:
+          identity: mt5_execution_identity
+          snapshot: mt5_execution_snapshot
+          prepare: mt5_execution_prepare
+          submit: mt5_execution_submit
+          recover: mt5_execution_recover
+          command: mt5_execution_command
+          cancel: mt5_execution_cancel
+    knowledge:
+      - id: reference-0
+        path: instructions.md
+        description: "MT5 domain reference: prompt.md"
+        kind: prompt
+      - id: reference-1
+        path: tools/official/prompt.md
+        description: "MT5 domain reference: tools/official/prompt.md"
+        kind: prompt
+      - id: reference-2
+        path: tools/charts/prompt.md
+        description: "MT5 domain reference: tools/charts/prompt.md"
+        kind: prompt
+      - id: reference-3
+        path: tools/editor/prompt.md
+        description: "MT5 domain reference: tools/editor/prompt.md"
+        kind: prompt
+      - id: reference-4
+        path: tools/python/prompt.md
+        description: "MT5 domain reference: tools/python/prompt.md"
+        kind: prompt
+      - id: reference-5
+        path: tools/system/prompt.md
+        description: "MT5 domain reference: tools/system/prompt.md"
+        kind: prompt
+      - id: reference-6
+        path: tools/tester/prompt.md
+        description: "MT5 domain reference: tools/tester/prompt.md"
+        kind: prompt
+      - id: reference-7
+        path: tools/trading/prompt.md
+        description: "MT5 domain reference: tools/trading/prompt.md"
+        kind: prompt
+      - id: reference-8
+        path: tools/deployment/prompt.md
+        description: "MT5 domain reference: tools/deployment/prompt.md"
+        kind: prompt
+      - id: reference-9
+        path: tools/authoring/prompt.md
+        description: "MT5 domain reference: tools/authoring/prompt.md"
+        kind: prompt
+      - id: reference-10
+        path: references/language.md
+        description: "MT5 domain reference: references/language.md"
+        kind: reference
+      - id: reference-11
+        path: target/README.md
+        description: "MT5 domain reference: target/README.md"
+        kind: reference
+      - id: reference-12
+        path: target/translation-file.md
+        description: "MT5 domain reference: target/translation-file.md"
+        kind: reference
+      - id: reference-13
+        path: target/sdk-integration.md
+        description: "MT5 domain reference: target/sdk-integration.md"
+        kind: reference
+      - id: reference-14
+        path: target/examples/Strategy.mq5
+        description: "MT5 domain reference: target/examples/Strategy.mq5"
+        kind: reference
+      - id: reference-15
+        path: backend/sdk/Expert.mqh
+        description: "MT5 domain reference: backend/sdk/Expert.mqh"
+        kind: reference
+      - id: reference-16
+        path: backend/sdk/Results.mqh
+        description: "MT5 domain reference: backend/sdk/Results.mqh"
+        kind: reference
+      - id: reference-17
+        path: backend/sdk/Risk.mqh
+        description: "MT5 domain reference: backend/sdk/Risk.mqh"
+        kind: reference
+      - id: reference-18
+        path: backend/sdk/Telemetry.mqh
+        description: "MT5 domain reference: backend/sdk/Telemetry.mqh"
+        kind: reference
+      - id: reference-19
+        path: backend/sdk/Trade.mqh
+        description: "MT5 domain reference: backend/sdk/Trade.mqh"
+        kind: reference
+      - id: reference-20
+        path: backend/sdk/Visual.mqh
+        description: "MT5 domain reference: backend/sdk/Visual.mqh"
+        kind: reference
+      - id: reference-21
+        path: scripts/install-mt5-python.py
+        description: "MT5 domain reference: scripts/install-mt5-python.py"
+        kind: reference
+      - id: reference-22
+        path: scripts/install-mt5-macos.sh
+        description: "MT5 domain reference: scripts/install-mt5-macos.sh"
+        kind: reference
+      - id: reference-23
+        path: scripts/README.md
+        description: "MT5 domain reference: scripts/README.md"
+        kind: reference
+      - id: reference-24
+        path: TRADING.md
+        description: "MT5 domain reference: TRADING.md"
+        kind: reference
+      - id: reference-25
+        path: target/conformance.md
+        description: "MT5 domain reference: target/conformance.md"
+        kind: reference
+      - id: reference-26
+        path: backend/sdk/Conformance.mqh
+        description: "MT5 domain reference: backend/sdk/Conformance.mqh"
+        kind: reference
+      - id: reference-27
+        path: backend/sdk/FrozenInputs.mqh
+        description: "MT5 domain reference: backend/sdk/FrozenInputs.mqh"
+        kind: reference
+      - id: reference-28
+        path: target/examples/FrozenTimeline.mq5
+        description: "MT5 domain reference: target/examples/FrozenTimeline.mq5"
+        kind: reference
+      - id: skill-connection
+        path: skills/connection/SKILL.md
+        description: MT5 domain capability reference skills/connection/SKILL.md
+        kind: skill
+      - id: skill-dependencies
+        path: skills/dependencies/SKILL.md
+        description: MT5 domain capability reference skills/dependencies/SKILL.md
+        kind: skill
+      - id: skill-mt5-official
+        path: skills/mt5-official/SKILL.md
+        description: MT5 domain capability reference skills/mt5-official/SKILL.md
+        kind: skill
+      - id: skill-native-ea
+        path: skills/native-ea/SKILL.md
+        description: MT5 domain capability reference skills/native-ea/SKILL.md
+        kind: skill
+      - id: skill-svl-mql5
+        path: skills/svl-mql5/SKILL.md
+        description: MT5 domain capability reference skills/svl-mql5/SKILL.md
+        kind: skill
+      - id: skill-visual-state-machines
+        path: skills/visual-state-machines/SKILL.md
+        description: MT5 domain capability reference skills/visual-state-machines/SKILL.md
+        kind: skill
+      - id: public-interface-contract
+        path: INTERFACES.md
+        consumers:
+          - agent
+          - host
+        description: "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries."
+        kind: reference
+    hooks:
+      - id: activate
+        event: lifecycle.activate
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: activate
+      - id: dispose
+        event: lifecycle.dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: dispose
+      - id: beforeAgentTurn
+        event: lifecycle.beforeAgentTurn
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: beforeAgentTurn
+      - id: beforeConfigChange
+        event: lifecycle.beforeConfigChange
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: beforeConfigChange
+      - id: beforeDeactivate
+        event: lifecycle.beforeDeactivate
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: beforeDeactivate
+      - id: configChanged
+        event: lifecycle.configChanged
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: configChanged
+      - id: beforeRunRelease
+        event: lifecycle.beforeRunRelease
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+          properties: {}
+          additionalProperties: false
+        operations:
+          handle: beforeRunRelease
+    stateCollections: []
+    artifactSchemas:
+      - id: resource
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format: {}
+          required:
+            - format
+          additionalProperties: true
+      - id: strategy.target
+        kind: strategy.target
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            schemaVersion: {}
+            id: {}
+            version: {}
+            runtime: {}
+            semantics: {}
+          required:
+            - schemaVersion
+            - id
+            - version
+            - runtime
+            - semantics
+          additionalProperties: true
+      - id: strategy.translation
+        kind: strategy.translation
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            schemaVersion: {}
+            source: {}
+            target: {}
+            sourceMap: {}
+            codeDigest: {}
+          required:
+            - schemaVersion
+            - source
+            - target
+            - sourceMap
+            - codeDigest
+          additionalProperties: true
+      - id: strategy.validation
+        kind: strategy.validation
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            schemaVersion: {}
+            source: {}
+            outcome: {}
+            cases: {}
+          required:
+            - schemaVersion
+            - source
+            - outcome
+            - cases
+          additionalProperties: true
+      - id: environment
+        kind: environment
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            profile: {}
+            plugin: {}
+            observedAt: {}
+          required:
+            - profile
+            - plugin
+            - observedAt
+          additionalProperties: true
+      - id: parameters
+        kind: parameters
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            source: {}
+            values: {}
+          required:
+            - source
+            - values
+          additionalProperties: true
+      - id: dependency-lock
+        kind: dependency-lock
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            plugin: {}
+            sdkVersion: {}
+          required:
+            - plugin
+            - sdkVersion
+          additionalProperties: true
+      - id: data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format: {}
+            path: {}
+            rowCount: {}
+            provenance: {}
+          required:
+            - format
+            - path
+            - rowCount
+            - provenance
+          additionalProperties: true
+      - id: strategy.result
+        kind: strategy.result
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            schemaVersion: {}
+            runId: {}
+            source: {}
+            translation: {}
+            status: {}
+            data: {}
+          required:
+            - schemaVersion
+            - runId
+            - source
+            - translation
+            - status
+            - data
+          additionalProperties: true
+    configuration:
+      title: MetaTrader 5 连接与凭据
+      fields:
+        - id: terminal_url
+          title: MT5 Terminal MCP 地址
+          schema:
+            type: string
+            maxLength: 2048
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/terminal/url
+            writePath: /changes/servers/terminal/url
+            versionPath: /settings/version
+        - id: terminal_enabled
+          title: 启用 MT5 Terminal
+          schema:
+            type: boolean
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/terminal/enabled
+            writePath: /changes/servers/terminal/enabled
+            versionPath: /settings/version
+        - id: terminal_token
+          title: MT5 Terminal MCP 密钥
+          description: 仅显示是否已保存；实际认证以对应能力的连接结果为准。
+          schema:
+            type: string
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]*$
+            writeOnly: true
+            description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            configuredPath: /settings/servers/terminal/authenticated
+            writePath: /changes/servers/terminal/token
+            versionPath: /settings/version
+        - id: metaeditor_url
+          title: MetaEditor MCP 地址
+          schema:
+            type: string
+            maxLength: 2048
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/metaeditor/url
+            writePath: /changes/servers/metaeditor/url
+            versionPath: /settings/version
+        - id: metaeditor_enabled
+          title: 启用 MetaEditor
+          schema:
+            type: boolean
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/metaeditor/enabled
+            writePath: /changes/servers/metaeditor/enabled
+            versionPath: /settings/version
+        - id: metaeditor_token
+          title: MetaEditor MCP 密钥
+          description: 仅显示是否已保存；实际认证以对应能力的连接结果为准。
+          schema:
+            type: string
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]*$
+            writeOnly: true
+            description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            configuredPath: /settings/servers/metaeditor/authenticated
+            writePath: /changes/servers/metaeditor/token
+            versionPath: /settings/version
+        - id: marketdata_url
+          title: MetaTrader.com MCP 地址
+          schema:
+            type: string
+            maxLength: 2048
+            pattern: ^[^\r\n\u0000]*$
+            const: https://www.metatrader.com/mcp
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/marketdata/url
+            writePath: /changes/servers/marketdata/url
+            versionPath: /settings/version
+        - id: marketdata_enabled
+          title: 启用 MetaTrader.com
+          schema:
+            type: boolean
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/servers/marketdata/enabled
+            writePath: /changes/servers/marketdata/enabled
+            versionPath: /settings/version
+        - id: marketdata_token
+          title: MetaTrader.com MCP 密钥
+          description: 仅显示是否已保存；实际认证以对应能力的连接结果为准。
+          schema:
+            type: string
+            maxLength: 8192
+            pattern: ^[^\r\n\u0000]*$
+            writeOnly: true
+            description: 用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            configuredPath: /settings/servers/marketdata/authenticated
+            writePath: /changes/servers/marketdata/token
+            versionPath: /settings/version
+        - id: account_login
+          title: 券商账户登录号
+          schema:
+            type: string
+            pattern: ^(|[1-9][0-9]{0,19})$
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/account/login
+            writePath: /changes/account/login
+            versionPath: /settings/version
+        - id: account_server
+          title: 券商服务器
+          schema:
+            type: string
+            maxLength: 200
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/account/server
+            writePath: /changes/account/server
+            versionPath: /settings/version
+        - id: account_password
+          title: 券商账户密码
+          schema:
+            type: string
+            maxLength: 1024
+            pattern: ^[^\r\n\u0000]*$
+            writeOnly: true
+            description: 用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            configuredPath: /settings/account/password_configured
+            writePath: /changes/account/password
+            versionPath: /settings/version
+        - id: tester_address
+          title: MetaTester 代理地址
+          schema:
+            type: string
+            maxLength: 15
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/tester_agent/address
+            writePath: /changes/tester_agent/address
+            versionPath: /settings/version
+        - id: tester_port
+          title: MetaTester 代理端口
+          schema:
+            type: integer
+            minimum: 1024
+            maximum: 65535
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/tester_agent/port
+            writePath: /changes/tester_agent/port
+            versionPath: /settings/version
+        - id: tester_password
+          title: MetaTester 代理密码
+          schema:
+            type: string
+            maxLength: 1024
+            pattern: ^[^\r\n\u0000]*$
+            writeOnly: true
+            description: 用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            configuredPath: /settings/tester_agent/password_configured
+            writePath: /changes/tester_agent/password
+            versionPath: /settings/version
+        - id: allow_trading
+          title: 允许原生交易操作
+          schema:
+            type: boolean
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/allow_trading
+            writePath: /changes/allow_trading
+            versionPath: /settings/version
+        - id: allow_host_operations
+          title: 允许原生宿主操作
+          schema:
+            type: boolean
+          binding:
+            type: capability
+            read: configuration.read
+            update: mt5_update_configuration
+            valuePath: /settings/allow_host_operations
+            writePath: /changes/allow_host_operations
+            versionPath: /settings/version
+        - id: terminal_directory
+          title: MT5 安装目录
+          description: 可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: dependencies.read
+            update: dependencies.configure
+            valuePath: /settings/terminal_directory
+            writePath: /changes/terminal_directory
+            versionPath: /version
+            clearValue: null
+        - id: data_directory
+          title: MT5 数据目录
+          description: 可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: dependencies.read
+            update: dependencies.configure
+            valuePath: /settings/data_directory
+            writePath: /changes/data_directory
+            versionPath: /version
+            clearValue: null
+        - id: python
+          title: Windows Python 程序
+          description: 可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: dependencies.read
+            update: dependencies.configure
+            valuePath: /settings/python
+            writePath: /changes/python
+            versionPath: /version
+            clearValue: null
+        - id: wine
+          title: Wine 程序
+          description: 可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: dependencies.read
+            update: dependencies.configure
+            valuePath: /settings/wine
+            writePath: /changes/wine
+            versionPath: /version
+            clearValue: null
+        - id: wine_prefix
+          title: Wine 前缀目录
+          description: 可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: ^[^\r\n\u0000]*$
+          binding:
+            type: capability
+            read: dependencies.read
+            update: dependencies.configure
+            valuePath: /settings/wine_prefix
+            writePath: /changes/wine_prefix
+            versionPath: /version
+            clearValue: null

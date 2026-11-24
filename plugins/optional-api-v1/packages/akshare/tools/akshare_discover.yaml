@@ -1,0 +1,51 @@
+name: akshare_discover
+title: akshare_discover
+description: Find and verify a configured/native Python with compatible existing AKShare; readonly reuse first, never download or upgrade shared environments.
+inputSchema:
+  type: object
+  properties:
+    python_path:
+      type: string
+      description: Configured existing native Python/venv executable
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - plugin.state.write
+  usage:
+    purpose: 验证并选择实际可导入固定版本 AKShare 的现有 Python。
+    inputs: '{python_path?}；例 {python_path:"C:/known-venv/Scripts/python.exe"} 仅在已有该真实路径时使用；{} 使用保存/私有/宿主/PATH候选。'
+    outputs: ready:true 返回 python、akshareVersion:"1.19.1"、pythonInfo、reused:true、mode、provenance；ready:false 返回 required、failures[{python,reason}]。成功会保存私有选择记录，查询可立即使用。
+    prerequisites:
+      - 本机64位 Python>=3.11；无需券商账户或API Key。
+    limitations:
+      - 不下载、不升级现有环境；一个失败候选不代表全机无依赖。有已知其他路径可显式 discover；确需安装用 akshare_prepare。
+  binding:
+    type: native
+    name: akshare_discover
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

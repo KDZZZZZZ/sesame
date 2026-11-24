@@ -1,0 +1,62 @@
+name: binance_order_status
+title: binance_order_status
+description: 按已保存的 operation_id 查询真实订单身份并恢复未知下单/改单/撤单结果。只读 Binance，不重新发送。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+  required:
+    - operation_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    contract:
+      type: string
+      const: sesame.execution-adapter/1
+    backend:
+      type: string
+      const: binance
+  required:
+    - contract
+    - backend
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - backend.read
+    - network
+    - plugin.state.write
+  usage:
+    purpose: 按已保存的 operation_id 查询真实订单身份并恢复未知下单/改单/撤单结果。只读 Binance，不重新发送。
+    inputs: Use the declared object schema; see INTERFACES.md for concrete examples.
+    outputs: 返回保存的回执及 recovery 观测；查无订单仍不能证明之前未发送，保留 outcome_unknown。
+    prerequisites:
+      - Configure the selected environment and HMAC API key/secret through configuration_integration_apply.
+      - Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission.
+    limitations:
+      - Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter.
+  configurationRequirements:
+    - field: environment
+      optional: true
+      reason: Select production or Spot Testnet; default is testnet.
+    - field: api_key
+      reason: Binance private account or trading operation.
+    - field: api_secret
+      reason: HMAC signing for the selected Binance account.
+  binding:
+    type: native
+    name: binance_order_status

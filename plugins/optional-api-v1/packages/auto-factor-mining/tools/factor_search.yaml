@@ -1,0 +1,851 @@
+name: factor_search
+title: factor_search
+description: Open a fixed search space or request one candidate batch; the caller decides whether to continue.
+inputSchema:
+  type: object
+  oneOf:
+    - type: object
+      properties:
+        action:
+          type: string
+          const: open
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        snapshotRef:
+          $ref: "#/$defs/Ref"
+        need:
+          type: string
+          minLength: 1
+          maxLength: 8000
+        space:
+          $ref: "#/$defs/Space"
+        profile:
+          $ref: "#/$defs/Profile"
+        references:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+          minItems: 0
+          maxItems: 32
+        budget:
+          $ref: "#/$defs/SearchBudget"
+      required:
+        - action
+        - requestId
+        - snapshotRef
+        - need
+        - space
+        - profile
+        - references
+        - budget
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: propose
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        searchId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        limit:
+          type: integer
+          minimum: 0
+          maximum: 64
+        feedback:
+          type: array
+          items:
+            type: object
+            properties:
+              factorId:
+                type: string
+                minLength: 1
+                maxLength: 128
+              evaluationId:
+                type: string
+                minLength: 1
+                maxLength: 128
+            required:
+              - factorId
+              - evaluationId
+            additionalProperties: false
+          minItems: 0
+          maxItems: 64
+      required:
+        - action
+        - requestId
+        - searchId
+        - limit
+        - feedback
+      additionalProperties: false
+    - type: object
+      properties:
+        action:
+          type: string
+          const: read
+        searchId:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+        - action
+        - searchId
+      additionalProperties: false
+  $defs:
+    Diagnostic:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: placebo
+            required:
+              type: boolean
+            repetitions:
+              type: integer
+              minimum: 1
+              maximum: 10000
+            options:
+              type: object
+              properties:
+                blockBars:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+                seed:
+                  type: integer
+                  minimum: 0
+                  maximum: 2147483647
+                confidence:
+                  type: number
+                  exclusiveMinimum: 0
+                  exclusiveMaximum: 1
+              required:
+                - blockBars
+                - seed
+                - confidence
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - repetitions
+            - options
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: bootstrap
+            required:
+              type: boolean
+            repetitions:
+              type: integer
+              minimum: 1
+              maximum: 10000
+            options:
+              type: object
+              properties:
+                blockBars:
+                  type: integer
+                  minimum: 1
+                  maximum: 100000
+                seed:
+                  type: integer
+                  minimum: 0
+                  maximum: 2147483647
+                confidence:
+                  type: number
+                  exclusiveMinimum: 0
+                  exclusiveMaximum: 1
+              required:
+                - blockBars
+                - seed
+                - confidence
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - repetitions
+            - options
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: walk_forward
+            required:
+              type: boolean
+            options:
+              type: object
+              properties:
+                foldBars:
+                  type: integer
+                  minimum: 3
+                  maximum: 1000000
+              required:
+                - foldBars
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - options
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: regimes
+            required:
+              type: boolean
+            options:
+              type: object
+              properties:
+                field:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                  pattern: ^[a-z][a-z0-9_]{0,63}$
+                bins:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 1
+                  maxItems: 20
+              required:
+                - field
+                - bins
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - options
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: sensitivity
+            required:
+              type: boolean
+            options:
+              type: object
+              properties:
+                argumentPath:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 0
+                    maximum: 1
+                  minItems: 0
+                  maxItems: 12
+                neighbors:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 1
+                  maxItems: 16
+              required:
+                - argumentPath
+                - neighbors
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - options
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: quantiles
+            required:
+              type: boolean
+            options:
+              type: object
+              properties:
+                count:
+                  type: integer
+                  minimum: 2
+                  maximum: 20
+              required:
+                - count
+              additionalProperties: false
+          required:
+            - kind
+            - required
+            - options
+          additionalProperties: false
+    Expr:
+      oneOf:
+        - type: object
+          properties:
+            field:
+              type: string
+              minLength: 1
+              maxLength: 64
+              pattern: ^[a-z][a-z0-9_]{0,63}$
+          required:
+            - field
+          additionalProperties: false
+        - type: object
+          properties:
+            constant:
+              type: number
+              minimum: -1000000000000
+              maximum: 1000000000000
+          required:
+            - constant
+          additionalProperties: false
+        - type: object
+          properties:
+            call:
+              type: string
+              enum:
+                - Add
+                - Sub
+                - Mul
+                - Div
+                - Abs
+                - Log
+                - Ref
+                - Mean
+                - Std
+                - Min
+                - Max
+                - Sum
+                - Rank
+            args:
+              type: array
+              items:
+                $ref: "#/$defs/Expr"
+              minItems: 1
+              maxItems: 2
+          required:
+            - call
+            - args
+          additionalProperties: false
+    Formula:
+      type: object
+      properties:
+        dsl:
+          type: string
+          const: qlib-expr/1
+        tree:
+          $ref: "#/$defs/Expr"
+      required:
+        - dsl
+        - tree
+      additionalProperties: false
+    ParameterExpr:
+      oneOf:
+        - type: object
+          properties:
+            field:
+              type: string
+              minLength: 1
+              maxLength: 64
+              pattern: ^[a-z][a-z0-9_]{0,63}$
+          required:
+            - field
+          additionalProperties: false
+        - type: object
+          properties:
+            constant:
+              type: number
+              minimum: -1000000000000
+              maximum: 1000000000000
+          required:
+            - constant
+          additionalProperties: false
+        - type: object
+          properties:
+            parameter:
+              type: string
+              minLength: 1
+              maxLength: 64
+          required:
+            - parameter
+          additionalProperties: false
+        - type: object
+          properties:
+            call:
+              type: string
+              enum:
+                - Add
+                - Sub
+                - Mul
+                - Div
+                - Abs
+                - Log
+                - Ref
+                - Mean
+                - Std
+                - Min
+                - Max
+                - Sum
+                - Rank
+            args:
+              type: array
+              items:
+                $ref: "#/$defs/ParameterExpr"
+              minItems: 1
+              maxItems: 2
+          required:
+            - call
+            - args
+          additionalProperties: false
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        version:
+          type: number
+          const: 1
+        kind:
+          type: string
+          enum:
+            - alpha
+            - risk
+            - state
+        axis:
+          type: string
+          enum:
+            - time_series
+            - cross_section
+        minPairs:
+          type: integer
+          minimum: 3
+          maximum: 1000000
+        minCoverage:
+          type: number
+          minimum: 0
+          maximum: 1
+        stabilityWindows:
+          type: integer
+          minimum: 2
+          maximum: 100
+        maxReferenceCorrelation:
+          type: number
+          minimum: 0
+          maximum: 1
+        score:
+          type: string
+          enum:
+            - abs_rank_ic
+            - eta_squared
+        diagnostics:
+          type: array
+          items:
+            $ref: "#/$defs/Diagnostic"
+          minItems: 0
+          maxItems: 6
+      required:
+        - id
+        - version
+        - kind
+        - axis
+        - minPairs
+        - minCoverage
+        - stabilityWindows
+        - maxReferenceCorrelation
+        - score
+        - diagnostics
+      additionalProperties: false
+    Ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 256
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 256
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          type: string
+          minLength: 1
+          maxLength: 256
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    SearchBudget:
+      type: object
+      properties:
+        maxSeconds:
+          type: integer
+          minimum: 1
+          maximum: 86400
+        maxInputBytes:
+          type: integer
+          minimum: 1024
+          maximum: 536870912
+        maxOutputBytes:
+          type: integer
+          minimum: 1024
+          maximum: 536870912
+        maxCandidates:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        batchSize:
+          type: integer
+          minimum: 1
+          maximum: 64
+        seed:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      required:
+        - maxSeconds
+        - maxInputBytes
+        - maxOutputBytes
+        - maxCandidates
+        - batchSize
+        - seed
+      additionalProperties: false
+    Space:
+      type: object
+      properties:
+        fields:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-z][a-z0-9_]{0,63}$
+          minItems: 1
+          maxItems: 64
+        operators:
+          type: array
+          items:
+            type: string
+            enum:
+              - Add
+              - Sub
+              - Mul
+              - Div
+              - Abs
+              - Log
+              - Ref
+              - Mean
+              - Std
+              - Min
+              - Max
+              - Sum
+              - Rank
+          minItems: 0
+          maxItems: 64
+        windows:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+            maximum: 10000
+          minItems: 0
+          maxItems: 64
+        lags:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+            maximum: 10000
+          minItems: 0
+          maxItems: 64
+        constants:
+          type: array
+          items:
+            type: number
+            minimum: -1000000000000
+            maximum: 1000000000000
+          minItems: 0
+          maxItems: 64
+        maxNodes:
+          type: integer
+          minimum: 1
+          maximum: 128
+        maxDepth:
+          type: integer
+          minimum: 1
+          maximum: 12
+        maxLookbackBars:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        seeds:
+          type: array
+          items:
+            $ref: "#/$defs/Formula"
+          minItems: 0
+          maxItems: 64
+        templates:
+          type: array
+          items:
+            $ref: "#/$defs/Template"
+          minItems: 0
+          maxItems: 64
+      required:
+        - fields
+        - operators
+        - windows
+        - lags
+        - constants
+        - maxNodes
+        - maxDepth
+        - maxLookbackBars
+        - seeds
+        - templates
+      additionalProperties: false
+    Template:
+      type: object
+      properties:
+        tree:
+          $ref: "#/$defs/ParameterExpr"
+        domains:
+          type: object
+          maxProperties: 16
+          additionalProperties:
+            type: array
+            items:
+              type: number
+            minItems: 1
+            maxItems: 64
+      required:
+        - tree
+        - domains
+      additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - execution
+    - plugin.state.write
+    - resources.publish
+  usage:
+    purpose: Open a fixed search space or request one candidate batch; the caller decides whether to continue.
+    inputs: 'Open: {action:"open",requestId,snapshotRef,need,space,profile,references,budget}. Propose: {action:"propose",requestId,searchId,limit,feedback:[{factorId,evaluationId}]}. Read: {action:"read",searchId}. Only genuine matching development evaluations may be feedback.'
+    outputs: "{searchId,snapshotRef,checkpoint,attempted,exhausted,candidates}. Open/read return no candidates. Propose never computes or evaluates them; limit=0 only acknowledges feedback."
+    prerequisites: []
+    limitations:
+      - All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions.
+  binding:
+    type: native
+    name: factor_search
+  resumable: true
+  configurationRequirements:
+    - field: pythonPath
+      reason: Prepare or select the verified Qlib/DEAP/Optuna environment before numerical work.
+      optional: false
+  finalOutputSchema:
+    type: object
+    properties:
+      searchId:
+        type: string
+        minLength: 1
+        maxLength: 128
+      snapshotRef:
+        $ref: "#/$defs/Ref"
+      checkpoint:
+        oneOf:
+          - $ref: "#/$defs/Ref"
+          - type: "null"
+      attempted:
+        type: integer
+        minimum: 0
+        maximum: 100000
+      exhausted:
+        type: boolean
+      candidates:
+        type: array
+        items:
+          $ref: "#/$defs/Candidate"
+        minItems: 0
+        maxItems: 64
+    required:
+      - searchId
+      - snapshotRef
+      - checkpoint
+      - attempted
+      - exhausted
+      - candidates
+    additionalProperties: false
+    $defs:
+      Candidate:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 128
+          formula:
+            $ref: "#/$defs/Formula"
+          hypothesis:
+            type: string
+            minLength: 1
+            maxLength: 4000
+          origin:
+            type: object
+            properties:
+              method:
+                type: string
+                enum:
+                  - seed
+                  - template
+                  - random
+                  - deap
+                  - optuna
+              parents:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                minItems: 0
+                maxItems: 64
+              parameters:
+                type: object
+                maxProperties: 32
+                additionalProperties:
+                  type: number
+            required:
+              - method
+              - parents
+              - parameters
+            additionalProperties: false
+        required:
+          - id
+          - formula
+          - hypothesis
+          - origin
+        additionalProperties: false
+      Expr:
+        oneOf:
+          - type: object
+            properties:
+              field:
+                type: string
+                minLength: 1
+                maxLength: 64
+                pattern: ^[a-z][a-z0-9_]{0,63}$
+            required:
+              - field
+            additionalProperties: false
+          - type: object
+            properties:
+              constant:
+                type: number
+                minimum: -1000000000000
+                maximum: 1000000000000
+            required:
+              - constant
+            additionalProperties: false
+          - type: object
+            properties:
+              call:
+                type: string
+                enum:
+                  - Add
+                  - Sub
+                  - Mul
+                  - Div
+                  - Abs
+                  - Log
+                  - Ref
+                  - Mean
+                  - Std
+                  - Min
+                  - Max
+                  - Sum
+                  - Rank
+              args:
+                type: array
+                items:
+                  $ref: "#/$defs/Expr"
+                minItems: 1
+                maxItems: 2
+            required:
+              - call
+              - args
+            additionalProperties: false
+      Formula:
+        type: object
+        properties:
+          dsl:
+            type: string
+            const: qlib-expr/1
+          tree:
+            $ref: "#/$defs/Expr"
+        required:
+          - dsl
+          - tree
+        additionalProperties: false
+      Ref:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 256
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 256
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            type: string
+            minLength: 1
+            maxLength: 256
+          schemaVersion:
+            type: string
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false

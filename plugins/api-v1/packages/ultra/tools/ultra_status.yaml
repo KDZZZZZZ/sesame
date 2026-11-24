@@ -1,0 +1,47 @@
+name: ultra_status
+title: ultra_status
+description: 查看当前会话 Ultra 的目标、分支、真实 Run、等待和完成证据，读取不会启动研究。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    branch_key:
+      type: string
+      minLength: 1
+      maxLength: 96
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - state.write
+    - read
+  usage:
+    purpose: 查看当前会话 Ultra 的目标、分支、真实 Run、等待和完成证据，读取不会启动研究。
+    inputs: Use the current user's accepted objective and scope. id may be omitted by owner controls.
+    outputs: Durable goal status and real Run references, plus enabled, continuation (active/draining/closed), active_work, accepted_work and queued_work. Reading never starts research or advances user authority. guidance contains the current mode instructions for model-only context assembly; never append it to visible user messages.
+    prerequisites:
+      - Configured model for planning; selected capabilities remain enabled and locally authorized.
+    limitations:
+      - Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.
+      - No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state.
+  binding:
+    type: native
+    name: ultra_status

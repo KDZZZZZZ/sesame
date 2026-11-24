@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-ml-features:instructions#preamble": "ff42221a8b9de6300697989233ab1de946640fc78539979ebb11699f23afba11",
+    "sesame/abu-ml-features:plugin.description": "1888abe199660a609608bb3d580a8e53772bfe41eb4274b5e0f629b67deb976f",
+    "sesame/abu-ml-features:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-ml-features:resource/PROVENANCE.md": "40cc385e045811a4a493746518638a6825c8938b57272dbfec46ed2ab27d6045",
+    "sesame/abu-ml-features:resource/README.md": "14715d21b5d5b7a9a71121b78ca9844a56d685ce2be8ee9cd1b1287012f16b05",
+    "sesame/abu-ml-features:resource/examples/input.json": "5c8df8b97c847d8bba21a92eab9b8e979bc74565a827cceabe6a89df9482f0e2",
+    "sesame/abu-ml-features:resource/references/method.md": "0388b19a8d1eaa6d42815f91a7057a5e617f083538659f01e2caab5940394c0e",
+    "sesame/abu-ml-features:resource/scripts/baseline.mjs": "2e13d540c3a37a4ae069ea98c5dd39fd8e91194580600be5382d25b6d648c84f",
+    "sesame/abu-ml-features:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-ml-features:skill/abu-ml-features.body": "697002ff673933a8f83373164ae906bcfd17962336979085614afe788653ad12",
+    "sesame/abu-ml-features:skill/abu-ml-features.description": "46d1a8304f9cfcf0bfa86da7561cc1fec219d3eef7e4ac3d30d49be43f4dcd17",
+    "sesame/abu-ml-features:tool/abu_ml_features_analyze.description": "daf643a1533fe12be20f6f409363d9de8c8cfb9fb7fed3396ea51b5f5c468e77",
+    "sesame/abu-ml-features:tool/abu_ml_features_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-ml-features:tool/abu_ml_features_analyze.input": "9e07c4506953f19c8342ae1093bc2c40e5f814c0ed66696576d01545a732c1fa",
+    "sesame/abu-ml-features:tool/abu_ml_features_analyze.output": "4a8c3ae748f9b96e014a7c4c83212f092c8a27d262f620e7801b15fe2ea191d7"
+  },
+  "digest": "bebbf005981ff472e203cc1d45801539c21a1c392e9eff6a611a7b15da2d24f3"
+}

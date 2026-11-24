@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { readFileSync } from 'node:fs';
 
 export const COMPONENT_PROTOCOL = 'sesame-components/1';
@@ -10,7 +11,7 @@ const freeze = value => {
 
 // The existing publication contract is authoritative. Do not read schemas from
 // components_*: those capabilities themselves consume this catalog.
-const publicationSchema = readJSON('capabilities.json').capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
+const publicationSchema = readPackageDirectory(new URL('.',import.meta.url)).capabilities.capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
 const documentDefinition = publicationSchema.properties.content;
 const blockDefinitions = publicationSchema.$defs.block.oneOf;
 const blockDefinition = type => blockDefinitions.find(item => item.properties.type.const === type);

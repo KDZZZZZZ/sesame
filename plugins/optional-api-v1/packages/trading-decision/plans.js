@@ -66,6 +66,14 @@ export function validateDecision(plan, snapshot, decision) {
     check(rules.signed || !target.quantity.startsWith('-'), 'INVALID_DECISION', 'Selected capability does not support negative quantities');
     check(!rules.integer || !target.quantity.includes('.'), 'INVALID_DECISION', 'Selected capability requires integer quantities');
     check(target.unit === rules.unit, 'INVALID_DECISION', 'Target quantity unit differs from the selected execution capability');
+    for (const field of ['stop_loss', 'take_profit']) {
+      const price = target[field];
+      if (price === undefined) continue;
+      check(rules.supportsAttachedStops === true, 'UNSUPPORTED_CAPABILITY', 'Selected execution capability does not support attached stop_loss/take_profit');
+      check(/[1-9]/.test(target.quantity), 'INVALID_DECISION', 'A zero target cannot carry attached protection');
+      check(typeof price === 'string' && price.length <= 40 && /^(0|[1-9]\d*)(\.\d+)?$/.test(price) && /[1-9]/.test(price),
+        'INVALID_DECISION', `${field} must be a positive decimal price string (max 40 characters)`);
+    }
   }
   check(Array.isArray(pauses) && pauses.length <= 30 && new Set(pauses.map(value => value.deployment_id)).size === pauses.length, 'INVALID_DECISION', 'Pause requests must be unique');
   for (const pause of pauses) {

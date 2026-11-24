@@ -2,24 +2,40 @@ import { ROLES } from './plans.js';
 import { instance } from './state.js';
 import { records } from './records.js';
 
+// Report the frozen workflow's capability separately from the eventual broker result.
+function executionScope(plan) {
+  return { executionMode: plan.workflow?.execute === false ? 'decision_only' : 'target_execution', supportsAttachedStops: Boolean(plan.execution?.quantityRules?.supportsAttachedStops) };
+}
+
+function runScope(run) {
+  return { ...executionScope(run.plan), executionDisposition: run.executionDisposition ?? null, targetCount: run.decision?.targets?.length ?? null };
+}
+
 export function createAgentCapabilities(host) {
   const runtime = () => instance(host).runtime;
   const handlers = {
     trading_decision_models: () => ({ models: host.context.models, roles: ROLES }),
     trading_decision_plan: async (args, signal) => {
       const service = runtime(); service.main(host);
-      if (args.action === 'list') return { plans: service.plans().filter(plan => plan.ownerConversationId === host.context.sessionId) };
-      if (args.action === 'save') return service.configure(host, args.plan, signal);
-      return service.setEnabled(host, args.plan_id, args.action === 'resume');
+      if (args.action === 'list') return { plans: service.plans().filter(plan => plan.ownerConversationId === host.context.sessionId).map(plan => ({ ...executionScope(plan), ...plan })) };
+      const plan = args.action === 'save' ? await service.configure(host, args.plan, signal) : await service.setEnabled(host, args.plan_id, args.action === 'resume');
+      return { ...executionScope(plan), ...plan };
     },
-    trading_decision_run: args => { const service = runtime(); service.ownedPlan(host, args.plan_id); return service.trigger(args.plan_id, { kind: 'manual', id: args.request_id }, host); },
+    trading_decision_run: args => {
+      const service = runtime(); service.ownedPlan(host, args.plan_id);
+      const run = service.trigger(args.plan_id, { kind: 'manual', id: args.request_id }, host);
+      return { ...runScope(run), ...run };
+    },
     trading_decision_event: args => { const service = runtime(); service.main(host); return { runs: service.event(args.key, args.event_id, args.data ?? {}, args.observed_at, host.context.sessionId, host) }; },
     trading_decision_runs: args => {
       const service = runtime(); service.main(host);
-      if (args.action === 'read') return service.authorize(host, args.run_id);
+      if (args.action === 'read') {
+        const run = service.authorize(host, args.run_id);
+        return { ...runScope(run), ...run };
+      }
       if (args.action === 'cancel') { service.authorize(host, args.run_id); return service.cancel(args.run_id, 'Stopped by main Agent'); }
       const rows = records(host).list('runs').filter(run => run.plan.ownerConversationId === host.context.sessionId && (!args.plan_id || run.planId === args.plan_id)).sort((a, b) => b.createdAt - a.createdAt), offset = args.offset ?? 0, limit = args.limit ?? 20;
-      return { items: rows.slice(offset, offset + limit).map(run => ({ id: run.id, planId: run.planId, status: run.status, createdAt: run.createdAt, completedAt: run.completedAt, error: run.error, report: run.report, reportPending: run.reportPending, workflow: run.workflow })), total: rows.length, nextOffset: offset + limit < rows.length ? offset + limit : null };
+      return { items: rows.slice(offset, offset + limit).map(run => ({ id: run.id, planId: run.planId, status: run.status, ...runScope(run), createdAt: run.createdAt, completedAt: run.completedAt, error: run.error, report: run.report, reportPending: run.reportPending, workflow: run.workflow })), total: rows.length, nextOffset: offset + limit < rows.length ? offset + limit : null };
     },
     trading_decision_activity: args => { const run = runtime().authorize(host, args.run_id); runtime().main(host); if (!run.workflow) throw Object.assign(new Error('The workflow has no execution yet'), { code: 'NOT_STARTED' }); return host.views.open({ surface: 'run', runId: run.workflow.id }); },
     trading_decision_context: (args, signal) => runtime().context(host, args.run_id, args.section, args.offset, args.limit, signal),

@@ -1,0 +1,67 @@
+name: kurumi_bind_experiment_fx
+title: kurumi_bind_experiment_fx
+description: 显式绑定新Run全章合法窗口真实FX补充；新manifest精确runId，不复制旧24H指针，不宣称60s缺口已解决。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 0
+    run_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+    bundle_directory:
+      type: string
+      minLength: 1
+  required:
+    - command_id
+    - expected_version
+    - run_id
+    - bundle_directory
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 显式绑定新Run全章合法窗口真实FX补充；新manifest精确runId，不复制旧24H指针，不宣称60s缺口已解决。
+    inputs: "{command_id,expected_version,run_id,bundle_directory:<verified explicit FX bundle>}."
+    outputs: Actual new-run supplement binding/archive receipt, retaining run identity and source manifest.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Matching new experiment, legal chapter windows, no concurrent work.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Does not copy an old run pointer or certify all60s quote gaps solved.
+  binding:
+    type: native
+    name: kurumi_bind_experiment_fx
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

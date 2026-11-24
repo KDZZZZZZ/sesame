@@ -1,0 +1,40 @@
+name: qmt_command
+title: qmt_command
+description: Read a stored QMT order/cancel receipt by operation_id without submitting or replaying it. outcome_unknown is unresolved even if a current-day search returns no match; inspect qmt_read orders/fills. This is not a live broker query.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+  properties:
+    operation_id:
+      type: string
+      description: Existing QMT operation ID
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 读取已保留的QMT命令回执，不重新提交。
+    inputs: '{operation_id:<已有下单/撤单键>}；例 {operation_id:"user-intent-1"}。'
+    outputs: "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。"
+    prerequisites:
+      - 已存在同账户命令；trading版本在委派任务中核对宿主执行上下文。
+    limitations:
+      - 只读保留回执，不自动刷新或重发原单。未知状态可用当前原生orders/fills核对；不能凭持仓变动臆测该订单成交。
+  binding:
+    type: native
+    name: qmt_command

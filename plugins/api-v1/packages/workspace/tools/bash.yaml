@@ -1,0 +1,47 @@
+name: bash
+title: bash
+description: 在实际工作区运行PowerShell或Bash，宿主创建和取消真实进程Run；返回退出码、输出和Run引用。不能将进程成功本身当作产物验证。
+inputSchema:
+  type: object
+  required:
+    - command
+  properties:
+    command:
+      type: string
+      minLength: 1
+      maxLength: 100000
+    timeout:
+      type: integer
+      minimum: 1
+      maximum: 600
+    cwd:
+      type: string
+      maxLength: 1000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - process.exec
+  usage:
+    purpose: 在实际工作区运行PowerShell或Bash，宿主创建和取消真实进程Run；返回退出码、输出和Run引用。不能将进程成功本身当作产物验证。
+    inputs: command 是当前平台脚本（Windows=PowerShell，其他=Bash）；cwd 为工作区子目录，默认根；timeout 秒，默认60。
+    outputs: 真实 output/exitCode/executionId 及 run={id,status}、receipt；executionId 可供 research_register 使用。大输出标记 truncated；snapshotErrors 明示输入输出快照缺失。
+    prerequisites:
+      - 当前工作区；所需可执行程序已存在。
+    limitations:
+      - 不是OS沙箱。需要冻结计算证据时使用仅含相关输入/脚本/输出的 cwd，避免整工作区超过256文件/16MiB快照预算。非零退出按输出修命令；超时/取消先检查已发生结果，不盲目重放。
+      - Windows 使用 PowerShell；含引号或多行的 Python 程序可先用 write 保存 .py，再用当前环境的 Python 加 -X utf8 执行，避免重复嵌套 shell 引号。
+  binding:
+    type: native
+    name: bash

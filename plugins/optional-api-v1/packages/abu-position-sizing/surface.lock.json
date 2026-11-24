@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-position-sizing:instructions#preamble": "1b1eda86aaa152328aaffd129e4198dda3fc40512988fcf0e99e12c0eefbdda0",
+    "sesame/abu-position-sizing:plugin.description": "9cab1ef3a048d5c72c525c72d7548e9721fed86eb82f8edf3fc29816fe91a58e",
+    "sesame/abu-position-sizing:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-position-sizing:resource/PROVENANCE.md": "662a81da4ec3b2e25d2ff7c5aaeed4505e4cf63f0e5ecf02b774226ba432f4e1",
+    "sesame/abu-position-sizing:resource/README.md": "8df0b55a92548a8be505ff283501e5a3986f818cecad93628ba47f02726f5931",
+    "sesame/abu-position-sizing:resource/examples/input.json": "c7c4b274d3db7c94ef18ceb9d1ebdf6c39de38f0a489f1e6356dc26d0e634e8d",
+    "sesame/abu-position-sizing:resource/references/method.md": "1e80449c37acec3648119416a5dd7939aba06fe26c57efe6da6e46da343ed767",
+    "sesame/abu-position-sizing:resource/scripts/baseline.mjs": "43b0697a2e6480eac32fde8b787f067b13160625de692fb0935fd09352f762f3",
+    "sesame/abu-position-sizing:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-position-sizing:skill/abu-position-sizing.body": "6b557a7e13a3c14b9f404642da96604ef5e27191a22ea08c7fb99cbc6312c59f",
+    "sesame/abu-position-sizing:skill/abu-position-sizing.description": "d6a8c85e9c33a7b4c00cd534114379ebe5cf18d05a9bdca637efd0e447003d26",
+    "sesame/abu-position-sizing:tool/abu_position_sizing_analyze.description": "b1a219d1cde2b1ed50f55291238ab07a6346e35e5dbaa2f02bf8fb6afd0d10f5",
+    "sesame/abu-position-sizing:tool/abu_position_sizing_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-position-sizing:tool/abu_position_sizing_analyze.input": "4d959c0f228e6e07e76db1b46b0c55504d663436e5650bd3fe4242f4897db134",
+    "sesame/abu-position-sizing:tool/abu_position_sizing_analyze.output": "e056286b2e4bc010e01dedd6d466ff8a8f0aa3ddc2ed2daae077f42308d34026"
+  },
+  "digest": "17c5d472f2e3d827855d0813a2e074139496db4d185f0efd8b1fecf4f2dad750"
+}

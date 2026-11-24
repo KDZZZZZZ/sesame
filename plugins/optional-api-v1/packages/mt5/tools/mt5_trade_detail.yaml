@@ -1,0 +1,43 @@
+name: mt5_trade_detail
+title: mt5_trade_detail
+description: 读取原生历史回测的成交与真实票据关联 trace。旧 visual-mql-v1 图保留原身份；没有真实映射时明确返回 unavailable，不将其标为 SVL 验证。
+inputSchema:
+  type: object
+  required:
+    - trade_id
+  properties:
+    trade_id:
+      type: string
+      description: 回测数据集中的成交 ID
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 展开一个真实回测成交及可关联的原生轨迹。
+    inputs: "{trade_id:<mt5_report_data trades行中的id>}，形如pass_<UUID>_deal_<ticket>。"
+    outputs: '{origin:{mode:"backtest",backtest_id,pass_id,report_id,report_revision},trade,fills,engine,rule_graph,trace_status:"partial"|"unavailable",trace_reason,trace:{items,snapshot_sequence,truncated,time_basis}}。'
+    prerequisites:
+      - 已有真实Tester成交ID。
+    limitations:
+      - 只关联实际订单/成交票据；无埋点或券商自动退出不能推断策略决策。
+  binding:
+    type: native
+    name: mt5_trade_detail

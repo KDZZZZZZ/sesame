@@ -1,5 +1,6 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 import { capability } from '@sesame/plugin-sdk/capabilities';
-import manifest from './capabilities.json' with { type: 'json' };
+const {capabilities:manifest}=readPackageDirectory(new URL('.',import.meta.url));
 import { executeCapability } from './backend/plugin-runtime.js';
 
 export function createCapabilities(host) {

@@ -1,0 +1,76 @@
+name: binance_amend
+title: binance_amend
+description: 减少已记录 Spot 订单的数量并保留优先级；保持 clientOrderId，不支持原地改价或增加数量。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+    original_operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+    quantity:
+      type: string
+      pattern: ^(0|[1-9][0-9]*)(\.[0-9]+)?$
+      maxLength: 64
+    user_authorized:
+      type: boolean
+      const: true
+  required:
+    - operation_id
+    - original_operation_id
+    - quantity
+    - user_authorized
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    contract:
+      type: string
+      const: sesame.execution-adapter/1
+    backend:
+      type: string
+      const: binance
+  required:
+    - contract
+    - backend
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - external-trading
+    - network
+    - plugin.state.write
+  usage:
+    purpose: 减少已记录 Spot 订单的数量并保留优先级；保持 clientOrderId，不支持原地改价或增加数量。
+    inputs: Use the declared object schema; see INTERFACES.md for concrete examples.
+    outputs: Exact source observations and status, or an explicit operation error.
+    prerequisites:
+      - Configure the selected environment and HMAC API key/secret through configuration_integration_apply.
+      - Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission.
+    limitations:
+      - Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter.
+  configurationRequirements:
+    - field: environment
+      optional: true
+      reason: Select production or Spot Testnet; default is testnet.
+    - field: api_key
+      reason: Binance private account or trading operation.
+    - field: api_secret
+      reason: HMAC signing for the selected Binance account.
+  binding:
+    type: native
+    name: binance_amend

@@ -1,0 +1,28 @@
+id: ccxt-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/ccxt/skills/ccxt-public-markets/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/ccxt
+  - step: 1
+    pointer: /tools/0/name
+    equals: ccxt_catalog
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties: {}
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: ccxt-public-markets
+      description: Use explicit public CCXT spot candle sources with exact r

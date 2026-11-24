@@ -16,8 +16,9 @@ export function createExecutionAdapter(host, service, { now = Date.now, account 
   const current = async expected => check(same((await identity()).account, expected), 'QMT account or configuration changed during the operation', 'CONNECTION_CHANGED');
   const connection = (read, expected) => check(sameConnection(read, expected), 'QMT connection changed during observation', 'CONNECTION_CHANGED');
   async function snapshot(args, signal) {
+    check(args.expected_account === undefined || args.symbol === undefined, 'A bound workflow may request only a whole-account snapshot', 'INVALID_ARGUMENT');
     if (!args.symbol) {
-      const value = await createTradingContext(host, service, { now })( { action: 'snapshot', ...(args.history_days === undefined ? {} : { history_days: args.history_days }) }, signal);
+      const value = await createTradingContext(host, service, { now })({ action: 'snapshot', history_days: args.history_days }, signal, args.expected_account);
       return result({ ...value, projection: executionProjection(value.positions, value.orders, value.account) });
     }
     const began = now(), { account: observedAccount } = await identity();

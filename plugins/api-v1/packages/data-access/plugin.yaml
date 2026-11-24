@@ -1,0 +1,142 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/data-access
+title: 数据与研究证据
+description: 发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。
+version: 3.0.7
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.1 <0.4.0"
+entry: index.js
+dependencies:
+  - name: sesame/workspace
+    version: ">=3.0.0"
+x-sesame:
+  default_state: mounted
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  execution: native
+  mcp_export:
+    - data_read
+  permissions:
+    scopes:
+      - capabilities.compose
+    calls:
+      - host.datasets.query
+      - host.executions.query
+  resources:
+    - references/source-queries.md
+    - references/market-history.md
+    - references/execution-evidence.md
+  contributions:
+    configSchema:
+      type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    capabilities:
+      - tool/market_read
+      - tool/data_sources
+      - tool/data_query
+      - tool/data_snapshot
+      - tool/data_read
+      - tool/research_register
+      - tool/data_providers
+      - tool/market_instruments
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: resource.1
+        path: instructions.md
+        description: 提供可复用真实输入与可复查计算证据的职责、来源复用原则和任务入口选择。
+        kind: prompt
+      - id: resource.2
+        path: skills/analyze-data/SKILL.md
+        description: 读取完整固定输入、在独立目录计算、登记冻结执行证据并交付可复查结果。
+        kind: skill
+      - id: resource.3
+        path: skills/market-discovery/SKILL.md
+        description: 按任务复用证据、发现来源和缓存、选择查询/固定历史/显示入口并核对实际结果。
+        kind: skill
+      - id: resource.4
+        path: references/source-queries.md
+        description: 来源发现、缓存入口、通用查询与固定快照的参数、分页和恢复规则。
+        kind: reference
+      - id: resource.5
+        path: references/market-history.md
+        description: 精确品种、历史K线参数、来源时间与量单位，以及显示和订阅的验收证据。
+        kind: reference
+      - id: resource.6
+        path: references/execution-evidence.md
+        description: 登记输入与DataRef、计算目录、executionId和冻结输入输出的登记示例。
+        kind: reference
+    hooks: []
+    stateCollections:
+      - name: captures
+        schemaVersion: "1"
+        mode: document
+        access: private
+        schema:
+          type: object
+          properties:
+            fingerprint:
+              type: string
+              minLength: 1
+              maxLength: 4096
+              description: 查询摘要
+            capture:
+              type: object
+            result:
+              type: object
+          required:
+            - fingerprint
+            - capture
+          additionalProperties: false
+    artifactSchemas:
+      - id: capture-evidence
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            type:
+              const: captured-data-evidence
+            path:
+              const: evidence.json
+            provenance:
+              type: object
+          required:
+            - type
+            - path
+            - provenance
+          additionalProperties: true
+      - id: captured-data
+        kind: data
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          properties:
+            format:
+              const: json-rows
+            path:
+              const: rows.json
+            rowCount:
+              type: integer
+              minimum: 0
+            columns:
+              type: array
+              items:
+                type: string
+              maxItems: 256
+            provenance:
+              type: object
+          required:
+            - format
+            - path
+            - rowCount
+            - columns
+            - provenance
+          additionalProperties: false

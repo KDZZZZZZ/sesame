@@ -1,3 +1,4 @@
+import {readPackageDirectory} from '@sesame/plugin-sdk/surface';
 // SPDX-License-Identifier: GPL-3.0-only
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -24,7 +25,7 @@ test('performance and audit use independent inputs and publish only their own ev
     async publish(source, manifest) { const ref = { id: `artifact-${++sequence}`, revision: 'fixed', digest: `sha256:${'a'.repeat(64)}`, kind: 'data', schemaVersion: '1.0.0' }; published.set(ref.id, { rows: created.get(source.id), manifest }); return { ref }; },
     async remove(ref) { assert.ok(created.has(ref.id), 'Only newly created temporary resources may be cleaned'); created.delete(ref.id); },
   } };
-  const tools = createCapabilities(host), declaration = await read('../capabilities.json');
+  const tools = createCapabilities(host), declaration = readPackageDirectory(new URL('../',import.meta.url)).capabilities;
   assert.deepEqual(tools.map(tool => tool.name), ['abu_trade_metrics_analyze', 'abu_trade_results_audit']);
   assert.ok(!tools.some(tool => tool.name === 'abu_backtest_lab_analyze'));
   for (const capability of declaration.capabilities) assert.deepEqual(capability.researchDataAccess, { schemaVersion: 1, reads: 'input-only', writes: 'derived-artifacts-only' });

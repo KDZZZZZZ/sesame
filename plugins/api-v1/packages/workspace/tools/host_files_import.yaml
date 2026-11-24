@@ -1,0 +1,40 @@
+name: host_files_import
+title: host_files_import
+description: 复制最多8MiB的普通文件为受管资源，返回版本引用、实际路径和原文件哈希。
+inputSchema:
+  type: object
+  required:
+    - path
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+  usage:
+    purpose: 复制最多8MiB的普通文件为受管资源，返回版本引用、实际路径和原文件哈希。
+    inputs: path 为宿主普通文件，最多8MiB。
+    outputs: "{ref,path,provenance:{sourcePath,modifiedAt,sha256,bytes}}；新建受管 durable 文件资源，原文件保留。"
+    prerequisites: []
+    limitations:
+      - 导入不会登记数据或验证来源；分析/报告需要真实数据冻结接口。
+  binding:
+    type: native
+    name: host_files_import

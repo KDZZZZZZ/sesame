@@ -1,0 +1,59 @@
+id: qmt-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/qmt/skills/qmt-readonly/SKILL.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/qmt
+  - step: 1
+    pointer: /tools/0/name
+    equals: qmt_cancel
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      required:
+        - operation_id
+        - user_authorized
+        - account_id
+        - connection_revision
+        - original_operation_id
+        - order_id
+      properties:
+        operation_id:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,100}$
+        user_authorized:
+          type: boolean
+          const: true
+        account_id:
+          type: string
+          description: Exact authorized account ID
+          minLength: 1
+          maxLength: 20000
+        connection_revision:
+          type: string
+          description: Exact configured connection revision
+          minLength: 1
+          maxLength: 20000
+        original_operation_id:
+          type: string
+          description: Original qmt_order operation ID; unknown results require a retained intent and exact native recovery
+          minLength: 1
+          maxLength: 20000
+        order_id:
+          type: string
+          pattern: ^[1-9]\d*$
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: |-
+      ---
+      name: qmt-readonly
+      description: Inspect configured Windows MiniQMT prerequisites and read actual

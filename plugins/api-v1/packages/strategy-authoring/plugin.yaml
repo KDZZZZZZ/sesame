@@ -1,0 +1,227 @@
+formatVersion: 1
+protocolVersion: 2026-07-28
+id: sesame/strategy-authoring
+title: SVL 策略创作
+description: 编写、可视化与重放 SVL 策略；提供指标函数、动态品种池、组合分配、风险与执行账本，以及隔离的 Agent 判断和冻结时间线。原生回测与交易由目标插件提供。
+version: 3.0.2
+license: MIT
+engines:
+  sesame: ">=0.3.0-dev.21 <0.4.0"
+author:
+  name: Sesame
+entry: index.js
+x-sesame:
+  default_state: mounted
+  agent_scope: all
+  prompts:
+    - instructions.md
+  skills:
+    - skills
+  resources:
+    - references/language.md
+    - references/architecture.md
+    - examples/close-threshold.svl.json
+    - examples/close-threshold.replay.json
+    - examples/crossover.svl.json
+    - examples/crossover.replay.json
+    - references/pipeline.md
+    - references/agent-inputs.md
+    - examples/function-threshold.svl.json
+    - examples/function-threshold.replay.json
+    - examples/pipeline-fixture.js
+    - references/methods.md
+    - references/execution.md
+    - references/quant-functions.md
+    - examples/method-workflow.js
+    - examples/close-threshold-commented.svl.json
+  execution: native
+  permissions:
+    scopes: []
+    calls:
+      - host.models.query
+      - host.model.complete
+      - sesame/workspace#write
+  contributions:
+    configSchema:
+      type: object
+    capabilities:
+      - tool/strategy_validate
+      - tool/strategy_publish
+      - tool/strategy_graph
+      - tool/strategy_replay
+      - tool/strategy_pipeline
+      - tool/strategy_workflow
+      - tool/strategy_decision
+      - tool/strategy_functions
+      - id: strategy_activate
+        kind: function
+        consumers:
+          - host
+        description: 启动私有决策记录库并标记重启中断的作业。
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        execution: immediate
+        effects:
+          - write:private-records
+        usage:
+          purpose: 启动私有决策记录库并标记重启中断的作业。
+          inputs: 宿主 lifecycle.activate 事件；实现使用注入的 storageRoot 与数据/模型端口，不消费业务输入。
+          outputs: '{ready:true,storage?:"plugin-private-sqlite"}；打开私有判断库并恢复重启状态。'
+          prerequisites:
+            - 由宿主加载插件时调用。
+          limitations:
+            - 不自动重放中断的模型请求。
+        binding:
+          type: native
+          name: strategy_activate
+      - id: strategy_dispose
+        kind: function
+        consumers:
+          - host
+        description: 关闭本地决策桥、取消模型作业并关闭私有记录库。
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        execution: immediate
+        effects:
+          - write:private-records
+        usage:
+          purpose: 关闭本地决策桥、取消模型作业并关闭私有记录库。
+          inputs: 宿主 lifecycle.dispose 事件；无业务参数。
+          outputs: "{closed:true}；等待本地桥关闭、作业取消和私有记录库释放。"
+          prerequisites:
+            - 由宿主管理生命周期。
+          limitations:
+            - 关闭不删除已保存判断，也不撤回外部交易。
+        binding:
+          type: native
+          name: strategy_dispose
+    sources: []
+    views: []
+    services: []
+    knowledge:
+      - id: strategy-guide
+        path: instructions.md
+        description: 把已有研究假设表达、验证和发布为SVL；区分语言执行、真实回测与工作流对收益证据的判断。
+        kind: prompt
+      - id: reference-0
+        path: references/language.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-1
+        path: references/architecture.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-2
+        path: examples/close-threshold.svl.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-3
+        path: examples/close-threshold.replay.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-4
+        path: examples/crossover.svl.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-5
+        path: examples/crossover.replay.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-6
+        path: references/pipeline.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-7
+        path: references/agent-inputs.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-8
+        path: examples/function-threshold.svl.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-9
+        path: examples/function-threshold.replay.json
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-10
+        path: examples/pipeline-fixture.js
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-11
+        path: references/methods.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-12
+        path: references/execution.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-13
+        path: references/quant-functions.md
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: reference-14
+        path: examples/method-workflow.js
+        description: 策略语言、方法或可重放示例。
+        kind: reference
+      - id: strategy-authoring
+        path: skills/strategy-authoring/SKILL.md
+        description: SVL策略创作方法。
+        kind: skill
+    hooks:
+      - id: activate
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+        event: lifecycle.activate
+        operations:
+          handle: strategy_activate
+      - id: dispose
+        contract: sesame.lifecycle/1
+        consumer: host
+        configSchema:
+          type: object
+        event: lifecycle.dispose
+        operations:
+          handle: strategy_dispose
+    stateCollections: []
+    artifactSchemas:
+      - id: strategy-source
+        kind: strategy.source
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - strategyId
+            - sourcePath
+            - sourceDigest
+            - language
+            - languageVersion
+          properties:
+            strategyId:
+              type: string
+            sourcePath:
+              type: string
+            sourceDigest:
+              type: string
+            language:
+              type: string
+            languageVersion:
+              type: string
+      - id: evaluation-resource
+        kind: resource
+        schemaVersion: 1.0.0
+        schema:
+          type: object
+          required:
+            - type
+          properties:
+            type:
+              enum:
+                - svl-evaluation
+                - strategy-pipeline-evaluation
+                - strategy-agent-timeline

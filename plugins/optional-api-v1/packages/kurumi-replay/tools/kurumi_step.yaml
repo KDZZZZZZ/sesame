@@ -1,0 +1,60 @@
+name: kurumi_step
+title: kurumi_step
+description: 主Agent仅允许一个真实角色决定，提交后推进下一根；没有决定暂停。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      description: 精确操作幂等ID；重试保持同ID与参数
+      minLength: 1
+      maxLength: 128
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+    expected_version:
+      type: integer
+      minimum: 0
+      description: kurumi_status返回的控制revision，新挑战用0
+  required:
+    - command_id
+    - expected_version
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent仅允许一个真实角色决定，提交后推进下一根；没有决定暂停。
+    inputs: "{command_id,expected_version}; requests exactly one decision unit under the current 1H/4H cadence."
+    outputs: Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Same prerequisites as continue/start.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - One decision unit may cover up to four tradable H1 at cadence4; it is not a chart zoom operation.
+  binding:
+    type: native
+    name: kurumi_step
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

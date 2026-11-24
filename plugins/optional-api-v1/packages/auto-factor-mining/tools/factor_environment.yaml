@@ -1,0 +1,86 @@
+name: factor_environment
+title: factor_environment
+description: Inspect genuine engine imports or prepare a private pinned environment.
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - inspect
+        - prepare
+    pythonPath:
+      type: string
+      minLength: 1
+      maxLength: 4096
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - plugin.state.write
+    - private-filesystem
+    - network-on-prepare
+  usage:
+    purpose: Inspect genuine engine imports or prepare a private pinned environment.
+    inputs: '{action:"inspect"|"prepare",pythonPath?}; prepare uses existing CPython 3.12 and installs only into a private venv.'
+    outputs: "{ready,pythonPath,versions,environmentDigest,reason?}; ready reflects actual imports and the validated dependency lock."
+    prerequisites: []
+    limitations:
+      - All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions.
+  binding:
+    type: native
+    name: factor_environment
+  finalOutputSchema:
+    type: object
+    properties:
+      ready:
+        type: boolean
+      pythonPath:
+        type: string
+        minLength: 1
+        maxLength: 4096
+      versions:
+        type: object
+        maxProperties: 512
+        additionalProperties:
+          type: string
+          minLength: 1
+          maxLength: 128
+      environmentDigest:
+        type: string
+        pattern: ^(?:sha256:[a-f0-9]{64})?$
+      reason:
+        type: string
+        minLength: 1
+        maxLength: 2000
+    required:
+      - ready
+      - pythonPath
+      - versions
+      - environmentDigest
+    additionalProperties: false

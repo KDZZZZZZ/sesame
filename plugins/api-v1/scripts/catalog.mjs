@@ -45,18 +45,19 @@ export function readCatalogPolicy(root, sourceCommit) {
 }
 
 /** Project a verified package index without evaluating any plugin code. */
-export function catalogPackage(pkg, manifest, declaration, release, { withdrawn = false, classification } = {}) {
+export function catalogPackage(pkg, manifest, declaration, release, { withdrawn = false, classification, surface, capabilityManifest = 'plugin.yaml' } = {}) {
   require(manifest.apiVersion === '2' && declaration?.apiVersion === '2' && declaration.schemaVersion === 1 && Array.isArray(declaration.capabilities), 'Catalog requires API 2 manifests and explicit capability declarations');
   require(manifest.id === pkg.id && manifest.version === pkg.version, 'Catalog package identity differs from its fixed manifest');
-  require(manifest.capability_manifest === 'capabilities.json' && pkg.files.some(file => file.path === manifest.capability_manifest), 'Catalog capability manifest must be the indexed capabilities.json');
+  require(pkg.files.some(file => file.path === capabilityManifest), 'Catalog declaration must be indexed');
   require(manifest.tool_names === undefined && manifest.tool_definitions === undefined, 'API 2 capabilities have one declaration source');
+  if (capabilityManifest === 'plugin.yaml') require(/^[a-f0-9]{64}$/.test(surface?.digest) && pkg.files.some(file => file.path === 'surface.lock.json'), 'Catalog requires verified surface lock');
   const path = `${release.sourceRoot}/packages/${pkg.directory}`, mcp = manifest.execution === 'mcp';
   return { id: pkg.id, name: pkg.directory, version: pkg.version, apiVersion: '2', format: mcp ? 'sesame-mcp' : 'sesame-native',
     engines: manifest.engines, distribution: release.sourceRoot === 'plugins/api-v1' ? 'core' : 'optional', ...catalogClassification(classification),
     title: manifest.title, description: manifest.description, license: manifest.license,
     author: manifest.author ?? { name: 'Sesame contributors', url: `https://github.com/${REPOSITORY}` }, status: withdrawn ? 'withdrawn' : 'active',
     release: release.tag, source: { repository: `https://github.com/${REPOSITORY}`, commit: release.sourceCommit, path },
-    package: { treeDigest: pkg.treeDigest, files: pkg.files }, capabilityManifest: manifest.capability_manifest,
+    package: { treeDigest: pkg.treeDigest, files: pkg.files }, capabilityManifest, ...(surface ? {protocolVersion: '2026-07-28', surfaceDigest: 'sha256:'+surface.digest} : {}),
     capabilities: declaration.capabilities.map(({ id, kind, description, consumers, execution, effects, binding }) => ({ id, kind, description, consumers, execution, effects, binding })),
     tools: declaration.capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id),
     review: { automated: 'package-static-review', human: 'not-recorded', record: release.review,
@@ -93,7 +94,7 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
       require(!ids.has(pkg.id), `Repeated catalog identity: ${pkg.id}`); ids.add(pkg.id);
       const path = `${plan.sourceRoot}/packages/${pkg.directory}`, manifest = jsonAt(root, plan.sourceCommit, `${path}/plugin.json`);
       const declared = jsonAt(root, plan.sourceCommit, `${path}/${manifest.capability_manifest}`);
-      plugins.push(catalogPackage(pkg, manifest, declared, release, { withdrawn: withdrawals.includes(pkg.id), classification: Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined }));
+      plugins.push(catalogPackage(pkg, manifest, declared, release, { capabilityManifest: manifest.capability_manifest, withdrawn: withdrawals.includes(pkg.id), classification: Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined }));
     }
     // Published readers interpret this optional shorthand as exact equality for
     // every package, not as a lower bound. prepareRelease already validated the

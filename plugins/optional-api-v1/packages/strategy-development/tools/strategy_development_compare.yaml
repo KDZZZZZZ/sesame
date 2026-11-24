@@ -1,0 +1,136 @@
+name: strategy_development_compare
+title: strategy_development_compare
+description: 比较开发期原生基线、候选、匹配对照和消融实验，定位单个改动的增量。
+inputSchema:
+  type: object
+  properties:
+    baseline:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    candidate:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    matched:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    ablation:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    retuned:
+      type: boolean
+  required:
+    - baseline
+    - candidate
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: 比较开发期原生基线、候选、匹配对照和消融实验，定位单个改动的增量。
+    inputs: Supply project references with native development results. Declare retuned when variants chose their own parameters.
+    outputs: Comparable development metrics, changes in observed trades, unresolved controls and interpretation limits.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_compare

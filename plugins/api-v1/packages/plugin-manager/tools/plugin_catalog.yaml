@@ -1,0 +1,45 @@
+name: plugin_catalog
+title: plugin_catalog
+description: 查询固定发布目录中 API 2 包的精确摘要与发布证据。
+inputSchema:
+  type: object
+  properties:
+    plugin_id:
+      type: string
+      minLength: 1
+      maxLength: 160
+      description: 插件完整 ID
+    query:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 关键词
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - network.read
+  usage:
+    purpose: 查询固定发布目录中 API 2 包的精确摘要与发布证据。
+    inputs: plugin_id 精确查一个官方包，或 query 搜索发布名称/描述。
+    outputs: 固定 catalog_digest、schemaVersion、包身份/版本/兼容范围、treeDigest、文件数和发布来源；schema2 包另含 R2 内容寻址 baseUrl。只接受 API2 声明，尚未安装或验证业务环境。
+    prerequisites:
+      - 可访问官方发布目录。
+    limitations:
+      - 目录必须 API2；版本不匹配或下载失败保留真实错误，不当成无插件。当前安装摘要和诊断用 plugin_inspect。
+      - 仅在 plugin_discover 确认本机缺失且需远程安装时调用；同会话内若目录请求失败 1 次即停止重复探测，禁止并发或连续重试同一失败目录。
+  binding:
+    type: native
+    name: plugin_catalog

@@ -1,0 +1,44 @@
+name: manual_trade_status
+title: manual_trade_status
+description: Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.
+inputSchema:
+  type: object
+  required:
+    - operation_id
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Existing operation ID
+    refresh:
+      type: boolean
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - backend.read
+  usage:
+    purpose: Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.
+    inputs: "{operation_id:<existing exact command ID>,refresh?:false}."
+    outputs: Stored command; refresh:true additionally reads native command/orders/fills, records evidence and checkedAt, and may resolve an uncertain state.
+    prerequisites:
+      - Main conversation only; task/tool names do not grant a delegated Agent this authority.
+      - The operation belongs to this conversation; refresh requires the same configured account.
+    limitations:
+      - No matching order or deal does not prove a timed-out send failed. A native accepted receipt and an observed fill are distinct evidence.
+  binding:
+    type: native
+    name: manual_trade_status

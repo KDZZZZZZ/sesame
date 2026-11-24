@@ -1,6 +1,6 @@
 # ICT 价格结构研究
 
-`sesame/ict`，Plugin API 2，要求 Sesame `>=0.2.3`，当前包版本以 plugin.json 为准。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。没有可调用 capability 或 source；可选 Python 观察脚本通过已声明资源读取并在工作区执行。
+`sesame/ict`，Plugin API 2，要求 Sesame `>=0.2.3`，当前包版本以 plugin.yaml 为准。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。没有可调用 capability 或 source；可选 Python 观察脚本通过已声明资源读取并在工作区执行。
 
 仅按需 ICT：固定参考范围、三柱价格区间、结构转变候选与失效证据；不从 OHLC 反推机构真实订单。
 
@@ -14,7 +14,7 @@
 
 | 文件 | 职责 |
 | --- | --- |
-| capabilities.json | 显式知识资源、空执行能力和空配置 Schema |
+| plugin.yaml | 显式知识资源、空执行能力和空配置 Schema |
 | skills/ict/SKILL.md | 问题、输入、判断边界和交接规则 |
 | references/method.md | 三柱区间观察的操作定义与反证 |
 | references/validation.md | 确认时点、日历与效力验证边界 |

@@ -1,0 +1,80 @@
+name: plugin_create
+title: plugin_create
+description: 创建不覆盖已有目录的 API 2 完整声明草稿。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+      minLength: 16
+      maxLength: 128
+      description: 16–128 位字母、数字、下划线或连字符；同一请求重试保持不变
+      pattern: ^[A-Za-z0-9_-]+$
+    name:
+      type: string
+      minLength: 1
+      maxLength: 64
+      description: 小写 slug
+    description:
+      type: string
+      minLength: 1
+      maxLength: 1024
+      description: 业务用途
+    version:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: SemVer
+    template:
+      type: string
+      enum:
+        - native
+        - skill
+        - knowledge
+        - function
+        - adapter
+        - workflow
+        - service
+    publisher:
+      type: string
+      minLength: 1
+      maxLength: 64
+      description: 发布者 slug
+    min_host:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: 最低宿主版本
+  required:
+    - command_id
+    - name
+    - description
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.write
+    - state.write
+  usage:
+    purpose: 创建不覆盖已有目录的 API 2 完整声明草稿。
+    inputs: command_id 为 16–128 位字母、数字、下划线或连字符，同一请求保持稳定；name/publisher 用小写连字符 slug，description 描述业务；template 支持 native、skill、knowledge、function、adapter、workflow、service，version 默认0.1.0。
+    outputs: "{path,id,name,version,template,files,...} 指向工作区 plugin-drafts 的新草稿。"
+    prerequisites:
+      - 主 Agent；开发资料见 skills/develop-plugins/SKILL.md。
+    limitations:
+      - 脚手架只提供最小起点；补齐业务实现、配置绑定和用法声明后安装。不会覆盖既有草稿。
+  binding:
+    type: native
+    name: plugin_create

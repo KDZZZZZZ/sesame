@@ -1,0 +1,58 @@
+name: kurumi_import_fx_supplement
+title: kurumi_import_fx_supplement
+description: 主Agent显式导入已独立核验的 HistData 真实 CHFJPY 逐笔报价补充包；仅缺数暂停、无活跃任务时，绑定当前run及原快照、仅未提交时段；原报价优先、60秒限制不变，先双副本归档，不推进账户。
+inputSchema:
+  type: object
+  properties:
+    command_id:
+      type: string
+    expected_version:
+      type: integer
+      minimum: 0
+    bundle_directory:
+      type: string
+  required:
+    - command_id
+    - expected_version
+    - bundle_directory
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent显式导入已独立核验的 HistData 真实 CHFJPY 逐笔报价补充包；仅缺数暂停、无活跃任务时，绑定当前run及原快照、仅未提交时段；原报价优先、60秒限制不变，先双副本归档，不推进账户。
+    inputs: "{command_id,expected_version,bundle_directory:<absolute verified HistData CHFJPY tick bundle>}."
+    outputs: "{installed,reused,rowCount,engineUnchanged,engineVersion,revision,index}; supplemental source archives are retained."
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Missing-data pause, no active task/recovery, bundle bound to current run/original snapshot and only uncommitted times.
+    limitations:
+      - command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.
+      - Original valid quotes win; max60s FX age remains, no interpolation or historical rewrite. Import does not advance.
+  binding:
+    type: native
+    name: kurumi_import_fx_supplement
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

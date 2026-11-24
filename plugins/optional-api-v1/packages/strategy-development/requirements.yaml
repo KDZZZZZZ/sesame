@@ -1,0 +1,14 @@
+goal: 从投资委托提出可检验的交易假设，研究入场后能否捕捉到行情，构建可替换的 SVL 策略，通过原生回测、逐笔诊断和对照实验选择参数与改法。按需复用已有因子。提供产物依赖工作流 strategy.development。
+acceptance:
+  discovery:
+    case: strategy-development-discovery
+    tools:
+      - strategy_development_backtest
+      - strategy_development_build
+      - strategy_development_compare
+      - strategy_development_method
+      - strategy_development_plan
+      - strategy_development_read
+      - strategy_development_study
+      - strategy_development_verify
+    resource: README.md

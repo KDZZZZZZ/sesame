@@ -1,0 +1,76 @@
+name: akshare_query
+title: akshare_query
+description: Call a read-only whitelisted research interface; returns actual source rows or a clear network error. Financial numbers are decimal strings, never synthetic fallback.
+inputSchema:
+  type: object
+  required:
+    - interface
+  properties:
+    interface:
+      anyOf:
+        - type: string
+          const: stock_info_a_code_name
+        - type: string
+          const: stock_zh_a_spot_em
+        - type: string
+          const: stock_zh_a_hist
+        - type: string
+          const: stock_zh_a_daily
+        - type: string
+          const: stock_bid_ask_em
+        - type: string
+          const: stock_zh_a_spot_tx
+        - type: string
+          const: stock_zh_a_hist_tx
+    arguments:
+      type: object
+      patternProperties:
+        ^.*$:
+          type: string
+    max_rows:
+      type: integer
+      minimum: 1
+      maximum: 1000
+      default: 100
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - network
+  usage:
+    purpose: 读取一个已声明接口的原始信息，交给方法/工作流处理；已有适用快照直接复用。
+    inputs: '{interface,arguments?,max_rows?}；arguments 的值均为字符串。例 {interface:"stock_zh_a_hist_tx",arguments:{symbol:"sz000001",start_date:"20260101",end_date:"20261015",adjust:""},max_rows:100}。stock_info_a_code_name/stock_zh_a_spot_em/stock_zh_a_spot_tx 无参数；stock_bid_ask_em 用 symbol 六位代码；stock_zh_a_hist 用六位symbol、period:"daily"；stock_zh_a_daily 用 sh/sz 前缀。'
+    outputs: "{ok,interface,akshareVersion,observedAt,rows,totalRows,truncated}；max_rows默认100、最多1000，只裁剪预览，totalRows 是原生返回行数。"
+    prerequisites:
+      - akshare_discover/status 或 prepare 的 ready:true；允许的接口完整列于 akshare_catalog。
+    limitations:
+      - 这是上游字段结果，不是统一Bar，也不自动发布DataRef。网络/接口错误是失败，不以空数组替代；需要完整统一历史/冻结证据用 market_read。
+      - 此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。
+  binding:
+    type: native
+    name: akshare_query
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

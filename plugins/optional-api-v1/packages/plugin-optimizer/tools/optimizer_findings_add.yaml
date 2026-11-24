@@ -1,0 +1,49 @@
+name: optimizer_findings_add
+title: optimizer_findings_add
+description: 记录含证据引用的发现
+inputSchema:
+  type: object
+  properties:
+    source:
+      type: string
+      enum:
+        - agent
+        - program
+        - human
+        - user
+    evidence:
+      type: string
+      minLength: 1
+    note:
+      type: string
+      minLength: 1
+  required:
+    - source
+    - evidence
+    - note
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: 记录含证据引用的发现
+    inputs: source, evidence, note
+    outputs: 返回含证据的结构化记录或操作结果。
+    prerequisites: []
+    limitations:
+      - 只使用本会话授权的草稿和记录。
+  binding:
+    type: native
+    name: optimizer_findings_add

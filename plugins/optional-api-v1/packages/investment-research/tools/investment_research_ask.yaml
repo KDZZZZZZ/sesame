@@ -1,0 +1,131 @@
+name: investment_research_ask
+title: investment_research_ask
+description: Ask a completed predecessor a targeted evidence or method question from an authorized downstream member of investment_research_analyze. Use an exact member ID from qa_context.members; the default bull/bear/risk/manager query the original analysts. Trusted context supplies the selected research tools/model. Returns a resumable Run; read/wait for its full Markdown answer and fixed source references.
+inputSchema:
+  type: object
+  properties:
+    analyst:
+      type: string
+      pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+      description: An exact completed preceding member id listed in trusted qa_context.members; default workflows use market/fundamentals/news/sentiment.
+    question:
+      type: string
+      minLength: 1
+      maxLength: 16000
+      description: A concrete question whose answer can change the scenario, confidence or falsification condition. Describe the unresolved evidence or mechanism and the competing explanations; include relevant findings from previous answers when useful.
+  required:
+    - analyst
+    - question
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  resumable: true
+  effects:
+    - start:research-member
+    - invoke:selected-research
+    - resources.create
+    - resources.publish
+  usage:
+    purpose: Resolve a specific evidence gap with the responsible original member so an authorized downstream member can revise its judgment.
+    inputs: Only analyst and question; analyst is the exact target member ID from qa_context.members. The host supplies the trusted original research context, configured member model and frozen capability selection; do not pass workflow IDs, credentials or reconstructed prompts.
+    outputs: "Accepted Run: use host_runs_wait/read. Completed run.output contains {from,to,question,markdown,run_ref,source_refs}. Read the complete answer before relying on it. Further material questions may call again; completed answers reach later members and the final result, including answers requested by the designated synthesis member."
+    prerequisites:
+      - Caller must be an authorized investment_research_analyze member with trusted qa_context, and the requested target must be among its declared completed predecessors. Report-only rewriting does not acquire new evidence.
+      - The originally selected model and source/method capabilities remain configured at their frozen revisions.
+    limitations:
+      - No fixed round count. Ask only when further evidence or clarification can materially change the judgment; unresolved differences are valid results.
+      - Only one original member is assigned per call. Independent questions may be asked separately; each answer remains on that member's node.
+      - Does not wake a completed Run, start a new team, widen source permissions, publish reports or perform trading. A follow-up is a new native Agent Run bound to the original member.
+      - Access restrictions and missing evidence are reported honestly. A question is not proof that its proposed causal explanation is true.
+      - When a missing fact materially limits the judgment, use an existing verification outcome or a concrete capability/coverage limit to explain the boundary. If an authorized original member retains applicable capabilities and no check was attempted, ask a targeted question; an inherited unknown is not proof of unavailability. Do not repeat failed acquisition without a new path or pursue nonessential completeness.
+  binding:
+    type: native
+    name: investment_research_ask
+  finalOutputSchema:
+    type: object
+    properties:
+      from:
+        type: string
+        pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+        description: Actual requester or preceding member ID from the frozen research plan.
+      to:
+        type: string
+        pattern: ^[A-Za-z][A-Za-z0-9_-]{0,63}$
+        description: Actual requester or preceding member ID from the frozen research plan.
+      question:
+        type: string
+        minLength: 1
+      markdown:
+        type: string
+        minLength: 1
+      run_ref:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+          kind:
+            type: string
+            minLength: 1
+          revision:
+            type: integer
+            minimum: 1
+        required:
+          - id
+        additionalProperties: false
+      source_refs:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+            revision:
+              type: string
+              minLength: 1
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: data
+            schemaVersion:
+              const: 1.0.0
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+        description: Existing fixed evidence to reuse. Account snapshots are optional evidence, never an execution binding.
+    required:
+      - from
+      - to
+      - question
+      - markdown
+      - run_ref
+      - source_refs
+    additionalProperties: false

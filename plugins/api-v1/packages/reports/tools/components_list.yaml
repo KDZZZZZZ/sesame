@@ -1,0 +1,50 @@
+name: components_list
+title: components_list
+description: "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs."
+inputSchema:
+  type: object
+  properties:
+    query:
+      type: string
+      minLength: 1
+      maxLength: 200
+    category:
+      type: string
+      minLength: 1
+      maxLength: 80
+    cursor:
+      type: string
+      minLength: 1
+      maxLength: 2048
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 20
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - read
+  usage:
+    purpose: "Discover report structure entries, body components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. report.highlights describes the required opening key results. Returns a compact paginated index; request exact schemas only for selected IDs."
+    inputs: Optional query/category, opaque cursor and limit (default 20, maximum 100).
+    outputs: Compact component IDs, categories and whenToUse guidance with a continuation cursor.
+    prerequisites: []
+    limitations:
+      - Discovery does not create reports or inspect actual browser output.
+  binding:
+    type: native
+    name: components_list

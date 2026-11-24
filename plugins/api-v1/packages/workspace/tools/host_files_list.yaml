@@ -1,0 +1,47 @@
+name: host_files_list
+title: host_files_list
+description: 只读列出宿主目录中的普通文件和目录；结果有界且可分页，遵循文件端口的应用私有区保护。
+inputSchema:
+  type: object
+  required:
+    - path
+  properties:
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主绝对路径；支持 ~/
+    offset:
+      type: integer
+      minimum: 0
+      maximum: 10000
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 200
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - filesystem.read
+  usage:
+    purpose: 只读列出宿主目录中的普通文件和目录；结果有界且可分页，遵循文件端口的应用私有区保护。
+    inputs: path 为允许访问的宿主绝对目录或 ~/；offset 默认0，limit 默认100、最大200。
+    outputs: "{path,items,next_offset,scanned,scan_truncated,read_only:true}；条目含名称、路径、类型、大小、修改时间。"
+    prerequisites: []
+    limitations:
+      - 扫描有上限；scan_truncated 不表示目录遍历完整。受保护路径不会因改路径写法而开放。
+  binding:
+    type: native
+    name: host_files_list

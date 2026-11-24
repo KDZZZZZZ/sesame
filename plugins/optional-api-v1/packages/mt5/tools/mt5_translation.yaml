@@ -1,0 +1,298 @@
+name: mt5_translation
+title: mt5_translation
+description: 将 Agent 按冻结 SVL 源编写的 MQL5 文件、逐节点 source_map 与适配说明登记为翻译成果和独立 MT5 工程。较长源码请在工作区写 JSON 清单后用 mt5_translation_file，避免全文重发。只检查身份与映射结构；结果 partial，不证明原生语义等价。逻辑变化先修 SVL，再创建新翻译。
+inputSchema:
+  type: object
+  required:
+    - operation_id
+    - title
+    - source
+    - target
+    - mode
+    - parameter_map
+    - files
+    - source_map
+    - adaptations
+  properties:
+    operation_id:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{16,128}$
+      minLength: 16
+      maxLength: 128
+    title:
+      type: string
+      description: 工程名称
+      minLength: 1
+      maxLength: 120
+    source:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+          description: 成果 ID
+          minLength: 1
+          maxLength: 20000
+        revision:
+          type: string
+          description: 固定修订
+          minLength: 1
+          maxLength: 20000
+        digest:
+          type: string
+          description: sha256 摘要
+          minLength: 1
+          maxLength: 20000
+        kind:
+          type: string
+          description: 成果类型
+          minLength: 1
+          maxLength: 20000
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    target:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+          description: 成果 ID
+          minLength: 1
+          maxLength: 20000
+        revision:
+          type: string
+          description: 固定修订
+          minLength: 1
+          maxLength: 20000
+        digest:
+          type: string
+          description: sha256 摘要
+          minLength: 1
+          maxLength: 20000
+        kind:
+          type: string
+          description: 成果类型
+          minLength: 1
+          maxLength: 20000
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    mode:
+      anyOf:
+        - type: string
+          const: backtest
+        - type: string
+          const: live
+    parameter_map:
+      type: object
+      patternProperties:
+        ^.*$:
+          anyOf:
+            - type: object
+              required:
+                - nativeInput
+              properties:
+                nativeInput:
+                  type: string
+                  description: 实际 MQL5 input 参数名
+                  minLength: 1
+                  maxLength: 20000
+                encoding:
+                  type: string
+                  const: json
+              additionalProperties: false
+            - type: object
+              required:
+                - binding
+              properties:
+                binding:
+                  anyOf:
+                    - type: string
+                      const: instrument
+                    - type: string
+                      const: account
+              additionalProperties: false
+    files:
+      type: object
+      patternProperties:
+        ^.*$:
+          type: string
+          maxLength: 1048576
+      minProperties: 1
+      maxProperties: 128
+    source_map:
+      type: array
+      items:
+        type: object
+        required:
+          - nodeId
+          - generated
+          - instrumentation
+        properties:
+          nodeId:
+            type: string
+            description: 实际 SVL 节点 ID
+            minLength: 1
+            maxLength: 20000
+          functionId:
+            type: string
+            description: 函数节点的完整 functionId；主节点省略。扩展模块使用展开后的完整 ID
+            minLength: 1
+            maxLength: 20000
+          generated:
+            type: array
+            items:
+              type: object
+              required:
+                - path
+                - startLine
+                - endLine
+              properties:
+                path:
+                  type: string
+                  description: 实际相对路径
+                  minLength: 1
+                  maxLength: 20000
+                startLine:
+                  type: integer
+                  minimum: 1
+                endLine:
+                  type: integer
+                  minimum: 1
+              additionalProperties: false
+          instrumentation:
+            anyOf:
+              - type: string
+                const: direct
+              - type: string
+                const: inlined
+              - type: string
+                const: boundary
+              - type: string
+                const: unobservable
+          reason:
+            type: string
+            description: 不可观测原因
+            minLength: 1
+            maxLength: 20000
+        additionalProperties: false
+      maxItems: 1000
+    adaptations:
+      type: array
+      items:
+        type: object
+        required:
+          - code
+          - nodes
+          - status
+          - description
+          - evidence
+        properties:
+          code:
+            type: string
+            description: 适配代码
+            minLength: 1
+            maxLength: 20000
+          nodes:
+            type: array
+            items:
+              type: string
+              description: 实际源节点 ID
+              minLength: 1
+              maxLength: 20000
+          status:
+            anyOf:
+              - type: string
+                const: equivalent
+              - type: string
+                const: limited
+              - type: string
+                const: unsupported
+          description:
+            type: string
+            description: 具体语义差异及限制
+            minLength: 1
+            maxLength: 20000
+          evidence:
+            type: array
+            items:
+              type: object
+              required:
+                - id
+                - revision
+                - digest
+                - kind
+                - schemaVersion
+              properties:
+                id:
+                  type: string
+                  description: 成果 ID
+                  minLength: 1
+                  maxLength: 20000
+                revision:
+                  type: string
+                  description: 固定修订
+                  minLength: 1
+                  maxLength: 20000
+                digest:
+                  type: string
+                  description: sha256 摘要
+                  minLength: 1
+                  maxLength: 20000
+                kind:
+                  type: string
+                  description: 成果类型
+                  minLength: 1
+                  maxLength: 20000
+                schemaVersion:
+                  type: string
+                  const: 1.0.0
+              additionalProperties: false
+        additionalProperties: false
+      maxItems: 1000
+  additionalProperties: false
+outputSchema:
+  description: "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation."
+  type:
+    - object
+    - array
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - plugin.state.write
+    - resources.publish
+  usage:
+    purpose: 登记Agent已编写的MQL5翻译和明确差异。
+    inputs: '{operation_id,title,source:<固定strategy.source>,target:<mt5_target固定Ref>,mode:"backtest"|"live",parameter_map,files,source_map,adaptations}；files映射真实相对路径到源码文本，如 {"Experts/Strategy.mq5":"<本任务编写源码>"}；source_map每项含源node与实际文件/行范围/instrumentation；parameter_map映射nativeInput或instrument/account绑定，adaptations列语义差异和已有证据。'
+    outputs: '{project_id,revision:1,source,translation:<strategy.translation Ref>,validation:<strategy.validation Ref>,implementation:"translated_unverified",limitations}；validation为partial，尚无原生语义证明。'
+    prerequisites:
+      - SVL源由strategy-authoring公开能力发布；目标profile/SDK用mt5_target及target/README.md、sdk-integration.md、translation-file.md。
+    limitations:
+      - 只注册源码/映射，不生成源码、不编译、不运行交易；相同operation_id绑定同一输入，修改内容用新研究操作。
+  binding:
+    type: native
+    name: mt5_translation

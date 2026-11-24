@@ -1,0 +1,153 @@
+name: strategy_development_build
+title: strategy_development_build
+description: 发布固定 SVL；可选验证事件、组合规则，冻结独立编写的 Backtrader 实现。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Stable operation key for this exact input. Choose a new key for a revision or a changed experiment.
+    project_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    title:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    change_summary:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    source_path:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    native_source_path:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    native_template:
+      const: forecast_buffer
+    replay_path:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    workflow_path:
+      type: string
+      minLength: 1
+      maxLength: 2000
+  required:
+    - operation_id
+    - project_ref
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - projectRef
+    - mandateRef
+    - stage
+  properties:
+    projectRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    mandateRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    stage:
+      type: string
+      minLength: 1
+      maxLength: 2000
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.create
+    - resources.publish
+    - workspace.write
+  usage:
+    purpose: 发布固定 SVL；可选验证事件、组合规则，冻结独立编写的 Backtrader 实现。
+    inputs: Use local source paths or choose the editable forecast_buffer native daily cash-equity template. SVL, authored native programs and the template have separate scopes.
+    outputs: New projectRef, fixed source, independent native code and any actual fixed-event receipts.
+    prerequisites: []
+    limitations:
+      - A starter may cover signal/rule state only. SVL event or method replay does not measure trading profitability.
+  binding:
+    type: native
+    name: strategy_development_build

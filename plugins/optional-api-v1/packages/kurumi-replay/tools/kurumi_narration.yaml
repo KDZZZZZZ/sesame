@@ -1,0 +1,64 @@
+name: kurumi_narration
+title: kurumi_narration
+description: main-only公开tasks.read/messages.read的claim→主Agent普通native-chat正文→ack/reconcile；只读验证真实message及追加边界，完整封存，不需注入写API/第二旁白模型。实际SDK/client显示仍须验收。
+inputSchema:
+  type: object
+  properties:
+    action:
+      type: string
+      enum:
+        - status
+        - claim
+        - ack
+        - reconcile
+        - diagnose
+    event_id:
+      type: string
+    text_field:
+      type: string
+      enum:
+        - content
+        - text
+        - body
+  required:
+    - action
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: main-only公开tasks.read/messages.read的claim→主Agent普通native-chat正文→ack/reconcile；只读验证真实message及追加边界，完整封存，不需注入写API/第二旁白模型。实际SDK/client显示仍须验收。
+    inputs: action=status/diagnose/claim/ack/reconcile; event_id from the actual pending event; text_field is the documented public message text field if required.
+    outputs: Durable narration claim/message identity and acknowledgement/reconciliation state; only visible appended text in the claimed real main response can become sealed evidence.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Main conversation and actual public current-message/read contract.
+    limitations:
+      - The main Agent authors normal chat; no secondary narrator, private writer or fabricated user message. doNotRewrite/unknown means reconcile the saved response rather than repeating prose.
+  binding:
+    type: native
+    name: kurumi_narration
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

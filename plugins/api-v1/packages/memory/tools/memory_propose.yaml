@@ -1,0 +1,207 @@
+name: memory_propose
+title: memory_propose
+description: 提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。子任务结束时，有持久来源的候选会转交主 Agent 审阅。
+inputSchema:
+  type: object
+  required:
+    - category
+    - title
+    - summary
+    - content
+    - scope
+    - sources
+  properties:
+    category:
+      type: string
+      description: 分类路径，阅读 manage-memory skill 获取完整分类树
+      minLength: 1
+      maxLength: 20000
+    title:
+      type: string
+      description: 稳定的事实或偏好名称
+      minLength: 1
+      maxLength: 20000
+    summary:
+      type: string
+      description: 用于检索的简短摘要
+      minLength: 1
+      maxLength: 20000
+    content:
+      type: string
+      description: 完整结论、依据与适用条件，不保存原始日志
+      minLength: 1
+      maxLength: 20000
+    scope:
+      anyOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: global
+          required:
+            - kind
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: project
+            project_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 真实项目 ID
+          required:
+            - kind
+            - project_id
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: strategy
+            project_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 策略所属项目 ID
+            strategy_id:
+              type: string
+              minLength: 1
+              maxLength: 160
+              pattern: ^[\w.-]+$
+              description: 真实策略 ID
+          required:
+            - kind
+            - project_id
+            - strategy_id
+          additionalProperties: false
+    sources:
+      type: array
+      items:
+        anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                const: user_message
+              id:
+                type: string
+                minLength: 1
+                maxLength: 20000
+                description: 真实用户消息 ID；不能使用委派消息或成果 ID
+            required:
+              - type
+              - id
+            additionalProperties: false
+          - type: object
+            properties:
+              type:
+                type: string
+                const: artifact
+              id:
+                type: string
+                minLength: 1
+                maxLength: 20000
+                description: 原 ArtifactRef.id
+              revision:
+                type: string
+                minLength: 1
+                maxLength: 20000
+                description: 原 ArtifactRef.revision 字符串
+              kind:
+                type: string
+                minLength: 1
+                maxLength: 20000
+                description: 原 ArtifactRef.kind
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+                description: 原 ArtifactRef.digest
+              schemaVersion:
+                type: string
+                minLength: 1
+                maxLength: 20000
+                description: 原 ArtifactRef.schemaVersion
+            required:
+              - type
+              - id
+              - revision
+              - kind
+              - digest
+              - schemaVersion
+            additionalProperties: false
+        description: 来源必须有 type。冻结成果使用 {type:"artifact",...完整 ArtifactRef}；用户表达使用 {type:"user_message",id:"真实消息ID"}。不省略 type，不改写来源类别或成果版本。
+      minItems: 1
+      maxItems: 20
+    tags:
+      type: array
+      items:
+        type: string
+        maxLength: 64
+      maxItems: 20
+    evidence:
+      anyOf:
+        - type: string
+          const: explicit
+        - type: string
+          const: verified
+        - type: string
+          const: inferred
+        - type: string
+          const: conflicted
+    pinned:
+      type: boolean
+    value:
+      anyOf:
+        - type: string
+          const: low
+        - type: string
+          const: normal
+        - type: string
+          const: high
+    expires_at:
+      anyOf:
+        - type: string
+        - type: "null"
+    review_at:
+      anyOf:
+        - type: string
+        - type: "null"
+    conflicts_with:
+      type: array
+      items:
+        type: string
+      maxItems: 20
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:memory
+  resultRetention: summary
+  usage:
+    purpose: 提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。子任务结束时，有持久来源的候选会转交主 Agent 审阅。
+    inputs: category/title/summary/content/scope/sources 必填；用户偏好用 user/workflow 或 user/communication 与 {kind:"global"}。sources 用 {type:"user_message",id} 或 {type:"artifact",...完整ref}；evidence 区分 explicit/verified/inferred/conflicted。 交易偏好使用 trading/style，策略/指标认知使用 trading/strategy-knowledge，风险草案使用 trading/risk-rules；后者始终是候选，不能自行接受为红线。
+    outputs: 候选 id/version、所有者、来源、正文及到期信息；候选不能用 memory_read 读取。主 Agent 用 memory_manage action=candidates 查看，用候选原始 id/version 接纳；仍不等于正式长期记忆。
+    prerequisites:
+      - 真实用户消息可从 host#messages 数据源读取；成果来源必须已发布。分类表见 manage-memory。
+    limitations:
+      - 子 Agent 使用候选；重要结论需主 Agent accept。无效来源应查真实消息/成果，不能引用助手自述或委派消息。
+      - 风险候选无论 explicit/verified/inferred，都必须由主 Agent 基于本次用户确认接纳；研究证据不能代替用户同意。
+  binding:
+    type: native
+    name: memory_propose

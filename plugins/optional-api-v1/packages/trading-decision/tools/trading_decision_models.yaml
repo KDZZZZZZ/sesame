@@ -1,0 +1,58 @@
+name: trading_decision_models
+title: trading_decision_models
+description: List configured model descriptors and the default manager/executor roles. Use exact provider/id for the default or role override; optional reviewer IDs come from the selected workflow plan.
+inputSchema:
+  type: object
+  properties: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    models:
+      type: array
+      items:
+        type: object
+        properties:
+          provider:
+            type: string
+          id:
+            type: string
+          configurationDigest:
+            type: string
+        required:
+          - provider
+          - id
+          - configurationDigest
+        additionalProperties: true
+    roles:
+      type: array
+      items:
+        enum:
+          - manager
+          - executor
+  required:
+    - models
+    - roles
+  additionalProperties: false
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  binding:
+    type: native
+    name: trading_decision_models
+  usage:
+    purpose: List configured model descriptors and the default manager/executor roles. Use exact provider/id for the default or role override; optional reviewer IDs come from the selected workflow plan.
+    inputs: "{}."
+    outputs: "{models:[{provider,id,configurationDigest,...}],roles:[role names]}; copy a configured model descriptor into plan.model or agent_models."
+    prerequisites: []
+    limitations:
+      - A configured model is not evidence that a particular workflow succeeded.

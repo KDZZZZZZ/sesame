@@ -1,0 +1,6 @@
+goal: 可组合的分析方法：实际资料支持哪些市场命题、传播关系和竞争解释，下一项观察如何区分它们；消费已有证据，返回命题与 source_cluster 表、支持/反对/缺失事实、竞争情景、触发与反证及更新条件。
+acceptance:
+  discovery:
+    case: narrative-analysis-discovery
+    tools: []
+    resource: skills/narrative-analysis/SKILL.md

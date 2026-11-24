@@ -1,0 +1,63 @@
+name: vnpy_environment
+title: vnpy_environment
+description: Inspect existing native Python/VeighNa environments; prepare first reuses a compatible environment and installs pinned dependencies in private plugin data only when needed. No download occurs on plugin load or inspect. Runs managed host processes, not an OS sandbox.
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: inspect
+        - type: string
+          const: prepare
+    python_path:
+      type: string
+      description: Existing native Python executable to inspect or use for a private environment
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects:
+    - process
+    - private-filesystem
+    - plugin.state.write
+    - network-on-prepare
+  usage:
+    purpose: 核验/选择实际VeighNa环境，或有界准备私有依赖。
+    inputs: '{action:"inspect",python_path?} 核验显式/已选/宿主Python；{action:"prepare",python_path:<已知兼容或安装所用base路径>} 选择现有环境或准备私有依赖。最小例 {action:"inspect"}。'
+    outputs: 成功:{ready:true,reused,configured,environment:{python,packages,origin,downloads,...},findings}；缺失:{ready:false,requirements,findings,next}；准备中:{ready:false,configured:false,phase,progress,error,retryable,privateDirectory,cacheDirectory,next}。
+    prerequisites:
+      - 本机64位Python3.10–3.13；固定vnpy4.5.0/CTA1.4.1。ready:true且configured:false可对同一python prepare保存选择，不下载。
+    limitations:
+      - prepare可能下载大Qt包；retryable:true且进度变化才有继续依据，使用相同base路径保留缓存。retryable:false停止自动重试；不换镜像/删除缓存来绕过失败。依赖就绪不代表策略回测成功。
+  binding:
+    type: native
+    name: vnpy_environment
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

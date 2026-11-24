@@ -397,6 +397,20 @@ export class MemoryRepository {
     for (const value of values) this.discardCandidate(value);
     if (values.length) this.purgePages(); return { deleted_candidates: values.length };
   }
+  finishCandidates(cid, owner, retained) {
+    this.main(owner);
+    const keep = new Set(retained), rows = this.rows('memory_candidates').filter(value => value.owner_conversation_id === cid);
+    for (const value of rows) {
+      if (keep.has(value.id)) {
+        value.owner_conversation_id = owner;
+        value.owner_run_id = null;
+        this.db.prepare('UPDATE memory_candidates SET body=? WHERE id=?').run(JSON.stringify(value), value.id);
+      } else this.discardCandidate(value);
+    }
+    const deleted = rows.length - keep.size;
+    if (deleted) this.purgePages();
+    return { retained_candidates: keep.size, deleted_candidates: deleted };
+  }
   maintain() {
     const policy = this.policy(), counts = { expired_candidates: 0, forgotten_low_value: 0, archived: 0 };
     for (const candidate of this.rows('memory_candidates')) if (Date.parse(candidate.expires_at) <= this.clock()) { this.discardCandidate(candidate); counts.expired_candidates++; }

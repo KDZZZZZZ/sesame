@@ -1,0 +1,53 @@
+name: kurumi_export
+title: kurumi_export
+description: 主Agent冻结并导出已揭示行情、账户/账本、真实角色与成熟引擎证据为固定data/resource成果，不推进；可直接用于现有reports插件。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 这次精确已揭示快照的稳定操作ID；推进后用新ID
+  required:
+    - operation_id
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      const: run
+    run:
+      type: object
+    receipt:
+      type: object
+  required:
+    - type
+    - run
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: run
+  effects: []
+  usage:
+    purpose: 主Agent冻结并导出已揭示行情、账户/账本、真实角色与成熟引擎证据为固定data/resource成果，不推进；可直接用于现有reports插件。
+    inputs: "{operation_id:<stable publication ID>}."
+    outputs: Published immutable data and resource references for revealed rows, current ledger/checkpoint and retained role evidence; inspect the returned ArtifactRefs with host.resources.read.
+    prerequisites:
+      - Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.
+      - Existing challenge and readable fixed evidence.
+    limitations:
+      - Does not advance, expose complete future-price arrays or publish credentials. Evidence remains marked simulated/demo as applicable.
+  binding:
+    type: native
+    name: kurumi_export
+  finalOutputSchema:
+    type: object
+    additionalProperties: true

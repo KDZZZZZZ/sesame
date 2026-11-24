@@ -15,6 +15,7 @@ const active = new Map();
 const nonempty = value => typeof value === 'string' && value.length > 0;
 const same = (a, b) => a !== undefined && b !== undefined && canonical(a) === canonical(b);
 const main = host => check(host.context?.kind === 'main' && nonempty(host.context.sessionId), 'FORBIDDEN', 'Configure execution bindings from the main conversation');
+const decisionController = 'sesame/trading-decision#trading_decision_workflow_execute';
 
 export function createExecution(host, { now = Date.now, apply = applyPortfolio, provenance, signal: lifetime } = {}) {
   const readBinding = id => {
@@ -22,11 +23,26 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
     check(binding, 'NOT_FOUND', 'Execution binding not found; call portfolio_execution_configure first');
     return binding;
   };
-  const native = async (binding, action, signal, historyDays) => {
+  const native = async (binding, action, signal, input = {}) => {
     const selected = await adapterOperation(host, binding.backend, action, { delegated: true });
-    const value = await invoke(host, selected.pluginId, selected.id, historyDays === undefined ? {} : { history_days: historyDays }, signal);
+    const value = await invoke(host, selected.pluginId, selected.id, input, signal);
     return adapterResult(value, binding.backend);
   };
+  function assertContextRead(binding, args) {
+    if (args.frozen_context === undefined) return assertBinding(binding);
+    lifetime?.throwIfAborted();
+    const { workflow, caller, chain, agent } = provenance ?? {};
+    const { kind, runId, sessionId, ownerSessionId } = host.context;
+    check(args.action === 'snapshot' && kind === 'subagent' && !agent
+      && nonempty(runId) && nonempty(sessionId) && workflow?.runId === runId && workflow.sessionId === sessionId
+      && ownerSessionId === binding.ownerConversationId && workflow.ownerSessionId === ownerSessionId
+      && caller?.pluginId === 'sesame/trading-decision' && caller.capabilityId === decisionController
+      && caller.runId === runId && caller.sessionId === sessionId
+      && chain?.at(-2)?.capabilityId === decisionController && chain.at(-1)?.capabilityId === PLUGIN + '#' + CONTEXT
+      && same(args.frozen_context, { bindingId: binding.id, backend: binding.backend, account: binding.account }),
+    'FORBIDDEN', 'Workflow snapshot requires its own saved execution binding and active controller');
+    check(same(readBinding(binding.id), binding), 'BINDING_CHANGED', 'Execution binding changed during snapshot');
+  }
   function assertBinding(binding, run) {
     lifetime?.throwIfAborted();
     const current = readBinding(binding.id);
@@ -66,6 +82,14 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
         && typeof target.quantity === 'string' && target.quantity.length <= 40 && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(target.quantity)
         && (binding.backend === 'mt5' ? target.unit === 'lots' : target.unit === 'shares' && /^(0|[1-9]\d*)$/.test(target.quantity)),
       'INVALID_ARGUMENT', 'Targets must have unique symbols and exact quantities in the bound native unit');
+      for (const field of ['stop_loss', 'take_profit']) {
+        const price = target[field];
+        if (price === undefined) continue;
+        check(binding.backend === 'mt5', 'UNSUPPORTED_CAPABILITY', 'Selected execution capability does not support attached stop_loss/take_profit');
+        check(/[1-9]/.test(target.quantity), 'INVALID_ARGUMENT', 'A zero target cannot carry attached protection');
+        check(typeof price === 'string' && price.length <= 40 && /^(0|[1-9]\d*)(\.\d+)?$/.test(price) && /[1-9]/.test(price),
+          'INVALID_ARGUMENT', `${field} must be a positive decimal price string (max 40 characters)`);
+      }
       seen.add(target.symbol);
     }
     check(new Set(pauses.map(value => value.deployment_id)).size === pauses.length
@@ -104,10 +128,13 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
       return { plugin_id: PLUGIN, context_tool: CONTEXT, apply_tool: APPLY, arguments: { binding_id: id } };
     },
     async context(args, signal) {
-      const binding = readBinding(args.binding_id); assertBinding(binding);
+      const binding = readBinding(args.binding_id); assertContextRead(binding, args);
       check(['identity', 'snapshot'].includes(args.action), 'INVALID_ARGUMENT', 'Choose identity or snapshot');
-      const result = await native(binding, args.action, signal, args.history_days);
-      assertBinding(binding);
+      const request = {};
+      if (args.history_days !== undefined) request.history_days = args.history_days;
+      if (args.frozen_context !== undefined) request.expected_account = binding.account;
+      const result = await native(binding, args.action, signal, request);
+      assertContextRead(binding, args);
       check(same(result.account, binding.account), 'ACCOUNT_CHANGED', 'Configured execution account changed; create a new binding');
       if (args.action === 'snapshot') return result;
       const declared = await executionTools(host, binding.backend);
@@ -116,7 +143,7 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
         taskContext: { bindingId: binding.id, backend: binding.backend, account: clone(binding.account) },
         accountProvider: { pluginId: `sesame/${binding.backend}`, providerId: 'account' },
         fillSources: binding.backend === 'mt5' ? [{ pluginId: 'sesame/mt5', provider: 'mt5/python/history_deals_get' }] : [],
-        quantityRules: { unit: binding.backend === 'mt5' ? 'lots' : 'shares', signed: binding.backend === 'mt5', integer: binding.backend === 'qmt' } };
+        quantityRules: { unit: binding.backend === 'mt5' ? 'lots' : 'shares', signed: binding.backend === 'mt5', integer: binding.backend === 'qmt', supportsAttachedStops: binding.backend === 'mt5' } };
     },
     async apply(args, signal) {
       const binding = readBinding(args.binding_id), run = clone(args.run);

@@ -1,0 +1,14 @@
+goal: 把当前用户目标组织成持久、并行、可恢复的研究和盯盘交易周期，组合现有工作流、知识与数据插件；真实任务完成后续办，达到目标或用户停止后结束。
+acceptance:
+  discovery:
+    case: ultra-discovery
+    tools:
+      - ultra_close
+      - ultra_dispatch
+      - ultra_finish
+      - ultra_resume
+      - ultra_start
+      - ultra_status
+      - ultra_stop
+      - ultra_wait
+    resource: PROVENANCE.md

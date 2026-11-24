@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-volatility:instructions#preamble": "2d83f79ec39d4ff8d18ee4be57f0503197c8beaf25ad7a49cb69c1980166a9fd",
+    "sesame/abu-volatility:plugin.description": "6e1e3f9b77d0cb820771af4bb3b0917994a4625afd2d72ec38db25436adce9c0",
+    "sesame/abu-volatility:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-volatility:resource/PROVENANCE.md": "b473b63238e179dedf8a8da5a5b4abb4c6cb7688d6a5578874ed01b441cc8177",
+    "sesame/abu-volatility:resource/README.md": "87e0231504a40e32c5aec5e47e404ce3726c249255c3a9fc458c6eb8bce26866",
+    "sesame/abu-volatility:resource/examples/input.json": "c75ca622b827c48f5aac5ff2ef2d375c019a90161ec8717d01d22c40fcd914d1",
+    "sesame/abu-volatility:resource/references/method.md": "590d5cf5dda0afff901f5d5cb61afbb540cd17a697d164150fc0ebf14ee9a7c7",
+    "sesame/abu-volatility:resource/scripts/baseline.mjs": "336c0f67d09b5336edaca3826ffcad1d23e61e8a05cfb52f91c7d0d9195e1608",
+    "sesame/abu-volatility:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-volatility:skill/abu-volatility.body": "e8eb42ae88be6a8abb3b4a160745d583026bfe338397b52ff23c7c32262998a5",
+    "sesame/abu-volatility:skill/abu-volatility.description": "0dce3b2095301dac1f1470dc431e912853565c247a6ad3772af711012f6b5fff",
+    "sesame/abu-volatility:tool/abu_volatility_analyze.description": "2f7f642e9c7f60c10644f8d16ea8359e18e1693b8e1e6bf3af7d471b0c03a6a1",
+    "sesame/abu-volatility:tool/abu_volatility_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-volatility:tool/abu_volatility_analyze.input": "36b2a0208b29679e1a5e7905f846e2c02934ae856f71cee1f8c58f8513f06f8f",
+    "sesame/abu-volatility:tool/abu_volatility_analyze.output": "476f1bdea1a8fe9daca74bf6a3a03fc71b33f6f1c984c37976a022ff7e5fef86"
+  },
+  "digest": "985b43caf94bef72fbc28e0120a123ba5efca25c0f27e37c6dc65d4814d8645b"
+}

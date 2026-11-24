@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "elements": {
+    "sesame/abu-stock-screening:instructions#preamble": "32af291586092125131e383e888efa632e9ce7412227975d8f101aeb522386ea",
+    "sesame/abu-stock-screening:plugin.description": "929246fe5179a9ecf6deca518bfcf90c8c3e92d4f143d97c1cb0a68d2c0e078e",
+    "sesame/abu-stock-screening:resource/LICENSE": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+    "sesame/abu-stock-screening:resource/PROVENANCE.md": "d8f30cdc24b7d2180efb0f17ed50d10363bbd4fcbded4b8629427eb6a4e8b4c8",
+    "sesame/abu-stock-screening:resource/README.md": "992cd6325969fc121d9fabb10417205fface3ee2ae72d667e37c78f312075a49",
+    "sesame/abu-stock-screening:resource/examples/input.json": "26d51b34beb45b2b35baa27e58f5d14f82e1ebcb695b8c458a60c1041c2ba4a6",
+    "sesame/abu-stock-screening:resource/references/method.md": "fd288ccbae7f05cc2a7b5690d8d69aaa1acf180d01e6361fedd5c86b3db87ef3",
+    "sesame/abu-stock-screening:resource/scripts/baseline.mjs": "25455dfa1aadba49a5f55a44dfc4a19217735332689dddbc10bf6acb121963a0",
+    "sesame/abu-stock-screening:resource/scripts/runtime.mjs": "9cb5580e871046edadc51fc03e153d841c36dbf1c2047ee161d8033f3434b47f",
+    "sesame/abu-stock-screening:skill/abu-stock-screening.body": "38226fcda584d82c4304d9b521157642615f904c6e8ae2a7432a6666ef79cf05",
+    "sesame/abu-stock-screening:skill/abu-stock-screening.description": "ffa9e525eb8d9d8df58a3a6747152b2bb5615417be3116975f936f1a75eb8378",
+    "sesame/abu-stock-screening:tool/abu_stock_screening_analyze.description": "81765398a80d2bc497a328ea3c162aa485cafd9b212ccad0d12ad58afe6977ac",
+    "sesame/abu-stock-screening:tool/abu_stock_screening_analyze.error/internal_error": "5311e608c818e0759cc46237f5afea9dc2a22d537ece4a13fed6e843ac1cace4",
+    "sesame/abu-stock-screening:tool/abu_stock_screening_analyze.input": "551a0c4e863df9f08f2a125bf6b9b7786aabe5640f47ddce36eefc99d023a5bd",
+    "sesame/abu-stock-screening:tool/abu_stock_screening_analyze.output": "b26d0b8d8b6f6d560d11383634e43b1c49c3759c0d0cb4a8e9c2e86e4589411a"
+  },
+  "digest": "9c478ffeec2cc6c4f61ce8375be9590aba8ecfd509e3d6994a99cdf2a960749b"
+}

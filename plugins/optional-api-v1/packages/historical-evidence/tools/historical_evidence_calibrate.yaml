@@ -1,0 +1,561 @@
+name: historical_evidence_calibrate
+title: historical_evidence_calibrate
+description: 用固定历史预测与实际标签做isotonic校准，过去拟合、后续独立时间评价，输出逐条件组Brier/可靠性/基线及无标签当前预测。
+inputSchema:
+  type: object
+  properties:
+    as_of:
+      type: string
+      format: date-time
+    source_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            const: data
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 64
+    plan:
+      type: object
+      properties:
+        ref:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            revision:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            kind:
+              const: data
+            schemaVersion:
+              const: 1.0.0
+          required:
+            - id
+            - revision
+            - digest
+            - kind
+            - schemaVersion
+          additionalProperties: false
+        frozen_at:
+          type: string
+          format: date-time
+          description: Actual plan record timestamp supported by plan.ref, never invented or backfilled. Unknown prior selection must be exploratory.
+        target:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              maxLength: 2000
+            horizon_seconds:
+              type: integer
+              minimum: 1
+              maximum: 316224000
+            description:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - id
+            - horizon_seconds
+            - description
+          additionalProperties: false
+        independence:
+          type: object
+          properties:
+            gap_seconds:
+              type: integer
+              minimum: 0
+              maximum: 316224000
+            assumption:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - gap_seconds
+            - assumption
+          additionalProperties: false
+        confidence_level:
+          enum:
+            - 0.8
+            - 0.9
+            - 0.95
+            - 0.99
+            - 0.999
+        conditions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        failure_conditions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        monitoring:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          minItems: 0
+          maxItems: 32
+        regime_definition:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        method:
+          const: isotonic
+        prediction_system:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        fit_end:
+          type: string
+          format: date-time
+        evaluation_start:
+          type: string
+          format: date-time
+        minimum_fit:
+          type: integer
+          minimum: 2
+          maximum: 5000
+          description: Explicit fit sample target; advisory unless sample_policy is user+required. At least 2 actual nonoverlapping fit records with class and score variation are structurally necessary.
+        minimum_evaluation:
+          type: integer
+          minimum: 1
+          maximum: 5000
+          description: Explicit scored evaluation sample target; advisory unless sample_policy is user+required. At least 1 actual fit-disjoint scored record is structurally necessary.
+        bins:
+          type: integer
+          minimum: 2
+          maximum: 30
+        out_of_bounds:
+          enum:
+            - unavailable
+            - clip
+        mode:
+          type: string
+          enum:
+            - prospective
+            - exploratory
+          description: prospective requires a genuinely prior recorded method plan. When selecting methods now on old logs, or original selection is unknown, use exploratory and the actual frozen_at; never backfill a fictional date.
+        sample_policy:
+          type: object
+          properties:
+            mode:
+              type: string
+              enum:
+                - advisory
+                - required
+            source:
+              type: string
+              enum:
+                - agent
+                - user
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 2000
+          required:
+            - mode
+            - source
+            - reason
+          additionalProperties: false
+          description: Omit for agent advisory sample targets. Only an actual user instruction may set source:user plus mode:required; never downgrade that fixed requirement after seeing results. Advisory shortfalls produce limited point estimates with actual counts. Structural missing data still produces null.
+      required:
+        - ref
+        - frozen_at
+        - target
+        - independence
+        - confidence_level
+        - conditions
+        - failure_conditions
+        - monitoring
+        - regime_definition
+        - method
+        - prediction_system
+        - fit_end
+        - evaluation_start
+        - minimum_fit
+        - minimum_evaluation
+        - bins
+        - out_of_bounds
+        - mode
+      additionalProperties: false
+    records:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          instrument:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          regime_id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          at:
+            type: string
+            format: date-time
+          probability:
+            type: number
+            minimum: 0
+            maximum: 1
+          prediction_system:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          prediction_available_at:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            description: Actual original prediction availability; for historical_replay actual generated/published time >=replay.generated_at, never a backfilled historical date.
+          model_trained_through:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            description: Original recorded model training cutoff; for explicit replay, virtual maximum training-data cutoff <=feature_cutoff and training_label_cutoff, not a claim the model physically ran then.
+          prediction_ref:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              revision:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              digest:
+                type: string
+                pattern: ^sha256:[a-f0-9]{64}$
+              kind:
+                const: data
+              schemaVersion:
+                const: 1.0.0
+            required:
+              - id
+              - revision
+              - digest
+              - kind
+              - schemaVersion
+            additionalProperties: false
+          outcome:
+            anyOf:
+              - type: object
+                properties:
+                  target_id:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  horizon_seconds:
+                    type: integer
+                    minimum: 1
+                  end_at:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                      - type: "null"
+                  available_at:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                      - type: "null"
+                  label:
+                    enum:
+                      - 0
+                      - 1
+                      - null
+                required:
+                  - target_id
+                  - horizon_seconds
+                  - end_at
+                  - available_at
+                  - label
+                additionalProperties: false
+              - type: "null"
+          regime_available_at:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+          origin:
+            type: string
+            enum:
+              - recorded_prediction
+              - historical_replay
+            description: Omit for original recorded prediction semantics. historical_replay is exploratory only and requires decision_at plus full replay provenance; never mix origins.
+          decision_at:
+            type: string
+            format: date-time
+            description: Replay virtual historical decision time, exactly equal to at; never the actual generation/publication time.
+          replay:
+            type: object
+            properties:
+              generated_at:
+                type: string
+                format: date-time
+                description: Actual execution time, at/after the real frozen plan and after the historical decision.
+              feature_cutoff:
+                type: string
+                format: date-time
+                description: Latest virtual information time used for features, no later than decision_at.
+              training_label_cutoff:
+                type: string
+                format: date-time
+                description: Latest virtual availability time of training labels, no later than decision_at.
+              outcome_available_at:
+                type: string
+                format: date-time
+                description: Explicit virtual information-clock availability for the target outcome, at/after its horizon end. Actual retrieval/observation stays in outcome.available_at.
+              code_ref:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  revision:
+                    type: string
+                    minLength: 1
+                    maxLength: 2000
+                  digest:
+                    type: string
+                    pattern: ^sha256:[a-f0-9]{64}$
+                  kind:
+                    const: data
+                  schemaVersion:
+                    const: 1.0.0
+                required:
+                  - id
+                  - revision
+                  - digest
+                  - kind
+                  - schemaVersion
+                additionalProperties: false
+              data_refs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    revision:
+                      type: string
+                      minLength: 1
+                      maxLength: 2000
+                    digest:
+                      type: string
+                      pattern: ^sha256:[a-f0-9]{64}$
+                    kind:
+                      const: data
+                    schemaVersion:
+                      const: 1.0.0
+                  required:
+                    - id
+                    - revision
+                    - digest
+                    - kind
+                    - schemaVersion
+                  additionalProperties: false
+                minItems: 1
+                maxItems: 64
+              source_vintage:
+                const: current_snapshot_not_point_in_time
+            required:
+              - generated_at
+              - feature_cutoff
+              - training_label_cutoff
+              - outcome_available_at
+              - code_ref
+              - data_refs
+              - source_vintage
+            additionalProperties: false
+        required:
+          - id
+          - instrument
+          - regime_id
+          - at
+          - probability
+          - prediction_system
+          - prediction_available_at
+          - model_trained_through
+          - prediction_ref
+          - outcome
+          - regime_available_at
+        additionalProperties: false
+      minItems: 0
+      maxItems: 5000
+    queries:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          instrument:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          regime_id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          at:
+            type: string
+            format: date-time
+          probability:
+            type: number
+            minimum: 0
+            maximum: 1
+          regime_available_at:
+            type: string
+            format: date-time
+        required:
+          - id
+          - instrument
+          - regime_id
+          - at
+          - probability
+          - regime_available_at
+        additionalProperties: false
+      minItems: 0
+      maxItems: 128
+  required:
+    - as_of
+    - source_refs
+    - plan
+    - records
+    - queries
+  additionalProperties: false
+outputSchema:
+  type: object
+  properties:
+    type:
+      type: string
+      minLength: 1
+      maxLength: 2000
+    schemaVersion:
+      const: 1.0.0
+    status:
+      enum:
+        - computed
+        - insufficient_data
+        - exploratory
+    input_digest:
+      type: string
+      pattern: "^sha256:"
+    source_refs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 2000
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            const: data
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 512
+  required:
+    - type
+    - schemaVersion
+    - status
+    - input_digest
+    - source_refs
+  additionalProperties: true
+annotations: {}
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects: []
+  usage:
+    purpose: 用固定历史预测与实际标签做isotonic校准，过去拟合、后续独立时间评价，输出逐条件组Brier/可靠性/基线及无标签当前预测。
+    inputs: 参数见已声明README.md、METHOD.md及examples中的完整算例；inline入口直接接收对应JSON对象，refs入口接收operation和固定input_ref。所有方法、阈值和适用条件由用户/Agent明确选择。 可显式使用origin:historical_replay+decision_at+replay来源对象，保存今天真实生成时间、历史prefix cutoff和固定代码/数据refs；仅exploratory，不修改原记录时间规则。
+    outputs: 完整JSON计算结果，含原计划、输入摘要、来源、样本筛选和缺失；match返回decision_at/cohorts/selection，经验频率不等于概率；calibrate返回groups/current_predictions/split/selection_status。今天选方法或原选择不明使用exploratory，只留回顾诊断，不给当前校准概率。没有通用研究合格判定或交易授权。 样本目标默认advisory，不足时当前估计标limited并给实际n/范围/理由；仅用户required阈值额外阻止输出，结构性无数据始终null。 回放仅称时间分割回放评价，保留真实生成/结果获取时刻与虚拟信息时钟；当前概率和可用校准grid始终null。
+    prerequisites: []
+    limitations:
+      - 只消费inline records；不得传Strategy隔离留出的未来行。
+      - 置信区间针对独立评估样本事件率，不是当前概率参数的置信区间。样本/支持不足返回null和原因，性能差仍保留条件结果。
+    references:
+      - title: "Probability calibration: disjoint fitting, Brier and reliability"
+        url: https://scikit-learn.org/stable/modules/calibration.html
+      - title: Wilson score interval
+        url: https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm
+  binding:
+    type: native
+    name: historical_evidence_calibrate
+  researchDataAccess:
+    schemaVersion: 1
+    reads: input-only
+    writes: derived-artifacts-only

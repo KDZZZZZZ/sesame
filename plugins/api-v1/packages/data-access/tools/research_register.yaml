@@ -1,0 +1,125 @@
+name: research_register
+title: research_register
+description: 核对宿主成功执行的冻结输出与精确输入哈希，发布可追溯DataRef。
+inputSchema:
+  type: object
+  properties:
+    operationId:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: 稳定操作ID
+    executionId:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 宿主真实执行证据ID
+    path:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 冻结输出路径
+    title:
+      type: string
+      minLength: 1
+      maxLength: 500
+      description: 结果名
+    description:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: 口径、单位和局限
+    inputIds:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 4096
+        description: 登记输入数据ID
+      minItems: 1
+      maxItems: 20
+    recipePaths:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 4096
+      description: 执行开始前已经存在并用于本次计算的配方路径，相对执行目录。生成的输出填 path。
+      maxItems: 128
+    inputRefs:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            description: 成果ID
+          revision:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            description: 精确修订
+          digest:
+            type: string
+            pattern: ^sha256:[a-f0-9]{64}$
+          kind:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            description: 成果类型
+          schemaVersion:
+            const: 1.0.0
+        required:
+          - id
+          - revision
+          - digest
+          - kind
+          - schemaVersion
+        additionalProperties: false
+      minItems: 1
+      maxItems: 20
+  required:
+    - operationId
+    - executionId
+    - path
+    - title
+    - description
+  additionalProperties: false
+  anyOf:
+    - required:
+        - inputIds
+    - required:
+        - inputRefs
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - data.query
+    - resource.create
+    - artifact.publish
+    - state.write
+  usage:
+    purpose: 核对宿主成功执行的冻结输出与精确输入哈希，发布可追溯DataRef。
+    inputs: '最小骨架：{operationId:"reg-1",executionId:"<bash返回的executionId，不可填runId>",path:"output/result.json",title:"...",description:"...",inputRefs:[{id,revision,digest,kind:"data",schemaVersion:"1.0.0"}],recipePaths:["script.py"]}。inputIds 与 inputRefs 至少填一种；recipePaths 只填执行前已存在的相对路径文件，生成结果填 path。'
+    outputs: 固定计算 DataRef、evidence、行列/样本与 provenance；证据绑定执行状态和输入/输出哈希。
+    prerequisites:
+      - 同会话的成功执行已冻结输出与 inputs；data_read.directory 和 bash.cwd 指向同一工作区计算目录。
+    limitations:
+      - 使用 executionId。宿主按文件分段读取冻结快照，同一执行的多个输出可分别登记。recipePaths 只填执行前的实际配方。若返回缺失路径，先核对返回的冻结文件名；只有原执行确实没有所需文件时才重新采集。
+      - 每次调用报错时必须先检查返回诊断与冻结文件列表，禁止在未核对路径/字段前用相似参数连续重试多次。
+  binding:
+    type: native
+    name: research_register

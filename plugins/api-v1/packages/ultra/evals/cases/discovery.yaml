@@ -1,0 +1,34 @@
+id: ultra-discovery
+environment:
+  mode: replay
+steps:
+  - operation: server/discover
+  - operation: tools/list
+  - operation: resources/read
+    params:
+      uri: sesame://plugins/sesame/ultra/PROVENANCE.md
+expect:
+  - step: 0
+    pointer: /serverInfo/name
+    equals: sesame/ultra
+  - step: 1
+    pointer: /tools/0/name
+    equals: ultra_close
+  - step: 1
+    pointer: /tools/0/inputSchema
+    equals:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required: []
+      additionalProperties: false
+  - step: 2
+    pointer: /contents/0/text
+    contains: "# 来源与实现边界"

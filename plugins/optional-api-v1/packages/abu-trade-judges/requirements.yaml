@@ -1,0 +1,7 @@
+goal: 已结束交易的相似邻居评分与拒绝证据。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。
+acceptance:
+  discovery:
+    case: abu-trade-judges-discovery
+    tools:
+      - abu_trade_judges_analyze
+    resource: skills/abu-trade-judges/SKILL.md

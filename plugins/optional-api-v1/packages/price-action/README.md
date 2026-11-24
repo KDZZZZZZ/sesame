@@ -1,6 +1,6 @@
 # Price Action 价格行为
 
-`sesame/price-action`，Plugin API 2，要求 Sesame `>=0.2.3`，当前包版本以 plugin.json 为准。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。没有执行 capability 或 source；不自动联网、安装依赖或操作账户，也不注入其它方法包。
+`sesame/price-action`，Plugin API 2，要求 Sesame `>=0.2.3`，当前包版本以 plugin.yaml 为准。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。没有执行 capability 或 source；不自动联网、安装依赖或操作账户，也不注入其它方法包。
 
 独立价格行为研究：趋势/区间语境、延迟确认摆动和收盘突破，区分确定性观察与人工解读。
 
@@ -10,7 +10,7 @@
 
 ## 文件与能力边界
 
-本包属于 `analysis / knowledge`。`index.js` 保持空能力列表，`capabilities.json` 显式声明可读取的知识资源。`skills/price-action/SKILL.md` 说明问题、输入与局部交付，`references/` 保留具体判据、反例及验证边界；`examples/` 提供合成输入和独立预期。`scripts/observe.py` 与 `scripts/bar_input.py` 保持原路径和闭柱确认规则，辅助计算通过已有工作区执行能力调用；加载知识不代表已经计算。
+本包属于 `analysis / knowledge`。`index.js` 保持空能力列表，`plugin.yaml` 显式声明可读取的知识资源。`skills/price-action/SKILL.md` 说明问题、输入与局部交付，`references/` 保留具体判据、反例及验证边界；`examples/` 提供合成输入和独立预期。`scripts/observe.py` 与 `scripts/bar_input.py` 保持原路径和闭柱确认规则，辅助计算通过已有工作区执行能力调用；加载知识不代表已经计算。
 
 取数、选择方法、安排研究步骤和发布报告由调用方组织。本包交付带原始来源、时间、支持/反证与失效条件的局部判断；多个同源解释不增加独立证据数量。
 

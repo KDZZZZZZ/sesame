@@ -1,0 +1,46 @@
+name: ultra_close
+title: ultra_close
+description: 关闭 Ultra 主动拓展，保留已经开始的研究、Run 和订阅自然收尾；不取消、不恢复已有任务，也不表示目标已完成。
+inputSchema:
+  type: object
+  properties:
+    id:
+      type: string
+      minLength: 1
+      maxLength: 100
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 2000
+  required: []
+  additionalProperties: false
+outputSchema:
+  type: object
+  additionalProperties: true
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.read
+    - state.write
+    - read
+  usage:
+    purpose: 关闭 Ultra 主动拓展，保留已经开始的研究、Run 和订阅自然收尾；不取消、不恢复已有任务，也不表示目标已完成。
+    inputs: Owning main conversation; optional id and reason. UI close and /ultra off use this operation.
+    outputs: Persistent enabled=false; continuation is draining while finite accepted work remains, then closed. Existing work and its completion notices are retained.
+    prerequisites:
+      - Existing owning main conversation.
+    limitations:
+      - Does not cancel accepted Runs or call domain stop actions. Unstarted queued work is withdrawn. New expansion requires an explicit new user request to start or resume Ultra.
+  binding:
+    type: native
+    name: ultra_close

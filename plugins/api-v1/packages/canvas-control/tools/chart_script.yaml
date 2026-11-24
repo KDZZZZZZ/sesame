@@ -1,0 +1,101 @@
+name: chart_script
+title: chart_script
+description: 读取单个已挂载指标实例，或挂载、移除图表指标。枚举实例使用 canvas_inspect；read 必须提供实例 script_id。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。
+inputSchema:
+  type: object
+  required:
+    - action
+  properties:
+    action:
+      anyOf:
+        - type: string
+          const: read
+        - type: string
+          const: put
+        - type: string
+          const: remove
+    command_id:
+      type: string
+      description: 至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID
+      minLength: 16
+      maxLength: 100
+      pattern: ^[a-zA-Z0-9_-]+$
+    expected_version:
+      type: integer
+      minimum: 1
+      description: canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次
+    chart_id:
+      type: string
+      description: put/remove 必填的目标图表 ID，取自 canvas_inspect.charts[].id
+      minLength: 1
+      maxLength: 100
+    script_id:
+      type: string
+      description: read/remove 必填，取自 canvas_inspect.scripts[].id；put 首次挂载省略，替换时使用目标图表现有实例 ID。无实例时不调用 read。
+      minLength: 1
+      maxLength: 100
+    artifact:
+      type: object
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      properties:
+        id:
+          type: string
+          description: 成果 ID
+          minLength: 1
+          maxLength: 100
+        revision:
+          type: string
+          description: 固定修订
+          minLength: 1
+          maxLength: 100
+        digest:
+          type: string
+          description: SHA-256 摘要
+          minLength: 1
+          maxLength: 100
+        kind:
+          type: string
+          description: 成果类别
+          minLength: 1
+          maxLength: 100
+        schemaVersion:
+          type: string
+          const: 1.0.0
+      additionalProperties: false
+    parameters:
+      type: object
+      patternProperties:
+        ^.*$: {}
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - view.write
+  usage:
+    purpose: 读取单个已挂载指标实例，或挂载、移除图表指标。枚举实例使用 canvas_inspect；read 必须提供实例 script_id。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。
+    inputs: action=read 必须提供 canvas_inspect.scripts[].id 作为 script_id；枚举用 canvas_inspect，无实例时不调用 read。put/remove 均需 command_id/expected_version/chart_id；put 还需 indicator_publish 返回的完整 artifact 引用，可带 parameters，首次挂载省略 script_id，替换时使用目标图表现有实例 ID；remove 必须提供目标图表的 script_id。
+    outputs: read 返回指定实例的 definition、parameters、fixedInputs 和 source（代码）或 initial（静态序列）；put/remove 返回画布状态及版本，绘制结果见当前渲染回执。
+    prerequisites:
+      - 挂载前已有固定 indicator 成果；配置格式示例在 resources/close-line.json 和 close-line.js。
+    limitations:
+      - 实例参数属于单张图，不能改写已发布指标。遇到计算错误读脚本诊断；输入为空时先看图表底层 feed/error。
+  binding:
+    type: native
+    name: chart_script

@@ -1,0 +1,53 @@
+name: strategy_workflow
+title: strategy_workflow
+description: Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.
+inputSchema:
+  type: object
+  required:
+    - fixture_path
+  properties:
+    fixture_path:
+      type: string
+      description: Workspace JSON conforming to methods.md workflow schema 1.1
+      minLength: 1
+      maxLength: 20000
+    output_path:
+      type: string
+      description: Optional workspace path for the complete workflow and execution checkpoint
+      minLength: 1
+      maxLength: 20000
+    operation_id:
+      type: string
+      description: If provided, preserve the frozen input and full result as a resource artifact
+      minLength: 1
+      maxLength: 20000
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - write:resource
+    - publish:artifact
+    - workspace.write
+  usage:
+    purpose: Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.
+    inputs: fixture_path 使用 methods.md 的 schemaVersion=1.1.0；scope.strategyId 与 strategySource 一致。output_path/operation_id 可保存完整工作流与账本证据。
+    outputs: 实际品种选择、持仓数量、现金预算、风险结论、订单定义与提议命令/执行检查点，可含 evidence。
+    prerequisites:
+      - 固定策略/数据；数量分配规则和执行事件见 methods.md、execution.md，样例见 examples/method-workflow.js。
+    limitations:
+      - 只重放输入账本，不发送订单或调用模型；未知请求不能当零持仓/零风险。
+  binding:
+    type: native
+    name: strategy_workflow

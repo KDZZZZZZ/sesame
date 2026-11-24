@@ -1,0 +1,110 @@
+name: report_style_save
+title: report_style_save
+description: Save user-requested declarative design tokens for exact-version reuse. The default report layout is unified; no selectable presets or arbitrary HTML/CSS/JS.
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 200
+    id:
+      type: string
+      pattern: ^[a-z][a-z0-9-]{0,63}$
+    title:
+      type: string
+      minLength: 1
+      maxLength: 200
+    description:
+      type: string
+      maxLength: 2000
+    style:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: User-requested presentation need
+          minLength: 1
+          maxLength: 2000
+        tokens:
+          type: object
+          properties:
+            accent:
+              type: string
+              pattern: ^#[a-fA-F0-9]{6}$
+            context:
+              type: string
+              pattern: ^#[a-fA-F0-9]{6}$
+            accent_dark:
+              type: string
+              pattern: ^#[a-fA-F0-9]{6}$
+            context_dark:
+              type: string
+              pattern: ^#[a-fA-F0-9]{6}$
+            heading:
+              enum:
+                - serif
+                - sans
+            body_size:
+              type: integer
+              minimum: 14
+              maximum: 20
+            content_width:
+              type: integer
+              minimum: 640
+              maximum: 1440
+            section_gap:
+              type: integer
+              minimum: 24
+              maximum: 88
+            chart_height:
+              type: integer
+              minimum: 180
+              maximum: 640
+            columns:
+              type: integer
+              minimum: 1
+              maximum: 3
+          required: []
+          additionalProperties: false
+      required:
+        - reason
+        - tokens
+      additionalProperties: false
+    expected_version:
+      type: integer
+      minimum: 0
+  required:
+    - operation_id
+    - id
+    - title
+    - description
+    - style
+  additionalProperties: false
+outputSchema:
+  type: object
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - state.write
+  usage:
+    purpose: Extend presentation and reuse styles managed inside Report.
+    inputs: id/title/description/style/operation_id. Updating requires current expected_version.
+    outputs: id, version and a publishable style selection.
+    prerequisites:
+      - A user-requested presentation change and a clear reason.
+    limitations:
+      - Does not change data or analysis; no arbitrary code. Publications retain their exact style version.
+  binding:
+    type: native
+    name: report_style_save

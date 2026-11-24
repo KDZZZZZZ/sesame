@@ -1,0 +1,151 @@
+name: strategy_development_verify
+title: strategy_development_verify
+description: 对固定的单路已收盘 SVL 行情重放，在同一决策时刻核对可用输入、预热长度、节点、状态和订单意图。
+inputSchema:
+  type: object
+  properties:
+    operation_id:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Stable operation key for this exact input. Choose a new key for a revision or a changed experiment.
+    project_ref:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    event_ids:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 2000
+      minItems: 1
+      maxItems: 8
+      uniqueItems: true
+    trace_nodes:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 2000
+      minItems: 1
+      maxItems: 8
+      uniqueItems: true
+    warmup_lengths:
+      type: array
+      maxItems: 6
+      uniqueItems: true
+      items:
+        type: integer
+        minimum: 1
+        maximum: 10000
+  required:
+    - operation_id
+    - project_ref
+    - event_ids
+  additionalProperties: false
+outputSchema:
+  type: object
+  required:
+    - projectRef
+    - mandateRef
+    - stage
+  properties:
+    projectRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    mandateRef:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        kind:
+          const: resource
+        schemaVersion:
+          const: 1.0.0
+      required:
+        - id
+        - revision
+        - digest
+        - kind
+        - schemaVersion
+      additionalProperties: false
+    stage:
+      type: string
+      minLength: 1
+      maxLength: 2000
+annotations:
+  readOnlyHint: false
+errors:
+  internal_error:
+    message: The operation failed.
+    recovery: Inspect the recorded diagnostic before retrying.
+x-sesame:
+  kind: function
+  consumers:
+    - agent
+    - host
+  execution: immediate
+  effects:
+    - resources.write
+  usage:
+    purpose: 对固定的单路已收盘 SVL 行情重放，在同一决策时刻核对可用输入、预热长度、节点、状态和订单意图。
+    inputs: Choose checkpoints in a published replay. Closed bars require explicit UTC openTime, endTime, first availableAt, and decision availableAt. Choose warmup_lengths and trace_nodes relevant to the rule.
+    outputs: New projectRef and pinned assessment of observed changes, first-availability violations and uncovered decisions.
+    prerequisites: []
+    limitations: []
+  binding:
+    type: native
+    name: strategy_development_verify
